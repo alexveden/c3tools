@@ -76,6 +76,14 @@ fn void! setup_teardown(){
     test::eq(state.expected_fail, false);
 }
 
+fn void! setup_no_teardown(){
+    test::setup(state.setup_fn);
+
+    test::eq(state.n_runs, 1);
+    test::eq(state.n_fails, 0);
+    test::eq(state.expected_fail, false);
+}
+
 fn void! expected_fail(){
     test::setup(state.setup_fn, state.teardown_fn);
     state.expected_fail = true;
@@ -188,22 +196,22 @@ fn void! test_lte_fails_when_greater(){
 }
 
 fn void! test_check(){
-    test::check(1 == 1);
-    test::check(1.2 == 1.2, "1 == 1");
-    test::check(true == true, "1 == 1");
-    test::check("foo" == "foo", "2 == %d", 1 );
+    test::@check(1 == 1);
+    test::@check(1.2 == 1.2, "1 == 1");
+    test::@check(true == true, "1 == 1");
+    test::@check("foo" == "foo", "2 == %d", 1 );
 }
 
 fn void! test_check_fails(){
     test::setup(state.setup_fn, state.teardown_fn);
     state.expected_fail = true;
-    test::check(2 == 1, "2 == %d", 1 );
+    test::@check(2 == 1, "2 == %d", 1 );
 }
 
 fn void! test_check_fails_no_info(){
     test::setup(state.setup_fn, state.teardown_fn);
     state.expected_fail = true;
-    test::check(2 == 1);
+    test::@check(2 == 1);
 }
 
 def TestIntFn = fn int! (int a, int b);
@@ -253,3 +261,4 @@ fn void! test_error_wrong_error_expected(){
 
     test::@error(ffail_int(1, 0), IoError.FILE_NOT_FOUND);
 }
+

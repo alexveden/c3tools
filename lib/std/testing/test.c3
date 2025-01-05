@@ -29,9 +29,16 @@ struct TestContext @private
 
 TestContext* test_context;
 
-macro setup(TestFn setup_fn, TestFn teardown_fn = null) {
-	assert(setup_fn != null);
+<*
+Initializes test case context.
 
+@param setup_fn `initializer function for test case`
+@param teardown_fn `cleanup function for test context (may be null)`
+
+@require setup_fn != null, "setup_fn must always be set"
+@require test_context != null, "allowed only in @test functions"
+*>
+macro setup(TestFn setup_fn, TestFn teardown_fn = null) {
 	test_context.setup_fn = setup_fn;
 	test_context.teardown_fn = teardown_fn;
 
@@ -41,14 +48,22 @@ macro setup(TestFn setup_fn, TestFn teardown_fn = null) {
 	}
 }
 
-macro check(condition, format = "", args...) { 
-	assert(test_context != null, "this macro is allowed only in @test functions");
-    if(!condition) {
+<*
+Checks condition and fails assertion if not true 
+
+@param #condition `any boolean condition, will be expanded by text`
+@param format `printf compatible format`
+@param args `vargs for format`
+
+@require test_context != null, "allowed only in @test functions"
+*>
+macro @check(#condition, format = "", args...) { 
+    if(!#condition) {
 		@stack_mem(512; Allocator allocator)
 		{
 			DString s;
 			s.new_init(allocator: allocator);
-			s.append("check failed. ");
+			s.appendf("check `%s` failed. ", $stringify(#condition));
 			s.appendf(format, ...args);
     		test_context.assert_print_backtrace = false;
 	    	builtin::panicf(s.str_view(), $$FILE, $$FUNC, $$LINE);
@@ -56,59 +71,112 @@ macro check(condition, format = "", args...) {
     }
 }
 
-macro @error(#funcresult, excuse) {
-	assert(test_context != null, "this macro is allowed only in @test functions");
+<*
+Check if function returns specific error
+
+@param #funcresult `result of function execution`
+@param error_expected `expected error of function execution`
+
+@require test_context != null, "allowed only in @test functions"
+*>
+macro @error(#funcresult, error_expected) {
     if(catch err = #funcresult) {
-    	if (err != excuse){
-	    	builtin::panicf("expected error [%s], got [%s]", $$FILE, $$FUNC, $$LINE, excuse, err);
+    	if (err != error_expected){
+	    	builtin::panicf("`%s` expected to return error [%s], got [%s]",
+	    					$$FILE, $$FUNC, $$LINE, 
+	    					$stringify(#funcresult), error_expected, err);
     	}
     } else {
-	    builtin::panicf("error was not returned.", $$FILE, $$FUNC, $$LINE);
+	    builtin::panicf("`%s` error was not returned.", 
+	    				$$FILE, $$FUNC, $$LINE,
+	    				$stringify(#funcresult));
     }
 }
 
+<*
+Check if left == right
+
+@param left `left argument of any comparable type`
+@param left `right argument of any comparable type`
+
+@require test_context != null, "allowed only in @test functions"
+*>
 macro eq(left, right) { 
-	assert(test_context != null, "this macro is allowed only in @test functions");
     if(!equals(left, right)) {
     	test_context.assert_print_backtrace = false;
 	    builtin::panicf("`%s` != `%s`", $$FILE, $$FUNC, $$LINE, left, right);
     }
 }
 
+<*
+Check if left != right
+
+@param left `left argument of any comparable type`
+@param left `right argument of any comparable type`
+
+@require test_context != null, "allowed only in @test functions"
+*>
 macro neq(left, right) { 
-	assert(test_context != null, "this macro is allowed only in @test functions");
     if(equals(left, right)) {
     	test_context.assert_print_backtrace = false;
 	    builtin::panicf("`%s` == `%s`", $$FILE, $$FUNC, $$LINE, left, right);
     }
 }
 
+<*
+Check if left > right
+
+@param left `left argument of any comparable type`
+@param left `right argument of any comparable type`
+
+@require test_context != null, "allowed only in @test functions"
+*>
 macro gt(left, right) { 
-	assert(test_context != null, "this macro is allowed only in @test functions");
     if(!greater(left, right)) {
     	test_context.assert_print_backtrace = false;
 	    builtin::panicf("`%s` <= `%s`", $$FILE, $$FUNC, $$LINE, left, right);
     }
 }
 
+<*
+Check if left >= right
+
+@param left `left argument of any comparable type`
+@param left `right argument of any comparable type`
+
+@require test_context != null, "allowed only in @test functions"
+*>
 macro gte(left, right) { 
-	assert(test_context != null, "this macro is allowed only in @test functions");
     if(!greater_eq(left, right)) {
     	test_context.assert_print_backtrace = false;
 	    builtin::panicf("`%s` < `%s`", $$FILE, $$FUNC, $$LINE, left, right);
     }
 }
 
+<*
+Check if left < right
+
+@param left `left argument of any comparable type`
+@param left `right argument of any comparable type`
+
+@require test_context != null, "allowed only in @test functions"
+*>
 macro lt(left, right) { 
-	assert(test_context != null, "this macro is allowed only in @test functions");
     if(!less(left, right)) {
     	test_context.assert_print_backtrace = false;
 	    builtin::panicf("`%s` >= `%s`", $$FILE, $$FUNC, $$LINE, left, right);
     }
 }
 
+<*
+Check if left <= right
+
+@param left `left argument of any comparable type`
+@param left `right argument of any comparable type`
+
+@require test_context != null, "allowed only in @test functions"
+*>
 macro lte(left, right) { 
-	assert(test_context != null, "this macro is allowed only in @test functions");
     if(!less_eq(left, right)) {
     	test_context.assert_print_backtrace = false;
 	    builtin::panicf("`%s` > `%s`", $$FILE, $$FUNC, $$LINE, left, right);
