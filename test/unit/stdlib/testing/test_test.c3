@@ -134,3 +134,122 @@ fn void! test_gt_fails_when_less(){
     state.expected_fail = true;
     test::gt(1, 2);
 }
+
+
+fn void! test_gte(){
+    test::gte(2, 1);
+    test::gte(true, false);
+    test::gte(1.32, 1.31);
+    test::gte(2, 2);
+    test::gte(true, true);
+    test::gte(1.32, 1.32);
+    //test::gt("fooooooo", "bar"); // NOTE: Error: @require "types::@comparable_value(a) && types::@comparable_value(b)" violated
+}
+
+fn void! test_gte_fails_when_less(){
+    test::setup(state.setup_fn, state.teardown_fn);
+    state.expected_fail = true;
+    test::gte(1, 2);
+}
+
+fn void! test_lt(){
+    test::lt(1, 2);
+    test::lt(false, true);
+    test::lt(1.31, 1.32);
+    //test::lt("fooooooo", "bar"); // NOTE: Error: @require "types::@comparable_value(a) && types::@comparable_value(b)" violated
+}
+
+fn void! test_lt_fails_when_equal(){
+    test::setup(state.setup_fn, state.teardown_fn);
+    state.expected_fail = true;
+    test::lt(2, 2);
+}
+
+fn void! test_lt_fails_when_greater(){
+    test::setup(state.setup_fn, state.teardown_fn);
+    state.expected_fail = true;
+    test::lt(2, 1);
+}
+
+fn void! test_lte(){
+    test::lte(1, 2);
+    test::lte(false, true);
+    test::lte(1.31, 1.32);
+    test::lte(2, 2);
+    test::lte(true, true);
+    test::lte(1.32, 1.32);
+    //test::lte("fooooooo", "bar"); // NOTE: Error: @require "types::@comparable_value(a) && types::@comparable_value(b)" violated
+}
+
+fn void! test_lte_fails_when_greater(){
+    test::setup(state.setup_fn, state.teardown_fn);
+    state.expected_fail = true;
+    test::lte(2, 1);
+}
+
+fn void! test_check(){
+    test::check(1 == 1);
+    test::check(1.2 == 1.2, "1 == 1");
+    test::check(true == true, "1 == 1");
+    test::check("foo" == "foo", "2 == %d", 1 );
+}
+
+fn void! test_check_fails(){
+    test::setup(state.setup_fn, state.teardown_fn);
+    state.expected_fail = true;
+    test::check(2 == 1, "2 == %d", 1 );
+}
+
+fn void! test_check_fails_no_info(){
+    test::setup(state.setup_fn, state.teardown_fn);
+    state.expected_fail = true;
+    test::check(2 == 1);
+}
+
+def TestIntFn = fn int! (int a, int b);
+
+fault MyFault {
+    FOO,
+}
+
+fn void! test_error(){
+    test::TestFn ffail_void = fn void!() {
+        return IoError.FILE_NOT_FOUND?;
+    };
+    TestIntFn ffail_int = fn int! (int a, int b) {
+        if (b == 0){
+            return IoError.FILE_NOT_FOUND?;
+        }
+        return a / b;
+    };
+    test::setup(state.setup_fn, state.teardown_fn);
+
+    test::@error(ffail_void(), IoError.FILE_NOT_FOUND);
+    test::@error(ffail_int(1, 0), IoError.FILE_NOT_FOUND);
+}
+
+fn void! test_error_not_raised(){
+    TestIntFn ffail_int = fn int! (int a, int b) {
+        if (b == 0){
+            return IoError.FILE_NOT_FOUND?;
+        }
+        return a / b;
+    };
+    test::setup(state.setup_fn, state.teardown_fn);
+    state.expected_fail = true;
+
+    test::@error(ffail_int(1, 1), IoError.FILE_NOT_FOUND);
+}
+
+fn void! test_error_wrong_error_expected(){
+    TestIntFn ffail_int = fn int! (int a, int b) {
+        if (b == 0){
+            return IoError.BUSY?;
+        }
+        return a / b;
+    };
+    test::setup(state.setup_fn, state.teardown_fn);
+    state.expected_fail = true;
+
+    test::@error(ffail_int(1, 0), IoError.FILE_NOT_FOUND);
+}

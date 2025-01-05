@@ -10,18 +10,6 @@ struct TestUnit @private
 	TestFn func;
 }
 
-fn TestUnit[] test_collection_create(Allocator allocator = allocator::heap()) 
-{
-	TestFn[] fns = $$TEST_FNS;
-	String[] names = $$TEST_NAMES;
-	TestUnit[] tests = allocator::alloc_array(allocator, TestUnit, names.len);
-	foreach (i, test : fns)
-	{
-		tests[i] = { names[i], fns[i] };
-	}
-	return tests;
-}
-
 struct TestContext @private
 {
 	JmpBuf buf;
@@ -39,6 +27,109 @@ struct TestContext @private
 	TestFn teardown_fn;
 }
 
+TestContext* test_context;
+
+macro setup(TestFn setup_fn, TestFn teardown_fn = null) {
+	assert(setup_fn != null);
+
+	test_context.setup_fn = setup_fn;
+	test_context.teardown_fn = teardown_fn;
+
+	if(catch err = test_context.setup_fn()) {
+    	test_context.assert_print_backtrace = false;
+	    builtin::panicf("test::setup() failed with %s", $$FILE, $$FUNC, $$LINE, err);
+	}
+}
+
+macro check(condition, format = "", args...) { 
+	assert(test_context != null, "this macro is allowed only in @test functions");
+    if(!condition) {
+		@stack_mem(512; Allocator allocator)
+		{
+			DString s;
+			s.new_init(allocator: allocator);
+			s.append("check failed. ");
+			s.appendf(format, ...args);
+    		test_context.assert_print_backtrace = false;
+	    	builtin::panicf(s.str_view(), $$FILE, $$FUNC, $$LINE);
+		};
+    }
+}
+
+macro @error(#funcresult, excuse) {
+	assert(test_context != null, "this macro is allowed only in @test functions");
+    if(catch err = #funcresult) {
+    	if (err != excuse){
+	    	builtin::panicf("expected error [%s], got [%s]", $$FILE, $$FUNC, $$LINE, excuse, err);
+    	}
+    } else {
+	    builtin::panicf("error was not returned.", $$FILE, $$FUNC, $$LINE);
+    }
+}
+
+macro eq(left, right) { 
+	assert(test_context != null, "this macro is allowed only in @test functions");
+    if(!equals(left, right)) {
+    	test_context.assert_print_backtrace = false;
+	    builtin::panicf("`%s` != `%s`", $$FILE, $$FUNC, $$LINE, left, right);
+    }
+}
+
+macro neq(left, right) { 
+	assert(test_context != null, "this macro is allowed only in @test functions");
+    if(equals(left, right)) {
+    	test_context.assert_print_backtrace = false;
+	    builtin::panicf("`%s` == `%s`", $$FILE, $$FUNC, $$LINE, left, right);
+    }
+}
+
+macro gt(left, right) { 
+	assert(test_context != null, "this macro is allowed only in @test functions");
+    if(!greater(left, right)) {
+    	test_context.assert_print_backtrace = false;
+	    builtin::panicf("`%s` <= `%s`", $$FILE, $$FUNC, $$LINE, left, right);
+    }
+}
+
+macro gte(left, right) { 
+	assert(test_context != null, "this macro is allowed only in @test functions");
+    if(!greater_eq(left, right)) {
+    	test_context.assert_print_backtrace = false;
+	    builtin::panicf("`%s` < `%s`", $$FILE, $$FUNC, $$LINE, left, right);
+    }
+}
+
+macro lt(left, right) { 
+	assert(test_context != null, "this macro is allowed only in @test functions");
+    if(!less(left, right)) {
+    	test_context.assert_print_backtrace = false;
+	    builtin::panicf("`%s` >= `%s`", $$FILE, $$FUNC, $$LINE, left, right);
+    }
+}
+
+macro lte(left, right) { 
+	assert(test_context != null, "this macro is allowed only in @test functions");
+    if(!less_eq(left, right)) {
+    	test_context.assert_print_backtrace = false;
+	    builtin::panicf("`%s` > `%s`", $$FILE, $$FUNC, $$LINE, left, right);
+    }
+}
+
+//
+//                  TEST RUNNER
+//
+fn TestUnit[] test_collection_create(Allocator allocator = allocator::heap()) 
+{
+	TestFn[] fns = $$TEST_FNS;
+	String[] names = $$TEST_NAMES;
+	TestUnit[] tests = allocator::alloc_array(allocator, TestUnit, names.len);
+	foreach (i, test : fns)
+	{
+		tests[i] = { names[i], fns[i] };
+	}
+	return tests;
+}
+
 // Sort the tests by their name in ascending order.
 fn int cmp_test_unit(TestUnit a, TestUnit b) @private
 {
@@ -53,7 +144,6 @@ fn int cmp_test_unit(TestUnit a, TestUnit b) @private
 	return (int)(an - bn);
 }
 
-TestContext* test_context;
 
 fn void test_panic(String message, String file, String function, uint line) @private
 {
@@ -176,47 +266,3 @@ fn bool default_test_runner()
 	};
 }
 
-macro setup(TestFn setup_fn, TestFn teardown_fn = null){
-	assert(setup_fn != null);
-
-	test_context.setup_fn = setup_fn;
-	test_context.teardown_fn = teardown_fn;
-
-	if(catch err = test_context.setup_fn()) {
-    	test_context.assert_print_backtrace = false;
-	    builtin::panicf("test::setup() failed with %s", $$FILE, $$FUNC, $$LINE, err);
-	}
-}
-
-
-macro eq(left, right) { 
-	assert(test_context != null, "this macro is allowed only in @test functions");
-    if(!equals(left, right)) {
-    	test_context.assert_print_backtrace = false;
-	    builtin::panicf("`%s` != `%s`", $$FILE, $$FUNC, $$LINE, left, right);
-    }
-}
-
-macro neq(left, right) { 
-	assert(test_context != null, "this macro is allowed only in @test functions");
-    if(equals(left, right)) {
-    	test_context.assert_print_backtrace = false;
-	    builtin::panicf("`%s` == `%s`", $$FILE, $$FUNC, $$LINE, left, right);
-    }
-}
-
-macro gt(left, right) { 
-	assert(test_context != null, "this macro is allowed only in @test functions");
-    if(!greater(left, right)) {
-    	test_context.assert_print_backtrace = false;
-	    builtin::panicf("`%s` <= `%s`", $$FILE, $$FUNC, $$LINE, left, right);
-    }
-}
-
-macro gte(left, right) { 
-	assert(test_context != null, "this macro is allowed only in @test functions");
-    if(!greater_eq(left, right)) {
-    	test_context.assert_print_backtrace = false;
-	    builtin::panicf("`%s` <= `%s`", $$FILE, $$FUNC, $$LINE, left, right);
-    }
-}
