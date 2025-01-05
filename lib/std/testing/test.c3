@@ -27,7 +27,7 @@ struct TestContext @private
 	TestFn teardown_fn;
 }
 
-TestContext* test_context;
+TestContext* test_context @private;
 
 <*
 Initializes test case context.
@@ -82,11 +82,13 @@ Check if function returns specific error
 macro @error(#funcresult, error_expected) {
     if(catch err = #funcresult) {
     	if (err != error_expected){
+    		test_context.assert_print_backtrace = false;
 	    	builtin::panicf("`%s` expected to return error [%s], got [%s]",
 	    					$$FILE, $$FUNC, $$LINE, 
 	    					$stringify(#funcresult), error_expected, err);
     	}
     } else {
+    	test_context.assert_print_backtrace = false;
 	    builtin::panicf("`%s` error was not returned.", 
 	    				$$FILE, $$FUNC, $$LINE,
 	    				$stringify(#funcresult));

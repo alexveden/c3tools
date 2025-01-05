@@ -1,5 +1,5 @@
 module test::std::testing::test @test;
-import std::testing::test;
+import std::testing::test @public;
 import std::core::builtin;
 import std::io;
 
@@ -22,6 +22,10 @@ TestState state = {
         //io::printn("new test setup");
         state.n_runs++;
         state.n_fails = 0;
+
+        assert (test::test_context.assert_print_backtrace);
+	    assert (builtin::panic != state.panic_mock_fn, "missing finalization of panic");
+
 	    state.old_panic = builtin::panic;
 	    builtin::panic = state.panic_mock_fn;
 	    if (state.setup_fail) {
@@ -51,12 +55,17 @@ TestState state = {
 
     },
     .panic_mock_fn = fn void (String message, String file, String function, uint line) {
+	    if (test::test_context.assert_print_backtrace){
+    	    builtin::print_backtrace(message, 3);
+	    }
+	    test::test_context.assert_print_backtrace = true;
         if (state.expected_fail) {
 	        io::printfn("[OOPS] (expected fail) ( %s:%s ) %s", file, line, message);
             state.n_fails++;
         } else {
+	        builtin::panic = state.old_panic;
             state.old_panic(message, file, function, line);
-        }
+;        }
     }
 };
 
@@ -82,6 +91,9 @@ fn void! setup_no_teardown(){
     test::eq(state.n_runs, 1);
     test::eq(state.n_fails, 0);
     test::eq(state.expected_fail, false);
+
+    // WARNING: reverting back original panic func
+	builtin::panic = state.old_panic;
 }
 
 fn void! expected_fail(){
@@ -262,3 +274,8 @@ fn void! test_error_wrong_error_expected(){
     test::@error(ffail_int(1, 0), IoError.FILE_NOT_FOUND);
 }
 
+fn void! test_vanilla_assert_fail(){
+    test::setup(state.setup_fn, state.teardown_fn);
+    state.expected_fail = true;
+    assert(false, "this assert expected to fail with backtrace");
+}
