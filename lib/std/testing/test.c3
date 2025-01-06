@@ -89,9 +89,9 @@ macro @error(#funcresult, error_expected) {
     	}
     } else {
     	test_context.assert_print_backtrace = false;
-	    builtin::panicf("`%s` error was not returned.", 
+	    builtin::panicf("`%s` error [%s] was not returned.", 
 	    				$$FILE, $$FUNC, $$LINE,
-	    				$stringify(#funcresult));
+	    				$stringify(#funcresult), error_expected);
     }
 }
 
@@ -297,11 +297,13 @@ fn bool run_tests(TestUnit[] tests) @private
 		(void)io::stdout().flush();
 		if (libc::setjmp(&context.buf) == 0)
 		{
+			(void)io::stdout().flush();
 			if (catch err = unit.func())
 			{
-				io::printfn("[%sFAIL%s] Failed due to: %s",
+				io::printfn("[%sFAIL%s] %s Failed due to: %s",
 							test_context.has_ansi ? "\e[0;31m" : "",
 							test_context.has_ansi ? "\e[0m" : "",
+							unit.name,
 							err);
 			} else {
 				io::printfn("[%sPASS%s] %s", 
