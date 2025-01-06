@@ -2,6 +2,12 @@ module std::os::argparse;
 import std::io;
 import std::io::path;
 
+fault ArgError {
+    MISSING_ARGUMENT,
+    BAD_ARGUMENT_NAME,
+    CONFIGURATION,
+}
+
 enum ArgType : int
 {
     USER,
@@ -14,8 +20,10 @@ struct ArgOpt {
     char short_name;
     String long_name;
     any value;
-    String help;
+    any default_value;
     bool required;
+    String help;
+    bool is_present;
     ArgType _arg_type;
     // argparse_callback_f* callback;
     // intptr_t data;
@@ -28,6 +36,7 @@ struct ArgParse {
     String epilog;       // a description at the end
     String program_name; // program name in usage (by default: argv[0])
     ArgOpt[] options;
+    String[] arguments;
 
     struct flags {
         bool ignore_unknown_args;
@@ -64,8 +73,61 @@ macro group_opt(String group_name) {
     };
 }
 
+fn void! ArgParse.options_ensure_required(&self) @local
+{
+    foreach(i, opt: self.options){
+        if (opt._arg_type == ArgType.GROUP || opt._arg_type == ArgType.HELP) {
+            continue;
+        }
+
+        if (opt.required && !opt.is_present) {
+            io::printf(
+                "Error: missing required option: -%c/--%s\n",
+                opt.short_name,
+                opt.long_name
+            );
+            return ArgError.MISSING_ARGUMENT?;
+        }
+    }
+}
+fn void! ArgParse.options_check(&self) @local
+{
+    assert(self.arguments.len == 0, "already processed?");
+
+    foreach(i, opt: self.options){
+        if (opt._arg_type == ArgType.GROUP || opt._arg_type == ArgType.HELP) {
+            continue;
+        }
+
+        if (!(opt.short_name || opt.long_name)) {
+            unreachable("option[%d] both long/short_name are not set", i);
+        }
+        if (!opt.value) {
+            unreachable("option[%d][-%c/--%s] has no valid .value= pointer set",
+                        i, opt.short_name, opt.long_name);
+        }
+
+        switch (opt.value.type) {
+            case short.typeid:
+            case ushort.typeid:
+            case int.typeid:
+            case uint.typeid:
+            case long.typeid:
+            case ulong.typeid:
+            case float.typeid:
+            case double.typeid:
+            case String.typeid:
+                // resetting presence flag, it will be updated after all argument parsing
+                opt.is_present = false;
+            default:
+                unreachable("option[%d][-%c/--%s] type[%s] is not supported", 
+                            i, opt.short_name, opt.long_name, opt.value.type);
+        }
+    }
+}
+
 fn void! ArgParse.parse(&self, String[] argv) {
-    assert(self._ctx.argc == 0, "ArgParse already initialized or double parse call");
+    assert(self.arguments.len == 0, "ArgParse already initialized or double parse call");
     assert(argv.len > 0);
 
     self._ctx.argc = argv.len;
@@ -73,12 +135,15 @@ fn void! ArgParse.parse(&self, String[] argv) {
     if (!self.program_name){
         self.program_name = argv[0];
     }
+    self.options_check()!;
+
+    self.options_ensure_required()!;
 }
 
 fn void! ArgParse.print_usage(&self) {
     assert(self._ctx.argc != 0, "ArgParse.parse() was not called?");
 
-    io::printf("Usage:\n");
+    io::printf("\nUsage:\n");
     if (self.usage) {
         @pool() {
             // NOTE: prepending program_name to all usage line
@@ -177,7 +242,11 @@ fn void! ArgParse.print_usage(&self) {
             io::print("\n");
             pad = usage_opts_width;
         }
-        io::printf("%*s%s\n", (int)pad + 2, "", opt.help);
+        io::printf("%*s%s", (int)pad + 2, "", opt.help);
+        if (opt.default_value) {
+           io::printf(" (default: %s)", opt.default_value); 
+        }
+        io::print("\n");
     }
     if (self.epilog) {
         io::printf("\n%s\n", self.epilog);
