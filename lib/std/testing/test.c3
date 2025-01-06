@@ -266,7 +266,7 @@ fn bool run_tests(TestUnit[] tests) @private
 	TestContext context = {
 		.assert_print_backtrace = true,
 		//.breakpoint_on_assert = true,
-		//.test_filter = "test_bar::",
+		.test_filter = "test::std::os::argparse::",
 		.has_ansi = terminal_has_ansi(),
 	};
 	test_context = &context;

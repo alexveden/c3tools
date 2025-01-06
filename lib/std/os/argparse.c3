@@ -4,8 +4,9 @@ import std::io::path;
 
 fault ArgError {
     MISSING_ARGUMENT,
-    BAD_ARGUMENT_NAME,
+    INVALID_ARGUMENT,
     CONFIGURATION,
+    HELP_SHOW,
 }
 
 enum ArgType : int
@@ -47,10 +48,10 @@ struct ArgParse {
         // Internal ArgParse state after calling argparse::parse()
 
         int argc;
-        char** argv;
-        char** out;
+        String[] argv;
+        String[] out;
         int cpidx;
-        char* optvalue; 
+        String optvalue; 
         bool has_argument;
     }
 }
@@ -126,22 +127,230 @@ fn void! ArgParse.options_check(&self) @local
     }
 }
 
+
+fn void! ArgParse.get_arg_val(&self, ArgOpt* opt)
+{
+    assert(opt);
+    if (opt._arg_type == ArgType.HELP) {
+        return ArgError.HELP_SHOW?;
+    }
+//
+//     assert(opt.value);
+//
+//     switch (opt.type) {
+//         case 2 /*ARGPARSE_OPT_BOOLEAN*/:
+//             if (flags & ARGPARSE_OPT_UNSET) {
+//                 *(int*)opt.value = 0;
+//             } else {
+//                 *(int*)opt.value = 1;
+//             }
+//             opt.is_present = true;
+//             break;
+//         case 6 /*ARGPARSE_OPT_STRING*/:
+//             if (self._ctx.optvalue) {
+//                 *(const char**)opt.value = self._ctx.optvalue;
+//                 self._ctx.optvalue = NULL;
+//             } else if (self._ctx.argc > 1) {
+//                 self._ctx.argc--;
+//                 self._ctx.cpidx++;
+//                 *(const char**)opt.value = *++self._ctx.argv;
+//             } else {
+//                 return argparse__error(self, opt, "requires a value", flags);
+//             }
+//             opt.is_present = true;
+//             break;
+//         case 4 /*ARGPARSE_OPT_INTEGER*/:
+//             errno = 0;
+//             if (self._ctx.optvalue) {
+//                 if (self._ctx.optvalue[0] == '\0') {
+//                     return argparse__error(self, opt, "requires a value", flags);
+//                 }
+//
+//                 *(int*)opt.value = strtol(self._ctx.optvalue, (char**)&s, 0);
+//                 self._ctx.optvalue = NULL;
+//             } else if (self._ctx.argc > 1) {
+//                 self._ctx.argc--;
+//                 self._ctx.cpidx++;
+//                 *(int*)opt.value = strtol(*++self._ctx.argv, (char**)&s, 0);
+//             } else {
+//                 return argparse__error(self, opt, "requires a value", flags);
+//             }
+//             if (errno == ERANGE) {
+//                 return argparse__error(self, opt, "numerical result out of range", flags);
+//             }
+//             if (s[0] != '\0') { // no digits or contains invalid characters
+//                 return argparse__error(self, opt, "expects an integer value", flags);
+//             }
+//             opt.is_present = true;
+//             break;
+//         case 5 /*ARGPARSE_OPT_FLOAT*/:
+//             errno = 0;
+//
+//             if (self._ctx.optvalue) {
+//                 if (self._ctx.optvalue[0] == '\0') {
+//                     return argparse__error(self, opt, "requires a value", flags);
+//                 }
+//                 *(float*)opt.value = strtof(self._ctx.optvalue, (char**)&s);
+//                 self._ctx.optvalue = NULL;
+//             } else if (self._ctx.argc > 1) {
+//                 self._ctx.argc--;
+//                 self._ctx.cpidx++;
+//                 *(float*)opt.value = strtof(*++self._ctx.argv, (char**)&s);
+//             } else {
+//                 return argparse__error(self, opt, "requires a value", flags);
+//             }
+//             if (errno == ERANGE) {
+//                 return argparse__error(self, opt, "numerical result out of range", flags);
+//             }
+//             if (s[0] != '\0') { // no digits or contains invalid characters
+//                 return argparse__error(self, opt, "expects a numerical value", flags);
+//             }
+//             opt.is_present = true;
+//             break;
+//         default:
+//             uassert(false && "unhandled");
+//             return Error.runtime;
+//     }
+//
+// skipped:
+//     if (opt.callback) {
+//         opt.is_present = true;
+//         return opt.callback(self, opt);
+//     } else {
+//         if (opt.short_name == 'h') {
+//             argparse_usage(self);
+//             return Error.argsparse;
+//         }
+//     }
+//
+//     return Error.ok;
+}
+
+fn void! ArgParse.parse_short(&self) @local
+{
+    foreach(&opt: self.options){
+        if (opt.short_name == self._ctx.optvalue[0]) {
+            self._ctx.optvalue = self._ctx.optvalue.len > 1 ? self._ctx.optvalue[1..] : "";
+            return self.get_arg_val(opt);
+        }
+    }
+}
+
+fn String prefix_skip(String s, String prefix) @local
+{
+    if(s.starts_with(prefix)) {
+        return s[prefix.len..];
+    } else {
+        return "";
+    }
+}
+
+fn void! ArgParse.parse_long(&self) @local
+{
+    foreach(&opt: self.options){
+        if (!opt.long_name) {
+            continue;
+        }
+
+        int opt_flags = 0;
+        String arg = prefix_skip(self._ctx.argv[0][2..], opt.long_name);
+        if (!arg) {
+            // unreachable();
+            // // negation disabled?
+            // if (options.flags & ARGPARSE_OPT_NONEG) {
+            //     continue;
+            // }
+            // // only OPT_BOOLEAN/OPT_BIT supports negation
+            // if (options.type != 2 /*ARGPARSE_OPT_BOOLEAN*/ &&
+            //     options.type != 3 /*ARGPARSE_OPT_BIT*/) {
+            //     continue;
+            // }
+            //
+            // if (argparse__prefix_cmp(self._ctx.argv[0] + 2, "no-")) {
+            //     continue;
+            // }
+            // arg = prefix_skip(self._ctx.argv[0] + 2 + 3, options.long_name);
+            // if (!arg) {
+            //     continue;
+            // }
+            // opt_flags |= ARGPARSE_OPT_UNSET;
+        }
+        if (arg && arg[0] == '=') {
+            self._ctx.optvalue = arg[1..];
+        }
+        return self.get_arg_val(opt);
+    }
+    return ArgError.INVALID_ARGUMENT?;
+}
+
 fn void! ArgParse.parse(&self, String[] argv) {
     assert(self.arguments.len == 0, "ArgParse already initialized or double parse call");
     assert(argv.len > 0);
 
-    self._ctx.argc = argv.len;
+    self._ctx.argc = argv.len - 1;
+    self._ctx.argv = argv[1..];
+    self._ctx.out = argv;
 
     if (!self.program_name){
         self.program_name = argv[0];
     }
     self.options_check()!;
 
+    for (; self._ctx.argc; self._ctx.argc--) {
+        String arg = self._ctx.argv[0];
+
+        if (arg[0] != '-' || !arg[1]) {
+            self._ctx.has_argument = true;
+
+            if (self.flags.stop_at_non_option) {
+                self._ctx.argc--;
+                self._ctx.argv = self._ctx.argv[1..];
+                break;
+            }
+            continue;
+        }
+        // short option
+        if (arg[1] != '-') {
+            // if (self._ctx.has_argument) {
+            //     // options are not allowed after arguments
+            //     return argparse__report_error(self, Error.integrity);
+            // }
+
+            self._ctx.optvalue = arg[1..];
+            self._ctx.cpidx++;
+            self.parse_short()!;
+            // while (self._ctx.optvalue) {
+            //     e$except_silent(err, argparse__short_opt(self, self.options))
+            //     {
+            //         return argparse__report_error(self, err);
+            //     }
+            // }
+            continue;
+        }
+        // if '--' presents
+        if (!arg[2]) {
+            self._ctx.argc--;
+            self._ctx.argv = self._ctx.argv[1..];
+            self._ctx.cpidx++;
+            break;
+        }
+        // // long option
+        // if (self._ctx.has_argument) {
+        //     // options are not allowed after arguments
+        //     return argparse__report_error(self, Error.integrity);
+        // }
+
+        self.parse_long()!;
+        self._ctx.cpidx++;
+        continue;
+    }
+
     self.options_ensure_required()!;
+
+    self.arguments = argv[self._ctx.cpidx + 1..]; // excludes 1st argv[0], program_name
 }
 
 fn void! ArgParse.print_usage(&self) {
-    assert(self._ctx.argc != 0, "ArgParse.parse() was not called?");
 
     io::printf("\nUsage:\n");
     if (self.usage) {
