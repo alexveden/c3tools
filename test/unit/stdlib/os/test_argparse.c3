@@ -28,6 +28,7 @@ fn void! test_simple_arg_init() {
 	test::eq(agp.description, "test ArgParse program");
 	test::eq(agp.epilog, "ArgParse epilog");
 	test::eq(agp.options.len, 5);
+	test::eq(agp.program_name, "testprog");
 }
 
 fn void! test_help_show() {
@@ -44,7 +45,6 @@ fn void! test_help_show() {
 
     String[] args = {"testprog", "-h"}; 
 	test::@error(agp.parse(args), ArgError.HELP_SHOW);
-
 }
 
 fn void! test_help_show_long() {
@@ -64,3 +64,251 @@ fn void! test_help_show_long() {
 
 }
 
+fn void! test_bool_flag() {
+
+	bool val = false;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'f', .long_name = "flt", .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "-f"}; 
+    test::eq(val, false);
+    test::eq(agp.options[0].is_present, false);
+
+	agp.parse(args)!;
+
+    test::eq(val, true);
+    test::eq(agp.options[0].is_present, true);
+}
+
+fn void! test_bool_flag_default() {
+
+	bool val = true;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'f', .long_name = "flt", .value = &val},
+		}
+	};
+
+    String[] args = {"testprog"}; 
+    test::eq(val, true);
+    test::eq(agp.options[0].is_present, false);
+
+	agp.parse(args)!;
+
+    test::eq(val, true);
+    test::eq(agp.options[0].is_present, false);
+}
+
+fn void! test_bool_flag_unset() {
+
+	bool val = true;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'f', .long_name = "flt", .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "--no-flt"}; 
+    test::eq(val, true);
+    test::eq(agp.options[0].is_present, false);
+
+	agp.parse(args)!;
+
+    test::eq(val, false);
+    test::eq(agp.options[0].is_present, true);
+}
+
+fn void! test_str_default() {
+
+	String val = "foo";
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'f', .long_name = "flt", .value = &val},
+		}
+	};
+
+    String[] args = {"testprog"}; 
+    test::eq(val, "foo");
+    test::eq(agp.options[0].is_present, false);
+
+	agp.parse(args)!;
+
+    test::eq(val, "foo");
+    test::eq(agp.options[0].is_present, false);
+}
+
+fn void! test_str_set_equal() {
+
+	String val = "foo";
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'f', .long_name = "flt", .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "--flt=bar"}; 
+    test::eq(val, "foo");
+    test::eq(agp.options[0].is_present, false);
+
+	agp.parse(args)!;
+
+    test::eq(val, "bar");
+    test::eq(agp.options[0].is_present, true);
+}
+
+fn void! test_str_set_next_arg() {
+
+	String val = "foo";
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'f', .long_name = "flt", .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "--flt", "bar"}; 
+    test::eq(val, "foo");
+    test::eq(agp.options[0].is_present, false);
+
+	agp.parse(args)!;
+
+    test::eq(val, "bar");
+    test::eq(agp.options[0].is_present, true);
+}
+
+
+fn void! test_str_set_short_arg() {
+
+	String val = "foo";
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'f', .long_name = "flt", .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "-f", "bar"}; 
+    test::eq(val, "foo");
+    test::eq(agp.options[0].is_present, false);
+
+	agp.parse(args)!;
+
+    test::eq(val, "bar");
+    test::eq(agp.options[0].is_present, true);
+}
+
+fn void! test_invalid_arg_short() {
+
+	String val = "foo";
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'f', .long_name = "flt", .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "-z"}; 
+	test::@error(agp.parse(args), ArgError.INVALID_ARGUMENT);
+}
+
+fn void! test_invalid_arg_long() {
+
+	String val = "foo";
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'f', .long_name = "flt", .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "--zooo"}; 
+	test::@error(agp.parse(args), ArgError.INVALID_ARGUMENT);
+}
+
+fn void! test_missing_require_argument() {
+
+	bool val = false;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'f', .long_name = "flt", .value = &val, .required = true},
+		}
+	};
+
+    String[] args = {"testprog"}; 
+	test::@error(agp.parse(args), ArgError.MISSING_ARGUMENT);
+}
+
+
+fn void! test_missing_require_arguments_many() {
+
+	bool val = false;
+	bool val2 = false;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'f', .long_name = "flt", .value = &val, .required = true},
+			{.short_name = 'z', .long_name = "zzz", .value = &val, .required = true},
+		}
+	};
+
+    String[] args = {"testprog"}; 
+	test::@error(agp.parse(args), ArgError.MISSING_ARGUMENT);
+}
+
+fn void! test_passing_short_option_after_argument() {
+
+	bool val = false;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'f', .long_name = "flt", .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "foo", "-f"}; 
+	test::@error(agp.parse(args), ArgError.INVALID_ARGUMENT);
+}
+
+fn void! test_passing_long_option_after_argument() {
+
+	bool val = false;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'f', .long_name = "flt", .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "foo", "--flt"}; 
+	test::@error(agp.parse(args), ArgError.INVALID_ARGUMENT);
+}
+
+fn void! test_multiple_short_args() {
+
+	bool val = false;
+	bool val2 = false;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'f', .long_name = "flt", .value = &val},
+			{.short_name = 'z', .long_name = "zzz", .value = &val2},
+		}
+	};
+
+    String[] args = {"testprog", "-f", "-z"}; 
+    agp.parse(args)!;
+
+    test::eq(val, true);
+    test::eq(val2, true);
+    test::eq(agp.options[0].is_present, true);
+    test::eq(agp.options[1].is_present, true);
+}

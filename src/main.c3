@@ -6,6 +6,10 @@ import std::os::argparse;
 fn int main(String[] args)
 {
 	int val = 0;
+	any aval = &val;
+
+	int* pval = anycast(aval, int)!!;
+	
 	String s;
 	float f = 0.0;
 	argparse::ArgParse agp = {

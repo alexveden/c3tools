@@ -76,6 +76,7 @@ macro group_opt(String group_name) {
 
 fn void! ArgParse.options_ensure_required(&self) @local
 {
+    bool has_errors = false;
     foreach(i, opt: self.options){
         if (opt._arg_type == ArgType.GROUP || opt._arg_type == ArgType.HELP) {
             continue;
@@ -87,8 +88,11 @@ fn void! ArgParse.options_ensure_required(&self) @local
                 opt.short_name,
                 opt.long_name
             );
-            return ArgError.MISSING_ARGUMENT?;
+            has_errors = true;
         }
+    }
+    if (has_errors){
+        return ArgError.MISSING_ARGUMENT?;
     }
 }
 fn void! ArgParse.options_check(&self) @local
@@ -109,6 +113,7 @@ fn void! ArgParse.options_check(&self) @local
         }
 
         switch (opt.value.type) {
+            case bool.typeid:
             case short.typeid:
             case ushort.typeid:
             case int.typeid:
@@ -128,11 +133,32 @@ fn void! ArgParse.options_check(&self) @local
 }
 
 
-fn void! ArgParse.get_arg_val(&self, ArgOpt* opt)
+fn void! ArgParse.get_arg_val(&self, ArgOpt* opt, bool flag_unset = false)
 {
     assert(opt);
     if (opt._arg_type == ArgType.HELP) {
         return ArgError.HELP_SHOW?;
+    }
+    assert(opt.value);
+
+    switch (opt.value.type) {
+        case bool.typeid:
+            bool* pvalue = anycast(opt.value, bool)!;
+            *pvalue = (flag_unset) ? false : true;
+            opt.is_present = true;
+        case String.typeid:
+            assert(!flag_unset, "only for bool");
+            String* pvalue = anycast(opt.value, String)!;
+            if(self._ctx.optvalue) {
+                // --arg=<optvalue> via =
+                *pvalue = self._ctx.optvalue;
+                self._ctx.optvalue = "";
+            } else if(self._ctx.argv.len > 1) {
+                self._ctx.argv = self._ctx.argv[1..];
+                self._ctx.cpidx++;
+                *pvalue = self._ctx.argv[0];
+            }
+            opt.is_present = true;
     }
 //
 //     assert(opt.value);
@@ -234,14 +260,16 @@ fn void! ArgParse.parse_short(&self) @local
             return self.get_arg_val(opt);
         }
     }
+    io::printf("Error: invalid argument %s\n", self._ctx.argv[0]);
+    return ArgError.INVALID_ARGUMENT?;
 }
 
-fn String prefix_skip(String s, String prefix) @local
+fn String! prefix_skip(String s, String prefix) @local
 {
     if(s.starts_with(prefix)) {
         return s[prefix.len..];
     } else {
-        return "";
+        return ArgError.MISSING_ARGUMENT?;
     }
 }
 
@@ -253,33 +281,32 @@ fn void! ArgParse.parse_long(&self) @local
         }
 
         int opt_flags = 0;
-        String arg = prefix_skip(self._ctx.argv[0][2..], opt.long_name);
-        if (!arg) {
-            // unreachable();
-            // // negation disabled?
-            // if (options.flags & ARGPARSE_OPT_NONEG) {
-            //     continue;
-            // }
-            // // only OPT_BOOLEAN/OPT_BIT supports negation
-            // if (options.type != 2 /*ARGPARSE_OPT_BOOLEAN*/ &&
-            //     options.type != 3 /*ARGPARSE_OPT_BIT*/) {
-            //     continue;
-            // }
-            //
-            // if (argparse__prefix_cmp(self._ctx.argv[0] + 2, "no-")) {
-            //     continue;
-            // }
-            // arg = prefix_skip(self._ctx.argv[0] + 2 + 3, options.long_name);
-            // if (!arg) {
-            //     continue;
-            // }
-            // opt_flags |= ARGPARSE_OPT_UNSET;
+        bool flag_unset = false;
+        String! arg = prefix_skip(self._ctx.argv[0][2..], opt.long_name);
+        if(catch err = arg){
+            switch(err){
+                case ArgError.MISSING_ARGUMENT:
+                    // NOTE: for boolean flags it's possible to pass unset with '--no-<flag_name>'
+                    if (opt.value.type == bool.typeid && 
+                        self._ctx.argv[0][2..].starts_with("no-"))
+                    {
+                        flag_unset = true;
+                    } else {
+                        continue;
+                    } 
+                default: 
+                    unreachable();
+            }
+        } else {
+            if (arg && arg[0] == '=') {
+                self._ctx.optvalue = arg[1..];
+            }
         }
-        if (arg && arg[0] == '=') {
-            self._ctx.optvalue = arg[1..];
-        }
-        return self.get_arg_val(opt);
+
+        return self.get_arg_val(opt, flag_unset);
     }
+
+    io::printf("Error: invalid argument %s\n", self._ctx.argv[0]);
     return ArgError.INVALID_ARGUMENT?;
 }
 
@@ -288,6 +315,7 @@ fn void! ArgParse.parse(&self, String[] argv) {
     assert(argv.len > 0);
 
     self._ctx.argc = argv.len - 1;
+    self._ctx.cpidx = 0;
     self._ctx.argv = argv[1..];
     self._ctx.out = argv;
 
@@ -296,29 +324,37 @@ fn void! ArgParse.parse(&self, String[] argv) {
     }
     self.options_check()!;
 
-    for (; self._ctx.argc; self._ctx.argc--) {
+    for (; self._ctx.argc && self._ctx.argv.len; self._ctx.argc--) {
         String arg = self._ctx.argv[0];
+        // io::printf("arg: %s\n", arg);
 
-        if (arg[0] != '-' || !arg[1]) {
+        if (arg[0] != '-' || arg[1] == '\0') {
             self._ctx.has_argument = true;
 
             if (self.flags.stop_at_non_option) {
                 self._ctx.argc--;
                 self._ctx.argv = self._ctx.argv[1..];
                 break;
+            } else {
+                self._ctx.argv = self._ctx.argv[1..];
             }
             continue;
         }
         // short option
         if (arg[1] != '-') {
-            // if (self._ctx.has_argument) {
-            //     // options are not allowed after arguments
-            //     return argparse__report_error(self, Error.integrity);
-            // }
-
             self._ctx.optvalue = arg[1..];
             self._ctx.cpidx++;
+
+            if (self._ctx.has_argument) {
+                io::printf("Error: passing options after arguments not allowed at `%s`\n", arg);
+                return ArgError.INVALID_ARGUMENT?;
+            }
+
             self.parse_short()!;
+
+            self._ctx.argv = self._ctx.argv[1..];
+
+            // TODO:
             // while (self._ctx.optvalue) {
             //     e$except_silent(err, argparse__short_opt(self, self.options))
             //     {
@@ -328,21 +364,21 @@ fn void! ArgParse.parse(&self, String[] argv) {
             continue;
         }
         // if '--' presents
-        if (!arg[2]) {
+        if (arg[2] == '\0') {
             self._ctx.argc--;
             self._ctx.argv = self._ctx.argv[1..];
             self._ctx.cpidx++;
             break;
         }
-        // // long option
-        // if (self._ctx.has_argument) {
-        //     // options are not allowed after arguments
-        //     return argparse__report_error(self, Error.integrity);
-        // }
+
+        if (self._ctx.has_argument) {
+            io::printf("Error: passing options after arguments not allowed at `%s`\n", arg);
+            return ArgError.INVALID_ARGUMENT?;
+        }
 
         self.parse_long()!;
         self._ctx.cpidx++;
-        continue;
+        self._ctx.argv = self._ctx.argv[1..];
     }
 
     self.options_ensure_required()!;
@@ -452,8 +488,10 @@ fn void! ArgParse.print_usage(&self) {
             pad = usage_opts_width;
         }
         io::printf("%*s%s", (int)pad + 2, "", opt.help);
-        if (opt.default_value) {
-           io::printf(" (default: %s)", opt.default_value); 
+        if (!opt.required) {
+            if(opt.value) io::printf(" [default: %s]", opt.value); 
+        } else {
+            io::printf(" (required)");
         }
         io::print("\n");
     }
