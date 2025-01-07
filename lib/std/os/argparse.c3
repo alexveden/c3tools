@@ -152,6 +152,7 @@ fn void! ArgParse.print_usage(&self) {
                 }
                 io::printf("%s %s\n", path.basename(), usage);
             }
+            io::print("\n");
         };
     } else {
         io::printf("%s [options] [--] [arg1 argN]\n\n", self.program_name);

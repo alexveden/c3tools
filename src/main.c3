@@ -47,17 +47,19 @@ fn void! command_handler(argparse::ArgParse* args){
 fn int main(String[] args)
 {
 	int val = 0;
+	bool flag = false;
 	String s;
 	float f = 0.0;
 	argparse::ArgParse agp = {
 		.description = "test ArgParse program",
-		.usage = "{hello,add} [cmd-args]",
+		.usage = "[c3test args] {hello,add} [cmd-args]",
 		.epilog= "ArgParse epilog",
 		.options = { 
 			argparse::help_opt(),
 			argparse::group_opt("Basic options"),
 			{.short_name = 'a', .long_name = "all", .value = &val, .help = "This is a sample option"},
-			{.short_name = 's', .long_name = "string", .value = &s, .help = "Simple string"},
+			{ .long_name = "string", .value = &s, .help = "Simple long_name string"},
+			{ .short_name = 'f', .value = &flag, .help = "short opt flag"},
 		}, 
 		.flags = {
 			.stop_at_non_option = true, // NOTE: this is crucial for sub commands 
