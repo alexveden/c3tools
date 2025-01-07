@@ -17,17 +17,16 @@ fn double! divide(int a, int b)
 
 
 module test::sample::m @test;
-import std::testing::test;
 import std::io;
 import sample::m;
 
 fn void! test_div() {
-    test::eq(2, m::divide(6, 3)!);
-    test::neq(1, 2);
-    test::gte(3, 3);
-    test::gt(2, m::divide(3, 3)!);
-    test::lt(2, 3);
-    test::lte(2, 3);
+    test::equal(2, m::divide(6, 3)!);
+    test::not_equal(1, 2);
+    test::greater_equal(3, 3);
+    test::greater(2, m::divide(3, 3)!);
+    test::less(2, 3);
+    test::less_equal(2, 3);
     test::@check(m::foo() == 123, "foo is %d", m::foo());
     test::@error(m::divide(3, 0), MathError.DIVISION_BY_ZERO);
 }
@@ -53,12 +52,12 @@ TestContext state @local  = {
 };
 
 fn void! test_with_setup_teardown() {
-    test::eq(0, state.n_runs);
+    test::equal(0, state.n_runs);
     test::setup(state.setup_fn, state.teardown_fn);
-    test::eq(777, state.n_runs);
+    test::equal(777, state.n_runs);
 
-    test::eq(2, m::divide(6, 3)!);
+    test::equal(2, m::divide(6, 3)!);
 
     // NOTE: next line will fail, but teardown_fn is triggered
-    // test::eq(1, 0); 
+    // test::equal(1, 0); 
 }

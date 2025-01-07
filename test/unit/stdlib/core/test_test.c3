@@ -1,5 +1,5 @@
-module test::std::testing::test @test;
-import std::testing::test @public;
+module test::std::core::test @test;
+import std::core::test @public;
 import std::core::builtin;
 import std::io;
 
@@ -71,26 +71,26 @@ TestState state = {
 
 
 fn void! test_eq(){
-    test::eq(1, 1);
-    test::eq(true, true);
-    test::eq(1.31, 1.31);
-    test::eq("foo", "foo");
+    test::equal(1, 1);
+    test::equal(true, true);
+    test::equal(1.31, 1.31);
+    test::equal("foo", "foo");
 }
 
 fn void! setup_teardown(){
     test::setup(state.setup_fn, state.teardown_fn);
 
-    test::eq(state.n_runs, 1);
-    test::eq(state.n_fails, 0);
-    test::eq(state.expected_fail, false);
+    test::equal(state.n_runs, 1);
+    test::equal(state.n_fails, 0);
+    test::equal(state.expected_fail, false);
 }
 
 fn void! setup_no_teardown(){
     test::setup(state.setup_fn);
 
-    test::eq(state.n_runs, 1);
-    test::eq(state.n_fails, 0);
-    test::eq(state.expected_fail, false);
+    test::equal(state.n_runs, 1);
+    test::equal(state.n_fails, 0);
+    test::equal(state.expected_fail, false);
 
     // WARNING: reverting back original panic func
 	builtin::panic = state.old_panic;
@@ -99,112 +99,112 @@ fn void! setup_no_teardown(){
 fn void! expected_fail(){
     test::setup(state.setup_fn, state.teardown_fn);
     state.expected_fail = true;
-    test::eq(state.n_fails, 0);
-    test::eq(2, 1); // this fails, and we test it
-    test::eq(state.n_fails, 1);
+    test::equal(state.n_fails, 0);
+    test::equal(2, 1); // this fails, and we test it
+    test::equal(state.n_fails, 1);
 }
 
 fn void! setup_failed_when_setup_fn_failed(){
-    test::eq(state.n_fails, 0);
-    test::eq(state.n_runs, 0);
+    test::equal(state.n_fails, 0);
+    test::equal(state.n_runs, 0);
     state.setup_fail = true;
     state.expected_fail = true;
     test::setup(state.setup_fn, state.teardown_fn);
-    test::eq(state.n_runs, 1);
-    test::eq(state.n_fails, 1);
+    test::equal(state.n_runs, 1);
+    test::equal(state.n_fails, 1);
 }
 
 fn void! setup_no_effect_when_teardown_fn_failed(){
-    test::eq(state.n_fails, 0);
-    test::eq(state.n_runs, 0);
+    test::equal(state.n_fails, 0);
+    test::equal(state.n_runs, 0);
     state.teardown_fail = true;
     test::setup(state.setup_fn, state.teardown_fn);
-    test::eq(state.n_runs, 1);
-    test::eq(state.n_fails, 0);
+    test::equal(state.n_runs, 1);
+    test::equal(state.n_fails, 0);
 }
 
 fn void! test_neq(){
-    test::neq(2, 1);
-    test::neq(false, true);
-    test::neq(1.32, 1.31);
-    test::neq("foo", "bar");
+    test::not_equal(2, 1);
+    test::not_equal(false, true);
+    test::not_equal(1.32, 1.31);
+    test::not_equal("foo", "bar");
 }
 
 fn void! test_neq_fails(){
     test::setup(state.setup_fn, state.teardown_fn);
     state.expected_fail = true;
-    test::neq(1, 1);
+    test::not_equal(1, 1);
 }
 
 fn void! test_gt(){
-    test::gt(2, 1);
-    test::gt(true, false);
-    test::gt(1.32, 1.31);
-    //test::gt("fooooooo", "bar"); // NOTE: Error: @require "types::@comparable_value(a) && types::@comparable_value(b)" violated
+    test::greater(2, 1);
+    test::greater(true, false);
+    test::greater(1.32, 1.31);
+    //test::greater("fooooooo", "bar"); // NOTE: Error: @require "types::@comparable_value(a) && types::@comparable_value(b)" violated
 }
 
 fn void! test_gt_fails_when_equal(){
     test::setup(state.setup_fn, state.teardown_fn);
     state.expected_fail = true;
-    test::gt(2, 2);
+    test::greater(2, 2);
 }
 
 fn void! test_gt_fails_when_less(){
     test::setup(state.setup_fn, state.teardown_fn);
     state.expected_fail = true;
-    test::gt(1, 2);
+    test::greater(1, 2);
 }
 
 
 fn void! test_gte(){
-    test::gte(2, 1);
-    test::gte(true, false);
-    test::gte(1.32, 1.31);
-    test::gte(2, 2);
-    test::gte(true, true);
-    test::gte(1.32, 1.32);
-    //test::gt("fooooooo", "bar"); // NOTE: Error: @require "types::@comparable_value(a) && types::@comparable_value(b)" violated
+    test::greater_equal(2, 1);
+    test::greater_equal(true, false);
+    test::greater_equal(1.32, 1.31);
+    test::greater_equal(2, 2);
+    test::greater_equal(true, true);
+    test::greater_equal(1.32, 1.32);
+    //test::greater("fooooooo", "bar"); // NOTE: Error: @require "types::@comparable_value(a) && types::@comparable_value(b)" violated
 }
 
 fn void! test_gte_fails_when_less(){
     test::setup(state.setup_fn, state.teardown_fn);
     state.expected_fail = true;
-    test::gte(1, 2);
+    test::greater_equal(1, 2);
 }
 
 fn void! test_lt(){
-    test::lt(1, 2);
-    test::lt(false, true);
-    test::lt(1.31, 1.32);
-    //test::lt("fooooooo", "bar"); // NOTE: Error: @require "types::@comparable_value(a) && types::@comparable_value(b)" violated
+    test::less(1, 2);
+    test::less(false, true);
+    test::less(1.31, 1.32);
+    //test::less("fooooooo", "bar"); // NOTE: Error: @require "types::@comparable_value(a) && types::@comparable_value(b)" violated
 }
 
 fn void! test_lt_fails_when_equal(){
     test::setup(state.setup_fn, state.teardown_fn);
     state.expected_fail = true;
-    test::lt(2, 2);
+    test::less(2, 2);
 }
 
 fn void! test_lt_fails_when_greater(){
     test::setup(state.setup_fn, state.teardown_fn);
     state.expected_fail = true;
-    test::lt(2, 1);
+    test::less(2, 1);
 }
 
 fn void! test_lte(){
-    test::lte(1, 2);
-    test::lte(false, true);
-    test::lte(1.31, 1.32);
-    test::lte(2, 2);
-    test::lte(true, true);
-    test::lte(1.32, 1.32);
-    //test::lte("fooooooo", "bar"); // NOTE: Error: @require "types::@comparable_value(a) && types::@comparable_value(b)" violated
+    test::less_equal(1, 2);
+    test::less_equal(false, true);
+    test::less_equal(1.31, 1.32);
+    test::less_equal(2, 2);
+    test::less_equal(true, true);
+    test::less_equal(1.32, 1.32);
+    //test::less_equal("fooooooo", "bar"); // NOTE: Error: @require "types::@comparable_value(a) && types::@comparable_value(b)" violated
 }
 
 fn void! test_lte_fails_when_greater(){
     test::setup(state.setup_fn, state.teardown_fn);
     state.expected_fail = true;
-    test::lte(2, 1);
+    test::less_equal(2, 1);
 }
 
 fn void! test_check(){
@@ -243,6 +243,8 @@ fn void! test_error(){
         return a / b;
     };
     test::setup(state.setup_fn, state.teardown_fn);
+    // int result = test::@ok(ffail_int(6, 2));
+    // test::equal(result, 3);
 
     test::@error(ffail_void(), IoError.FILE_NOT_FOUND);
     test::@error(ffail_int(1, 0), IoError.FILE_NOT_FOUND);

@@ -1,4 +1,4 @@
-module std::testing::test;
+module std::core::test;
 import std::core::builtin;
 import libc, std::time, std::io, std::sort;
 
@@ -95,6 +95,16 @@ macro @error(#funcresult, error_expected) {
     }
 }
 
+// TODO: implement this
+macro @ok(#funcresult) {
+    if(catch err = #funcresult) {
+    		test_context.assert_print_backtrace = false;
+	    	builtin::panicf("`%s` expected to return, got error [%s]",
+	    					$$FILE, $$FUNC, $$LINE, 
+	    					$stringify(#funcresult), err);
+    }
+}
+
 <*
 Check if left == right
 
@@ -103,8 +113,8 @@ Check if left == right
 
 @require test_context != null, "allowed only in @test functions"
 *>
-macro eq(left, right) { 
-    if(!equals(left, right)) {
+macro equal(left, right) { 
+    if(!builtin::equals(left, right)) {
     	test_context.assert_print_backtrace = false;
 	    builtin::panicf("`%s` != `%s`", $$FILE, $$FUNC, $$LINE, left, right);
     }
@@ -118,8 +128,8 @@ Check if left != right
 
 @require test_context != null, "allowed only in @test functions"
 *>
-macro neq(left, right) { 
-    if(equals(left, right)) {
+macro not_equal(left, right) { 
+    if(builtin::equals(left, right)) {
     	test_context.assert_print_backtrace = false;
 	    builtin::panicf("`%s` == `%s`", $$FILE, $$FUNC, $$LINE, left, right);
     }
@@ -133,8 +143,8 @@ Check if left > right
 
 @require test_context != null, "allowed only in @test functions"
 *>
-macro gt(left, right) { 
-    if(!greater(left, right)) {
+macro greater(left, right) { 
+    if(!builtin::greater(left, right)) {
     	test_context.assert_print_backtrace = false;
 	    builtin::panicf("`%s` <= `%s`", $$FILE, $$FUNC, $$LINE, left, right);
     }
@@ -148,8 +158,8 @@ Check if left >= right
 
 @require test_context != null, "allowed only in @test functions"
 *>
-macro gte(left, right) { 
-    if(!greater_eq(left, right)) {
+macro greater_equal(left, right) { 
+    if(!builtin::greater_eq(left, right)) {
     	test_context.assert_print_backtrace = false;
 	    builtin::panicf("`%s` < `%s`", $$FILE, $$FUNC, $$LINE, left, right);
     }
@@ -163,8 +173,8 @@ Check if left < right
 
 @require test_context != null, "allowed only in @test functions"
 *>
-macro lt(left, right) { 
-    if(!less(left, right)) {
+macro less(left, right) { 
+    if(!builtin::less(left, right)) {
     	test_context.assert_print_backtrace = false;
 	    builtin::panicf("`%s` >= `%s`", $$FILE, $$FUNC, $$LINE, left, right);
     }
@@ -178,8 +188,8 @@ Check if left <= right
 
 @require test_context != null, "allowed only in @test functions"
 *>
-macro lte(left, right) { 
-    if(!less_eq(left, right)) {
+macro less_equal(left, right) { 
+    if(!builtin::less_eq(left, right)) {
     	test_context.assert_print_backtrace = false;
 	    builtin::panicf("`%s` > `%s`", $$FILE, $$FUNC, $$LINE, left, right);
     }
@@ -266,7 +276,7 @@ fn bool run_tests(TestUnit[] tests) @private
 	TestContext context = {
 		.assert_print_backtrace = true,
 		//.breakpoint_on_assert = true,
-		.test_filter = "test::std::os::argparse::",
+		//.test_filter = "test::std::os::argparse::",
 		.has_ansi = terminal_has_ansi(),
 	};
 	test_context = &context;

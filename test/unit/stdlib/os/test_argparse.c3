@@ -1,6 +1,5 @@
 module test::std::os::argparse @test;
 import std::os::argparse;
-import std::testing::test;
 
 
 fn void! test_simple_arg_init() {
@@ -24,11 +23,11 @@ fn void! test_simple_arg_init() {
     String[] args = {"testprog"}; 
 	agp.parse(args)!;
 
-	test::eq(agp.usage, "option -sdf -[sdf]");
-	test::eq(agp.description, "test ArgParse program");
-	test::eq(agp.epilog, "ArgParse epilog");
-	test::eq(agp.options.len, 5);
-	test::eq(agp.program_name, "testprog");
+	test::equal(agp.usage, "option -sdf -[sdf]");
+	test::equal(agp.description, "test ArgParse program");
+	test::equal(agp.epilog, "ArgParse epilog");
+	test::equal(agp.options.len, 5);
+	test::equal(agp.program_name, "testprog");
 }
 
 fn void! test_help_show() {
@@ -75,13 +74,13 @@ fn void! test_bool_flag() {
 	};
 
     String[] args = {"testprog", "-f"}; 
-    test::eq(val, false);
-    test::eq(agp.options[0].is_present, false);
+    test::equal(val, false);
+    test::equal(agp.options[0].is_present, false);
 
 	agp.parse(args)!;
 
-    test::eq(val, true);
-    test::eq(agp.options[0].is_present, true);
+    test::equal(val, true);
+    test::equal(agp.options[0].is_present, true);
 }
 
 fn void! test_bool_flag_default() {
@@ -95,13 +94,13 @@ fn void! test_bool_flag_default() {
 	};
 
     String[] args = {"testprog"}; 
-    test::eq(val, true);
-    test::eq(agp.options[0].is_present, false);
+    test::equal(val, true);
+    test::equal(agp.options[0].is_present, false);
 
 	agp.parse(args)!;
 
-    test::eq(val, true);
-    test::eq(agp.options[0].is_present, false);
+    test::equal(val, true);
+    test::equal(agp.options[0].is_present, false);
 }
 
 fn void! test_bool_flag_unset() {
@@ -115,13 +114,13 @@ fn void! test_bool_flag_unset() {
 	};
 
     String[] args = {"testprog", "--no-flt"}; 
-    test::eq(val, true);
-    test::eq(agp.options[0].is_present, false);
+    test::equal(val, true);
+    test::equal(agp.options[0].is_present, false);
 
 	agp.parse(args)!;
 
-    test::eq(val, false);
-    test::eq(agp.options[0].is_present, true);
+    test::equal(val, false);
+    test::equal(agp.options[0].is_present, true);
 }
 
 fn void! test_str_default() {
@@ -135,13 +134,13 @@ fn void! test_str_default() {
 	};
 
     String[] args = {"testprog"}; 
-    test::eq(val, "foo");
-    test::eq(agp.options[0].is_present, false);
+    test::equal(val, "foo");
+    test::equal(agp.options[0].is_present, false);
 
 	agp.parse(args)!;
 
-    test::eq(val, "foo");
-    test::eq(agp.options[0].is_present, false);
+    test::equal(val, "foo");
+    test::equal(agp.options[0].is_present, false);
 }
 
 fn void! test_str_set_equal() {
@@ -155,13 +154,13 @@ fn void! test_str_set_equal() {
 	};
 
     String[] args = {"testprog", "--flt=bar"}; 
-    test::eq(val, "foo");
-    test::eq(agp.options[0].is_present, false);
+    test::equal(val, "foo");
+    test::equal(agp.options[0].is_present, false);
 
 	agp.parse(args)!;
 
-    test::eq(val, "bar");
-    test::eq(agp.options[0].is_present, true);
+    test::equal(val, "bar");
+    test::equal(agp.options[0].is_present, true);
 }
 
 fn void! test_str_set_next_arg() {
@@ -175,13 +174,13 @@ fn void! test_str_set_next_arg() {
 	};
 
     String[] args = {"testprog", "--flt", "bar"}; 
-    test::eq(val, "foo");
-    test::eq(agp.options[0].is_present, false);
+    test::equal(val, "foo");
+    test::equal(agp.options[0].is_present, false);
 
 	agp.parse(args)!;
 
-    test::eq(val, "bar");
-    test::eq(agp.options[0].is_present, true);
+    test::equal(val, "bar");
+    test::equal(agp.options[0].is_present, true);
 }
 
 
@@ -196,13 +195,13 @@ fn void! test_str_set_short_arg() {
 	};
 
     String[] args = {"testprog", "-f", "bar"}; 
-    test::eq(val, "foo");
-    test::eq(agp.options[0].is_present, false);
+    test::equal(val, "foo");
+    test::equal(agp.options[0].is_present, false);
 
 	agp.parse(args)!;
 
-    test::eq(val, "bar");
-    test::eq(agp.options[0].is_present, true);
+    test::equal(val, "bar");
+    test::equal(agp.options[0].is_present, true);
 }
 
 fn void! test_invalid_arg_short() {
@@ -307,8 +306,8 @@ fn void! test_multiple_short_args() {
     String[] args = {"testprog", "-f", "-z"}; 
     agp.parse(args)!;
 
-    test::eq(val, true);
-    test::eq(val2, true);
-    test::eq(agp.options[0].is_present, true);
-    test::eq(agp.options[1].is_present, true);
+    test::equal(val, true);
+    test::equal(val2, true);
+    test::equal(agp.options[0].is_present, true);
+    test::equal(agp.options[1].is_present, true);
 }
