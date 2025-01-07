@@ -60,7 +60,6 @@ fn void! test_help_show_long() {
 
     String[] args = {"testprog", "--help"}; 
 	test::@error(agp.parse(args), ArgError.HELP_SHOW);
-
 }
 
 fn void! test_bool_flag() {

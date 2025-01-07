@@ -1,4 +1,5 @@
 module std::core::test;
+import std::math;
 import std::core::builtin;
 import libc, std::time, std::io, std::sort;
 
@@ -95,16 +96,6 @@ macro @error(#funcresult, error_expected) {
     }
 }
 
-// TODO: implement this
-macro @ok(#funcresult) {
-    if(catch err = #funcresult) {
-    		test_context.assert_print_backtrace = false;
-	    	builtin::panicf("`%s` expected to return, got error [%s]",
-	    					$$FILE, $$FUNC, $$LINE, 
-	    					$stringify(#funcresult), err);
-    }
-}
-
 <*
 Check if left == right
 
@@ -117,6 +108,35 @@ macro equal(left, right) {
     if(!builtin::equals(left, right)) {
     	test_context.assert_print_backtrace = false;
 	    builtin::panicf("`%s` != `%s`", $$FILE, $$FUNC, $$LINE, left, right);
+    }
+}
+
+<*
+Check left floating point is approximately equals to right
+
+@param left `left argument of any comparable type`
+@param left `right argument of any comparable type`
+@param places `number of decimal places to compare (default: 7)`
+@param delta `minimal allowed difference (overrides places parameter)`
+@param equal_nan `allows comparing nan values, if left and right both nans result is ok`
+
+@require test_context != null, "allowed only in @test functions"
+@require places > 0, places <= 20, "too many decimal places"
+@require delta >= 0, delta <= 1, "delta must be a small number"
+*>
+macro almost_equal(left, right, uint places=7, double delta=0, bool equal_nan = true) { 
+	double diff = (double)left - (double)right;
+	double eps = delta;
+	if (eps == 0){
+		eps = 1.0 / math::pow(10.0, places);
+	} 
+
+    if(!math::is_approx(left, right, eps)){
+    	if(equal_nan && math::is_nan(left) && math::is_nan(right)) {
+    		return;
+    	}
+    	test_context.assert_print_backtrace = false;
+	    builtin::panicf("Not almost equal: `%s` !~~ `%s` delta=%e diff: %e", $$FILE, $$FUNC, $$LINE, left, right, eps, diff);
     }
 }
 

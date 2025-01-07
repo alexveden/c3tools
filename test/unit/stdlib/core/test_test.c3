@@ -58,14 +58,14 @@ TestState state = {
 	    if (test::test_context.assert_print_backtrace){
     	    builtin::print_backtrace(message, 3);
 	    }
-	    test::test_context.assert_print_backtrace = true;
         if (state.expected_fail) {
 	        io::printfn("[OOPS] (expected fail) ( %s:%s ) %s", file, line, message);
             state.n_fails++;
         } else {
 	        builtin::panic = state.old_panic;
             state.old_panic(message, file, function, line);
-;        }
+;       }
+	    test::test_context.assert_print_backtrace = true;
     }
 };
 
@@ -75,6 +75,45 @@ fn void! test_eq(){
     test::equal(true, true);
     test::equal(1.31, 1.31);
     test::equal("foo", "foo");
+}
+
+fn void! test_almost_equal(){
+    test::almost_equal(1, 1);
+    test::almost_equal(1.31, 1.31);
+    test::almost_equal(1.31f, 1.31f);
+    test::almost_equal(double.nan, double.nan);
+    test::almost_equal(float.nan, float.nan);
+    test::almost_equal(1.31, 1.31, delta: 0.01);
+    test::almost_equal(1.311, 1.312, delta: 0.01);
+    test::almost_equal(1.311, 1.312, places: 2);
+    // 7 decimal places are default
+    test::almost_equal(1.00000001, 1.00000000);
+}
+
+
+fn void! test_almost_equal_fails(){
+    test::setup(state.setup_fn, state.teardown_fn);
+    state.expected_fail = true;
+    // 7 decimal places are default
+    test::almost_equal(1.0000001, 1.00000000);
+}
+
+fn void! test_almost_equal_fails_nan(){
+    test::setup(state.setup_fn, state.teardown_fn);
+    state.expected_fail = true;
+    test::almost_equal(1.0000001, double.nan);
+}
+
+fn void! test_almost_equal_fails_nan2(){
+    test::setup(state.setup_fn, state.teardown_fn);
+    state.expected_fail = true;
+    test::almost_equal(double.nan, 1);
+}
+
+fn void! test_almost_equal_fails_equal_nan_false(){
+    test::setup(state.setup_fn, state.teardown_fn);
+    state.expected_fail = true;
+    test::almost_equal(double.nan, double.nan, equal_nan: false);
 }
 
 fn void! setup_teardown(){
@@ -227,14 +266,17 @@ fn void! test_check_fails_no_info(){
 }
 
 def TestIntFn = fn int! (int a, int b);
+def TestFailFn = fn void! (bool to_fail);
 
 fault MyFault {
     FOO,
 }
 
 fn void! test_error(){
-    test::TestFn ffail_void = fn void!() {
-        return IoError.FILE_NOT_FOUND?;
+    TestFailFn ffail_void = fn void!(bool to_fail) {
+        if (to_fail){
+            return IoError.FILE_NOT_FOUND?;
+        }
     };
     TestIntFn ffail_int = fn int! (int a, int b) {
         if (b == 0){
@@ -243,10 +285,8 @@ fn void! test_error(){
         return a / b;
     };
     test::setup(state.setup_fn, state.teardown_fn);
-    // int result = test::@ok(ffail_int(6, 2));
-    // test::equal(result, 3);
 
-    test::@error(ffail_void(), IoError.FILE_NOT_FOUND);
+    test::@error(ffail_void(true), IoError.FILE_NOT_FOUND);
     test::@error(ffail_int(1, 0), IoError.FILE_NOT_FOUND);
 }
 
