@@ -112,7 +112,7 @@ macro equal(left, right) {
 }
 
 <*
-Check left floating point is approximately equals to right
+Check left floating point value is approximately equals to right value
 
 @param left `left argument of any comparable type`
 @param left `right argument of any comparable type`
