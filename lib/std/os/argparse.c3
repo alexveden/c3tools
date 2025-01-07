@@ -5,6 +5,7 @@ import std::io::path;
 fault ArgError {
     MISSING_ARGUMENT,
     INVALID_ARGUMENT,
+    ARGUMENT_VALUE,
     CONFIGURATION,
     HELP_SHOW,
 }
@@ -114,8 +115,6 @@ fn void! ArgParse.options_check(&self) @local
 
         switch (opt.value.type) {
             case bool.typeid:
-            case short.typeid:
-            case ushort.typeid:
             case int.typeid:
             case uint.typeid:
             case long.typeid:
@@ -133,131 +132,81 @@ fn void! ArgParse.options_check(&self) @local
 }
 
 
-fn void! ArgParse.get_arg_val(&self, ArgOpt* opt, bool flag_unset = false)
+fn String! ArgParse.get_arg(&self) @local {
+    if(self._ctx.optvalue) {
+        // --arg=<optvalue> via =
+        String result = self._ctx.optvalue;
+        self._ctx.optvalue = "";
+        return result;
+    } else if(self._ctx.argv.len > 1) {
+        self._ctx.argv = self._ctx.argv[1..];
+        self._ctx.cpidx++;
+        String result = self._ctx.argv[0];
+        if (!result || result[0] == '-') {
+            io::printf("Error: getting another option instead of previous option value at `%s`\n", self._ctx.argv[0]);
+            return ArgError.ARGUMENT_VALUE?; 
+        }
+        return result;
+    } else {
+        io::printf("Error: missing argument value for %s\n", self._ctx.argv[0]);
+        return ArgError.ARGUMENT_VALUE?; 
+    }
+
+}
+
+fn void! ArgParse.parse_arg_val(&self, ArgOpt* opt, bool flag_unset = false) @local
 {
     assert(opt);
     if (opt._arg_type == ArgType.HELP) {
         return ArgError.HELP_SHOW?;
     }
+
+    if (opt.is_present) {
+        io::printf("Error: duplicated option %s\n", self._ctx.argv[0]);
+        return ArgError.INVALID_ARGUMENT?; 
+    }
     assert(opt.value);
+    assert(opt.value.type == bool.typeid || !flag_unset, "flag_unset only for bool options");
+    opt.is_present = true;
 
     switch (opt.value.type) {
         case bool.typeid:
             bool* pvalue = anycast(opt.value, bool)!;
             *pvalue = (flag_unset) ? false : true;
-            opt.is_present = true;
         case String.typeid:
-            assert(!flag_unset, "only for bool");
             String* pvalue = anycast(opt.value, String)!;
-            if(self._ctx.optvalue) {
-                // --arg=<optvalue> via =
-                *pvalue = self._ctx.optvalue;
-                self._ctx.optvalue = "";
-            } else if(self._ctx.argv.len > 1) {
-                self._ctx.argv = self._ctx.argv[1..];
-                self._ctx.cpidx++;
-                *pvalue = self._ctx.argv[0];
-            }
-            opt.is_present = true;
+            // TODO: handle '' and "" arguments for strings
+            String aval = self.get_arg()!;
+            *pvalue = aval;
+        case int.typeid:
+            String aval = self.get_arg()!;
+            *anycast(opt.value, int)! = aval.to_integer(int)!;
+        case uint.typeid:
+            String aval = self.get_arg()!;
+            *anycast(opt.value, uint)! = aval.to_integer(uint)!;
+        case long.typeid:
+            String aval = self.get_arg()!;
+            *anycast(opt.value, long)! = aval.to_integer(long)!;
+        case ulong.typeid:
+            String aval = self.get_arg()!;
+            *anycast(opt.value, ulong)! = aval.to_integer(ulong)!;
+        case float.typeid:
+            String aval = self.get_arg()!;
+            *anycast(opt.value, float)! = aval.to_float()!;
+        case double.typeid:
+            String aval = self.get_arg()!;
+            *anycast(opt.value, double)! = aval.to_double()!;
+        default:
+            unreachable("TODO: implement this typeid: %s", opt.value.type.kindof);
     }
-//
-//     assert(opt.value);
-//
-//     switch (opt.type) {
-//         case 2 /*ARGPARSE_OPT_BOOLEAN*/:
-//             if (flags & ARGPARSE_OPT_UNSET) {
-//                 *(int*)opt.value = 0;
-//             } else {
-//                 *(int*)opt.value = 1;
-//             }
-//             opt.is_present = true;
-//             break;
-//         case 6 /*ARGPARSE_OPT_STRING*/:
-//             if (self._ctx.optvalue) {
-//                 *(const char**)opt.value = self._ctx.optvalue;
-//                 self._ctx.optvalue = NULL;
-//             } else if (self._ctx.argc > 1) {
-//                 self._ctx.argc--;
-//                 self._ctx.cpidx++;
-//                 *(const char**)opt.value = *++self._ctx.argv;
-//             } else {
-//                 return argparse__error(self, opt, "requires a value", flags);
-//             }
-//             opt.is_present = true;
-//             break;
-//         case 4 /*ARGPARSE_OPT_INTEGER*/:
-//             errno = 0;
-//             if (self._ctx.optvalue) {
-//                 if (self._ctx.optvalue[0] == '\0') {
-//                     return argparse__error(self, opt, "requires a value", flags);
-//                 }
-//
-//                 *(int*)opt.value = strtol(self._ctx.optvalue, (char**)&s, 0);
-//                 self._ctx.optvalue = NULL;
-//             } else if (self._ctx.argc > 1) {
-//                 self._ctx.argc--;
-//                 self._ctx.cpidx++;
-//                 *(int*)opt.value = strtol(*++self._ctx.argv, (char**)&s, 0);
-//             } else {
-//                 return argparse__error(self, opt, "requires a value", flags);
-//             }
-//             if (errno == ERANGE) {
-//                 return argparse__error(self, opt, "numerical result out of range", flags);
-//             }
-//             if (s[0] != '\0') { // no digits or contains invalid characters
-//                 return argparse__error(self, opt, "expects an integer value", flags);
-//             }
-//             opt.is_present = true;
-//             break;
-//         case 5 /*ARGPARSE_OPT_FLOAT*/:
-//             errno = 0;
-//
-//             if (self._ctx.optvalue) {
-//                 if (self._ctx.optvalue[0] == '\0') {
-//                     return argparse__error(self, opt, "requires a value", flags);
-//                 }
-//                 *(float*)opt.value = strtof(self._ctx.optvalue, (char**)&s);
-//                 self._ctx.optvalue = NULL;
-//             } else if (self._ctx.argc > 1) {
-//                 self._ctx.argc--;
-//                 self._ctx.cpidx++;
-//                 *(float*)opt.value = strtof(*++self._ctx.argv, (char**)&s);
-//             } else {
-//                 return argparse__error(self, opt, "requires a value", flags);
-//             }
-//             if (errno == ERANGE) {
-//                 return argparse__error(self, opt, "numerical result out of range", flags);
-//             }
-//             if (s[0] != '\0') { // no digits or contains invalid characters
-//                 return argparse__error(self, opt, "expects a numerical value", flags);
-//             }
-//             opt.is_present = true;
-//             break;
-//         default:
-//             uassert(false && "unhandled");
-//             return Error.runtime;
-//     }
-//
-// skipped:
-//     if (opt.callback) {
-//         opt.is_present = true;
-//         return opt.callback(self, opt);
-//     } else {
-//         if (opt.short_name == 'h') {
-//             argparse_usage(self);
-//             return Error.argsparse;
-//         }
-//     }
-//
-//     return Error.ok;
 }
 
-fn void! ArgParse.parse_short(&self) @local
+fn void! ArgParse.parse_short_arg(&self) @local
 {
     foreach(&opt: self.options){
         if (opt.short_name == self._ctx.optvalue[0]) {
             self._ctx.optvalue = self._ctx.optvalue.len > 1 ? self._ctx.optvalue[1..] : "";
-            return self.get_arg_val(opt);
+            return self.parse_arg_val(opt);
         }
     }
     io::printf("Error: invalid argument %s\n", self._ctx.argv[0]);
@@ -273,7 +222,7 @@ fn String! prefix_skip(String s, String prefix) @local
     }
 }
 
-fn void! ArgParse.parse_long(&self) @local
+fn void! ArgParse.parse_long_arg(&self) @local
 {
     foreach(&opt: self.options){
         if (!opt.long_name) {
@@ -303,7 +252,7 @@ fn void! ArgParse.parse_long(&self) @local
             }
         }
 
-        return self.get_arg_val(opt, flag_unset);
+        return self.parse_arg_val(opt, flag_unset);
     }
 
     io::printf("Error: invalid argument %s\n", self._ctx.argv[0]);
@@ -350,7 +299,18 @@ fn void! ArgParse.parse(&self, String[] argv) {
                 return ArgError.INVALID_ARGUMENT?;
             }
 
-            self.parse_short()!;
+            if(catch err = self.parse_short_arg()) {
+                
+                case ArgError.MISSING_ARGUMENT:
+                case ArgError.INVALID_ARGUMENT:
+                case ArgError.ARGUMENT_VALUE:
+                case ArgError.CONFIGURATION:
+                case ArgError.HELP_SHOW:
+                    return err?;
+                default:
+                    io::printf("Error: argument parse error %s failed with `%s`\n", arg, err);
+                    return ArgError.ARGUMENT_VALUE?;
+            }
 
             self._ctx.argv = self._ctx.argv[1..];
 
@@ -376,7 +336,18 @@ fn void! ArgParse.parse(&self, String[] argv) {
             return ArgError.INVALID_ARGUMENT?;
         }
 
-        self.parse_long()!;
+        if(catch err = self.parse_long_arg()) {
+            
+            case ArgError.MISSING_ARGUMENT:
+            case ArgError.INVALID_ARGUMENT:
+            case ArgError.ARGUMENT_VALUE:
+            case ArgError.CONFIGURATION:
+            case ArgError.HELP_SHOW:
+                return err?;
+            default:
+                io::printf("Error: argument parse error %s failed with `%s`\n", arg, err);
+                return ArgError.ARGUMENT_VALUE?;
+        }
         self._ctx.cpidx++;
         self._ctx.argv = self._ctx.argv[1..];
     }
@@ -425,8 +396,6 @@ fn void! ArgParse.print_usage(&self) {
 
         if (opt.value){
             switch(opt.value.type) {
-                case short.typeid:
-                case ushort.typeid:
                 case int.typeid:
                 case uint.typeid:
                 case long.typeid:

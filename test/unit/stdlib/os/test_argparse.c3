@@ -310,3 +310,224 @@ fn void! test_multiple_short_args() {
     test::equal(agp.options[0].is_present, true);
     test::equal(agp.options[1].is_present, true);
 }
+
+fn void! test_str_set_next_arg_missing_value_with_eqchar() {
+
+	String val = "foo";
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'f', .long_name = "flt", .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "--flt="}; 
+	test::@error(agp.parse(args), ArgError.ARGUMENT_VALUE);
+}
+
+fn void! test_str_set_next_arg_missing_value() {
+
+	String val = "foo";
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'f', .long_name = "flt", .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "--flt"}; 
+	test::@error(agp.parse(args), ArgError.ARGUMENT_VALUE);
+}
+
+fn void! test_str_set_next_arg_is_another_option() {
+
+	String val = "foo";
+	bool val2 = true;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'f', .long_name = "flt", .value = &val},
+			{.short_name = 'a',  .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "--flt", "-a" }; 
+	test::@error(agp.parse(args), ArgError.ARGUMENT_VALUE);
+}
+
+fn void! test_str_set_next_arg_is_another_option_long() {
+
+	String val = "foo";
+	bool val2 = true;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'f', .long_name = "flt", .value = &val},
+			{.long_name = "all",  .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "--flt", "--all" }; 
+	test::@error(agp.parse(args), ArgError.ARGUMENT_VALUE);
+}
+
+fn void! test_duplicated_flag(){
+
+	bool val2 = true;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.long_name = "all",  .value = &val2},
+		}
+	};
+
+    String[] args = {"testprog", "--all", "--all" }; 
+	test::@error(agp.parse(args), ArgError.INVALID_ARGUMENT);
+}
+
+fn void! test_integer_option_i32(){
+
+	int val = 0;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.long_name = "int",  .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "--int=3"}; 
+    agp.parse(args)!;
+
+    test::equal(val, 3);
+    test::equal(agp.options[0].is_present, true);
+}
+
+fn void! test_integer_option_parsing_error(){
+
+	int val = 0;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'i', .long_name = "int",  .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "--int=a"}; 
+    test::@error(agp.parse(args), ArgError.ARGUMENT_VALUE);
+}
+
+fn void! test_integer_option_parsing_error_short(){
+
+	int val = 0;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'i', .long_name = "int",  .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "-i", "a"}; 
+    test::@error(agp.parse(args), ArgError.ARGUMENT_VALUE);
+}
+
+fn void! test_integer_option_u32(){
+
+	uint val = 0;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.long_name = "int",  .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "--int=3"}; 
+    agp.parse(args)!;
+
+    test::equal(val, 3);
+    test::equal(agp.options[0].is_present, true);
+}
+
+fn void! test_integer_option_i64(){
+
+	long val = 0;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.long_name = "int",  .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "--int=3"}; 
+    agp.parse(args)!;
+
+    test::equal(val, 3);
+    test::equal(agp.options[0].is_present, true);
+}
+
+fn void! test_integer_option_u64(){
+
+	ulong val = 0;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.long_name = "int",  .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "--int=3"}; 
+    agp.parse(args)!;
+
+    test::equal(val, 3);
+    test::equal(agp.options[0].is_present, true);
+}
+
+fn void! test_float_option_f32(){
+
+	float val = 0;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.long_name = "float",  .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "--float=3.23"}; 
+    agp.parse(args)!;
+
+    test::almost_equal(val, 3.23);
+    test::equal(agp.options[0].is_present, true);
+}
+
+fn void! test_float_option_f64(){
+
+	double val = 0;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.long_name = "float",  .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "--float=3.23"}; 
+    agp.parse(args)!;
+
+    test::almost_equal(val, 3.23);
+    test::equal(agp.options[0].is_present, true);
+}
+
+fn void! test_float_option_f64_nan(){
+
+	double val = 0;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.long_name = "float",  .value = &val},
+		}
+	};
+
+    String[] args = {"testprog", "--float=nan"}; 
+    agp.parse(args)!;
+
+    test::almost_equal(val, double.nan);
+    test::equal(agp.options[0].is_present, true);
+}
