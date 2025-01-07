@@ -174,10 +174,7 @@ fn void! ArgParse.parse_arg_val(&self, ArgOpt* opt, bool flag_unset = false) @lo
             bool* pvalue = anycast(opt.value, bool)!;
             *pvalue = (flag_unset) ? false : true;
         case String.typeid:
-            String* pvalue = anycast(opt.value, String)!;
-            // TODO: handle '' and "" arguments for strings
-            String aval = self.get_arg()!;
-            *pvalue = aval;
+            *anycast(opt.value, String)! = self.get_arg()!;
         case int.typeid:
             String aval = self.get_arg()!;
             *anycast(opt.value, int)! = aval.to_integer(int)!;
@@ -206,7 +203,18 @@ fn void! ArgParse.parse_short_arg(&self) @local
     foreach(&opt: self.options){
         if (opt.short_name == self._ctx.optvalue[0]) {
             self._ctx.optvalue = self._ctx.optvalue.len > 1 ? self._ctx.optvalue[1..] : "";
-            return self.parse_arg_val(opt);
+            if(catch err = self.parse_arg_val(opt)){
+                case ArgError.MISSING_ARGUMENT:
+                case ArgError.INVALID_ARGUMENT:
+                case ArgError.ARGUMENT_VALUE:
+                case ArgError.CONFIGURATION:
+                case ArgError.HELP_SHOW:
+                    return err?;
+                default:
+                    io::printf("Error: argument parse error -%s failed with `%s`\n", opt.short_name, err);
+                    return ArgError.ARGUMENT_VALUE?;
+            }
+            return; // ALL OK
         }
     }
     io::printf("Error: invalid argument %s\n", self._ctx.argv[0]);
@@ -252,7 +260,18 @@ fn void! ArgParse.parse_long_arg(&self) @local
             }
         }
 
-        return self.parse_arg_val(opt, flag_unset);
+        if(catch err = self.parse_arg_val(opt, flag_unset)){
+            case ArgError.MISSING_ARGUMENT:
+            case ArgError.INVALID_ARGUMENT:
+            case ArgError.ARGUMENT_VALUE:
+            case ArgError.CONFIGURATION:
+            case ArgError.HELP_SHOW:
+                return err?;
+            default:
+                io::printf("Error: argument parse error %s failed with `%s`\n", self._ctx.argv[0], err);
+                return ArgError.ARGUMENT_VALUE?;
+        }
+        return; // ALL OK
     }
 
     io::printf("Error: invalid argument %s\n", self._ctx.argv[0]);
@@ -299,28 +318,14 @@ fn void! ArgParse.parse(&self, String[] argv) {
                 return ArgError.INVALID_ARGUMENT?;
             }
 
-            if(catch err = self.parse_short_arg()) {
-                
-                case ArgError.MISSING_ARGUMENT:
-                case ArgError.INVALID_ARGUMENT:
-                case ArgError.ARGUMENT_VALUE:
-                case ArgError.CONFIGURATION:
-                case ArgError.HELP_SHOW:
-                    return err?;
-                default:
-                    io::printf("Error: argument parse error %s failed with `%s`\n", arg, err);
-                    return ArgError.ARGUMENT_VALUE?;
-            }
+            self.parse_short_arg()!;
 
             self._ctx.argv = self._ctx.argv[1..];
 
-            // TODO:
-            // while (self._ctx.optvalue) {
-            //     e$except_silent(err, argparse__short_opt(self, self.options))
-            //     {
-            //         return argparse__report_error(self, err);
-            //     }
-            // }
+            // Parsing stackted short args: when '-f -a -b' passed as '-fab'
+            while (self._ctx.optvalue) {
+                self.parse_short_arg()!;
+            }
             continue;
         }
         // if '--' presents
@@ -336,18 +341,7 @@ fn void! ArgParse.parse(&self, String[] argv) {
             return ArgError.INVALID_ARGUMENT?;
         }
 
-        if(catch err = self.parse_long_arg()) {
-            
-            case ArgError.MISSING_ARGUMENT:
-            case ArgError.INVALID_ARGUMENT:
-            case ArgError.ARGUMENT_VALUE:
-            case ArgError.CONFIGURATION:
-            case ArgError.HELP_SHOW:
-                return err?;
-            default:
-                io::printf("Error: argument parse error %s failed with `%s`\n", arg, err);
-                return ArgError.ARGUMENT_VALUE?;
-        }
+        self.parse_long_arg()!;
         self._ctx.cpidx++;
         self._ctx.argv = self._ctx.argv[1..];
     }

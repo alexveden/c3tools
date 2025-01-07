@@ -531,3 +531,22 @@ fn void! test_float_option_f64_nan(){
     test::almost_equal(val, double.nan);
     test::equal(agp.options[0].is_present, true);
 }
+
+fn void! test_multi_short_flags(){
+
+	bool val = false;
+	bool val2 = false;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'a',  .value = &val},
+			{.short_name = 'b',  .value = &val2},
+		}
+	};
+
+    String[] args = {"testprog", "-ab"}; 
+	agp.parse(args)!!;
+
+	test::equal(val, true);
+	test::equal(val2, true);
+}
