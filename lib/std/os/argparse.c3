@@ -16,8 +16,7 @@ struct ArgParse {
     ArgOpt[] options;    // argument parser options
 
     struct flags {
-        bool ignore_unknown_args;
-        bool stop_at_non_option;
+        bool stop_at_non_option; // allows incremental args parsing (e.g. support of commands)
     }
 
     struct _ctx {
@@ -38,10 +37,11 @@ struct ArgOpt {
     any value;
     bool required;
     String help;
-    bool is_present;
+    ArgParseCallbackFn callback;
+    bool _is_present;
     ArgType _arg_type;
-    // argparse_callback_f* callback;
 }
+def ArgParseCallbackFn = fn void!(ArgOpt* opt, String value);
 
 macro help_opt(String help_prompt = "show this help message and exit") {
     return ArgOpt {
@@ -279,7 +279,7 @@ fn void! ArgParse.options_ensure_required(&self) @local
             continue;
         }
 
-        if (opt.required && !opt.is_present) {
+        if (opt.required && !opt._is_present) {
             io::printf(
                 "Error: missing required option: -%c/--%s\n",
                 opt.short_name,
@@ -319,10 +319,12 @@ fn void! ArgParse.options_check(&self) @local
             case double.typeid:
             case String.typeid:
                 // resetting presence flag, it will be updated after all argument parsing
-                opt.is_present = false;
+                opt._is_present = false;
             default:
-                unreachable("option[%d][-%c/--%s] type[%s] is not supported", 
-                            i, opt.short_name, opt.long_name, opt.value.type);
+                if (!opt.callback){
+                    unreachable("option[%d][-%c/--%s] type[%s] is not supported (or pass .callback)", 
+                                i, opt.short_name, opt.long_name, opt.value.type);
+                }
         }
     }
 }
@@ -357,13 +359,22 @@ fn void! ArgParse.parse_arg_val(&self, ArgOpt* opt, bool flag_unset = false) @lo
         return ArgError.HELP_SHOW?;
     }
 
-    if (opt.is_present) {
+    if (opt._is_present) {
         io::printf("Error: duplicated option %s\n", self._ctx.argv[0]);
         return ArgError.INVALID_ARGUMENT?; 
     }
     assert(opt.value);
     assert(opt.value.type == bool.typeid || !flag_unset, "flag_unset only for bool options");
-    opt.is_present = true;
+    opt._is_present = true;
+
+    if(opt.callback) {
+        if (opt.value.type == bool.typeid) {
+            return opt.callback(opt, (flag_unset) ? "0" : "1");
+        } else {
+            String aval = self.get_arg()!;
+            return opt.callback(opt, aval);
+        }
+    }
 
     switch (opt.value.type) {
         case bool.typeid:
