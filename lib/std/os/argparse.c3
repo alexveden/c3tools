@@ -6,12 +6,14 @@ import std::io;
 import std::io::path;
 
 struct ArgParse {
+    String[] arguments;  // remaining positional arguments after successful parse
+
+    // Settings
     String usage;        // usage text (can be multiline), each line prepended by program_name
     String description;  // a description after usage
     String epilog;       // a description at the end
     String program_name; // program name in usage (by default: argv[0])
-    ArgOpt[] options;
-    String[] arguments;
+    ArgOpt[] options;    // argument parser options
 
     struct flags {
         bool ignore_unknown_args;
@@ -34,7 +36,6 @@ struct ArgOpt {
     char short_name;
     String long_name;
     any value;
-    any default_value;
     bool required;
     String help;
     bool is_present;
@@ -76,6 +77,10 @@ fn void! ArgParse.parse(&self, String[] argv) {
     for (; self._ctx.argc && self._ctx.argv.len; self._ctx.argc--) {
         String arg = self._ctx.argv[0];
         // io::printf("arg: %s\n", arg);
+        if (arg.len < 2) {
+            io::printf("Error: argument too short `%s`\n", arg);
+            return ArgError.INVALID_ARGUMENT?;
+        }
 
         if (arg[0] != '-' || arg[1] == '\0') {
             self._ctx.has_argument = true;
@@ -110,7 +115,7 @@ fn void! ArgParse.parse(&self, String[] argv) {
             continue;
         }
         // if '--' presents
-        if (arg[2] == '\0') {
+        if (arg.len == 2) {
             self._ctx.argc--;
             self._ctx.argv = self._ctx.argv[1..];
             self._ctx.cpidx++;

@@ -550,3 +550,153 @@ fn void! test_multi_short_flags(){
 	test::equal(val, true);
 	test::equal(val2, true);
 }
+
+fn void! test_single_dash(){
+
+	bool val = false;
+	bool val2 = false;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'a',  .value = &val},
+			{.short_name = 'b',  .value = &val2},
+		}
+	};
+
+    String[] args = {"testprog", "-"}; 
+	test::@error(agp.parse(args), ArgError.INVALID_ARGUMENT);
+}
+
+fn void! test_empty_argument(){
+
+	bool val = false;
+	bool val2 = false;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'a',  .value = &val},
+			{.short_name = 'b',  .value = &val2},
+		}
+	};
+
+    String[] args = {"testprog", ""}; 
+	test::@error(agp.parse(args), ArgError.INVALID_ARGUMENT);
+}
+
+fn void! test_multi_arguments_double_dash(){
+
+	bool val = false;
+	bool val2 = false;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'a',  .value = &val},
+			{.short_name = 'b',  .value = &val2},
+		}
+	};
+
+    String[] args = {"testprog", "-ab", "--", "--some-opt=4323", "arg1", "arg2"}; 
+	agp.parse(args)!!;
+
+	test::equal(val, true);
+	test::equal(val2, true);
+	test::equal(agp.arguments.len, 3);
+	test::equal(agp.arguments[0], "--some-opt=4323");
+	test::equal(agp.arguments[1], "arg1");
+	test::equal(agp.arguments[2], "arg2");
+}
+
+fn void! test_multi_arguments(){
+
+	bool val = false;
+	bool val2 = false;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'a',  .value = &val},
+			{.short_name = 'b',  .value = &val2},
+		}
+	};
+
+    String[] args = {"testprog", "-ab", "arg1", "arg2"}; 
+	agp.parse(args)!!;
+
+	test::equal(val, true);
+	test::equal(val2, true);
+	test::equal(agp.arguments.len, 2);
+	test::equal(agp.arguments[0], "arg1");
+	test::equal(agp.arguments[1], "arg2");
+}
+
+fn void! test_multi_arguments_stop_at_non_option(){
+
+	bool val = false;
+	bool val2 = false;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'a',  .value = &val},
+			{.short_name = 'b',  .value = &val2},
+		},
+		.flags = {
+			.stop_at_non_option = true,
+		}
+		
+	};
+
+    String[] args = {"testprog", "command", "-ab", "arg1", "arg2"}; 
+	agp.parse(args)!!;
+
+	test::equal(val, false);
+	test::equal(val2, false);
+	test::equal(agp.arguments.len, 4);
+	test::equal(agp.arguments[0], "command");
+	test::equal(agp.arguments[1], "-ab");
+	test::equal(agp.arguments[2], "arg1");
+	test::equal(agp.arguments[3], "arg2");
+}
+
+fn void! test_subcommands(){
+
+	bool val = false;
+	bool val2 = false;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.short_name = 'a',  .value = &val},
+			{.short_name = 'b',  .value = &val2},
+		},
+		.flags = {
+			.stop_at_non_option = true, // NOTE: this is crucial for sub commands 
+		}
+		
+	};
+
+	int cmd_int = 0;
+	argparse::ArgParse agp_cmd = {
+		.description = "test sub command",
+		.options = { 
+			{.long_name = "int",  .value = &cmd_int},
+		},
+	};
+
+    String[] args = {"testprog", "-ab", "command", "--int=4", "arg1", "arg2"}; 
+	agp.parse(args)!!;
+
+
+	// passed "-ab" flags to higher level
+	test::equal(val, true);
+	test::equal(val2, true);
+	test::equal(agp.arguments.len, 4);
+	test::equal(agp.arguments[0], "command");
+	test::equal(agp.arguments[1], "--int=4");
+	test::equal(agp.arguments[2], "arg1");
+	test::equal(agp.arguments[3], "arg2");
+
+	// NOTE: passing agr.arguments to sub command
+	agp_cmd.parse(agp.arguments)!!;
+	test::equal(cmd_int, 4);
+	test::equal(agp_cmd.arguments.len, 2);
+	test::equal(agp_cmd.arguments[0], "arg1");
+	test::equal(agp_cmd.arguments[1], "arg2");
+}

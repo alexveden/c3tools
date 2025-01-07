@@ -2,6 +2,47 @@ module c3test;
 import std::io;
 import std::os::argparse;
 
+fn void! hello_comand(argparse::ArgParse* args) {
+	bool all = false;
+	argparse::ArgParse agp = {
+		.description = "Hello command",
+		.options = { 
+			argparse::help_opt(),
+			argparse::group_opt("Command options"),
+			{.short_name = 'a', .long_name = "all", .value = &all, .help = "This is a command option"},
+		}, 
+	};
+	if(catch err = agp.parse(args.arguments)){
+		agp.print_usage()!!;
+		return err?;
+	}
+
+	if (all){
+		io::printfn("Hello ALL world");
+	} else {
+		io::printfn("Hello world");
+	}
+}
+
+fn void! command_handler(argparse::ArgParse* args){
+	if(args.arguments.len == 0){
+		args.print_usage()!!;
+		return IoError.OVERFLOW?;
+	}
+
+	switch(args.arguments[0]) {
+		case "hello":
+			return hello_comand(args);
+		case "add":
+			io::printfn("add command");
+			return;
+		default:
+			io::printfn("Unknown command");
+			args.print_usage()!!;
+			return IoError.OVERFLOW?;
+	}
+
+}
 
 fn int main(String[] args)
 {
@@ -10,17 +51,16 @@ fn int main(String[] args)
 	float f = 0.0;
 	argparse::ArgParse agp = {
 		.description = "test ArgParse program",
+		.usage = "{hello,add} [cmd-args]",
 		.epilog= "ArgParse epilog",
-		.usage = `
-option -sdf -[sdf]
-foo bara [-]
-		`,
 		.options = { 
 			argparse::help_opt(),
 			argparse::group_opt("Basic options"),
-			{.short_name = 'a', .long_name = "all", .value = &val, .default_value=&&3, .help = "This is a sample option"},
-			{.short_name = 's', .long_name = "string", .value = &s, .default_value=&&"foo", .help = "Simple string"},
-			{.short_name = 'f', .long_name = "flt", .value = &f, .required=true, .help = "float arg"},
+			{.short_name = 'a', .long_name = "all", .value = &val, .help = "This is a sample option"},
+			{.short_name = 's', .long_name = "string", .value = &s, .help = "Simple string"},
+		}, 
+		.flags = {
+			.stop_at_non_option = true, // NOTE: this is crucial for sub commands 
 		}
 	};
 
@@ -29,7 +69,12 @@ foo bara [-]
 		return 1;
 	}
 
+	if(catch err = command_handler(&agp)) {
+		return 1;
+	}
+
 	io::printf("My arguments: val=%s, s=%s, f=%s\n", val, s, f);
+
 	return 0;
 }
 
