@@ -1,6 +1,55 @@
 <*
-argparse module
+Console arguments parsing module
+
+Features:
+- --long-names and -s short optional
+- generic option value to program value parsing
+- sub-commands support
+- ZII initialization, with sensible defaults
+- Builtin argument validation
+- Custom argument parser via user-defined callbacks
+- Automatic help printout
+
+Example:
+```c3
+
+// Simple arguments
+import std::os::argparse;
+import std::io;
+
+fn int main(String[] args)
+{
+	int val = 0;
+	bool flag = false;
+	String s;
+	float f = 0.0;
+	argparse::ArgParse agp = {
+		.description = "My program",
+		.usage = "[-a] [--string=<some>] arg1",
+		.epilog= "Footer message",
+		.options = { 
+			argparse::help_opt(),
+			argparse::group_opt("Basic options"),
+			{.short_name = 'a', .long_name = "all", .value = &val, .help = "This is a sample option"},
+			argparse::group_opt("Advanced options"),
+			{ .long_name = "string", .value = &s, .help = "Simple long_name string"},
+			{ .short_name = 'f', .value = &flag, .help = "short opt flag"},
+		}, 
+	};
+
+	if(catch err = agp.parse(args)){
+		agp.print_usage()!!;
+		return 1;
+	}
+
+	io::printf("My arguments: val=%s, s=%s, flag=%s\n", val, s, f);
+	return 0;
+}
+```
 *>
+// Copyright (c) 2025 Alex Veden <i@alexveden.com>. All rights reserved.
+// Use of this source code is governed by the MIT license
+// a copy of which can be found in the LICENSE_STDLIB file.
 module std::os::argparse;
 import std::io;
 import std::io::path;

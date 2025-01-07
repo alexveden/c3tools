@@ -1,3 +1,41 @@
+<*
+Unit test module
+
+This module provides a toolset of macros for running unit test checks 
+
+Example:
+```c3
+module sample::m;
+import std::io;
+
+fault MathError
+{
+    DIVISION_BY_ZERO
+}
+
+fn double! divide(int a, int b)
+{
+    if (b == 0) return MathError.DIVISION_BY_ZERO?;
+    return (double)(a) / (double)(b);
+}
+
+fn void! test_div() @test {
+    test::equal(2, divide(6, 3)!);
+    test::not_equal(1, 2);
+    test::almost_equal(m::divide(1, 3)!, 0.333, places: 3);
+    test::greater_equal(3, 3);
+    test::greater(2, divide(3, 3)!);
+    test::less(2, 3);
+    test::less_equal(2, 3);
+    test::@check(2 == 2, "divide: %d", divide(6, 3)!);
+    test::@error(m::divide(3, 0), MathError.DIVISION_BY_ZERO);
+}
+
+```
+*>
+// Copyright (c) 2025 Alex Veden <i@alexveden.com>. All rights reserved.
+// Use of this source code is governed by the MIT license
+// a copy of which can be found in the LICENSE_STDLIB file.
 module std::core::test;
 import std::math;
 import std::core::builtin;

@@ -1,33 +1,26 @@
 module sample::m;
+import std::io;
 
 fault MathError
 {
     DIVISION_BY_ZERO
 }
 
-fn int foo() { return 123; }
-fn int bar() { return 0; }
-
 fn double! divide(int a, int b)
 {
     if (b == 0) return MathError.DIVISION_BY_ZERO?;
-
     return (double)(a) / (double)(b);
 }
 
-
-module test::sample::m @test;
-import std::io;
-import sample::m;
-
-fn void! test_div() {
-    test::equal(2, m::divide(6, 3)!);
+fn void! test_div() @test {
+    test::equal(2, divide(6, 3)!);
     test::not_equal(1, 2);
+    test::almost_equal(m::divide(1, 3)!, 0.333, places: 3);
     test::greater_equal(3, 3);
-    test::greater(2, m::divide(3, 3)!);
+    test::greater(2, divide(3, 3)!);
     test::less(2, 3);
     test::less_equal(2, 3);
-    test::@check(m::foo() == 123, "foo is %d", m::foo());
+    test::@check(2 == 2, "divide: %d", divide(6, 3)!);
     test::@error(m::divide(3, 0), MathError.DIVISION_BY_ZERO);
 }
 
