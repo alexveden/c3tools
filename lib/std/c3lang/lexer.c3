@@ -478,7 +478,6 @@ fn bool scan_ident(Lexer *lexer, TokenType normal, TokenType const_token, TokenT
 		}
 		return add_error_token(lexer, "An identifier may not consist of only '_' characters.");
 	}
-	char* interned_string = "FOO"; //symtab_add(lexer.lexing_start, len, hash, &type);
 	switch (type)
 	{
 		case TOKEN_RETURN:
@@ -487,7 +486,12 @@ fn bool scan_ident(Lexer *lexer, TokenType normal, TokenType const_token, TokenT
 		default:
 			break;
 	}
-	return new_token(lexer, type, ((ZString)lexer.lexing_start).str_view()[..len-1]);
+	String identifier = (String)lexer.lexing_start[..len-1];
+	TokenType ttype = common::token_from_identifier(identifier); 
+	if (ttype != TOKEN_INVALID_TOKEN){
+	    type = ttype;
+	}
+	return new_token(lexer, type, identifier);
 }
 
 // --- Number scanning
