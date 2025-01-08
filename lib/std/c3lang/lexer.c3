@@ -487,7 +487,7 @@ fn bool scan_ident(Lexer *lexer, TokenType normal, TokenType const_token, TokenT
 		default:
 			break;
 	}
-	return new_token(lexer, type, ((ZString)lexer.lexing_start).str_view()[..len]);
+	return new_token(lexer, type, ((ZString)lexer.lexing_start).str_view()[..len-1]);
 }
 
 // --- Number scanning
