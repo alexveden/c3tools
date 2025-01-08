@@ -8,7 +8,7 @@ fn void! process_file(String file_name) {
 	String contents = (String)file::load_new(file_name)!;
 	io::printfn("File source:\n%s", contents);
 
-	io::printfn("Tokens:\n%s", contents);
+	io::printfn("Tokens:\n");
 	Lexer lexer = {};
 	lexer::lexer_init(&lexer, contents);
 	// breakpoint();
