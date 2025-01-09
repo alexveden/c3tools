@@ -938,17 +938,14 @@ fn long scan_utf8(Lexer *lexer, char c) @inline @local
  */
 fn bool scan_char(Lexer *lexer) @inline @local
 {
-
 	// Handle the problem with zero size character literal first.
 	if (match(lexer, '\''))
 	{
 		return add_error_token(lexer, "The character literal was empty.");
 	}
 
-	int width = 0;
+	int width = 1;
 	char c;
-	//Int128 b = { 0, 0 };
-	int128 b = 0;
 
 	while LOOP: (!match(lexer, '\''))
 	{
@@ -959,120 +956,11 @@ fn bool scan_char(Lexer *lexer) @inline @local
 		{
 			return add_error_token_at_start(lexer, "The character literal did not terminate.");
 		}
-		// We might exceed the width that we allow.
-		if (width > 15) return add_error_token_at_start(lexer, "The character literal exceeds 16 characters.");
-		// Handle (expected) utf-8 characters.
-		if ((uint)c >= (uint)0x80)
-		{
-			if (width != 0) {
-			        
-                 //goto UNICODE_IN_MULTI;
-	             return add_error_token(lexer, "A multi-character literal may not contain unicode characters.");
-			}
-			long utf8 = scan_utf8(lexer, (char)c);
-			if (utf8 < 0) return false;
-			if (!match(lexer, '\''))
-			{
-				if (peek(lexer) == '\0') continue;
-				backtrack(lexer);
-				return add_error_token_at_current(lexer, "Unicode character literals may only contain one character, "
-														 "please remove the additional ones or use all ASCII.");
-			}
-			assert(1 != 0, "wtf?");
-		    //b.low = (ulong) utf8;
-			width = utf8 > 0xffff ? 4 : 2;
-			// goto DONE;
-			break LOOP;
-		}
-		// Parse the escape code
-		ichar escape = ' ';
-		if (c == '\\')
-		{
-			assert(c == '\\');
-			c = peek(lexer);
-			escape = utils_port::char_is_valid_escape(c);
-			if (escape == -1)
-			{
-				lexer.lexing_start += 1;
-				if (c > ' ' && c <= 127)
-				{
-					next(lexer);
-					return add_error_token(lexer, "Invalid escape sequence '\\%c'.", c);
-				}
-				return add_error_token_at_current(lexer, "An escape sequence was expected after '\\'.");
-			}
-			next(lexer);
-		}
-		char *escape_begin = lexer.current - 2;
-		switch (escape)
-		{
-			case 'x':
-			{
-				long hex = scan_hex_literal(lexer, 2);
-				if (hex < 0)
-				{
-					return add_error_token_at(lexer, escape_begin, lexer.current - escape_begin, "Expected a two character hex value after \\x.");
-				}
-				// We can now reassign c and use the default code.
-				c = (char)hex;
-				break;
-			}
-			case 'u':
-			case 'U':
-			{
-				// First check that we don't have any characters previous to this one.
-				if (width != 0) {
-					return add_error_token_at(lexer, escape_begin, lexer.current - escape_begin, "Expected a two character hex value after \\x.");
-				};
-				int bytes = escape == 'U' ? 4 : 2;
-				long hex = scan_hex_literal(lexer, bytes * 2);
-				// The hex parsing may have failed, lacking more hex chars.
-				if (hex < 0)
-				{
-					begin_new_token(lexer);
-					return add_error_token_at(lexer, escape_begin, lexer.current - escape_begin,
-											  "Expected %s character hex value after \\%c.",
-											  escape == 'u' ? "a four" : "an eight", escape);
-				}
-				// If we don't see the end here, then something is wrong.
-				if (!match(lexer, '\''))
-				{
-					// It may be the end of the line, if so use the default handling by invoking "continue"
-					if (peek(lexer) == '\0') continue;
-					return add_error_token_at_current(lexer,
-													  "Character literals with '\\%c' can only contain one character, please remove this one.",
-													  escape);
-				}
-				// Assign the value and go to "DONE".
-			    assert(1 != 0, "wtf?");
-				//b.low = (ulong) hex;
-				width = bytes;
-				// goto DONE;
-				break LOOP;
-			}
-			case ' ':
-				// No escape, a regular character.
-				break;
-			default:
-				c = (ichar)escape;
-				break;
-		}
-		// Default handling here:
 		width++;
-		// b = i128_shl64(b, 8);
-		// b = i128_add64(b, (char)c);
-		b <<= 8;
-		b += (char)c;
 	}
-	assert(width > 0 && width <= 16);
-// DONE:
-	set_generic_token(lexer, TOKEN_CHAR_LITERAL);
-	lexer.data.char_value = b;
-	lexer.data.width = (char)width;
-	return true;
-
-// UNICODE_IN_MULTI:
-// return add_error_token(lexer, "A multi-character literal may not contain unicode characters.");
+	// next(lexer);
+	assert(width > 0 && width <= 8);
+	return new_token(lexer, TOKEN_CHAR_LITERAL, (String)lexer.lexing_start[..width]);
 }
 
 fn int append_esc_string_token(char* dest, char* src, usz *pos) @local
@@ -1283,6 +1171,7 @@ fn bool scan_hex_array(Lexer *lexer) @inline @local
 	{
 		return add_error_token(lexer, "The hexadecimal string is not an even length, did you miss a digit somewhere?");
 	}
+	// FIX: this may oveflow
 	if (!new_token(lexer, TOKEN_BYTES, ((ZString)lexer.lexing_start).str_view())) return false;
 	lexer.data.is_base64 = false;
 	lexer.data.bytes_len = (ulong)len / 2;
@@ -1363,6 +1252,7 @@ fn bool scan_base64(Lexer *lexer) @inline @local
 											   "- only need 1 or 2 bytes of extra padding.");
 	}
 	ulong decoded_len = (3 * len - end_len) / 4;
+	// FIX: this may oveflow
 	if (!new_token(lexer, TOKEN_BYTES, ((ZString)lexer.lexing_start).str_view())) return false;
 	lexer.data.is_base64 = true;
 	lexer.data.bytes_len = decoded_len;
@@ -1422,7 +1312,8 @@ fn bool parse_doc_start(Lexer *lexer) @local
 	//
 	// In any case we can consider this having reached "the contracts"
 	lexer.mode = LEX_CONTRACTS;
-	return new_token(lexer, TOKEN_DOCS_START, ((ZString)lexer.lexing_start).str_view());
+	uint len = (uint)(lexer.current - lexer.lexing_start);
+	return new_token(lexer, TOKEN_DOCS_START, (String)lexer.lexing_start[..len-1]);
 }
 
 fn bool lexer_scan_token_inner(Lexer *lexer) @local

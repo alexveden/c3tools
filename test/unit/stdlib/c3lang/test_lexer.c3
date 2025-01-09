@@ -62,16 +62,13 @@ fn void test_all_available_tokens() {
 	foreach(ttype: TokenType.values) {
 		s.clear();
 		String token_value = common::token_type_to_string(ttype);
+		String token_value_exp = "";
 		switch(ttype) {
 			case TOKEN_INVALID_TOKEN:
 			case TOKEN_EOF:
 				continue;
 			case TOKEN_ARROW:
 				//TOKEN_ARROW,            // -> // Not used but reserved
-				continue;
-			case TOKEN_COMMENT_SINGLE:
-				token_value = "; // a comment";
-				io::printf("TODO token: %s `%s`\n", ttype, s);
 				continue;
 			case TOKEN_VOID:
 			case TOKEN_BOOL:
@@ -97,35 +94,52 @@ fn void test_all_available_tokens() {
 			case TOKEN_ANY:
 				ttype = TOKEN_TYPE_IDENT;
 
-			case TOKEN_DOLLAR:
-			case TOKEN_BUILTIN:
-			case TOKEN_HASH:
 			case TOKEN_IDENT:
-			case TOKEN_CONST_IDENT:
-			case TOKEN_TYPE_IDENT:
-			case TOKEN_CT_IDENT:
-			case TOKEN_CT_CONST_IDENT:
-			case TOKEN_CT_TYPE_IDENT:
-			case TOKEN_HASH_CONST_IDENT:
-			case TOKEN_HASH_IDENT:
-			case TOKEN_HASH_TYPE_IDENT:
-			case TOKEN_AT_IDENT:
-			case TOKEN_AT_CONST_IDENT:
-			case TOKEN_AT_TYPE_IDENT:
+				token_value = "indEnt_123";
 			case TOKEN_STRING:
+				token_value = `"some string"`;
+				token_value_exp = "some string";
 			case TOKEN_RAW_STRING:
+				token_value = "`raw string`";
+				token_value_exp = "raw string";
 			case TOKEN_INTEGER:
+				token_value = "9797";
 			case TOKEN_REAL:
+				token_value = "97.97";
 			case TOKEN_CHAR_LITERAL:
+				token_value = `'\0'`;
+			case TOKEN_CONST_IDENT:
+				token_value = "CONST_IND1821";
+			case TOKEN_TYPE_IDENT:
+				token_value = "MyType_213";
+			case TOKEN_CT_IDENT:
+				token_value = "$foo_211";
+			case TOKEN_CT_CONST_IDENT:
+				token_value = "$FOOSAD_211";
+			case TOKEN_CT_TYPE_IDENT:
+				token_value = "$FtyPe_211";
+			case TOKEN_HASH_CONST_IDENT:
+				token_value = "#SO_CONTS122";
+			case TOKEN_HASH_IDENT:
+				token_value = "#sdo_iDentA122";
+			case TOKEN_HASH_TYPE_IDENT:
+				token_value = "#MyTypeo_iDentA122";
+			case TOKEN_AT_CONST_IDENT:
+				token_value = "@SO_CONTS122";
+			case TOKEN_AT_IDENT:
+				token_value = "@sdo_iDentA122";
+			case TOKEN_AT_TYPE_IDENT:
+				token_value = "@MyTypeo_iDentA122";
+			case TOKEN_COMMENT_SINGLE:
+			case TOKEN_BUILTIN: 
+			case TOKEN_DOLLAR:
+			case TOKEN_HASH:
 			case TOKEN_BYTES:
 			case TOKEN_DOC_COMMENT:
 			case TOKEN_DOCS_EOL:
-				io::printf("TODO token: %s `%s`\n", ttype, s);
-				continue;
-
 			case TOKEN_DOCS_START:
 			case TOKEN_DOCS_END:
-				io::printf("(!!!)BUG token: %s `%s`\n", ttype, s);
+				io::printf("TODO token: %s `%s`\n", ttype, s);
 				continue;
 			default:
 		}
@@ -158,11 +172,50 @@ fn void test_all_available_tokens() {
 		test::equal(toks[3].row, 1);
 		test::equal(toks[3].offset, s.len());
 
-		// TODO: synth token check
 		test::equal(toks[1].type, ttype);
-		test::equal(toks[1].value, token_value);
-		test::equal(toks[1].col, 8);
-		test::equal(toks[1].row, 1);
-		test::equal(toks[1].offset, 7);
+		if (token_value_exp){
+			test::@check(toks[1].value == token_value_exp, "\nsource: %s\ntoken: %s\n", source, toks[1]);
+		} else {
+			test::@check(toks[1].value == token_value, "\nsource: %s\ntoken: %s\n", source, toks[1]);
+			test::equal(toks[1].col, 8);
+			test::equal(toks[1].row, 1);
+			test::equal(toks[1].offset, 7);
+		}
 	}
+}
+
+fn void test_simple_comments() {
+    String contents = "// foo;";
+	Lexer lexer = lexer::new_init(contents);
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+
+    // foreach(t: toks) t.print(new_line: true);
+    foreach(i, t: toks) io::printf("%d: %s", i, t);
+
+    // module IDENT[foo] ; EOF
+	test::equal(3, toks.len());
+	test::equal(toks[0].type, TokenType.TOKEN_MODULE);
+	test::equal(toks[0].value, "module");
+	test::equal(toks[0].row, 1);
+	test::equal(toks[0].col, 1);
+	test::equal(toks[0].offset, 0);
+
+	test::equal(toks[1].type, TokenType.TOKEN_IDENT);
+	test::equal(toks[1].value, "foo");
+	test::equal(toks[1].offset, 7);
+	test::equal(toks[1].row, 1);
+	test::equal(toks[1].col, 8);
+
+	test::equal(toks[2].type, TokenType.TOKEN_EOS);
+	test::equal(toks[2].value, ";");
+	test::equal(toks[2].offset, 10);
+	test::equal(toks[2].row, 1);
+	test::equal(toks[2].col, 11);
+
+	test::equal(toks[3].type, TokenType.TOKEN_EOF);
+	test::equal(toks[3].value, "\n");
+	test::equal(toks[3].col, 12);
+	test::equal(toks[3].row, 1);
+	test::equal(toks[3].offset, 11);
 }
