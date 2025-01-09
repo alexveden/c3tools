@@ -335,6 +335,7 @@ fn bool run_tests(TestUnit[] tests) @private
 		.assert_print_backtrace = true,
 		//.breakpoint_on_assert = true,
 		//.test_filter = "test::std::os::argparse::",
+		.test_filter = "lexer",
 		.has_ansi = terminal_has_ansi(),
 	};
 	test_context = &context;

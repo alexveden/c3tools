@@ -2,6 +2,7 @@ module std::c3lang::lexer;
 import std::io;
 import std::c3lang::utils_port;
 import std::c3lang::common;
+import std::collections::list;
 
 // Copyright (c) 2019 Christoffer Lerno. All rights reserved.
 // Copyright (c) 2025 Alex Veden <i@alexveden.com>. All rights reserved.
@@ -9,7 +10,9 @@ import std::c3lang::common;
 // a copy of which can be found in the LICENSE_STDLIB file.
 
 
-struct Lexer
+def Lexer = LexerImp;
+
+struct LexerImp
 {
 	char *file_begin;
 	char *lexing_start;
@@ -25,7 +28,148 @@ struct Lexer
 	LexMode mode; // only normal is supported
 }
 
-struct TokenData
+struct Token(Printable) {
+	TokenType type;
+	String value;
+	uint row;
+	uint col;
+	usz offset;
+}
+
+fn String Token.to_string(&self, Allocator allocator) @dynamic {
+	@pool(allocator)
+	{
+		DString builder = dstring::temp_new();
+		builder.appendf("{\n");
+		builder.appendf("    type: %s\n", self.type);
+		builder.appendf("    value: `%s`\n", self.value);
+		builder.appendf("    row: %s\n", self.row);
+		builder.appendf("    col: %s\n", self.col);
+		builder.appendf("    offset: %s\n", self.offset);
+		builder.appendf("}\n");
+		return builder.copy_str(allocator);
+	};
+}
+
+fn void Token.print(&self, bool new_line = false) {
+	switch(self.type)
+	{
+		case TOKEN_IDENT:
+		case TOKEN_CT_IDENT:
+		case TOKEN_CT_CONST_IDENT:
+		case TOKEN_CT_TYPE_IDENT:
+		case TOKEN_HASH_IDENT:
+		case TOKEN_HASH_CONST_IDENT:
+		case TOKEN_HASH_TYPE_IDENT:
+		case TOKEN_CONST_IDENT:
+		case TOKEN_TYPE_IDENT:
+		case TOKEN_AT_IDENT:
+		case TOKEN_AT_TYPE_IDENT:
+		case TOKEN_AT_CONST_IDENT:
+			io::printf("%s[%s]%s", 
+					   common::token_type_to_string(self.type), self.value, new_line ? "\n" : " ");
+			break;
+		case TOKEN_STRING:
+		case TOKEN_RAW_STRING:
+		case TOKEN_INTEGER:
+		case TOKEN_REAL:
+		case TOKEN_CHAR_LITERAL:
+		case TOKEN_BYTES:
+		case TOKEN_COMMENT_SINGLE:
+			io::printf("%s[%s]%s", 
+					   common::token_type_to_string(self.type), self.value, new_line ? "\n" : " ");
+			break;
+		case TOKEN_EOS:
+			io::printf("%s\n", common::token_type_to_string(self.type));
+			break;
+		default:
+			io::printf("%s%s", common::token_type_to_string(self.type), new_line ? "\n" : " ");
+	}
+
+}
+
+<*
+Initializes new lexer instance
+@param contents `c3 source contents`
+@require contents.len > 0
+*>
+fn Lexer new_init(String contents)
+{
+	Lexer lexer = {};
+	// Set the current file.
+	// lexer.file_begin = lexer.file.contents;
+	lexer.file_begin = contents;
+	// Set current to beginning.
+	lexer.current = lexer.file_begin;
+	// Line start is current.
+	lexer.line_start = lexer.current;
+	// Row number starts at 1
+	lexer.current_row = 1;
+	// File id is the current file.
+	// lexer.tok_span.file_id = lexer.file.file_id;
+	// Mode is NORMAL
+	lexer.mode = LEX_NORMAL;
+	// Set up lexing for a new token.
+	begin_new_token(&lexer);
+	// Check for bidirectional markers.
+	check_bidirectional_markers(&lexer);
+	return lexer;
+}
+
+<*
+Parses next token in a code
+@return `true if token found, false - EOF reached or error`
+*>
+fn bool Lexer.next_token(&self)
+{
+	if(self.token_type == TOKEN_EOF) {
+		return false;
+	}
+	// Scan for a token.
+	if (lexer_scan_token_inner(self)) return true;
+	// Failed, so check if we're at end:
+	if (reached_end(self)) return true;
+	// Scan through the rest of the text for other invalid tokens:
+	bool token_is_ok = false;
+	do
+	{
+		if (!token_is_ok)
+		{
+			// Scan to the end of the line if we have an error.
+			while (!reached_end(self) && peek(self) != '\n') next(self);
+		}
+		token_is_ok = lexer_scan_token_inner(self);
+	}
+	while (!reached_end(self));
+	// Done.
+	return false;
+}
+
+fn List(<lexer::Token>) Lexer.new_parse_tokens(&self, Allocator allocator = allocator::heap())
+{
+	assert(self.file_begin, "not initialied");
+	assert(self.file_begin == self.current, "already processed");
+
+	List(<Token>) result;
+	result.new_init(allocator: allocator);
+	
+	while (self.next_token())
+	{
+		result.push(
+			Token {
+				.type = self.token_type, 
+				.value = self.data.string, 
+				.row = self.tok_span.row,
+				.col = self.tok_span.col,
+				.offset = (usz)(self.lexing_start - self.file_begin), 
+			}
+		);
+	}
+	return result;
+}
+
+
+struct TokenData @private
 {
 	char *lex_start;
 	usz lex_len;
@@ -355,7 +499,7 @@ fn bool skip_whitespace(Lexer *lexer) @local
 				return false;
 		}
 	}
-	return false;
+	// unreachable();
 }
 
 // --- Identifier scanning
@@ -381,33 +525,7 @@ fn bool scan_ident(Lexer *lexer, TokenType normal, TokenType const_token, TokenT
 		c = peek(lexer);
 		switch (c)
 		{
-            // LOWER_CHAR_CASE
-            case 'a':
-            case 'b':
-            case 'c':
-            case 'd':
-            case 'e':
-            case 'f':
-            case 'g':
-            case 'h':
-            case 'i':
-            case 'j':
-            case 'k':
-            case 'l':
-            case 'm':
-            case 'n':
-            case 'o':
-            case 'p':
-            case 'q':
-            case 'r':
-            case 's':
-            case 't':
-            case 'u':
-            case 'v':
-            case 'w':
-            case 'x':
-            case 'y':
-            case 'z':
+            case 'a'..'z':
 				if (type == TOKEN_INVALID_TOKEN)
 				{
 					type = normal;
@@ -417,58 +535,21 @@ fn bool scan_ident(Lexer *lexer, TokenType normal, TokenType const_token, TokenT
 					type = type_token;
 				}
 				break;
-            // UPPER_CHAR_CASE
-            case 'A':
-            case 'B':
-            case 'C':
-            case 'D':
-            case 'E':
-            case 'F':
-            case 'G':
-            case 'H':
-            case 'I':
-            case 'J':
-            case 'K':
-            case 'L':
-            case 'M':
-            case 'N':
-            case 'O':
-            case 'P':
-            case 'Q':
-            case 'R':
-            case 'S':
-            case 'T':
-            case 'U':
-            case 'V':
-            case 'W':
-            case 'X':
-            case 'Y':
-            case 'Z':
+            case 'A'..'Z':
 				if (type == TOKEN_INVALID_TOKEN) type = const_token;
 				break;
-            // NUMBER_CHAR_CASE CASE
-            case '0': 
-            case '1':
-            case '2':
-            case '3':
-            case '4':
-            case '5':
-            case '6':
-            case '7':
-            case '8':
-            case '9':
+            case '0'..'9': 
 				if (type == TOKEN_INVALID_TOKEN) return add_error_token(lexer, "A letter must precede any digit");
 			case '_':
 				break;
 			default:
-				// goto EXIT;
 				break LOOP;
 		}
 		hash = utils_port::fnv1a(c, hash);
 		next(lexer);
 	}
 
-	// TODO: skip this at case default break
+	// FIX: skip this at case default break
 	// Allow bang!
 	if (peek(lexer) == '!' && type == normal)
 	{
@@ -476,7 +557,6 @@ fn bool scan_ident(Lexer *lexer, TokenType normal, TokenType const_token, TokenT
 		next(lexer);
 	}
 
-	// EXIT:;
 	uint len = (uint)(lexer.current - lexer.lexing_start);
 	if (type == TOKEN_INVALID_TOKEN)
 	{
@@ -1361,7 +1441,10 @@ fn bool lexer_scan_token_inner(Lexer *lexer) @local
 	// Point start to the first non-whitespace character.
 	begin_new_token(lexer);
 
-	if (reached_end(lexer)) return new_token(lexer, TOKEN_EOF, "\n") && false;
+	if (reached_end(lexer)) {
+		new_token(lexer, TOKEN_EOF, "\n");
+		return false;
+	}
 
 	ichar c = peek(lexer);
 	next(lexer);
@@ -1577,49 +1660,5 @@ fn void check_bidirectional_markers(Lexer *lexer) @inline
 		add_error_token_at_start(lexer, "Invalid encoding - Unbalanced bidirectional markers.");
 		return;
 	}
-}
-
-// Initialize a file
-fn void lexer_init(Lexer *lexer, String contents)
-{
-	// Set the current file.
-	// lexer.file_begin = lexer.file.contents;
-	lexer.file_begin = contents;
-	// Set current to beginning.
-	lexer.current = lexer.file_begin;
-	// Line start is current.
-	lexer.line_start = lexer.current;
-	// Row number starts at 1
-	lexer.current_row = 1;
-	// File id is the current file.
-	// lexer.tok_span.file_id = lexer.file.file_id;
-	// Mode is NORMAL
-	lexer.mode = LEX_NORMAL;
-	// Set up lexing for a new token.
-	begin_new_token(lexer);
-	// Check for bidirectional markers.
-	check_bidirectional_markers(lexer);
-}
-
-fn bool lexer_next_token(Lexer *lexer)
-{
-	// Scan for a token.
-	if (lexer_scan_token_inner(lexer)) return true;
-	// Failed, so check if we're at end:
-	if (reached_end(lexer)) return true;
-	// Scan through the rest of the text for other invalid tokens:
-	bool token_is_ok = false;
-	do
-	{
-		if (!token_is_ok)
-		{
-			// Scan to the end of the line if we have an error.
-			while (!reached_end(lexer) && peek(lexer) != '\n') next(lexer);
-		}
-		token_is_ok = lexer_scan_token_inner(lexer);
-	}
-	while (!reached_end(lexer));
-	// Done.
-	return false;
 }
 

@@ -3,19 +3,20 @@ import std::c3lang::lexer;
 import std::c3lang::common;
 import std::io;
 import std::os::argparse;
+import std::collections::list;
 
 fn void! process_file(String file_name) {
 	String contents = (String)file::load_new(file_name)!;
 	io::printfn("File source:\n%s", contents);
 
+	Lexer lexer = lexer::new_init(contents);
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	// io::printfn("Tokens:\n%s", toks);
 	io::printfn("Tokens:\n");
-	Lexer lexer = {};
-	lexer::lexer_init(&lexer, contents);
 	// breakpoint();
-	while (lexer::lexer_next_token(&lexer))
+	foreach(t: toks)
 	{
-		c3lang::common::TokenType token_type = lexer.token_type;
-		switch(token_type)
+		switch(t.type)
 		{
 			case TOKEN_IDENT:
 			case TOKEN_CT_IDENT:
@@ -29,7 +30,7 @@ fn void! process_file(String file_name) {
 			case TOKEN_AT_IDENT:
 			case TOKEN_AT_TYPE_IDENT:
 			case TOKEN_AT_CONST_IDENT:
-				io::printf("%s[%s] ", common::token_type_to_string(token_type), lexer.data.string);
+				io::printf("%s[%s] ", common::token_type_to_string(t.type), t.value);
 				break;
 			case TOKEN_STRING:
 			case TOKEN_RAW_STRING:
@@ -38,13 +39,13 @@ fn void! process_file(String file_name) {
 			case TOKEN_CHAR_LITERAL:
 			case TOKEN_BYTES:
 			case TOKEN_COMMENT_SINGLE:
-				io::printf("%s[%s] ", common::token_type_to_string(token_type), lexer.data.string);
+				io::printf("%s[%s] ", common::token_type_to_string(t.type), t.value);
 				break;
 			default:
-				io::printf("%s ", common::token_type_to_string(token_type));
+				io::printf("%s ", common::token_type_to_string(t.type));
 		}
-		if (token_type == TOKEN_EOF) break;
 	}
+	toks.free();
 	io::printfn("DONE");
 }
 
