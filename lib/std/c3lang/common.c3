@@ -101,7 +101,11 @@ enum TokenType : uint
 	TOKEN_AT_CONST_IDENT,   // @MACRO
 	TOKEN_AT_TYPE_IDENT,    // @Macro
 
-	TOKEN_COMMENT_SINGLE,           // //single line comment
+	TOKEN_COMMENT_SINGLE_INLINE,           // //single INLINE comment
+	TOKEN_COMMENT_SINGLE,     // //single line comment
+	TOKEN_COMMENT_MULTI,          //  /* multiline on new line */
+	TOKEN_COMMENT_MULTI_INLINE,   //  some /* multiline on the same line */
+
 
 	TOKEN_STRING,           // "Teststring"
 	TOKEN_RAW_STRING,           // `Teststring`
@@ -432,6 +436,12 @@ fn String token_type_to_string(TokenType type)
 			return "RAW_STRING";
 		case TOKEN_COMMENT_SINGLE:
 			return "COMMENT_SINGLE";
+		case TOKEN_COMMENT_SINGLE_INLINE:
+			return "COMMENT_SINGLE_INLINE";
+		case TOKEN_COMMENT_MULTI:
+			return "COMMENT_MULTI";
+		case TOKEN_COMMENT_MULTI_INLINE:
+			return "COMMENT_MULTI_INLINE";
 		case TOKEN_INTEGER:
 			return "INTEGER";
 		case TOKEN_REAL:

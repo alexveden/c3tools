@@ -401,6 +401,8 @@ fn bool new_token(Lexer *lexer, TokenType type, String string) @inline @local
  */
 fn bool parse_line_comment(Lexer *lexer) @inline @local
 {
+	backtrack(lexer);
+	backtrack(lexer);
 	begin_new_token(lexer);
 
 	while (!reached_end(lexer) && peek(lexer) != '\n')
@@ -410,22 +412,38 @@ fn bool parse_line_comment(Lexer *lexer) @inline @local
 	// If we found EOL, then walk past '\n'
 	if (peek(lexer) == '\n')
 	{
-		uint len = (uint)(lexer.current - lexer.lexing_start);
 		next(lexer);
-		return new_token(lexer, TOKEN_COMMENT_SINGLE, (String)lexer.lexing_start[..len-1]);
 	}
 
-	return false;
+	bool has_new_line = false;
+	char* cur = lexer.lexing_start - 1;
+	while LOOP: (cur >= lexer.file_begin) {
+		switch(*cur) {
+			case ' ':
+			case '\t':
+				break;
+			case '\n':
+				has_new_line = true;
+			default:
+				break LOOP;
+		}
+		cur--;
+	}
+	uint len = (uint)(lexer.current - lexer.lexing_start);
+	return new_token(lexer, has_new_line ? TOKEN_COMMENT_SINGLE : TOKEN_COMMENT_SINGLE_INLINE, (String)lexer.lexing_start[..len-1]);
 }
 
 /**
  * Parse the common / *  * / style multiline comments, allowing nesting.
  **/
-fn void parse_multiline_comment(Lexer *lexer) @inline @local
+fn bool parse_multiline_comment(Lexer *lexer) @inline @local
 {
+	backtrack(lexer);
+	backtrack(lexer);
+	begin_new_token(lexer);
+
 	int nesting = 1;
-	while (1)
-	{
+	while LOOP: (!reached_end(lexer)) {
 		switch (peek(lexer))
 		{
 			case '*':
@@ -433,10 +451,9 @@ fn void parse_multiline_comment(Lexer *lexer) @inline @local
 				{
 					skip(lexer, 2);
 					nesting--;
-					if (nesting == 0) return;
+					if (nesting == 0) break LOOP;
 					continue;
 				}
-				break;
 			case '/':
 				if (peek_next(lexer) == '*')
 				{
@@ -444,15 +461,31 @@ fn void parse_multiline_comment(Lexer *lexer) @inline @local
 					nesting++;
 					continue;
 				}
-				break;
 			case '\0':
 				// Reached eof - end.
-				return;
+				return false;
 			default:
 				break;
 		}
 		next(lexer);
 	}
+
+	bool has_new_line = false;
+	char* cur = lexer.lexing_start - 1;
+	while LOOP: (cur >= lexer.file_begin) {
+		switch(*cur) {
+			case ' ':
+			case '\t':
+				break;
+			case '\n':
+				has_new_line = true;
+			default:
+				break LOOP;
+		}
+		cur--;
+	}
+	uint len = (uint)(lexer.current - lexer.lexing_start);
+	return new_token(lexer, has_new_line ? TOKEN_COMMENT_MULTI : TOKEN_COMMENT_MULTI_INLINE, (String)lexer.lexing_start[..len-1]);
 }
 
 
@@ -480,7 +513,9 @@ fn bool skip_whitespace(Lexer *lexer) @local
 				if (peek_next(lexer) == '*')
 				{
 					skip(lexer, 2);
-					parse_multiline_comment(lexer);
+					if(parse_multiline_comment(lexer)){
+						return true;
+					}
 					continue;
 				}
 				return false;
@@ -852,90 +887,6 @@ fn bool scan_digit(Lexer *lexer) @inline @local
 
 // --- Character & string scan
 
-fn long scan_hex_literal(Lexer *lexer, int positions) @inline @local
-{
-	long hex = 0;
-	for (int j = 0; j < positions; j++)
-	{
-		hex <<= 4U;
-		int i = utils_port::char_hex_to_nibble(peek(lexer));
-		if (i < 0)
-		{
-			return -1;
-		}
-		next(lexer);
-		hex += i;
-	}
-	return hex;
-}
-
-fn long scan_utf8(Lexer *lexer, char c) @inline @local
-{
-	int utf8_bytes;
-	ulong result;
-	if (c < 0xc0) {
-        // goto ERROR;
-        return -1;
-	} 
-	if (c <= 0xdf)
-	{
-		result = 0x1f & (ulong)c;
-		utf8_bytes = 2;
-	}
-	else if (c <= 0xef)
-	{
-		result = 0xf & (ulong)c;
-		utf8_bytes = 3;
-	}
-	else if (c <= 0xf7)
-	{
-		utf8_bytes = 4;
-		result = 0x7 & (ulong)c;
-	}
-	else if (c <= 0xfb)
-	{
-		utf8_bytes = 5;
-		result = 0x3 & (ulong)c;
-	}
-	else if (c <= 0xfd)
-	{
-		utf8_bytes = 6;
-		result = 0x1 & (ulong)c;
-	}
-	else
-	{
-		//goto ERROR;
-		return -1;
-	}
-	for (int i = 1; i < utf8_bytes; i++)
-	{
-		result <<= 6U;
-		c = (char)peek(lexer);
-		if (c == '\0') return 0xFFFD;
-		next(lexer);
-		if ((c & 0xc0) != 0x80)
-		{
-			// goto ERROR;
-			return -1;
-		}
-		result += (ulong)c & 0x3f;
-	}
-	return (long)result;
-// ERROR:
-	// add_error_token(lexer, "Invalid UTF-8 sequence.");
-	// return -1;
-}
-
-/**
- * Rules:
- * 1. If ASCII or \xAB, accept up to 8 characters (16 with Int128 support), size is char, ushort, uint, ulong, UInt128
- * 2. If UTF8, accept 1 UTF character, size is ushort normally, ulong on wide UTF characters, no additional characters accepted.
- * 3. If \uABCD, convert to 16 bits, size is ushort, no additional characters accepted.
- * 4. If \U01234567, convert to 32 bits, size is uint, no additional characters accepted.
- *
- * @param lexer
- * @return
- */
 fn bool scan_char(Lexer *lexer) @inline @local
 {
 	// Handle the problem with zero size character literal first.
@@ -961,90 +912,6 @@ fn bool scan_char(Lexer *lexer) @inline @local
 	// next(lexer);
 	assert(width > 0 && width <= 8);
 	return new_token(lexer, TOKEN_CHAR_LITERAL, (String)lexer.lexing_start[..width]);
-}
-
-fn int append_esc_string_token(char* dest, char* src, usz *pos) @local
-{
-	int scanned;
-	ulong unicode_char;
-	ichar scanned_char = utils_port::char_is_valid_escape(src[0]);
-	if (scanned_char < 0) return -1;
-	switch (scanned_char)
-	{
-		case 'x':
-		{
-			int h = utils_port::char_hex_to_nibble(src[1]);
-			if (h < 0) return -1;
-			int l = utils_port::char_hex_to_nibble(src[2]);
-			if (l < 0) return -1;
-			unicode_char = (((ulong) h << (ulong)4) + (ulong)l);
-			scanned = 3;
-			break;
-		}
-		case 'u':
-		{
-			int x1 = utils_port::char_hex_to_nibble(src[1]);
-			if (x1 < 0) return -1;
-			int x2 = utils_port::char_hex_to_nibble(src[2]);
-			if (x2 < 0) return -1;
-			int x3 = utils_port::char_hex_to_nibble(src[3]);
-			if (x3 < 0) return -1;
-			int x4 = utils_port::char_hex_to_nibble(src[4]);
-			if (x4 < 0) return -1;
-			unicode_char = ((ulong) x1 << (ulong)12) + ((ulong) x2 << (ulong)8) + ((ulong) x3 << (ulong)4) + (uint)x4;
-			scanned = 5;
-			break;
-		}
-		case 'U':
-		{
-			int x1 = utils_port::char_hex_to_nibble(src[1]);
-			if (x1 < 0) return -1;
-			int x2 = utils_port::char_hex_to_nibble(src[2]);
-			if (x2 < 0) return -1;
-			int x3 = utils_port::char_hex_to_nibble(src[3]);
-			if (x3 < 0) return -1;
-			int x4 = utils_port::char_hex_to_nibble(src[4]);
-			if (x4 < 0) return -1;
-			int x5 = utils_port::char_hex_to_nibble(src[5]);
-			if (x5 < 0) return -1;
-			int x6 = utils_port::char_hex_to_nibble(src[6]);
-			if (x6 < 0) return -1;
-			int x7 = utils_port::char_hex_to_nibble(src[7]);
-			if (x7 < 0) return -1;
-			int x8 = utils_port::char_hex_to_nibble(src[8]);
-			if (x8 < 0) return -1;
-			unicode_char = ((ulong) x1 << 28U) + ((ulong) x2 << 24U) + ((ulong) x3 << 20U) + ((ulong) x4 << 16U) +
-					((ulong) x5 << 12U) + ((ulong) x6 << 8U) + ((ulong) x7 << 4U) + (ulong)x8;
-			scanned = 9;
-			break;
-		}
-		default:
-			dest[(*pos)++] = scanned_char;
-			return 1;
-	}
-	if (unicode_char < 0x80U)
-	{
-		dest[(*pos)++] = (char)unicode_char;
-	}
-	else if (unicode_char < 0x800U)
-	{
-		dest[(*pos)++] = (char)(0xC0U | (unicode_char >> 6U));
-		dest[(*pos)++] = (char)(0x80U | (unicode_char & 0x3FU));
-	}
-	else if (unicode_char < 0x10000U)
-	{
-		dest[(*pos)++] = (char)(0xE0U | (unicode_char >> 12U));
-		dest[(*pos)++] = (char)(0x80U | ((unicode_char >> 6U) & 0x3FU));
-		dest[(*pos)++] = (char)(0x80U | (unicode_char & 0x3FU));
-	}
-	else
-	{
-		dest[(*pos)++] = (char)(0xF0U | (unicode_char >> 18U));
-		dest[(*pos)++] = (char)(0x80U | ((unicode_char >> 12U) & 0x3FU));
-		dest[(*pos)++] = (char)(0x80U | ((unicode_char >> 6U) & 0x3FU));
-		dest[(*pos)++] = (char)(0x80U | (unicode_char & 0x3FU));
-	}
-	return scanned;
 }
 
 
@@ -1077,6 +944,9 @@ fn bool scan_string(Lexer *lexer) @inline @local
 	}
 	char *end = current - 1;
 	usz len = 0;
+
+	// NOTE: inlcuding previous "
+	backtrack(lexer);
 	begin_new_token(lexer);
 	while (lexer.current < end)
 	{
@@ -1105,7 +975,7 @@ fn bool scan_string(Lexer *lexer) @inline @local
 	}
 	// Skip the `"`
 	next(lexer);
-	return new_token(lexer, TOKEN_STRING, len > 0 ? (String)lexer.lexing_start[..len-1]: "");
+	return new_token(lexer, TOKEN_STRING, len > 0 ? (String)lexer.lexing_start[..len]: "");
 
 }
 
@@ -1125,8 +995,8 @@ fn bool scan_raw_string(Lexer *lexer) @inline @local
 		}
 		if (c == '`') next(lexer);
 	}
-	char *current = lexer.lexing_start + 1;
-	char *end = lexer.current - 1;
+	char *current = lexer.lexing_start;
+	char *end = lexer.current;
 	usz len = (usz)(end - current);
 	new_token(lexer, TOKEN_RAW_STRING, (String)current[0..len-1]);
 	return true;
