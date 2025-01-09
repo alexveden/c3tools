@@ -1,4 +1,8 @@
 module std::c3lang::common;
+// Copyright (c) 2019 Christoffer Lerno. All rights reserved.
+// Copyright (c) 2025 Alex Veden <i@alexveden.com>. All rights reserved.
+// Use of this source code is governed by the MIT license
+// a copy of which can be found in the LICENSE_STDLIB file.
 
 const int MAX_SOURCE_LOCATION_LEN = 255;
 
@@ -97,7 +101,10 @@ enum TokenType : uint
 	TOKEN_AT_CONST_IDENT,   // @MACRO
 	TOKEN_AT_TYPE_IDENT,    // @Macro
 
+	TOKEN_COMMENT_SINGLE,           // //single line comment
+
 	TOKEN_STRING,           // "Teststring"
+	TOKEN_RAW_STRING,           // `Teststring`
 	TOKEN_INTEGER,          // 123 0x23 0b10010 0o327
 	TOKEN_CHAR_LITERAL,        // 'a' 'FO' 'BARS' '\u1232'
 	TOKEN_REAL,             // 0x23.2p-2a 43.23e23
@@ -233,7 +240,6 @@ union SourceSpan
 {
 	struct
 	{
-		// FileId file_id; // TODO: maybe redundant?
 		char length;
 		uint col;
 		uint row;
@@ -422,6 +428,10 @@ fn String token_type_to_string(TokenType type)
 		// Values
 		case TOKEN_STRING:
 			return "STRING";
+		case TOKEN_RAW_STRING:
+			return "RAW_STRING";
+		case TOKEN_COMMENT_SINGLE:
+			return "COMMENT_SINGLE";
 		case TOKEN_INTEGER:
 			return "INTEGER";
 		case TOKEN_REAL:

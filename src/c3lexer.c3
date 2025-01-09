@@ -31,13 +31,15 @@ fn void! process_file(String file_name) {
 			case TOKEN_AT_CONST_IDENT:
 				io::printf("%s[%s] ", common::token_type_to_string(token_type), lexer.data.string);
 				break;
-			// case TOKEN_STRING:
-			// case TOKEN_INTEGER:
-			// case TOKEN_REAL:
-			// case TOKEN_CHAR_LITERAL:
-			// case TOKEN_BYTES:
-			// 	OUTF("%s[%s] ", token_type_to_string(token_type), lexer.data.string);
-			// 	break;
+			case TOKEN_STRING:
+			case TOKEN_RAW_STRING:
+			case TOKEN_INTEGER:
+			case TOKEN_REAL:
+			case TOKEN_CHAR_LITERAL:
+			case TOKEN_BYTES:
+			case TOKEN_COMMENT_SINGLE:
+				io::printf("%s[%s] ", common::token_type_to_string(token_type), lexer.data.string);
+				break;
 			default:
 				io::printf("%s ", common::token_type_to_string(token_type));
 		}

@@ -1,4 +1,8 @@
 module std::c3lang::utils_port;
+// Copyright (c) 2019 Christoffer Lerno. All rights reserved.
+// Copyright (c) 2025 Alex Veden <i@alexveden.com>. All rights reserved.
+// Use of this source code is governed by the MIT license
+// a copy of which can be found in the LICENSE_STDLIB file.
 
 macro bool char_is_lower(char c)
 {

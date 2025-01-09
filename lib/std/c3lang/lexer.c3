@@ -4,10 +4,10 @@ import std::c3lang::utils_port;
 import std::c3lang::common;
 
 // Copyright (c) 2019 Christoffer Lerno. All rights reserved.
-// Use of this source code is governed by the GNU LGPLv3.0 license
-// a copy of which can be found in the LICENSE file.
+// Copyright (c) 2025 Alex Veden <i@alexveden.com>. All rights reserved.
+// Use of this source code is governed by the MIT license
+// a copy of which can be found in the LICENSE_STDLIB file.
 
-// #include "compiler_internal.h"
 
 struct Lexer
 {
@@ -96,9 +96,6 @@ fn char next(Lexer *lexer) @inline
 {
 	if (*lexer.current == '\n')
 	{
-	    // FIX: maybe different logic from orig
-		//lexer->line_start = lexer->current + 1, lexer->current_row++;
-
 		lexer.line_start = lexer.current + 1;
 		lexer.current_row++;
 	}
@@ -256,14 +253,23 @@ fn bool new_token(Lexer *lexer, TokenType type, String string) @inline @local
 /**
  * Parsing of the "//" line comment - skipping past the end.
  */
-fn void parse_line_comment(Lexer *lexer) @inline @local
+fn bool parse_line_comment(Lexer *lexer) @inline @local
 {
+	begin_new_token(lexer);
+
 	while (!reached_end(lexer) && peek(lexer) != '\n')
 	{
 		next(lexer);
 	}
 	// If we found EOL, then walk past '\n'
-	if (peek(lexer) == '\n') next(lexer);
+	if (peek(lexer) == '\n')
+	{
+		uint len = (uint)(lexer.current - lexer.lexing_start);
+		next(lexer);
+		return new_token(lexer, TOKEN_COMMENT_SINGLE, (String)lexer.lexing_start[..len-1]);
+	}
+
+	return false;
 }
 
 /**
@@ -307,19 +313,21 @@ fn void parse_multiline_comment(Lexer *lexer) @inline @local
 /**
  * Skip regular whitespace.
  */
-fn void skip_whitespace(Lexer *lexer) @local
+fn bool skip_whitespace(Lexer *lexer) @local
 {
 	while (1)
 	{
 		switch (peek(lexer))
 		{
 			case '/':
-				if (lexer.mode == LEX_CONTRACTS) return;
+				if (lexer.mode == LEX_CONTRACTS) return false;
 				// The '//' case
 				if (peek_next(lexer) == '/')
 				{
 					skip(lexer, 2);
-					parse_line_comment(lexer);
+					if(parse_line_comment(lexer)) {
+						return true;
+					}
 					continue;
 				}
 				// '/*'
@@ -329,10 +337,10 @@ fn void skip_whitespace(Lexer *lexer) @local
 					parse_multiline_comment(lexer);
 					continue;
 				}
-				return;
+				return false;
 			case '\n':
 				// Contract lexing sees '\n' as a token.
-				if (lexer.mode == LEX_CONTRACTS) return;
+				if (lexer.mode == LEX_CONTRACTS) return false;
 				//FALLTHROUGH;
 				nextcase;
 			case ' ':
@@ -344,9 +352,10 @@ fn void skip_whitespace(Lexer *lexer) @local
 				// Already filtered out.
 				unreachable();
 			default:
-				return;
+				return false;
 		}
 	}
+	return false;
 }
 
 // --- Identifier scanning
@@ -589,7 +598,8 @@ fn bool scan_oct(Lexer *lexer) @local
 	{
 		return add_error_token(lexer, "Octal literals cannot have a floating point suffix.");
 	}
-	return new_token(lexer, TOKEN_INTEGER, ((ZString)lexer.lexing_start).str_view());
+	uint len = (uint)(lexer.current - lexer.lexing_start);
+	return new_token(lexer, TOKEN_INTEGER, (String)lexer.lexing_start[..len-1]);
 }
 
 /**
@@ -613,7 +623,9 @@ fn bool scan_binary(Lexer *lexer) @local
 	{
 		return add_error_token(lexer, "Binary literals cannot have a floating point suffix.");
 	}
-	return new_token(lexer, TOKEN_INTEGER, ((ZString)lexer.lexing_start).str_view());
+	// return new_token(lexer, TOKEN_INTEGER, ((ZString)lexer.lexing_start).str_view());
+	uint len = (uint)(lexer.current - lexer.lexing_start);
+	return new_token(lexer, TOKEN_INTEGER, (String)lexer.lexing_start[..len-1]);
 }
 
 /**
@@ -679,7 +691,10 @@ fn bool scan_hex(Lexer *lexer) @inline @local
 		if (!scan_exponent(lexer)) return false;
 	}
 	if (!scan_number_suffix(lexer, &is_float)) return false;
-	return new_token(lexer, is_float ? TOKEN_REAL : TOKEN_INTEGER, ((ZString)lexer.lexing_start).str_view());
+	// return new_token(lexer, is_float ? TOKEN_REAL : TOKEN_INTEGER, ((ZString)lexer.lexing_start).str_view());
+	uint len = (uint)(lexer.current - lexer.lexing_start);
+	return new_token(lexer,is_float ? TOKEN_REAL : TOKEN_INTEGER, (String)lexer.lexing_start[..len-1]);
+
 }
 
 /**
@@ -720,7 +735,9 @@ fn bool scan_dec(Lexer *lexer) @inline @local
 		if (!scan_exponent(lexer)) return false;
 	}
 	if (!scan_number_suffix(lexer, &is_float)) return false;
-	return new_token(lexer, is_float ? TOKEN_REAL : TOKEN_INTEGER, ((ZString)lexer.lexing_start).str_view());
+	// return new_token(lexer, is_float ? TOKEN_REAL : TOKEN_INTEGER, ((ZString)lexer.lexing_start).str_view());
+	uint len = (uint)(lexer.current - lexer.lexing_start);
+	return new_token(lexer,is_float ? TOKEN_REAL : TOKEN_INTEGER, (String)lexer.lexing_start[..len-1]);
 }
 
 /**
@@ -1097,10 +1114,8 @@ fn bool scan_string(Lexer *lexer) @inline @local
 		}
 	}
 	char *end = current - 1;
-	// FIX: leaks????
-	// char *destination = malloc_string((usz)(end - lexer.current + 1));
-	char *destination = mem::malloc((usz)(end - lexer.current + 1));
 	usz len = 0;
+	begin_new_token(lexer);
 	while (lexer.current < end)
 	{
 		c = peek(lexer);
@@ -1124,26 +1139,12 @@ fn bool scan_string(Lexer *lexer) @inline @local
 			consume_to_end_quote(lexer);
 			return false;
 		}
-		if (c == '\\')
-		{
-			int scanned = append_esc_string_token(destination, lexer.current, &len);
-			if (scanned < 0)
-			{
-				add_error_token_at_current(lexer, "Invalid escape in string.");
-				consume_to_end_quote(lexer);
-				return false;
-			}
-			skip(lexer, scanned);
-			continue;
-		}
-		destination[len++] = c;
+		len++;
 	}
 	// Skip the `"`
 	next(lexer);
-	destination[len] = 0;
-	new_token(lexer, TOKEN_STRING, ((ZString)destination).str_view());
-	// lexer.data.strlen = len;
-	return true;
+	return new_token(lexer, TOKEN_STRING, len > 0 ? (String)lexer.lexing_start[..len-1]: "");
+
 }
 
 fn bool scan_raw_string(Lexer *lexer) @inline @local
@@ -1165,23 +1166,7 @@ fn bool scan_raw_string(Lexer *lexer) @inline @local
 	char *current = lexer.lexing_start + 1;
 	char *end = lexer.current - 1;
 	usz len = (usz)(end - current);
-	// FIX: leaks????
-	// char *destination = malloc_string(len + 1);
-	char *destination = mem::malloc(len + 1);
-	len = 0;
-	while (current < end)
-	{
-		c = *(current++);
-		if (c == '`' && current[0] == '`')
-		{
-			current++;
-		}
-		destination[len++] = c;
-	}
-	destination[len] = 0;
-	new_token(lexer, TOKEN_STRING, ((ZString)destination).str_view());
-	// new_token(lexer, TOKEN_STRING, destination);
-	// lexer.data.strlen = len;
+	new_token(lexer, TOKEN_RAW_STRING, (String)current[0..len-1]);
 	return true;
 }
 
@@ -1368,8 +1353,10 @@ fn bool parse_doc_start(Lexer *lexer) @local
 
 fn bool lexer_scan_token_inner(Lexer *lexer) @local
 {
-	// Now skip the whitespace.
-	skip_whitespace(lexer);
+	if(skip_whitespace(lexer)){
+		// Now skip the whitespace (but check for comments).
+		return true;
+	}
 
 	// Point start to the first non-whitespace character.
 	begin_new_token(lexer);
