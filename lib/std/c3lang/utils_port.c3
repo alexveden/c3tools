@@ -320,20 +320,3 @@ macro bool char_is_letter_(char c)
 	}
 }
 
-
-const uint FNV1_PRIME = (uint)0x01000193;
-const uint FNV1_SEED = (uint) 0x811C9DC5;
-
-macro uint fnv1a(uint c, uint seed) {
-    return ((uint)((((uint)(c)) ^ (seed)) * FNV1_PRIME));
-}
-//
-// static inline uint fnv1a(const char *key, uint len)
-// {
-// 	uint hash = FNV1_SEED;
-// 	for (uint i = 0; i < len; i++)
-// 	{
-// 		hash = FNV1a(key[i], hash);
-// 	}
-// 	return hash;
-// }

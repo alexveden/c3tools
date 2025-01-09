@@ -15,6 +15,7 @@ def Lexer = LexerImp;
 struct LexerImp
 {
 	char *file_begin;
+	uint file_len;
 	char *lexing_start;
 	char *current;
 	uint current_row;
@@ -99,6 +100,7 @@ fn Lexer new_init(String contents)
 	// Set the current file.
 	// lexer.file_begin = lexer.file.contents;
 	lexer.file_begin = contents;
+	lexer.file_len = contents.len;
 	// Set current to beginning.
 	lexer.current = lexer.file_begin;
 	// Line start is current.
@@ -232,7 +234,7 @@ macro char peek_next(lexer_) @local {
 //
 // // Is the current character '\0' if so we assume we reached the end.
 macro bool reached_end(lexer_) {
-    return (lexer_.current[0] == '\0');
+    return (lexer_.current[0] == '\0' || lexer_.current >= (lexer_.file_begin+lexer_.file_len));
 }
 
 // Step one character forward and return that character
@@ -509,15 +511,9 @@ fn bool skip_whitespace(Lexer *lexer) @local
 fn bool scan_ident(Lexer *lexer, TokenType normal, TokenType const_token, TokenType type_token, char prefix) @inline @local
 {
 	TokenType type = TOKEN_INVALID_TOKEN;
-	uint hash = utils_port::FNV1_SEED;
-	if (prefix)
-	{
-		hash = utils_port::fnv1a(prefix, hash);
-	}
 	char c;
 	while ((c = peek(lexer)) == '_')
 	{
-		hash = utils_port::fnv1a(c, hash);
 		next(lexer);
 	}
 	while LOOP: (1)
@@ -545,7 +541,6 @@ fn bool scan_ident(Lexer *lexer, TokenType normal, TokenType const_token, TokenT
 			default:
 				break LOOP;
 		}
-		hash = utils_port::fnv1a(c, hash);
 		next(lexer);
 	}
 
@@ -553,7 +548,6 @@ fn bool scan_ident(Lexer *lexer, TokenType normal, TokenType const_token, TokenT
 	// Allow bang!
 	if (peek(lexer) == '!' && type == normal)
 	{
-		hash = utils_port::fnv1a('!', hash);
 		next(lexer);
 	}
 
