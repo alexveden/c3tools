@@ -1165,7 +1165,7 @@ fn bool parse_doc_start(Lexer *lexer) @local
 				{
 					// Found a contract
 					// goto EXIT;
-					break;
+					break LOOP;
 				}
 				nextcase;
 			default:
