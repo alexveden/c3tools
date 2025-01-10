@@ -63,12 +63,25 @@ fn void test_all_available_tokens() {
 		s.clear();
 		String token_value = common::token_type_to_string(ttype);
 		String token_value_exp = "";
+
+		// NOTE: imputing some values to tokens that don't have literal analogs
 		switch(ttype) {
 			case TOKEN_INVALID_TOKEN:
 			case TOKEN_EOF:
-				continue;
+			case TOKEN_DOCS_EOL:
+			case TOKEN_BYTES:
+			case TOKEN_DOC_COMMENT:
+			case TOKEN_DOCS_START:
+			case TOKEN_DOCS_END:
+			case TOKEN_COMMENT_SINGLE_INLINE:
+			case TOKEN_COMMENT_SINGLE:
+			case TOKEN_COMMENT_MULTI_INLINE:
+			case TOKEN_COMMENT_MULTI:
 			case TOKEN_ARROW:
-				//TOKEN_ARROW,            // -> // Not used but reserved
+			case TOKEN_BUILTIN: 
+			case TOKEN_DOLLAR:
+			case TOKEN_HASH:
+				// These are handled by separate tests 
 				continue;
 			case TOKEN_VOID:
 			case TOKEN_BOOL:
@@ -128,21 +141,8 @@ fn void test_all_available_tokens() {
 				token_value = "@sdo_iDentA122";
 			case TOKEN_AT_TYPE_IDENT:
 				token_value = "@MyTypeo_iDentA122";
-			case TOKEN_BUILTIN: 
-			case TOKEN_DOLLAR:
-			case TOKEN_HASH:
-			case TOKEN_BYTES:
-			case TOKEN_DOC_COMMENT:
-			case TOKEN_DOCS_EOL:
-			case TOKEN_DOCS_START:
-			case TOKEN_DOCS_END:
-			case TOKEN_COMMENT_SINGLE_INLINE:
-			case TOKEN_COMMENT_SINGLE:
-			case TOKEN_COMMENT_MULTI_INLINE:
-			case TOKEN_COMMENT_MULTI:
-				io::printf("TODO token: %s `%s`\n", ttype, s);
-				continue;
 			default:
+				continue;
 		}
 		s.appendf("module %s;", token_value);
 		// io::printf("token: %s `%s`\n", ttype, s);
@@ -398,4 +398,317 @@ fn void test_simple_module_multiline() {
 	test::equal(toks[3].col, 8);
 	test::equal(toks[3].row, 2);
 	test::equal(toks[3].offset, contents.len);
+}
+
+fn void test_simple_docstring() {
+    String contents = `
+<*
+Some text
+@param foo "asdlkj"
+@pure
+@require foo > 0
+*>
+    `;
+	Lexer lexer = lexer::new_init(contents);
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+
+    // foreach(t: toks) t.print(new_line: true);
+    // foreach(i, t: toks) io::printf("%d: %s", i, t);
+
+    // module IDENT[foo] ; EOF
+	test::equal(14, toks.len());
+	test::equal(toks[0].type, TokenType.TOKEN_DOCS_START);
+	test::equal(toks[0].value, "<*\nSome text\n");
+	test::equal(toks[0].row, 2);
+	test::equal(toks[0].col, 1);
+	test::equal(toks[0].offset, 1);
+
+	test::equal(toks[1].type, TokenType.TOKEN_AT_IDENT);
+	test::equal(toks[1].value, "@param");
+	test::equal(toks[1].offset, 14);
+	test::equal(toks[1].row, 4);
+	test::equal(toks[1].col, 1);
+
+	test::equal(toks[2].type, TokenType.TOKEN_IDENT);
+	test::equal(toks[2].value, "foo");
+	test::equal(toks[2].offset, 21);
+	test::equal(toks[2].row, 4);
+	test::equal(toks[2].col, 8);
+
+	test::equal(toks[3].type, TokenType.TOKEN_STRING);
+	test::equal(toks[3].value, `"asdlkj"`);
+	test::equal(toks[3].offset, 25);
+	test::equal(toks[3].row, 4);
+	test::equal(toks[3].col, 12);
+
+	test::equal(toks[4].type, TokenType.TOKEN_DOCS_EOL);
+	test::equal(toks[4].value, "\n");
+	test::equal(toks[4].offset, 33);
+	test::equal(toks[4].row, 4);
+	test::equal(toks[4].col, 20);
+
+	test::equal(toks[5].type, TokenType.TOKEN_AT_IDENT);
+	test::equal(toks[5].value, "@pure");
+	test::equal(toks[5].offset, 34);
+	test::equal(toks[5].row, 5);
+	test::equal(toks[5].col, 1);
+
+	test::equal(toks[6].type, TokenType.TOKEN_DOCS_EOL);
+	test::equal(toks[6].value, "\n");
+	test::equal(toks[6].offset, 39);
+	test::equal(toks[6].row, 5);
+	test::equal(toks[6].col, 6);
+
+	test::equal(toks[7].type, TokenType.TOKEN_AT_IDENT);
+	test::equal(toks[7].value, "@require");
+
+	test::equal(toks[8].type, TokenType.TOKEN_IDENT);
+	test::equal(toks[8].value, "foo");
+
+	test::equal(toks[9].type, TokenType.TOKEN_GREATER);
+	test::equal(toks[9].value, ">");
+
+	test::equal(toks[10].type, TokenType.TOKEN_INTEGER);
+	test::equal(toks[10].value, "0");
+
+	test::equal(toks[11].type, TokenType.TOKEN_DOCS_EOL);
+
+	test::equal(toks[12].type, TokenType.TOKEN_DOCS_END);
+	test::equal(toks[12].value, "*>");
+
+	test::equal(toks[13].type, TokenType.TOKEN_EOF);
+}
+
+fn void test_simple_docstring_inline() {
+    String contents = `<*some text*>`;
+	Lexer lexer = lexer::new_init(contents);
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+
+    // foreach(t: toks) t.print(new_line: true);
+    // foreach(i, t: toks) io::printf("%d: %s", i, t);
+
+    // module IDENT[foo] ; EOF
+	test::equal(3, toks.len());
+	test::equal(toks[0].type, TokenType.TOKEN_DOCS_START);
+	test::equal(toks[0].value, "<*some text");
+	test::equal(toks[1].type, TokenType.TOKEN_DOCS_END);
+	test::equal(toks[1].value, "*>");
+	test::equal(toks[2].type, TokenType.TOKEN_EOF);
+}
+
+fn void test_simple_docstring_compound_statement() {
+    String contents = `<*
+@require {| IntList* l = (IntList*) data; return l.allocator && l.capacity; |}
+    *>
+    `;
+	Lexer lexer = lexer::new_init(contents);
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+
+    // foreach(t: toks) t.print(new_line: true);
+    // foreach(i, t: toks) io::printf("%d: %s", i, t);
+    // foreach(i, t: toks) io::printf(",%s", t.type);
+
+    TokenType[] expected = {TOKEN_DOCS_START,TOKEN_AT_IDENT,TOKEN_LBRAPIPE,TOKEN_TYPE_IDENT,TOKEN_STAR,TOKEN_IDENT,TOKEN_EQ,TOKEN_LPAREN,TOKEN_TYPE_IDENT,TOKEN_STAR,TOKEN_RPAREN,TOKEN_IDENT,TOKEN_EOS,TOKEN_RETURN,TOKEN_IDENT,TOKEN_DOT,TOKEN_IDENT,TOKEN_AND,TOKEN_IDENT,TOKEN_DOT,TOKEN_IDENT,TOKEN_EOS,TOKEN_RBRAPIPE,TOKEN_DOCS_EOL,TOKEN_DOCS_END,TOKEN_EOF};
+
+    // module IDENT[foo] ; EOF
+	test::equal(expected.len, toks.len());
+	foreach(i, e: expected) {
+		test::@check(e == toks[i].type, "%s != %s at i:%d", e, toks[i], i);
+	}
+}
+
+fn void test_base64_bytes()
+{
+    String contents = `module b64"SGVsbG8gV29ybGQh";`;
+	Lexer lexer = lexer::new_init(contents);
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+
+    // foreach(t: toks) t.print(new_line: true);
+    // foreach(i, t: toks) io::printf("%d: %s", i, t);
+    // foreach(i, t: toks) io::printf(",%s", t.type);
+
+	test::equal(4, toks.len());
+	test::equal(toks[0].type, TokenType.TOKEN_MODULE);
+	test::equal(toks[0].value, "module");
+	test::equal(toks[0].row, 1);
+	test::equal(toks[0].col, 1);
+	test::equal(toks[0].offset, 0);
+
+	test::equal(toks[1].type, TokenType.TOKEN_BYTES);
+	test::equal(toks[1].value, `b64"SGVsbG8gV29ybGQh"`);
+	test::equal(toks[1].row, 1);
+	test::equal(toks[1].col, 8);
+	test::equal(toks[1].offset, 7);
+
+	test::equal(toks[2].type, TokenType.TOKEN_EOS);
+	test::equal(toks[2].value, `;`);
+	test::equal(toks[2].row, 1);
+	test::equal(toks[2].col, contents.len);
+	test::equal(toks[2].offset, contents.len-1);
+
+	test::equal(toks[3].type, TokenType.TOKEN_EOF);
+}
+
+fn void test_hex_bytes()
+{
+    String contents = `module x"4865 6c6c";`;
+	Lexer lexer = lexer::new_init(contents);
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+
+    // foreach(t: toks) t.print(new_line: true);
+    // foreach(i, t: toks) io::printf("%d: %s", i, t);
+    // foreach(i, t: toks) io::printf(",%s", t.type);
+
+	test::equal(4, toks.len());
+	test::equal(toks[0].type, TokenType.TOKEN_MODULE);
+	test::equal(toks[0].value, "module");
+	test::equal(toks[0].row, 1);
+	test::equal(toks[0].col, 1);
+	test::equal(toks[0].offset, 0);
+
+	test::equal(toks[1].type, TokenType.TOKEN_BYTES);
+	test::equal(toks[1].value, `x"4865 6c6c"`);
+	test::equal(toks[1].row, 1);
+	test::equal(toks[1].col, 8);
+	test::equal(toks[1].offset, 7);
+
+	test::equal(toks[2].type, TokenType.TOKEN_EOS);
+	test::equal(toks[2].value, `;`);
+	test::equal(toks[2].row, 1);
+	test::equal(toks[2].col, contents.len);
+	test::equal(toks[2].offset, contents.len-1);
+
+	test::equal(toks[3].type, TokenType.TOKEN_EOF);
+}
+
+fn void test_fn_decl()
+{
+    String contents = `fn void ! foo(int a)`;
+	Lexer lexer = lexer::new_init(contents);
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+
+    // foreach(t: toks) t.print(new_line: true);
+    // foreach(i, t: toks) io::printf("%d: %s", i, t);
+    // foreach(i, t: toks) io::printf(",%s", t.type);
+
+    TokenType[] expected = {TOKEN_FN,TOKEN_TYPE_IDENT,TOKEN_BANG,TOKEN_IDENT,TOKEN_LPAREN,TOKEN_TYPE_IDENT,TOKEN_IDENT,TOKEN_RPAREN,TOKEN_EOF};
+
+    // module IDENT[foo] ; EOF
+	test::equal(expected.len, toks.len());
+	foreach(i, e: expected) {
+		test::@check(e == toks[i].type, "%s != %s at i:%d", e, toks[i], i);
+	}
+}
+
+fn void test_fn_decl_bang_is_close()
+{
+    String contents = `fn void! foo(int a)`;
+	Lexer lexer = lexer::new_init(contents);
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+
+    // foreach(t: toks) t.print(new_line: true);
+    // foreach(i, t: toks) io::printf("%d: %s", i, t);
+    // foreach(i, t: toks) io::printf(",%s", t.type);
+
+    TokenType[] expected = {TOKEN_FN,TOKEN_TYPE_IDENT,TOKEN_BANG,TOKEN_IDENT,TOKEN_LPAREN,TOKEN_TYPE_IDENT,TOKEN_IDENT,TOKEN_RPAREN,TOKEN_EOF};
+
+    // module IDENT[foo] ; EOF
+	test::equal(expected.len, toks.len());
+	foreach(i, e: expected) {
+		test::@check(e == toks[i].type, "%s != %s at i:%d", e, toks[i], i);
+	}
+}
+
+fn void test_simple_bultin() {
+    String contents = "module $$bui_ltin123;";
+	Lexer lexer = lexer::new_init(contents);
+	// breakpoint();
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+
+    // foreach(t: toks) t.print(new_line: true);
+    // foreach(i, t: toks) io::printf("%d: %s", i, t);
+
+	test::equal(4, toks.len());
+	test::equal(toks[0].type, TokenType.TOKEN_MODULE);
+	test::equal(toks[0].value, "module");
+
+	test::equal(toks[1].type, TokenType.TOKEN_BUILTIN);
+	test::equal(toks[1].value, "$$bui_ltin123");
+	test::equal(toks[1].row, 1);
+	test::equal(toks[1].col, 8);
+	test::equal(toks[1].offset, 7);
+
+	test::equal(toks[2].type, TokenType.TOKEN_EOS);
+	test::equal(toks[2].value, `;`);
+	test::equal(toks[2].row, 1);
+	test::equal(toks[2].col, contents.len);
+	test::equal(toks[2].offset, contents.len-1);
+
+	test::equal(toks[3].type, TokenType.TOKEN_EOF);
+}
+
+fn void test_simple_bultin_type() {
+    String contents = "module $$TypeBuiltin;";
+	Lexer lexer = lexer::new_init(contents);
+	// breakpoint();
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+
+    // foreach(t: toks) t.print(new_line: true);
+    // foreach(i, t: toks) io::printf("%d: %s", i, t);
+
+	test::equal(4, toks.len());
+	test::equal(toks[0].type, TokenType.TOKEN_MODULE);
+	test::equal(toks[0].value, "module");
+
+	test::equal(toks[1].type, TokenType.TOKEN_BUILTIN);
+	test::equal(toks[1].value, "$$TypeBuiltin");
+	test::equal(toks[1].row, 1);
+	test::equal(toks[1].col, 8);
+	test::equal(toks[1].offset, 7);
+
+	test::equal(toks[2].type, TokenType.TOKEN_EOS);
+	test::equal(toks[2].value, `;`);
+	test::equal(toks[2].row, 1);
+	test::equal(toks[2].col, contents.len);
+	test::equal(toks[2].offset, contents.len-1);
+
+	test::equal(toks[3].type, TokenType.TOKEN_EOF);
+}
+
+fn void test_simple_bultin_const() {
+    String contents = "module $$BUILTIN_CONTS12;";
+	Lexer lexer = lexer::new_init(contents);
+	// breakpoint();
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+
+    // foreach(t: toks) t.print(new_line: true);
+    // foreach(i, t: toks) io::printf("%d: %s", i, t);
+
+	test::equal(4, toks.len());
+	test::equal(toks[0].type, TokenType.TOKEN_MODULE);
+	test::equal(toks[0].value, "module");
+
+	test::equal(toks[1].type, TokenType.TOKEN_BUILTIN);
+	test::equal(toks[1].value, "$$BUILTIN_CONTS12");
+	test::equal(toks[1].row, 1);
+	test::equal(toks[1].col, 8);
+	test::equal(toks[1].offset, 7);
+
+	test::equal(toks[2].type, TokenType.TOKEN_EOS);
+	test::equal(toks[2].value, `;`);
+	test::equal(toks[2].row, 1);
+	test::equal(toks[2].col, contents.len);
+	test::equal(toks[2].offset, contents.len-1);
+
+	test::equal(toks[3].type, TokenType.TOKEN_EOF);
 }

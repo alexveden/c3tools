@@ -147,6 +147,12 @@ fn bool Lexer.next_token(&self)
 	return false;
 }
 
+<*
+Parses lexer contents and returns new list of all available tokens
+
+@param allocator "optional allocator for resulting list"
+@return "list of all tokens in lexer string"
+*>
 fn List(<lexer::Token>) Lexer.new_parse_tokens(&self, Allocator allocator = allocator::heap())
 {
 	assert(self.file_begin, "not initialied");
@@ -283,11 +289,13 @@ fn bool match(Lexer *lexer, char expected) @inline @local
  * This call is doing the basic allocation, with other functions
  * filling out additional information.
  **/
-fn void set_generic_token(Lexer *lexer, TokenType type) @inline @local
+fn void set_generic_token(Lexer *lexer, TokenType type, String value) @inline @local
 {
+
 
 	lexer.token_type = type;
 	// Set the location.
+	lexer.data.string = value;
 	lexer.data.lex_len = lexer.current - lexer.lexing_start;
 	lexer.data.lex_start = lexer.lexing_start;
 	uint line = lexer.start_row;
@@ -307,88 +315,45 @@ fn void set_generic_token(Lexer *lexer, TokenType type) @inline @local
 		// But always set a single token length.
 		length = 1;
 	}
-	lexer.tok_span.length = (char)length; // TODO: wtf cast int to char
+	lexer.tok_span.length = (char)length; 
 	lexer.tok_span.col = (char)col;
 	lexer.tok_span.row = line;
 }
 
 // Error? We simply generate an invalid token and print out the error.
-macro bool add_error_token(Lexer *lexer, char *message, ...) @local
+macro bool add_error_token(Lexer *lexer, String message) @local
 {
     
-	set_generic_token(lexer, TOKEN_INVALID_TOKEN);
-	io::printfn("add_error_token");
-	// va_list list;
-	// va_start(list, message);
-	// sema_verror_range(lexer.tok_span, message, list);
-	// va_end(list);
+	set_generic_token(lexer, TOKEN_INVALID_TOKEN, message);
 	return false;
 }
 
 // Error at the start of the lexing, with a single length.
-macro bool add_error_token_at_start(Lexer *lexer, char *message, ...) @local
+macro bool add_error_token_at_start(Lexer *lexer, String message) @local
 {
-	io::printfn("add_error_token_at_start");
-	// va_list list;
-	// va_start(list, message);
-	// SourceSpan location = {
-	// 		.file_id = lexer.file.file_id,
-	// 		.row = lexer.start_row,
-	// 		.length = 1,
-	// 		.col = check_col((lexer.lexing_start - lexer.start_row_start) + 1),
-	// };
-	// sema_verror_range(location, message, list);
-	// va_end(list);
-	set_generic_token(lexer, TOKEN_INVALID_TOKEN);
+	set_generic_token(lexer, TOKEN_INVALID_TOKEN, message);
 	return false;
 }
 
 // Create an error token at a particular place in the file.
 // used for pointing out errors in strings etc.
-macro bool add_error_token_at(Lexer *lexer, char *loc, isz len, char *message, ...) @local
+macro bool add_error_token_at(Lexer *lexer, char *loc, isz len, String message) @local
 {
-	// va_list list;
-	// va_start(list, message);
-	// uint current_line = lexer.current_row;
-	// if (len > MAX_SOURCE_LOCATION_LEN) len = 0;
-	// SourceSpan location = {
-	// 		.file_id = lexer.file.file_id,
-	// 		.row = current_line,
-	// 		.length = len,
-	// 		.col = check_col((loc - lexer.line_start) + 1),
-	// };
-	// sema_verror_range(location, message, list);
-	// va_end(list);
-	io::printfn("add_error_token_at");
-	set_generic_token(lexer, TOKEN_INVALID_TOKEN);
+	set_generic_token(lexer, TOKEN_INVALID_TOKEN, message);
 	return false;
 }
 
 // Print an error at the current location.
-macro bool add_error_token_at_current(Lexer *lexer, char *message, ...) @local
+macro bool add_error_token_at_current(Lexer *lexer, String message) @local
 {
-	// va_list list;
-	// va_start(list, message);
-	// uint current_line = lexer.current_row;
-	// SourceSpan location = {
-	// 		.file_id = lexer.file.file_id,
-	// 		.row = current_line,
-	// 		.length = 1,
-	// 		.col = check_col((lexer.current - lexer.line_start) + 1),
-	// };
-	// sema_verror_range(location, message, list);
-	// va_end(list);
-
-	io::printfn("add_error_token_at_current");
-	set_generic_token(lexer, TOKEN_INVALID_TOKEN);
+	set_generic_token(lexer, TOKEN_INVALID_TOKEN, message);
 	return false;
 }
 
 // Add a new regular token.
 fn bool new_token(Lexer *lexer, TokenType type, String string) @inline @local
 {
-	set_generic_token(lexer, type);
-	lexer.data.string = string;
+	set_generic_token(lexer, type, string);
 	return true;
 }
 
@@ -579,20 +544,13 @@ fn bool scan_ident(Lexer *lexer, TokenType normal, TokenType const_token, TokenT
 		next(lexer);
 	}
 
-	// FIX: skip this at case default break
-	// Allow bang!
-	if (peek(lexer) == '!' && type == normal)
-	{
-		next(lexer);
-	}
-
 	uint len = (uint)(lexer.current - lexer.lexing_start);
 	if (type == TOKEN_INVALID_TOKEN)
 	{
 		if (!prefix && len == 1) return new_token(lexer, TOKEN_UNDERSCORE, "_");
 		if (prefix && len == 1)
 		{
-			return add_error_token(lexer, "An identifier was expected after the '%c'.", prefix);
+			return add_error_token(lexer, "An identifier was expected ... ");
 		}
 		return add_error_token(lexer, "An identifier may not consist of only '_' characters.");
 	}
@@ -635,13 +593,13 @@ fn bool scan_number_suffix(Lexer *lexer, bool *is_float) @local
 			c = next(lexer);
 			if (*is_float)
 			{
-				return add_error_token_at_current(lexer, "Integer suffix '%c' is not valid for a floating point literal.", c);
+				return add_error_token_at_current(lexer, "Integer suffix is not valid for a floating point literal.");
 			}
 			break;
 		case 'u':
 			if (*is_float)
 			{
-				return add_error_token_at_current(lexer, "Integer suffix '%c' is not valid for a floating point literal.", c);
+				return add_error_token_at_current(lexer, "Integer suffix is not valid for a floating point literal.");
 			}
 			c = next(lexer);
 			if ((c | 32) == 'l')
@@ -654,7 +612,7 @@ fn bool scan_number_suffix(Lexer *lexer, bool *is_float) @local
 		case 'i':
 			if (*is_float)
 			{
-				return add_error_token_at_current(lexer, "Integer suffix '%c' is not valid for a floating point literal.", c);
+				return add_error_token_at_current(lexer, "Integer suffix '%c' is not valid for a floating point literal.");
 			}
 			next(lexer);
 			while (utils_port::char_is_digit(c = peek(lexer))) next(lexer);
@@ -764,7 +722,7 @@ fn bool scan_exponent(Lexer *lexer) @inline @local
 		}
 		if (c == '\n') return add_error_token(lexer, "End of line was reached while parsing the exponent.");
 		if (c < 31 || c > 127) add_error_token(lexer, "An unexpected character was found while parsing the exponent.");
-		return add_error_token(lexer, "Parsing the floating point exponent failed, because '%c' is not a number.", c);
+		return add_error_token(lexer, "Parsing the floating point exponent failed, because some char is not a number.");
 	}
 	// Step through all the digits.
 	while (utils_port::char_is_digit(peek(lexer))) next(lexer);
@@ -1007,13 +965,13 @@ fn bool scan_hex_array(Lexer *lexer) @inline @local
 	char start_char = peek(lexer);
 	next(lexer); // Step past ' or " `
 	char c;
-	ulong len = 0;
+	ulong len = 2;
 	while (1)
 	{
 		c = peek(lexer);
 		if (c == 0)
 		{
-			return add_error_token_at_current(lexer, "The hex string seems to be missing a terminating '%c'", start_char);
+			return add_error_token_at_current(lexer, "The hex string seems to be missing a terminating ");
 		}
 		if (c == start_char) break;
 		if (utils_port::char_is_hex(c))
@@ -1030,8 +988,8 @@ fn bool scan_hex_array(Lexer *lexer) @inline @local
 		if (c > ' ' && c < 127)
 		{
 			return add_error_token_at_current(lexer,
-											  "'%c' isn't a valid hexadecimal digit, all digits should be a-z, A-Z and 0-9.",
-											  c);
+											  " isn't a valid hexadecimal digit, all digits should be a-z, A-Z and 0-9.",
+											  );
 		}
 		return add_error_token_at_current(lexer,
 										  "This isn't a valid hexadecimal digit, all digits should be a-z, A-Z and 0-9.");
@@ -1041,10 +999,8 @@ fn bool scan_hex_array(Lexer *lexer) @inline @local
 	{
 		return add_error_token(lexer, "The hexadecimal string is not an even length, did you miss a digit somewhere?");
 	}
-	// FIX: this may oveflow
-	if (!new_token(lexer, TOKEN_BYTES, ((ZString)lexer.lexing_start).str_view())) return false;
-	lexer.data.is_base64 = false;
-	lexer.data.bytes_len = (ulong)len / 2;
+
+	new_token(lexer, TOKEN_BYTES, (String)lexer.lexing_start[..len+1]);
 	return true;
 }
 
@@ -1057,13 +1013,13 @@ fn bool scan_base64(Lexer *lexer) @inline @local
 	next(lexer); // Step past ' or " or `
 	char c;
 	uint end_len = 0;
-	ulong len = 0;
+	ulong len = 4;
 	while (1)
 	{
 		c = peek(lexer);
 		if (c == 0)
 		{
-			return add_error_token_at_start(lexer, "The base64 string seems to be missing a terminating '%c'", start_char);
+			return add_error_token_at_start(lexer, "The base64 string seems to be missing a terminating");
 		}
 		next(lexer);
 		if (c == start_char) break;
@@ -1071,7 +1027,7 @@ fn bool scan_base64(Lexer *lexer) @inline @local
 		{
 			if (end_len)
 			{
-				return add_error_token_at_current(lexer, "'%c' can't be placed after an ending '='", c);
+				return add_error_token_at_current(lexer, "can't be placed after an ending '='");
 			}
 			len++;
 			continue;
@@ -1080,7 +1036,7 @@ fn bool scan_base64(Lexer *lexer) @inline @local
 		{
 			if (end_len > 1)
 			{
-				return add_error_token_at_current(lexer, "There cannot be more than 2 '=' at the end of a base64 string.", c);
+				return add_error_token_at_current(lexer, "There cannot be more than 2 '=' at the end of a base64 string.");
 			}
 			end_len++;
 			continue;
@@ -1091,41 +1047,10 @@ fn bool scan_base64(Lexer *lexer) @inline @local
 			{
 				return add_error_token_at_current(lexer, "A valid base64 character was expected here.");
 			}
-			return add_error_token_at_current(lexer, "'%c' is not a valid base64 character.", c);
+			return add_error_token_at_current(lexer, "not a valid base64 character.");
 		}
 	}
-	if (!end_len && len % 4 != 0)
-	{
-		switch (len % 4)
-		{
-			case 0:
-			case 1:
-				// Invalid
-				break;
-			case 2:
-				end_len = 2;
-				break;
-			case 3:
-				end_len = 1;
-				break;
-			default:
-				unreachable();
-		}
-		if (len % 4 == 3)
-		{
-			end_len = 1;
-		}
-	}
-	if ((len + end_len) % 4 != 0)
-	{
-		return add_error_token_at_start(lexer, "Base64 strings must either be padded to multiple of 4, or if unpadded "
-											   "- only need 1 or 2 bytes of extra padding.");
-	}
-	ulong decoded_len = (3 * len - end_len) / 4;
-	// FIX: this may oveflow
-	if (!new_token(lexer, TOKEN_BYTES, ((ZString)lexer.lexing_start).str_view())) return false;
-	lexer.data.is_base64 = true;
-	lexer.data.bytes_len = decoded_len;
+	new_token(lexer, TOKEN_BYTES, (String)lexer.lexing_start[..len]);
 	return true;
 }
 
@@ -1207,7 +1132,7 @@ fn bool lexer_scan_token_inner(Lexer *lexer) @local
 	{
 		case '\n':
 			assert(lexer.mode == LEX_CONTRACTS);
-			return new_token(lexer, TOKEN_DOCS_EOL, "<eol>");
+			return new_token(lexer, TOKEN_DOCS_EOL, "\n");
 		case '@':
 			if (utils_port::char_is_letter_(peek(lexer)))
 			{
@@ -1227,11 +1152,12 @@ fn bool lexer_scan_token_inner(Lexer *lexer) @local
 			{
 				if (utils_port::char_is_letter(peek(lexer)))
 				{
-					return new_token(lexer, TOKEN_BUILTIN, "$$");
+					return scan_ident(lexer, TOKEN_BUILTIN, TOKEN_BUILTIN, TOKEN_BUILTIN, '#');
 				}
 				return add_error_token_at_current(lexer, "Expected a letter after $$.");
+			} else {
+				return scan_ident(lexer, TOKEN_CT_IDENT, TOKEN_CT_CONST_IDENT, TOKEN_CT_TYPE_IDENT, '$');
 			}
-			return scan_ident(lexer, TOKEN_CT_IDENT, TOKEN_CT_CONST_IDENT, TOKEN_CT_TYPE_IDENT, '$');
 		case ',':
 			return new_token(lexer, TOKEN_COMMA, ",");
 		case ';':
@@ -1357,9 +1283,9 @@ fn bool lexer_scan_token_inner(Lexer *lexer) @local
 			if (c >= 'A' && c <= 'Z') nextcase '_'; // goto IDENT;
 			if (c < 0)
 			{
-				return add_error_token(lexer, "The 0x%x character may not be placed outside of a string or comment, did you forget a \" somewhere?", (char)c);
+				return add_error_token(lexer, "The 0x ?? character may not be placed outside of a string or comment, did you forget a \" somewhere?");
 			}
-			return add_error_token(lexer, "'%c' may not be placed outside of a string or comment, did you perhaps forget a \" somewhere?", c);
+			return add_error_token(lexer, "char may not be placed outside of a string or comment, did you perhaps forget a \" somewhere?");
 
 	}
 }
