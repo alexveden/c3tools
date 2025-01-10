@@ -39,9 +39,11 @@ fn void! test_div() @test {
 module std::core::test;
 import std::math;
 import std::core::builtin;
+import std::os::argparse;
 import libc, std::time, std::io, std::sort;
 
-def TestFn = fn void!();
+def TestFn = fn void!() @if($$OLD_TEST);
+def TestFn = fn void() @if(!$$OLD_TEST);
 
 struct TestUnit @private
 {
@@ -59,7 +61,7 @@ struct TestContext @private
 
 	// internal state
 	bool assert_print_backtrace;
-	bool has_ansi;
+	bool has_ansi_codes;
 	bool is_in_panic;
 	String current_test_name;
 	TestFn setup_fn;
@@ -80,11 +82,7 @@ Initializes test case context.
 macro setup(TestFn setup_fn, TestFn teardown_fn = null) {
 	test_context.setup_fn = setup_fn;
 	test_context.teardown_fn = teardown_fn;
-
-	if(catch err = test_context.setup_fn()) {
-    	test_context.assert_print_backtrace = false;
-	    builtin::panicf("test::setup() failed with %s", $$FILE, $$FUNC, $$LINE, err);
-	}
+	test_context.setup_fn();
 }
 
 <*
@@ -282,6 +280,10 @@ fn int cmp_test_unit(TestUnit a, TestUnit b) @private
 	return (int)(an - bn);
 }
 
+fn bool terminal_has_ansi_codes() {
+	// TODO: implement terminal ansi code support check, currently colors can be enabled manually
+	return false;
+}
 
 fn void test_panic(String message, String file, String function, uint line) @private
 {
@@ -295,8 +297,8 @@ fn void test_panic(String message, String file, String function, uint line) @pri
     	builtin::print_backtrace(message, 3);
 	}
 	io::printfn("[%sFAIL%s] %s ( %s:%s ) %s", 
-		test_context.has_ansi ? "\e[0;31m" : "",
-		test_context.has_ansi ? "\e[0m" : "",
+		test_context.has_ansi_codes ? "\e[0;31m" : "",
+		test_context.has_ansi_codes ? "\e[0m" : "",
 		test_context.current_test_name, 
 		file, 
 		line,
@@ -308,37 +310,60 @@ fn void test_panic(String message, String file, String function, uint line) @pri
 	}
 
 	if (test_context.teardown_fn){
-		if(catch err = test_context.teardown_fn()) {
-			io::printfn("teardown_fn failed with %s (ignored)", err);
-		}
+		test_context.teardown_fn();
 	}
 
 	test_context.is_in_panic = false;
 	libc::longjmp(&test_context.buf, 1);
 }
-fn bool terminal_has_ansi() @private {
-	// TODO: implement this 
-	return true;
-}
 
-fn bool run_tests(TestUnit[] tests) @private
+fn bool run_tests(String[] args, TestUnit[] tests) @private
 {
 	usz max_name;
 	foreach (&unit : tests)
 	{
 		if (max_name < unit.name.len) max_name = unit.name.len;
 	}
-	// TODO: add argument to sort or not
-	//quicksort(tests, &cmp_test_unit);
-
 	TestContext context = {
 		.assert_print_backtrace = true,
-		//.breakpoint_on_assert = true,
-		//.test_filter = "test::std::os::argparse::",
-		.test_filter = "lexer",
-		.has_ansi = terminal_has_ansi(),
+		.breakpoint_on_assert = false,
+		.test_filter = "",
+		.has_ansi_codes = terminal_has_ansi_codes(),
 	};
+	bool sort_tests = true;
 	test_context = &context;
+	// io::printfn("args: %s", args);
+
+	argparse::ArgParse agp = {
+		.description = "c3c default test runner",
+		.usage = " [options]",
+		.options = { 
+			argparse::group_opt("Test options"),
+			argparse::help_opt(),
+			{.short_name = 'f', .long_name = "filter", .value = &context.test_filter, 
+				.help = "filter tests by name, e.g. some::test, or some"},
+			{.short_name = 'b', .long_name = "breakpoint", .value = &context.breakpoint_on_assert,
+				.help = "emits breakpoint if any assert() is failed"},
+			{.long_name = "sort", .value = &sort_tests,
+				.help = "sort all tests alphabetically by name, --no-sort - preserve natural order"},
+			{.short_name = 'c', .long_name = "color", .value = &context.has_ansi_codes,
+				.help = "test output with colors"},
+		}, 
+	};
+
+	if(catch err = agp.parse(args)){
+		agp.print_usage()!!;
+		return false;
+	}
+	if (agp.arguments.len != 0){
+		io::printfn("Error: no extra arguments allowed, got: %s", agp.arguments);
+		return false;
+	}
+
+	if (sort_tests) {
+		quicksort(tests, &cmp_test_unit);
+	}
+
 
 	PanicFn old_panic = builtin::panic;
 	defer builtin::panic = old_panic;
@@ -367,43 +392,41 @@ fn bool run_tests(TestUnit[] tests) @private
 		if (libc::setjmp(&context.buf) == 0)
 		{
 			(void)io::stdout().flush();
-			if (catch err = unit.func())
-			{
-				io::printfn("[%sFAIL%s] %s Failed due to: %s",
-							test_context.has_ansi ? "\e[0;31m" : "",
-							test_context.has_ansi ? "\e[0m" : "",
-							unit.name,
-							err);
-			} else {
-				io::printfn("[%sPASS%s] %s", 
-							test_context.has_ansi ? "\e[0;32m" : "",
-							test_context.has_ansi ? "\e[0m" : "",
-							unit.name);
-				tests_passed++;
-			}
+			unit.func();
+			io::printfn("[%sPASS%s] %s", 
+						test_context.has_ansi_codes ? "\e[0;32m" : "",
+						test_context.has_ansi_codes ? "\e[0m" : "",
+						unit.name);
+			tests_passed++;
 
 			if (test_context.teardown_fn){
-				if(catch err = test_context.teardown_fn()) {
-					io::printfn("teardown_fn failed with %s (ignored)", err);
-				}
+				test_context.teardown_fn();
 			}
 		}
 	}
 	io::printfn("\n%d test%s run.\n", test_count-tests_skipped, test_count > 1 ? "s" : "");
-	io::printfn("Test Result: %s. %d passed, %d failed, %d skipped.",
-				tests_passed < test_count - tests_skipped ? "FAILED" : "ok", 
+
+	int n_failed = test_count - tests_passed - tests_skipped;
+	io::printf("Test Result: %s%s%s: ",
+				test_context.has_ansi_codes ? (n_failed ? "\e[0;31m" : "\e[0;32m") : "",
+				n_failed ? "FAILED" : "PASSED",
+				test_context.has_ansi_codes ? "\e[0m" : "",
+				);
+
+	io::printfn("%d passed, %d failed, %d skipped.",
 				tests_passed,
-				test_count - tests_passed - tests_skipped, 
+				n_failed,
 				tests_skipped);
-	return test_count-tests_skipped == tests_passed;
+
+	return n_failed == 0;
 }
 
-fn bool default_test_runner()
+fn bool default_test_runner(String[] args)
 {
 	@pool()
 	{
 		assert(test_context == null, "test suite is already running");
-		return run_tests(test_collection_create(allocator::temp()));
+		return run_tests(args, test_collection_create(allocator::temp()));
 	};
 }
 

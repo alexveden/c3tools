@@ -204,14 +204,12 @@ fn void! ArgParse.print_usage(&self) {
             io::print("\n");
         };
     } else {
-        io::printf("%s [options] [--] [arg1 argN]\n\n", self.program_name);
+        io::printf("%s [options] [--] [arg1 argN]\n", self.program_name);
     }
 
     if (self.description) {
         io::printf("%s\n", self.description);
     }
-
-    io::print("\n");
 
     usz usage_opts_width = 0;
     foreach(opt: self.options){
@@ -502,7 +500,8 @@ fn void! ArgParse.parse_long_arg(&self) @local
                 case ArgError.MISSING_ARGUMENT:
                     // NOTE: for boolean flags it's possible to pass unset with '--no-<flag_name>'
                     if (opt.value.type == bool.typeid && 
-                        self._ctx.argv[0][2..].starts_with("no-"))
+                        self._ctx.argv[0][2..].starts_with("no-") &&
+                        self._ctx.argv[0][5..].starts_with(opt.long_name))
                     {
                         flag_unset = true;
                     } else {

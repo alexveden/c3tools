@@ -1,7 +1,7 @@
 module test::std::os::argparse @test;
 import std::os::argparse @public;
 
-fn void! test_simple_arg_init() {
+fn void test_simple_arg_init() {
 
 	int val = 0;
 	String s;
@@ -20,7 +20,7 @@ fn void! test_simple_arg_init() {
 	};
 
     String[] args = {"testprog"}; 
-	agp.parse(args)!;
+	agp.parse(args)!!;
 
 	test::equal(agp.usage, "option -sdf -[sdf]");
 	test::equal(agp.description, "test ArgParse program");
@@ -29,7 +29,7 @@ fn void! test_simple_arg_init() {
 	test::equal(agp.program_name, "testprog");
 }
 
-fn void! test_help_show() {
+fn void test_help_show() {
 
 	int val = 0;
 	String s;
@@ -45,7 +45,7 @@ fn void! test_help_show() {
 	test::@error(agp.parse(args), ArgError.HELP_SHOW);
 }
 
-fn void! test_help_show_long() {
+fn void test_help_show_long() {
 
 	int val = 0;
 	String s;
@@ -61,7 +61,7 @@ fn void! test_help_show_long() {
 	test::@error(agp.parse(args), ArgError.HELP_SHOW);
 }
 
-fn void! test_bool_flag() {
+fn void test_bool_flag() {
 
 	bool val = false;
 	argparse::ArgParse agp = {
@@ -75,13 +75,13 @@ fn void! test_bool_flag() {
     test::equal(val, false);
     test::equal(agp.options[0]._is_present, false);
 
-	agp.parse(args)!;
+	agp.parse(args)!!;
 
     test::equal(val, true);
     test::equal(agp.options[0]._is_present, true);
 }
 
-fn void! test_bool_flag_default() {
+fn void test_bool_flag_default() {
 
 	bool val = true;
 	argparse::ArgParse agp = {
@@ -95,13 +95,13 @@ fn void! test_bool_flag_default() {
     test::equal(val, true);
     test::equal(agp.options[0]._is_present, false);
 
-	agp.parse(args)!;
+	agp.parse(args)!!;
 
     test::equal(val, true);
     test::equal(agp.options[0]._is_present, false);
 }
 
-fn void! test_bool_flag_unset() {
+fn void test_bool_flag_unset() {
 
 	bool val = true;
 	argparse::ArgParse agp = {
@@ -115,13 +115,13 @@ fn void! test_bool_flag_unset() {
     test::equal(val, true);
     test::equal(agp.options[0]._is_present, false);
 
-	agp.parse(args)!;
+	agp.parse(args)!!;
 
     test::equal(val, false);
     test::equal(agp.options[0]._is_present, true);
 }
 
-fn void! test_str_default() {
+fn void test_str_default() {
 
 	String val = "foo";
 	argparse::ArgParse agp = {
@@ -135,13 +135,13 @@ fn void! test_str_default() {
     test::equal(val, "foo");
     test::equal(agp.options[0]._is_present, false);
 
-	agp.parse(args)!;
+	agp.parse(args)!!;
 
     test::equal(val, "foo");
     test::equal(agp.options[0]._is_present, false);
 }
 
-fn void! test_str_set_equal() {
+fn void test_str_set_equal() {
 
 	String val = "foo";
 	argparse::ArgParse agp = {
@@ -155,13 +155,13 @@ fn void! test_str_set_equal() {
     test::equal(val, "foo");
     test::equal(agp.options[0]._is_present, false);
 
-	agp.parse(args)!;
+	agp.parse(args)!!;
 
     test::equal(val, "bar");
     test::equal(agp.options[0]._is_present, true);
 }
 
-fn void! test_str_set_next_arg() {
+fn void test_str_set_next_arg() {
 
 	String val = "foo";
 	argparse::ArgParse agp = {
@@ -175,14 +175,14 @@ fn void! test_str_set_next_arg() {
     test::equal(val, "foo");
     test::equal(agp.options[0]._is_present, false);
 
-	agp.parse(args)!;
+	agp.parse(args)!!;
 
     test::equal(val, "bar");
     test::equal(agp.options[0]._is_present, true);
 }
 
 
-fn void! test_str_set_short_arg() {
+fn void test_str_set_short_arg() {
 
 	String val = "foo";
 	argparse::ArgParse agp = {
@@ -196,13 +196,13 @@ fn void! test_str_set_short_arg() {
     test::equal(val, "foo");
     test::equal(agp.options[0]._is_present, false);
 
-	agp.parse(args)!;
+	agp.parse(args)!!;
 
     test::equal(val, "bar");
     test::equal(agp.options[0]._is_present, true);
 }
 
-fn void! test_invalid_arg_short() {
+fn void test_invalid_arg_short() {
 
 	String val = "foo";
 	argparse::ArgParse agp = {
@@ -216,7 +216,7 @@ fn void! test_invalid_arg_short() {
 	test::@error(agp.parse(args), ArgError.INVALID_ARGUMENT);
 }
 
-fn void! test_invalid_arg_long() {
+fn void test_invalid_arg_long() {
 
 	String val = "foo";
 	argparse::ArgParse agp = {
@@ -230,7 +230,7 @@ fn void! test_invalid_arg_long() {
 	test::@error(agp.parse(args), ArgError.INVALID_ARGUMENT);
 }
 
-fn void! test_missing_require_argument() {
+fn void test_missing_require_argument() {
 
 	bool val = false;
 	argparse::ArgParse agp = {
@@ -245,7 +245,7 @@ fn void! test_missing_require_argument() {
 }
 
 
-fn void! test_missing_require_arguments_many() {
+fn void test_missing_require_arguments_many() {
 
 	bool val = false;
 	bool val2 = false;
@@ -261,7 +261,7 @@ fn void! test_missing_require_arguments_many() {
 	test::@error(agp.parse(args), ArgError.MISSING_ARGUMENT);
 }
 
-fn void! test_passing_short_option_after_argument() {
+fn void test_passing_short_option_after_argument() {
 
 	bool val = false;
 	argparse::ArgParse agp = {
@@ -275,7 +275,7 @@ fn void! test_passing_short_option_after_argument() {
 	test::@error(agp.parse(args), ArgError.INVALID_ARGUMENT);
 }
 
-fn void! test_passing_long_option_after_argument() {
+fn void test_passing_long_option_after_argument() {
 
 	bool val = false;
 	argparse::ArgParse agp = {
@@ -289,7 +289,7 @@ fn void! test_passing_long_option_after_argument() {
 	test::@error(agp.parse(args), ArgError.INVALID_ARGUMENT);
 }
 
-fn void! test_multiple_short_args() {
+fn void test_multiple_short_args() {
 
 	bool val = false;
 	bool val2 = false;
@@ -302,7 +302,7 @@ fn void! test_multiple_short_args() {
 	};
 
     String[] args = {"testprog", "-f", "-z"}; 
-    agp.parse(args)!;
+    agp.parse(args)!!;
 
     test::equal(val, true);
     test::equal(val2, true);
@@ -310,7 +310,7 @@ fn void! test_multiple_short_args() {
     test::equal(agp.options[1]._is_present, true);
 }
 
-fn void! test_str_set_next_arg_missing_value_with_eqchar() {
+fn void test_str_set_next_arg_missing_value_with_eqchar() {
 
 	String val = "foo";
 	argparse::ArgParse agp = {
@@ -324,7 +324,7 @@ fn void! test_str_set_next_arg_missing_value_with_eqchar() {
 	test::@error(agp.parse(args), ArgError.ARGUMENT_VALUE);
 }
 
-fn void! test_str_set_next_arg_missing_value() {
+fn void test_str_set_next_arg_missing_value() {
 
 	String val = "foo";
 	argparse::ArgParse agp = {
@@ -338,7 +338,7 @@ fn void! test_str_set_next_arg_missing_value() {
 	test::@error(agp.parse(args), ArgError.ARGUMENT_VALUE);
 }
 
-fn void! test_str_set_next_arg_is_another_option() {
+fn void test_str_set_next_arg_is_another_option() {
 
 	String val = "foo";
 	bool val2 = true;
@@ -354,7 +354,7 @@ fn void! test_str_set_next_arg_is_another_option() {
 	test::@error(agp.parse(args), ArgError.ARGUMENT_VALUE);
 }
 
-fn void! test_str_set_next_arg_is_another_option_long() {
+fn void test_str_set_next_arg_is_another_option_long() {
 
 	String val = "foo";
 	bool val2 = true;
@@ -370,7 +370,7 @@ fn void! test_str_set_next_arg_is_another_option_long() {
 	test::@error(agp.parse(args), ArgError.ARGUMENT_VALUE);
 }
 
-fn void! test_duplicated_flag(){
+fn void test_duplicated_flag(){
 
 	bool val2 = true;
 	argparse::ArgParse agp = {
@@ -384,7 +384,7 @@ fn void! test_duplicated_flag(){
 	test::@error(agp.parse(args), ArgError.INVALID_ARGUMENT);
 }
 
-fn void! test_integer_option_i32(){
+fn void test_integer_option_i32(){
 
 	int val = 0;
 	argparse::ArgParse agp = {
@@ -395,13 +395,13 @@ fn void! test_integer_option_i32(){
 	};
 
     String[] args = {"testprog", "--int=3"}; 
-    agp.parse(args)!;
+    agp.parse(args)!!;
 
     test::equal(val, 3);
     test::equal(agp.options[0]._is_present, true);
 }
 
-fn void! test_integer_option_parsing_error(){
+fn void test_integer_option_parsing_error(){
 
 	int val = 0;
 	argparse::ArgParse agp = {
@@ -415,7 +415,7 @@ fn void! test_integer_option_parsing_error(){
     test::@error(agp.parse(args), ArgError.ARGUMENT_VALUE);
 }
 
-fn void! test_integer_option_parsing_error_short(){
+fn void test_integer_option_parsing_error_short(){
 
 	int val = 0;
 	argparse::ArgParse agp = {
@@ -429,7 +429,7 @@ fn void! test_integer_option_parsing_error_short(){
     test::@error(agp.parse(args), ArgError.ARGUMENT_VALUE);
 }
 
-fn void! test_integer_option_u32(){
+fn void test_integer_option_u32(){
 
 	uint val = 0;
 	argparse::ArgParse agp = {
@@ -440,13 +440,13 @@ fn void! test_integer_option_u32(){
 	};
 
     String[] args = {"testprog", "--int=3"}; 
-    agp.parse(args)!;
+    agp.parse(args)!!;
 
     test::equal(val, 3);
     test::equal(agp.options[0]._is_present, true);
 }
 
-fn void! test_integer_option_i64(){
+fn void test_integer_option_i64(){
 
 	long val = 0;
 	argparse::ArgParse agp = {
@@ -457,13 +457,13 @@ fn void! test_integer_option_i64(){
 	};
 
     String[] args = {"testprog", "--int=3"}; 
-    agp.parse(args)!;
+    agp.parse(args)!!;
 
     test::equal(val, 3);
     test::equal(agp.options[0]._is_present, true);
 }
 
-fn void! test_integer_option_u64(){
+fn void test_integer_option_u64(){
 
 	ulong val = 0;
 	argparse::ArgParse agp = {
@@ -474,13 +474,13 @@ fn void! test_integer_option_u64(){
 	};
 
     String[] args = {"testprog", "--int=3"}; 
-    agp.parse(args)!;
+    agp.parse(args)!!;
 
     test::equal(val, 3);
     test::equal(agp.options[0]._is_present, true);
 }
 
-fn void! test_float_option_f32(){
+fn void test_float_option_f32(){
 
 	float val = 0;
 	argparse::ArgParse agp = {
@@ -491,13 +491,13 @@ fn void! test_float_option_f32(){
 	};
 
     String[] args = {"testprog", "--float=3.23"}; 
-    agp.parse(args)!;
+    agp.parse(args)!!;
 
     test::almost_equal(val, 3.23);
     test::equal(agp.options[0]._is_present, true);
 }
 
-fn void! test_float_option_f64(){
+fn void test_float_option_f64(){
 
 	double val = 0;
 	argparse::ArgParse agp = {
@@ -508,13 +508,13 @@ fn void! test_float_option_f64(){
 	};
 
     String[] args = {"testprog", "--float=3.23"}; 
-    agp.parse(args)!;
+    agp.parse(args)!!;
 
     test::almost_equal(val, 3.23);
     test::equal(agp.options[0]._is_present, true);
 }
 
-fn void! test_float_option_f64_nan(){
+fn void test_float_option_f64_nan(){
 
 	double val = 0;
 	argparse::ArgParse agp = {
@@ -525,13 +525,13 @@ fn void! test_float_option_f64_nan(){
 	};
 
     String[] args = {"testprog", "--float=nan"}; 
-    agp.parse(args)!;
+    agp.parse(args)!!;
 
     test::almost_equal(val, double.nan);
     test::equal(agp.options[0]._is_present, true);
 }
 
-fn void! test_multi_short_flags(){
+fn void test_multi_short_flags(){
 
 	bool val = false;
 	bool val2 = false;
@@ -550,7 +550,7 @@ fn void! test_multi_short_flags(){
 	test::equal(val2, true);
 }
 
-fn void! test_single_dash(){
+fn void test_single_dash(){
 
 	bool val = false;
 	bool val2 = false;
@@ -566,7 +566,7 @@ fn void! test_single_dash(){
 	test::@error(agp.parse(args), ArgError.INVALID_ARGUMENT);
 }
 
-fn void! test_empty_argument(){
+fn void test_empty_argument(){
 
 	bool val = false;
 	bool val2 = false;
@@ -582,7 +582,7 @@ fn void! test_empty_argument(){
 	test::@error(agp.parse(args), ArgError.INVALID_ARGUMENT);
 }
 
-fn void! test_multi_arguments_double_dash(){
+fn void test_multi_arguments_double_dash(){
 
 	bool val = false;
 	bool val2 = false;
@@ -605,7 +605,7 @@ fn void! test_multi_arguments_double_dash(){
 	test::equal(agp.arguments[2], "arg2");
 }
 
-fn void! test_multi_arguments(){
+fn void test_multi_arguments(){
 
 	bool val = false;
 	bool val2 = false;
@@ -627,7 +627,7 @@ fn void! test_multi_arguments(){
 	test::equal(agp.arguments[1], "arg2");
 }
 
-fn void! test_multi_arguments_stop_at_non_option(){
+fn void test_multi_arguments_stop_at_non_option(){
 
 	bool val = false;
 	bool val2 = false;
@@ -655,7 +655,7 @@ fn void! test_multi_arguments_stop_at_non_option(){
 	test::equal(agp.arguments[3], "arg2");
 }
 
-fn void! test_subcommands(){
+fn void test_subcommands(){
 
 	bool val = false;
 	bool val2 = false;
@@ -700,10 +700,10 @@ fn void! test_subcommands(){
 	test::equal(agp_cmd.arguments[1], "arg2");
 }
 
-fn void! test_custom_type_callback_unknown_type() {
+fn void test_custom_type_callback_unknown_type() {
 
 	char val = '\0';
-	ArgParseCallbackFn cbf = fn void!(ArgOpt* opt, String value) {
+	ArgParseCallbackFn cbf = fn void! (ArgOpt* opt, String value) {
 		test::equal(value, "bar");
         *anycast(opt.value, char)! = value[0];
 	};
@@ -718,16 +718,16 @@ fn void! test_custom_type_callback_unknown_type() {
     test::equal(val, '\0');
     test::equal(agp.options[0]._is_present, false);
 
-	agp.parse(args)!;
+	agp.parse(args)!!;
 
     test::equal(val, 'b');
     test::equal(agp.options[0]._is_present, true);
 }
 
-fn void! test_custom_type_callback_str_type() {
+fn void test_custom_type_callback_str_type() {
 
 	String val = "foo";
-	ArgParseCallbackFn cbf = fn void!(ArgOpt* opt, String value) {
+	ArgParseCallbackFn cbf = fn void! (ArgOpt* opt, String value) {
         *anycast(opt.value, String)! = value[0..1];
 	};
 
@@ -741,16 +741,16 @@ fn void! test_custom_type_callback_str_type() {
     test::equal(val, "foo");
     test::equal(agp.options[0]._is_present, false);
 
-	agp.parse(args)!;
+	agp.parse(args)!!;
 
     test::equal(val, "ba");
     test::equal(agp.options[0]._is_present, true);
 }
 
-fn void! test_custom_type_callback_str_type_bad_arg() {
+fn void test_custom_type_callback_str_type_bad_arg() {
 
 	String val = "foo";
-	ArgParseCallbackFn cbf = fn void!(ArgOpt* opt, String value) {
+	ArgParseCallbackFn cbf = fn void! (ArgOpt* opt, String value) {
         *anycast(opt.value, String)! = value[0..1];
 	};
 
@@ -764,10 +764,10 @@ fn void! test_custom_type_callback_str_type_bad_arg() {
 	test::@error(agp.parse(args), ArgError.ARGUMENT_VALUE);
 }
 
-fn void! test_custom_type_callback_bool() {
+fn void test_custom_type_callback_bool() {
 
 	bool val = false;
-	ArgParseCallbackFn cbf = fn void!(ArgOpt* opt, String value) {
+	ArgParseCallbackFn cbf = fn void! (ArgOpt* opt, String value) {
 		test::equal(value, "1");
 		if (value == "1"){
         	*anycast(opt.value, bool)! = true;
@@ -786,14 +786,14 @@ fn void! test_custom_type_callback_bool() {
 	};
 
     String[] args = {"testprog", "--flt"}; 
-	agp.parse(args)!;
+	agp.parse(args)!!;
 	test::equal(val, true);
 }
 
-fn void! test_custom_type_callback_bool_unset() {
+fn void test_custom_type_callback_bool_unset() {
 
 	bool val = true;
-	ArgParseCallbackFn cbf = fn void!(ArgOpt* opt, String value) {
+	ArgParseCallbackFn cbf = fn void! (ArgOpt* opt, String value) {
 		test::equal(value, "0");
 		if (value == "1"){
         	*anycast(opt.value, bool)! = true;
@@ -812,6 +812,45 @@ fn void! test_custom_type_callback_bool_unset() {
 	};
 
     String[] args = {"testprog", "--no-flt"}; 
-	agp.parse(args)!;
+	agp.parse(args)!!;
 	test::equal(val, false);
+}
+
+fn void test_bool_flag_unset_no_short() {
+
+	bool val = true;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.long_name = "color", .value = &val,
+				.help = "Test output with colors, --no-color to disable"},
+		}
+	};
+
+    String[] args = {"testprog", "--no-flt"}; 
+    test::equal(val, true);
+    test::equal(agp.options[0]._is_present, false);
+
+	test::@error(agp.parse(args), ArgError.INVALID_ARGUMENT);
+}
+
+fn void test_bool_flag_unset_has_arg() {
+
+	bool val = true;
+	argparse::ArgParse agp = {
+		.description = "test ArgParse program",
+		.options = { 
+			{.long_name = "color", .value = &val,
+				.help = "Test output with colors, --no-color to disable"},
+		}
+	};
+
+    String[] args = {"testprog", "--no-color"}; 
+    test::equal(val, true);
+    test::equal(agp.options[0]._is_present, false);
+
+	agp.parse(args)!!;
+
+    test::equal(val, false);
+    test::equal(agp.options[0]._is_present, true);
 }
