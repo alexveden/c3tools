@@ -1370,8 +1370,9 @@ fn void check_bidirectional_markers(Lexer *lexer) @inline
 	char *check = (char *)lexer.current;
 	uint c;
 	int balance = 0;
+	char *last = check + lexer.file_len;
 	// Loop until end.
-	while LOOP: ((c = *(check++)) != '\0')
+	while LOOP: (check < last && (c = *(check++)) != '\0')
 	{
 		if (c != 0xE2) continue;
 		// Possible marker.
