@@ -712,3 +712,31 @@ fn void test_simple_bultin_const() {
 
 	test::equal(toks[3].type, TokenType.TOKEN_EOF);
 }
+
+fn void test_empty_string_token() {
+    String contents = "module \n   \t \t \n;";
+	Lexer lexer = lexer::new_init(contents);
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+
+    // foreach(t: toks) t.print(new_line: true);
+    // foreach(i, t: toks) io::printf("%d: %s", i, t);
+
+	test::equal(4, toks.len());
+	test::equal(toks[0].type, TokenType.TOKEN_MODULE);
+	test::equal(toks[0].value, "module");
+
+	test::equal(toks[1].type, TokenType.TOKEN_EMPTY_LINE);
+	test::equal(toks[1].value, "\n");
+	test::equal(toks[1].row, 2);
+	test::equal(toks[1].col, 8);
+	test::equal(toks[1].offset, 15);
+
+	test::equal(toks[2].type, TokenType.TOKEN_EOS);
+	test::equal(toks[2].value, `;`);
+	test::equal(toks[2].row, 3);
+	test::equal(toks[2].col, 1);
+	test::equal(toks[2].offset, contents.len-1);
+
+	test::equal(toks[3].type, TokenType.TOKEN_EOF);
+}

@@ -20,6 +20,7 @@ enum TokenType : uint
 	TOKEN_COLON,            // :
 	TOKEN_COMMA,            // ,
 	TOKEN_EOS,              // ;
+	TOKEN_EMPTY_LINE,       // a line with only white spaces (useful for code formatting)
 	TOKEN_EQ,               // =
 	TOKEN_GREATER,          // >
 	TOKEN_DIV,              // /
@@ -287,6 +288,8 @@ fn String token_type_to_string(TokenType type)
 			return ".";
 		case TOKEN_EOS:
 			return ";";
+		case TOKEN_EMPTY_LINE:
+			return "<EMPTY_LINE>";
 		case TOKEN_EQ:
 			return "=";
 		case TOKEN_GREATER:

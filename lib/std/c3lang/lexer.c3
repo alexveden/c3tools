@@ -459,11 +459,13 @@ fn bool parse_multiline_comment(Lexer *lexer) @inline @local
  */
 fn bool skip_whitespace(Lexer *lexer) @local
 {
+	bool has_empty_line = false;
 	while (1)
 	{
 		switch (peek(lexer))
 		{
 			case '/':
+				has_empty_line = false;
 				if (lexer.mode == LEX_CONTRACTS) return false;
 				// The '//' case
 				if (peek_next(lexer) == '/')
@@ -487,7 +489,11 @@ fn bool skip_whitespace(Lexer *lexer) @local
 			case '\n':
 				// Contract lexing sees '\n' as a token.
 				if (lexer.mode == LEX_CONTRACTS) return false;
-				//FALLTHROUGH;
+				if (has_empty_line) {
+					begin_new_token(lexer);
+					return new_token(lexer, TokenType.TOKEN_EMPTY_LINE, "\n");
+				}
+				has_empty_line = true;
 				nextcase;
 			case ' ':
 			case '\t':
@@ -495,9 +501,9 @@ fn bool skip_whitespace(Lexer *lexer) @local
 				next(lexer);
 				break;
 			case '\r':
-				// Already filtered out.
-				unreachable();
+				unreachable(`\r has to be filtered out`);
 			default:
+				has_empty_line = false;
 				return false;
 		}
 	}
