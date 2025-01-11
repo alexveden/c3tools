@@ -40,7 +40,10 @@ module std::core::test;
 import std::math;
 import std::core::builtin;
 import std::os::argparse;
-import libc, std::time, std::io, std::sort;
+import libc; 
+import std::time;
+import std::io;
+import std::sort;
 
 def TestFn = fn void!() @if($$OLD_TEST);
 def TestFn = fn void() @if(!$$OLD_TEST);
@@ -66,6 +69,13 @@ struct TestContext @private
 	String current_test_name;
 	TestFn setup_fn;
 	TestFn teardown_fn;
+
+			
+	char* error_buffer;
+	usz error_buffer_capacity;
+	File fake_buffer;
+	File orig_stdout;
+	File orig_stderr;
 }
 
 TestContext* test_context @private;
@@ -290,8 +300,9 @@ fn void test_panic(String message, String file, String function, uint line) @pri
 	if(test_context.is_in_panic){
 		return;
 	}
-
 	test_context.is_in_panic = true;
+
+	unmute_output(true);
 	(void)io::stdout().flush();
 	if (test_context.assert_print_backtrace){
     	builtin::print_backtrace(message, 3);
@@ -315,6 +326,68 @@ fn void test_panic(String message, String file, String function, uint line) @pri
 
 	test_context.is_in_panic = false;
 	libc::longjmp(&test_context.buf, 1);
+}
+
+fn void mute_output() @private {
+	assert(test_context.error_buffer != null);
+	assert(test_context.error_buffer_capacity > 0);
+	assert(!test_context.fake_buffer.file);
+	assert(!test_context.orig_stderr.file);
+	assert(!test_context.orig_stdout.file);
+
+	test_context.fake_buffer = File {
+		.file = libc::fmemopen(test_context.error_buffer, test_context.error_buffer_capacity, "r+w"),
+	};
+
+	File* stdout = io::stdout();
+	File* stderr = io::stderr();
+
+	test_context.orig_stderr = *stderr;
+	test_context.orig_stdout = *stdout;
+
+	*stderr = test_context.fake_buffer;
+	*stdout = test_context.fake_buffer;
+}
+
+fn void unmute_output(bool has_error) @private {
+	assert(test_context.fake_buffer.file);
+	assert(test_context.orig_stderr.file);
+	assert(test_context.orig_stdout.file);
+
+
+	File* stdout = io::stdout();
+	File* stderr = io::stderr();
+
+	*stderr = test_context.orig_stderr;
+	*stdout = test_context.orig_stdout;
+	test_context.orig_stderr.file = null;
+	test_context.orig_stdout.file = null;
+
+	usz log_size = test_context.fake_buffer.seek(0, Seek.CURSOR)!!;
+
+	if (has_error && log_size > 0) {
+		test_context.fake_buffer.write_byte('\n')!!;
+		test_context.fake_buffer.write_byte('\0')!!;
+		(void)test_context.fake_buffer.seek(0, Seek.SET)!!;
+
+		io::printfn("========== TEST LOG ============");
+		io::printfn("%s\n", test_context.current_test_name);
+		while(true){
+			char! c = test_context.fake_buffer.read_byte();
+			if(catch c) {
+				break; // EOF
+			}
+			if (@unlikely(c == '\0')){
+				// ignore junk from previous tests 
+				break;
+			}
+			libc::putchar(c);			
+		}
+		io::printfn("========== TEST END ============");
+	}
+	(void)stdout.flush();
+	libc::fclose(test_context.fake_buffer.file);
+	test_context.fake_buffer.file = null;
 }
 
 fn bool run_tests(String[] args, TestUnit[] tests) @private
@@ -364,6 +437,11 @@ fn bool run_tests(String[] args, TestUnit[] tests) @private
 		quicksort(tests, &cmp_test_unit);
 	}
 
+	// Buffer for hijacking the output
+	test_context.error_buffer_capacity = 1024 * 1024;
+	test_context.error_buffer = libc::calloc(1, test_context.error_buffer_capacity);
+	assert(test_context.error_buffer, "out of mem");
+	defer libc::free(test_context.error_buffer);
 
 	PanicFn old_panic = builtin::panic;
 	defer builtin::panic = old_panic;
@@ -388,11 +466,12 @@ fn bool run_tests(String[] args, TestUnit[] tests) @private
 		test_context.teardown_fn = null;
 
 		test_context.current_test_name = unit.name;
-		(void)io::stdout().flush();
 		if (libc::setjmp(&context.buf) == 0)
 		{
-			(void)io::stdout().flush();
+			mute_output();
 			unit.func();
+			unmute_output(false); // all good, discard output
+
 			io::printfn("[%sPASS%s] %s", 
 						test_context.has_ansi_codes ? "\e[0;32m" : "",
 						test_context.has_ansi_codes ? "\e[0m" : "",

@@ -1,5 +1,6 @@
 module test::std::os::argparse @test;
 import std::os::argparse @public;
+import std::io;
 
 fn void test_simple_arg_init() {
 

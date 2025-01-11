@@ -50,7 +50,7 @@ TestState state = {
     	    builtin::print_backtrace(message, 3);
 	    }
         if (state.expected_fail) {
-	        io::printfn("[OOPS] (expected fail) ( %s:%s ) %s", file, line, message);
+	        // io::printfn("[OOPS] (expected fail) ( %s:%s ) %s", file, line, message);
             state.n_fails++;
         } else {
 	        builtin::panic = state.old_panic;
@@ -303,4 +303,16 @@ fn void test_vanilla_assert_fail(){
     test::setup(state.setup_fn, state.teardown_fn);
     state.expected_fail = true;
     assert(false, "this assert expected to fail with backtrace");
+}
+
+fn void test_std_out_hijack() {
+	io::print("print: aldsjalsdjlasjdlja\n");
+	io::printf("printf: aldsjalsdjlasjdlja\n");
+	io::eprint("eprint: aldsjalsdjlasjdlja\n");
+	io::eprintfn("eprintfn: aldsjalsdjlasjdlja\n");
+	io::fprint(io::stdout(), "fprint: stdout aldsjalsdjlasjdlja\n")!!;
+	io::fprint(io::stderr(), "fprint: stderr aldsjalsdjlasjdlja\n")!!;
+	io::fprintf(io::stderr(), "fprintf: stderr aldsjalsdjlasjdlja\n")!!;
+	io::fprintf(io::stderr(), "fprintfn: stderr aldsjalsdjlasjdlja\n")!!;
+    test::equal(true, true);
 }
