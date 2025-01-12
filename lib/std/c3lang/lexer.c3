@@ -31,7 +31,7 @@ struct Token(Printable) {
 	String value;
 	uint row;
 	uint col;
-	usz offset;
+	uint offset;
 }
 
 fn String Token.to_string(&self, Allocator allocator) @dynamic {
@@ -275,12 +275,12 @@ fn bool match(Lexer *lexer, char expected) @inline @local
  **/
 fn void set_generic_token(Lexer *lexer, TokenType type, String value) @inline @local
 {
-
+	assert(lexer.lexing_start >= lexer.file_begin);
 
 	lexer.token.type = type;
 	// Set the location.
 	lexer.token.value = value;
-	lexer.token.offset = lexer.lexing_start - lexer.file_begin;
+	lexer.token.offset = (uint)(lexer.lexing_start - lexer.file_begin);
 	uint line = lexer.start_row;
 	uint col;
 	uint length;
