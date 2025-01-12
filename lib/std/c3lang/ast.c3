@@ -2,7 +2,6 @@ module std::c3lang::ast;
 import std::io;
 import std::c3lang::lexer;
 import std::collections::list;
-import std::c3lang::common;
 
 
 struct Ast {
@@ -10,12 +9,7 @@ struct Ast {
     AstModule* modules;
     allocator::DynamicArenaAllocator _allocator;
     Lexer lexer;
-    struct _state {
-        char* scope_begin;
-        uint scope_len;
-        char* stmt_begin;
-        uint stmt_len;
-    }
+    any state;
 }
 
 struct AstNode {
@@ -78,33 +72,35 @@ struct AstCallableParam {
 }
 
 def NodeParser = fn bool (Ast* ast, AstNode* node, Token* t);
+struct NodeParserModuleState @local {
+    TokenType current;
+}
+
 fn bool parse_module(Ast* ast, AstNode* node, Token* t) 
 {
-    assert(node.type == TOKEN_MODULE);
+    assert(node.type == MODULE);
     AstModule* m = (AstModule*)node;
 
     t.print();
 
     switch (t.type){
-        case TOKEN_MODULE:
+        case MODULE:
             // initial statement
-	        mem::clear(&ast._state, $sizeof(ast._state));
-            ast._state.scope_begin = t.value.ptr;
+	        // mem::clear(&ast._state, $sizeof(ast._state));
             m.module_name = "";
-        case TOKEN_IDENT:
-            if(!ast._state.stmt_begin) ast._state.stmt_begin = t.value.ptr;
+        case IDENT:
             nextcase;
-        case TOKEN_SCOPE:
-            ast._state.stmt_len += t.value.len;
-        case TOKEN_AT_IDENT:
+        case SCOPE:
+            break;
+        case AT_IDENT:
             AstNode* attr = ast.@allc_add(AstNode, &m.attributes, t);
 
-        case TOKEN_EOS:
-            if (ast._state.stmt_begin) {
-                uint stmt_len = ast._state.stmt_len;
-                assert(stmt_len > 0 && stmt_len < 100);
-                m.module_name = ast.@allc_str((String)ast._state.stmt_begin[..stmt_len-1]);
-            }
+        case EOS:
+            // if (ast._state.stmt_begin) {
+            //     uint stmt_len = ast._state.stmt_len;
+            //     assert(stmt_len > 0 && stmt_len < 100);
+            //     m.module_name = ast.@allc_str((String)ast._state.stmt_begin[..stmt_len-1]);
+            // }
             m.iend = t.offset + t.value.len;
             // t.print(new_line: true);
             return true;
@@ -169,7 +165,7 @@ fn Ast parse(String contents, String file_path) {
 		// io::printf("%s\n", t);
 		if (!node_fn) {
 		    switch(self.lexer.token.type) {
-                case TOKEN_MODULE:
+                case MODULE:
                     assert(node == null);
                     node_fn = &parse_module;
                     node = self.@allc_add(AstModule, &self.modules, &self.lexer.token); 
@@ -189,7 +185,7 @@ fn Ast parse(String contents, String file_path) {
         AstModule* last_mod = @node_last(self.modules); 
         last_mod.iend = self.lexer.token.offset - 1;
     }
-	mem::clear(&self._state, $sizeof(self._state));
+	self.state = null;
 	return self;
 }
 

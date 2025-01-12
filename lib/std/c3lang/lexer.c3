@@ -1,7 +1,6 @@
 module std::c3lang::lexer;
 import std::io;
 import std::c3lang::utils_port;
-import std::c3lang::common;
 import std::collections::list;
 
 // Copyright (c) 2019 Christoffer Lerno. All rights reserved.
@@ -52,36 +51,36 @@ fn String Token.to_string(&self, Allocator allocator) @dynamic {
 fn void Token.print(&self, bool new_line = false) {
 	switch(self.type)
 	{
-		case TOKEN_IDENT:
-		case TOKEN_CT_IDENT:
-		case TOKEN_CT_CONST_IDENT:
-		case TOKEN_CT_TYPE_IDENT:
-		case TOKEN_HASH_IDENT:
-		case TOKEN_HASH_CONST_IDENT:
-		case TOKEN_HASH_TYPE_IDENT:
-		case TOKEN_CONST_IDENT:
-		case TOKEN_TYPE_IDENT:
-		case TOKEN_AT_IDENT:
-		case TOKEN_AT_TYPE_IDENT:
-		case TOKEN_AT_CONST_IDENT:
+		case IDENT:
+		case CT_IDENT:
+		case CT_CONST_IDENT:
+		case CT_TYPE_IDENT:
+		case HASH_IDENT:
+		case HASH_CONST_IDENT:
+		case HASH_TYPE_IDENT:
+		case CONST_IDENT:
+		case TYPE_IDENT:
+		case AT_IDENT:
+		case AT_TYPE_IDENT:
+		case AT_CONST_IDENT:
 			io::printf("%s[%s]%s", 
-					   common::token_type_to_string(self.type), self.value, new_line ? "\n" : " ");
+					   lexer::token_type_to_string(self.type), self.value, new_line ? "\n" : " ");
 			break;
-		case TOKEN_STRING:
-		case TOKEN_RAW_STRING:
-		case TOKEN_INTEGER:
-		case TOKEN_REAL:
-		case TOKEN_CHAR_LITERAL:
-		case TOKEN_BYTES:
-		case TOKEN_COMMENT_SINGLE:
+		case STRING:
+		case RAW_STRING:
+		case INTEGER:
+		case REAL:
+		case CHAR_LITERAL:
+		case BYTES:
+		case COMMENT_SINGLE:
 			io::printf("%s[%s]%s", 
-					   common::token_type_to_string(self.type), self.value, new_line ? "\n" : " ");
+					   lexer::token_type_to_string(self.type), self.value, new_line ? "\n" : " ");
 			break;
-		case TOKEN_EOS:
-			io::printf("%s\n", common::token_type_to_string(self.type));
+		case EOS:
+			io::printf("%s\n", lexer::token_type_to_string(self.type));
 			break;
 		default:
-			io::printf("%s%s", common::token_type_to_string(self.type), new_line ? "\n" : " ");
+			io::printf("%s%s", lexer::token_type_to_string(self.type), new_line ? "\n" : " ");
 	}
 
 }
@@ -116,7 +115,7 @@ Parses next token in a code
 *>
 fn bool Lexer.next_token(&self)
 {
-	if(self.token.type == TOKEN_EOF) {
+	if(self.token.type == EOF) {
 		return false;
 	}
 	// Scan for a token.
@@ -195,7 +194,7 @@ fn ushort check_col(usz col) @inline @local
 }
 fn uint check_row(usz line) @inline @local
 {
-	return line > std::c3lang::common::MAX_SOURCE_LOCATION_LEN ? 0 : (uint)line;
+	return line > std::c3lang::lexer::MAX_SOURCE_LOCATION_LEN ? 0 : (uint)line;
 }
 
 // --- Lexing general methods.
@@ -307,14 +306,14 @@ fn void set_generic_token(Lexer *lexer, TokenType type, String value) @inline @l
 macro bool add_error_token(Lexer *lexer, String message) @local
 {
     
-	set_generic_token(lexer, TOKEN_INVALID_TOKEN, message);
+	set_generic_token(lexer, INVALID_TOKEN, message);
 	return false;
 }
 
 // Error at the start of the lexing, with a single length.
 macro bool add_error_token_at_start(Lexer *lexer, String message) @local
 {
-	set_generic_token(lexer, TOKEN_INVALID_TOKEN, message);
+	set_generic_token(lexer, INVALID_TOKEN, message);
 	return false;
 }
 
@@ -322,14 +321,14 @@ macro bool add_error_token_at_start(Lexer *lexer, String message) @local
 // used for pointing out errors in strings etc.
 macro bool add_error_token_at(Lexer *lexer, char *loc, isz len, String message) @local
 {
-	set_generic_token(lexer, TOKEN_INVALID_TOKEN, message);
+	set_generic_token(lexer, INVALID_TOKEN, message);
 	return false;
 }
 
 // Print an error at the current location.
 macro bool add_error_token_at_current(Lexer *lexer, String message) @local
 {
-	set_generic_token(lexer, TOKEN_INVALID_TOKEN, message);
+	set_generic_token(lexer, INVALID_TOKEN, message);
 	return false;
 }
 
@@ -378,7 +377,7 @@ fn bool parse_line_comment(Lexer *lexer) @inline @local
 		cur--;
 	}
 	uint len = (uint)(lexer.current - lexer.lexing_start);
-	return new_token(lexer, has_new_line ? TOKEN_COMMENT_SINGLE : TOKEN_COMMENT_SINGLE_INLINE, (String)lexer.lexing_start[..len-1]);
+	return new_token(lexer, has_new_line ? COMMENT_SINGLE : COMMENT_SINGLE_INLINE, (String)lexer.lexing_start[..len-1]);
 }
 
 /**
@@ -433,7 +432,7 @@ fn bool parse_multiline_comment(Lexer *lexer) @inline @local
 		cur--;
 	}
 	uint len = (uint)(lexer.current - lexer.lexing_start);
-	return new_token(lexer, has_new_line ? TOKEN_COMMENT_MULTI : TOKEN_COMMENT_MULTI_INLINE, (String)lexer.lexing_start[..len-1]);
+	return new_token(lexer, has_new_line ? COMMENT_MULTI : COMMENT_MULTI_INLINE, (String)lexer.lexing_start[..len-1]);
 }
 
 
@@ -474,7 +473,7 @@ fn bool skip_whitespace(Lexer *lexer) @local
 				if (lexer.mode == LEX_CONTRACTS) return false;
 				if (has_empty_line) {
 					begin_new_token(lexer);
-					return new_token(lexer, TokenType.TOKEN_EMPTY_LINE, "\n");
+					return new_token(lexer, TokenType.EMPTY_LINE, "\n");
 				}
 				has_empty_line = true;
 				nextcase;
@@ -499,7 +498,7 @@ fn bool skip_whitespace(Lexer *lexer) @local
 // we split identifiers into 2 types + find keywords.
 fn bool scan_ident(Lexer *lexer, TokenType normal, TokenType const_token, TokenType type_token, char prefix) @inline @local
 {
-	TokenType type = TOKEN_INVALID_TOKEN;
+	TokenType type = INVALID_TOKEN;
 	char c;
 	while ((c = peek(lexer)) == '_')
 	{
@@ -511,7 +510,7 @@ fn bool scan_ident(Lexer *lexer, TokenType normal, TokenType const_token, TokenT
 		switch (c)
 		{
             case 'a'..'z':
-				if (type == TOKEN_INVALID_TOKEN)
+				if (type == INVALID_TOKEN)
 				{
 					type = normal;
 				}
@@ -521,10 +520,10 @@ fn bool scan_ident(Lexer *lexer, TokenType normal, TokenType const_token, TokenT
 				}
 				break;
             case 'A'..'Z':
-				if (type == TOKEN_INVALID_TOKEN) type = const_token;
+				if (type == INVALID_TOKEN) type = const_token;
 				break;
             case '0'..'9': 
-				if (type == TOKEN_INVALID_TOKEN) return add_error_token(lexer, "A letter must precede any digit");
+				if (type == INVALID_TOKEN) return add_error_token(lexer, "A letter must precede any digit");
 			case '_':
 				break;
 			default:
@@ -534,9 +533,9 @@ fn bool scan_ident(Lexer *lexer, TokenType normal, TokenType const_token, TokenT
 	}
 
 	uint len = (uint)(lexer.current - lexer.lexing_start);
-	if (type == TOKEN_INVALID_TOKEN)
+	if (type == INVALID_TOKEN)
 	{
-		if (!prefix && len == 1) return new_token(lexer, TOKEN_UNDERSCORE, "_");
+		if (!prefix && len == 1) return new_token(lexer, UNDERSCORE, "_");
 		if (prefix && len == 1)
 		{
 			return add_error_token(lexer, "An identifier was expected ... ");
@@ -545,15 +544,15 @@ fn bool scan_ident(Lexer *lexer, TokenType normal, TokenType const_token, TokenT
 	}
 	switch (type)
 	{
-		case TOKEN_RETURN:
-			if (lexer.mode == LEX_CONTRACTS) type = TOKEN_IDENT;
+		case RETURN:
+			if (lexer.mode == LEX_CONTRACTS) type = IDENT;
 			break;
 		default:
 			break;
 	}
 	String identifier = (String)lexer.lexing_start[..len-1];
-	TokenType ttype = common::token_from_identifier(identifier); 
-	if (ttype != TOKEN_INVALID_TOKEN){
+	TokenType ttype = lexer::token_from_identifier(identifier); 
+	if (ttype != INVALID_TOKEN){
 	    type = ttype;
 	}
 	return new_token(lexer, type, identifier);
@@ -655,7 +654,7 @@ fn bool scan_oct(Lexer *lexer) @local
 		return add_error_token(lexer, "Octal literals cannot have a floating point suffix.");
 	}
 	uint len = (uint)(lexer.current - lexer.lexing_start);
-	return new_token(lexer, TOKEN_INTEGER, (String)lexer.lexing_start[..len-1]);
+	return new_token(lexer, INTEGER, (String)lexer.lexing_start[..len-1]);
 }
 
 /**
@@ -679,9 +678,9 @@ fn bool scan_binary(Lexer *lexer) @local
 	{
 		return add_error_token(lexer, "Binary literals cannot have a floating point suffix.");
 	}
-	// return new_token(lexer, TOKEN_INTEGER, ((ZString)lexer.lexing_start).str_view());
+	// return new_token(lexer, INTEGER, ((ZString)lexer.lexing_start).str_view());
 	uint len = (uint)(lexer.current - lexer.lexing_start);
-	return new_token(lexer, TOKEN_INTEGER, (String)lexer.lexing_start[..len-1]);
+	return new_token(lexer, INTEGER, (String)lexer.lexing_start[..len-1]);
 }
 
 /**
@@ -747,9 +746,9 @@ fn bool scan_hex(Lexer *lexer) @inline @local
 		if (!scan_exponent(lexer)) return false;
 	}
 	if (!scan_number_suffix(lexer, &is_float)) return false;
-	// return new_token(lexer, is_float ? TOKEN_REAL : TOKEN_INTEGER, ((ZString)lexer.lexing_start).str_view());
+	// return new_token(lexer, is_float ? REAL : INTEGER, ((ZString)lexer.lexing_start).str_view());
 	uint len = (uint)(lexer.current - lexer.lexing_start);
-	return new_token(lexer,is_float ? TOKEN_REAL : TOKEN_INTEGER, (String)lexer.lexing_start[..len-1]);
+	return new_token(lexer,is_float ? REAL : INTEGER, (String)lexer.lexing_start[..len-1]);
 
 }
 
@@ -791,9 +790,9 @@ fn bool scan_dec(Lexer *lexer) @inline @local
 		if (!scan_exponent(lexer)) return false;
 	}
 	if (!scan_number_suffix(lexer, &is_float)) return false;
-	// return new_token(lexer, is_float ? TOKEN_REAL : TOKEN_INTEGER, ((ZString)lexer.lexing_start).str_view());
+	// return new_token(lexer, is_float ? REAL : INTEGER, ((ZString)lexer.lexing_start).str_view());
 	uint len = (uint)(lexer.current - lexer.lexing_start);
-	return new_token(lexer,is_float ? TOKEN_REAL : TOKEN_INTEGER, (String)lexer.lexing_start[..len-1]);
+	return new_token(lexer,is_float ? REAL : INTEGER, (String)lexer.lexing_start[..len-1]);
 }
 
 /**
@@ -858,7 +857,7 @@ fn bool scan_char(Lexer *lexer) @inline @local
 	}
 	// next(lexer);
 	assert(width > 0 && width <= 8);
-	return new_token(lexer, TOKEN_CHAR_LITERAL, (String)lexer.lexing_start[..width]);
+	return new_token(lexer, CHAR_LITERAL, (String)lexer.lexing_start[..width]);
 }
 
 
@@ -922,7 +921,7 @@ fn bool scan_string(Lexer *lexer) @inline @local
 	}
 	// Skip the `"`
 	next(lexer);
-	return new_token(lexer, TOKEN_STRING, len > 0 ? (String)lexer.lexing_start[..len]: "");
+	return new_token(lexer, STRING, len > 0 ? (String)lexer.lexing_start[..len]: "");
 
 }
 
@@ -945,7 +944,7 @@ fn bool scan_raw_string(Lexer *lexer) @inline @local
 	char *current = lexer.lexing_start;
 	char *end = lexer.current;
 	usz len = (usz)(end - current);
-	new_token(lexer, TOKEN_RAW_STRING, (String)current[0..len-1]);
+	new_token(lexer, RAW_STRING, (String)current[0..len-1]);
 	return true;
 }
 
@@ -989,7 +988,7 @@ fn bool scan_hex_array(Lexer *lexer) @inline @local
 		return add_error_token(lexer, "The hexadecimal string is not an even length, did you miss a digit somewhere?");
 	}
 
-	new_token(lexer, TOKEN_BYTES, (String)lexer.lexing_start[..len+1]);
+	new_token(lexer, BYTES, (String)lexer.lexing_start[..len+1]);
 	return true;
 }
 
@@ -1039,7 +1038,7 @@ fn bool scan_base64(Lexer *lexer) @inline @local
 			return add_error_token_at_current(lexer, "not a valid base64 character.");
 		}
 	}
-	new_token(lexer, TOKEN_BYTES, (String)lexer.lexing_start[..len]);
+	new_token(lexer, BYTES, (String)lexer.lexing_start[..len]);
 	return true;
 }
 
@@ -1097,7 +1096,7 @@ fn bool parse_doc_start(Lexer *lexer) @local
 	// In any case we can consider this having reached "the contracts"
 	lexer.mode = LEX_CONTRACTS;
 	uint len = (uint)(lexer.current - lexer.lexing_start);
-	return new_token(lexer, TOKEN_DOCS_START, (String)lexer.lexing_start[..len-1]);
+	return new_token(lexer, DOCS_START, (String)lexer.lexing_start[..len-1]);
 }
 
 fn bool lexer_scan_token_inner(Lexer *lexer) @local
@@ -1111,7 +1110,7 @@ fn bool lexer_scan_token_inner(Lexer *lexer) @local
 	begin_new_token(lexer);
 
 	if (reached_end(lexer)) {
-		new_token(lexer, TOKEN_EOF, "\n");
+		new_token(lexer, EOF, "\n");
 		return false;
 	}
 
@@ -1121,13 +1120,13 @@ fn bool lexer_scan_token_inner(Lexer *lexer) @local
 	{
 		case '\n':
 			assert(lexer.mode == LEX_CONTRACTS);
-			return new_token(lexer, TOKEN_DOCS_EOL, "\n");
+			return new_token(lexer, DOCS_EOL, "\n");
 		case '@':
 			if (utils_port::char_is_letter_(peek(lexer)))
 			{
-				return scan_ident(lexer, TOKEN_AT_IDENT, TOKEN_AT_CONST_IDENT, TOKEN_AT_TYPE_IDENT, '@');
+				return scan_ident(lexer, AT_IDENT, AT_CONST_IDENT, AT_TYPE_IDENT, '@');
 			}
-			return new_token(lexer, TOKEN_AT, "@");
+			return new_token(lexer, AT, "@");
 		case '\'':
 			return scan_char(lexer);
 		case '`':
@@ -1135,115 +1134,115 @@ fn bool lexer_scan_token_inner(Lexer *lexer) @local
 		case '"':
 			return scan_string(lexer);
 		case '#':
-			return scan_ident(lexer, TOKEN_HASH_IDENT, TOKEN_HASH_CONST_IDENT, TOKEN_HASH_TYPE_IDENT, '#');
+			return scan_ident(lexer, HASH_IDENT, HASH_CONST_IDENT, HASH_TYPE_IDENT, '#');
 		case '$':
 			if (match(lexer, '$'))
 			{
 				if (utils_port::char_is_letter(peek(lexer)))
 				{
-					return scan_ident(lexer, TOKEN_BUILTIN, TOKEN_BUILTIN, TOKEN_BUILTIN, '#');
+					return scan_ident(lexer, BUILTIN, BUILTIN, BUILTIN, '#');
 				}
 				return add_error_token_at_current(lexer, "Expected a letter after $$.");
 			} else {
-				return scan_ident(lexer, TOKEN_CT_IDENT, TOKEN_CT_CONST_IDENT, TOKEN_CT_TYPE_IDENT, '$');
+				return scan_ident(lexer, CT_IDENT, CT_CONST_IDENT, CT_TYPE_IDENT, '$');
 			}
 		case ',':
-			return new_token(lexer, TOKEN_COMMA, ",");
+			return new_token(lexer, COMMA, ",");
 		case ';':
-			return new_token(lexer, TOKEN_EOS, ";");
+			return new_token(lexer, EOS, ";");
 		case '{':
-			return match(lexer, '|') ? new_token(lexer, TOKEN_LBRAPIPE, "{|") : new_token(lexer, TOKEN_LBRACE, "{");
+			return match(lexer, '|') ? new_token(lexer, LBRAPIPE, "{|") : new_token(lexer, LBRACE, "{");
 		case '}':
-			return new_token(lexer, TOKEN_RBRACE, "}");
+			return new_token(lexer, RBRACE, "}");
 		case '(':
-			return match(lexer, '<') ? new_token(lexer, TOKEN_LGENPAR, "(<") : new_token(lexer, TOKEN_LPAREN, "(");
+			return match(lexer, '<') ? new_token(lexer, LGENPAR, "(<") : new_token(lexer, LPAREN, "(");
 		case ')':
-			return new_token(lexer, TOKEN_RPAREN, ")");
+			return new_token(lexer, RPAREN, ")");
 		case '[':
-			if (match(lexer, '<')) return new_token(lexer, TOKEN_LVEC, "[<");
-			return new_token(lexer, TOKEN_LBRACKET, "[");
+			if (match(lexer, '<')) return new_token(lexer, LVEC, "[<");
+			return new_token(lexer, LBRACKET, "[");
 		case ']':
-			return new_token(lexer, TOKEN_RBRACKET, "]");
+			return new_token(lexer, RBRACKET, "]");
 		case '.':
 			if (match(lexer, '.'))
 			{
-				if (match(lexer, '.')) return new_token(lexer, TOKEN_ELLIPSIS, "...");
-				return new_token(lexer, TOKEN_DOTDOT, "..");
+				if (match(lexer, '.')) return new_token(lexer, ELLIPSIS, "...");
+				return new_token(lexer, DOTDOT, "..");
 			}
-			return new_token(lexer, TOKEN_DOT, ".");
+			return new_token(lexer, DOT, ".");
 		case '~':
-			return new_token(lexer, TOKEN_BIT_NOT, "~");
+			return new_token(lexer, BIT_NOT, "~");
 		case ':':
-			return match(lexer, ':') ? new_token(lexer, TOKEN_SCOPE, "::") : new_token(lexer, TOKEN_COLON, ":");
+			return match(lexer, ':') ? new_token(lexer, SCOPE, "::") : new_token(lexer, COLON, ":");
 		case '!':
-			if (match(lexer, '!')) return new_token(lexer, TOKEN_BANGBANG, "!!");
-			return match(lexer, '=') ? new_token(lexer, TOKEN_NOT_EQUAL, "!=") : new_token(lexer, TOKEN_BANG, "!");
+			if (match(lexer, '!')) return new_token(lexer, BANGBANG, "!!");
+			return match(lexer, '=') ? new_token(lexer, NOT_EQUAL, "!=") : new_token(lexer, BANG, "!");
 		case '/':
-			return match(lexer, '=') ? new_token(lexer, TOKEN_DIV_ASSIGN, "/=") : new_token(lexer, TOKEN_DIV, "/");
+			return match(lexer, '=') ? new_token(lexer, DIV_ASSIGN, "/=") : new_token(lexer, DIV, "/");
 		case '*':
 			if (lexer.mode == LEX_CONTRACTS && match(lexer, '>'))
 			{
 				lexer.mode = LEX_NORMAL;
-				return new_token(lexer, TOKEN_DOCS_END, "*>");
+				return new_token(lexer, DOCS_END, "*>");
 			}
-			return match(lexer, '=') ? new_token(lexer, TOKEN_MULT_ASSIGN, "*=") : new_token(lexer, TOKEN_STAR, "*");
+			return match(lexer, '=') ? new_token(lexer, MULT_ASSIGN, "*=") : new_token(lexer, STAR, "*");
 		case '=':
-			if (match(lexer, '>')) return new_token(lexer, TOKEN_IMPLIES, "=>");
-			return match(lexer, '=') ? new_token(lexer, TOKEN_EQEQ, "==") : new_token(lexer, TOKEN_EQ, "=");
+			if (match(lexer, '>')) return new_token(lexer, IMPLIES, "=>");
+			return match(lexer, '=') ? new_token(lexer, EQEQ, "==") : new_token(lexer, EQ, "=");
 		case '^':
-			return match(lexer, '=') ? new_token(lexer, TOKEN_BIT_XOR_ASSIGN, "^=") : new_token(lexer, TOKEN_BIT_XOR, "^");
+			return match(lexer, '=') ? new_token(lexer, BIT_XOR_ASSIGN, "^=") : new_token(lexer, BIT_XOR, "^");
 		case '?':
-			if (match(lexer, '?')) return new_token(lexer, TOKEN_QUESTQUEST, "??");
-			return match(lexer, ':') ? new_token(lexer, TOKEN_ELVIS, "?:") : new_token(lexer, TOKEN_QUESTION, "?");
+			if (match(lexer, '?')) return new_token(lexer, QUESTQUEST, "??");
+			return match(lexer, ':') ? new_token(lexer, ELVIS, "?:") : new_token(lexer, QUESTION, "?");
 		case '<':
 			if (match(lexer, '<'))
 			{
-				if (match(lexer, '=')) return new_token(lexer, TOKEN_SHL_ASSIGN, "<<=");
-				return new_token(lexer, TOKEN_SHL, "<<");
+				if (match(lexer, '=')) return new_token(lexer, SHL_ASSIGN, "<<=");
+				return new_token(lexer, SHL, "<<");
 			}
 			if (lexer.mode == LEX_NORMAL && match(lexer, '*'))
 			{
 				return parse_doc_start(lexer);
 			}
-			return match(lexer, '=') ? new_token(lexer, TOKEN_LESS_EQ, "<=") : new_token(lexer, TOKEN_LESS, "<");
+			return match(lexer, '=') ? new_token(lexer, LESS_EQ, "<=") : new_token(lexer, LESS, "<");
 		case '>':
 			if (match(lexer, '>'))
 			{
-				if (match(lexer, '=')) return new_token(lexer, TOKEN_SHR_ASSIGN, ">>=");
-				return new_token(lexer, TOKEN_SHR, ">>");
+				if (match(lexer, '=')) return new_token(lexer, SHR_ASSIGN, ">>=");
+				return new_token(lexer, SHR, ">>");
 			}
-			if (match(lexer, ')')) return new_token(lexer, TOKEN_RGENPAR, ">)");
-			if (match(lexer, ']')) return new_token(lexer, TOKEN_RVEC, ">]");
-			return match(lexer, '=') ? new_token(lexer, TOKEN_GREATER_EQ, ">=") : new_token(lexer, TOKEN_GREATER, ">");
+			if (match(lexer, ')')) return new_token(lexer, RGENPAR, ">)");
+			if (match(lexer, ']')) return new_token(lexer, RVEC, ">]");
+			return match(lexer, '=') ? new_token(lexer, GREATER_EQ, ">=") : new_token(lexer, GREATER, ">");
 		case '%':
-			return match(lexer, '=') ? new_token(lexer, TOKEN_MOD_ASSIGN, "%=") : new_token(lexer, TOKEN_MOD, "%");
+			return match(lexer, '=') ? new_token(lexer, MOD_ASSIGN, "%=") : new_token(lexer, MOD, "%");
 		case '&':
 			if (match(lexer, '&'))
 			{
-				return match(lexer, '&') ? new_token(lexer, TOKEN_CT_AND, "&&&") : new_token(lexer, TOKEN_AND, "&&");
+				return match(lexer, '&') ? new_token(lexer, CT_AND, "&&&") : new_token(lexer, AND, "&&");
 			}
-			return match(lexer, '=') ? new_token(lexer, TOKEN_BIT_AND_ASSIGN, "&=") : new_token(lexer, TOKEN_AMP, "&");
+			return match(lexer, '=') ? new_token(lexer, BIT_AND_ASSIGN, "&=") : new_token(lexer, AMP, "&");
 		case '|':
-			if (match(lexer, '}')) return new_token(lexer, TOKEN_RBRAPIPE, "|}");
+			if (match(lexer, '}')) return new_token(lexer, RBRAPIPE, "|}");
 			if (match(lexer, '|'))
 			{
-				return match(lexer, '|') ? new_token(lexer, TOKEN_CT_OR, "|||") : new_token(lexer, TOKEN_OR, "||");
+				return match(lexer, '|') ? new_token(lexer, CT_OR, "|||") : new_token(lexer, OR, "||");
 			}
-			return match(lexer, '=') ? new_token(lexer, TOKEN_BIT_OR_ASSIGN, "|=") : new_token(lexer, TOKEN_BIT_OR,
+			return match(lexer, '=') ? new_token(lexer, BIT_OR_ASSIGN, "|=") : new_token(lexer, BIT_OR,
 			                                                                                   "|");
 		case '+':
 			if (match(lexer, '+'))
 			{
-				if (match(lexer, '+')) return new_token(lexer, TOKEN_CT_CONCAT, "+++");
-				return new_token(lexer, TOKEN_PLUSPLUS, "++");
+				if (match(lexer, '+')) return new_token(lexer, CT_CONCAT, "+++");
+				return new_token(lexer, PLUSPLUS, "++");
 			}
-			if (match(lexer, '=')) return new_token(lexer, TOKEN_PLUS_ASSIGN, "+=");
-			return new_token(lexer, TOKEN_PLUS, "+");
+			if (match(lexer, '=')) return new_token(lexer, PLUS_ASSIGN, "+=");
+			return new_token(lexer, PLUS, "+");
 		case '-':
-			if (match(lexer, '>')) return new_token(lexer, TOKEN_ARROW, ".");
-			if (match(lexer, '-')) return new_token(lexer, TOKEN_MINUSMINUS, "--");
-			if (match(lexer, '=')) return new_token(lexer, TOKEN_MINUS_ASSIGN, "-=");
-			return new_token(lexer, TOKEN_MINUS, "-");
+			if (match(lexer, '>')) return new_token(lexer, ARROW, ".");
+			if (match(lexer, '-')) return new_token(lexer, MINUSMINUS, "--");
+			if (match(lexer, '=')) return new_token(lexer, MINUS_ASSIGN, "-=");
+			return new_token(lexer, MINUS, "-");
 		case 'x':
 			if ((peek(lexer) == '"' || peek(lexer) == '\'' || peek(lexer) == '`'))
 			{
@@ -1261,7 +1260,7 @@ fn bool lexer_scan_token_inner(Lexer *lexer) @local
 		case '_':
 		// IDENT:
 			backtrack(lexer);
-			return scan_ident(lexer, TOKEN_IDENT, TOKEN_CONST_IDENT, TOKEN_TYPE_IDENT, 0);
+			return scan_ident(lexer, IDENT, CONST_IDENT, TYPE_IDENT, 0);
 		default:
 			if (c >= '0' && c <= '9')
 			{
@@ -1279,3 +1278,890 @@ fn bool lexer_scan_token_inner(Lexer *lexer) @local
 	}
 }
 
+const int MAX_SOURCE_LOCATION_LEN = 255;
+
+enum TokenType : uint
+{
+	INVALID_TOKEN,
+
+	// Single-character tokens.
+	AMP,              // &
+	AT,               // @
+	BANG,             // !
+	BIT_NOT,          // ~
+	BIT_OR,           // =
+	BIT_XOR,          // ^
+	COLON,            // :
+	COMMA,            // ,
+	EOS,              // ;
+	EMPTY_LINE,       // a line with only white spaces (useful for code formatting)
+	EQ,               // =
+	GREATER,          // >
+	DIV,              // /
+	DOLLAR,           // $
+	DOT,              // .
+	HASH,             // #
+	LESS,             // <
+	LBRACE,           // {
+	LBRACKET,         // [
+	LPAREN,           // (
+	MINUS,            // -
+	MOD,              // %
+	PLUS,             // +
+	QUESTION,         // ?
+	RBRACE,           // }
+	RBRACKET,         // ]
+	RPAREN,           // )
+	STAR,             // *
+	UNDERSCORE,       // _
+
+	// two character tokens.
+	AND,              // &&
+	ARROW,            // -> // Not used but reserved
+	BANGBANG,         // !!
+	BIT_AND_ASSIGN,   // &=
+	BIT_OR_ASSIGN,    // |=
+	BIT_XOR_ASSIGN,   // ^=
+	DIV_ASSIGN,       // /=
+	DOTDOT,           // ..
+	BUILTIN,          // $$
+	ELVIS,            // ?:
+	EQEQ,             // ==
+	GREATER_EQ,       // >=
+	IMPLIES,          // =>
+	LESS_EQ,          // <=
+	LBRAPIPE,         // {|
+	LGENPAR,          // (<
+	LVEC,             // [<
+	MINUS_ASSIGN,     // -=
+	MINUSMINUS,       // --
+	MOD_ASSIGN,       // %=
+	MULT_ASSIGN,      // *=
+	NOT_EQUAL,        // !=
+	OR,               // ||
+	PLUS_ASSIGN,      // +=
+	PLUSPLUS,         // ++
+	RBRAPIPE,         // |}
+	RGENPAR,          // >)
+	RVEC,             // >]
+	QUESTQUEST,       // ??
+	SCOPE,            // ::
+	SHL,              // <<
+	SHR,              // >>
+
+	// Three or more
+	ELLIPSIS,         // ...
+	SHL_ASSIGN,       // <<=
+	SHR_ASSIGN,       // >>=
+	CT_AND,           // &&&
+	CT_CONCAT,        // +++
+	CT_OR,            // |||
+	// Literals.
+	IDENT,            // Any normal ident.
+	CONST_IDENT,      // Any purely uppercase ident,
+	TYPE_IDENT,       // Any ident on the format FooBar or __FooBar
+
+	// We want to parse $foo separately,
+	// otherwise we allow things like "$ foo" which would be pretty bad.
+	CT_IDENT,         // $foobar
+	CT_CONST_IDENT,   // $FOOBAR
+	CT_TYPE_IDENT,    // $Foobar
+
+	// We want to parse #foo separately.
+	HASH_IDENT,       // #foobar
+	HASH_CONST_IDENT, // #FOOBAR
+	HASH_TYPE_IDENT,  // #Foobar
+
+	AT_IDENT,         // @macro
+	AT_CONST_IDENT,   // @MACRO
+	AT_TYPE_IDENT,    // @Macro
+
+	COMMENT_SINGLE_INLINE,           // //single INLINE comment
+	COMMENT_SINGLE,     // //single line comment
+	COMMENT_MULTI,          //  /* multiline on new line */
+	COMMENT_MULTI_INLINE,   //  some /* multiline on the same line */
+
+
+	STRING,           // "Teststring"
+	RAW_STRING,           // `Teststring`
+	INTEGER,          // 123 0x23 0b10010 0o327
+	CHAR_LITERAL,        // 'a' 'FO' 'BARS' '\u1232'
+	REAL,             // 0x23.2p-2a 43.23e23
+	BYTES,            // Base64 or Hex
+
+	DOC_COMMENT,      // Doc Comment start
+
+	// Basic types names
+	VOID,
+	// FIRST_KEYWORD = TOKEN_VOID,
+	BOOL,
+	CHAR,
+	DOUBLE,
+	FLOAT,
+	FLOAT16,
+	BFLOAT,
+	INT128,
+	ICHAR,
+	INT,
+	IPTR,
+	ISZ,
+	LONG,
+	SHORT,
+	UINT128,
+	UINT,
+	ULONG,
+	UPTR,
+	USHORT,
+	USZ,
+	FLOAT128,
+	ANY,
+	ANYFAULT,
+	TYPEID,
+
+	// Keywords
+	ASSERT,
+	ASM,
+	BITSTRUCT,
+	BREAK,
+	CASE,
+	CATCH,
+	CONST,
+	CONTINUE,
+	DEF,
+	DEFAULT,
+	DEFER,
+	DISTINCT,
+	DO,
+	ELSE,
+	ENUM,
+	EXTERN,
+	FALSE,
+	FAULT,
+	FOR,
+	FOREACH,
+	FOREACH_R,
+	FN,
+	TLOCAL,
+	IF,
+	INLINE,
+	IMPORT,
+	MACRO,
+	MODULE,
+	NEXTCASE,
+	NULL,
+	INTERFACE,
+	RETURN,
+	STATIC,
+	STRUCT,
+	SWITCH,
+	TRUE,
+	TRY,
+	UNION,
+	VAR,
+	WHILE,
+	// LAST_NON_CT_KEYWORD = TOKEN_WHILE,
+
+	CT_ALIGNOF,           // $alignof
+	CT_ANDFN,             // $and
+	CT_APPEND,            // $append
+	CT_ASSERT,            // $assert
+	CT_ASSIGNABLE,        // $assignable
+	CT_CASE,              // $case
+	CT_CONCATFN,          // $concat
+	CT_DEFAULT,           // $default
+	CT_DEFINED,           // $defined
+	CT_ECHO,              // $echo
+	CT_ELSE,              // $else
+	CT_EMBED,             // $embed
+	CT_ENDFOR,            // $endfor
+	CT_ENDFOREACH,        // $endforeach
+	CT_ENDIF,             // $endif
+	CT_ENDSWITCH,         // $endswitch
+	CT_EVAL,              // $eval
+	CT_EVALTYPE,          // $evaltype
+	CT_ERROR,             // $error
+	CT_EXEC,              // $exec
+	CT_EXTNAMEOF,         // $extnameof
+	CT_FEATURE,           // $feature
+	CT_FOR,               // $for
+	CT_FOREACH,           // $foreach
+	CT_IF,                // $if
+	CT_INCLUDE,           // $include
+	CT_IS_CONST,          // $is_const
+	CT_NAMEOF,            // $nameof
+	CT_OFFSETOF,          // $offsetof
+	CT_ORFN,              // $or
+	CT_QNAMEOF,           // $qnameof
+	CT_SIZEOF,            // $sizeof
+	CT_STRINGIFY,         // $stringify
+	CT_SWITCH,            // $switch
+	CT_TYPEFROM,          // $typefrom
+	CT_TYPEOF,            // $typeof
+	CT_VACOUNT,           // $vacount
+	CT_VATYPE,            // $vatype
+	CT_VACONST,           // $vaconst,
+	CT_VAREF,             // $varef,
+	CT_VAARG,             // $vaarg,
+	CT_VAEXPR,            // $vaexpr,
+	CT_VASPLAT,           // $vasplat,
+	// LAST_KEYWORD = TOKEN_CT_VASPLAT,
+	DOCS_START,       // <*
+	DOCS_END,         // *>
+	DOCS_EOL,
+
+	EOF,              // \n - SHOULD ALWAYS BE THE LAST TOKEN.
+
+	// LAST = TOKEN_EOF,
+}
+
+
+union SourceSpan
+{
+	struct
+	{
+		char length;
+		uint col;
+		uint row;
+	}
+	ulong a;
+}
+
+enum LexMode
+{
+	LEX_NORMAL,
+	LEX_CONTRACTS,
+}
+
+fn String token_type_to_string(TokenType type)
+{
+	switch (type)
+	{
+		case INVALID_TOKEN:
+			return "INVALID_TOKEN";
+
+		// One character tokens
+		case AMP:
+			return "&";
+		case AT:
+			return "@";
+		case BIT_NOT:
+			return "~";
+		case BIT_OR:
+			return "|";
+		case BIT_XOR:
+			return "^";
+		case COLON:
+			return ":";
+		case COMMA:
+			return ",";
+		case DIV:
+			return "/";
+		case DOLLAR:
+			return "$";
+		case DOT:
+			return ".";
+		case EOS:
+			return ";";
+		case EMPTY_LINE:
+			return "<EMPTY_LINE>";
+		case EQ:
+			return "=";
+		case GREATER:
+			return ">";
+		case HASH:
+			return "#";
+		case LBRACE:
+			return "{";
+		case LBRACKET:
+			return "[";
+		case LESS:
+			return "<";
+		case LPAREN:
+			return "(";
+		case MINUS:
+			return "-";
+		case MOD:
+			return "%";
+		case BANG:
+			return "!";
+		case PLUS:
+			return "+";
+		case QUESTION:
+			return "?";
+		case RBRACE:
+			return "}";
+		case RBRACKET:
+			return "]";
+		case RPAREN:
+			return ")";
+		case STAR:
+			return "*";
+		case UNDERSCORE:
+			return "_";
+
+		// Two character tokens
+		case AND:
+			return "&&";
+		case ARROW:
+			return "->";
+		case BIT_AND_ASSIGN:
+			return "&=";
+		case BIT_OR_ASSIGN:
+			return "|=";
+		case BIT_XOR_ASSIGN:
+			return "^=";
+		case BUILTIN:
+			return "$$";
+		case CT_AND:
+			return "&&&";
+		case CT_OR:
+			return "|||";
+		case CT_CONCAT:
+			return "+++";
+		case DIV_ASSIGN:
+			return "/=";
+		case DOTDOT:
+			return "..";
+		case ELVIS:
+			return "?:";
+		case EQEQ:
+			return "==";
+		case GREATER_EQ:
+			return ">=";
+		case IMPLIES:
+			return "=>";
+		case LESS_EQ:
+			return "<=";
+		case LBRAPIPE:
+			return "{|";
+		case LGENPAR:
+			return "(<";
+		case LVEC:
+			return "[<";
+		case MINUS_ASSIGN:
+			return "-=";
+		case MINUSMINUS:
+			return "--";
+		case MULT_ASSIGN:
+			return "*=";
+		case MOD_ASSIGN:
+			return "%=";
+		case NOT_EQUAL:
+			return "!=";
+		case OR:
+			return "||";
+		case PLUS_ASSIGN:
+			return "+=";
+		case PLUSPLUS:
+			return "++";
+		case QUESTQUEST:
+			return "??";
+		case RBRAPIPE:
+			return "|}";
+		case RGENPAR:
+			return ">)";
+		case RVEC:
+			return ">]";
+		case SCOPE:
+			return "::";
+		case SHL:
+			return "<<";
+		case SHR:
+			return ">>";
+		case BANGBANG:
+			return "!!";
+
+		// Three character tokens
+		case ELLIPSIS:
+			return "...";
+		case SHL_ASSIGN:
+			return "<<=";
+		case SHR_ASSIGN:
+			return ">>=";
+
+		// Identifiers
+		case IDENT:
+			return "IDENT";
+		case CT_IDENT:
+			return "CT_IDENT";
+		case CT_CONST_IDENT:
+			return "CT_CONST_IDENT";
+		case CT_TYPE_IDENT:
+			return "CT_TYPE_IDENT";
+		case HASH_IDENT:
+			return "HASH_IDENT";
+		case HASH_CONST_IDENT:
+			return "HASH_CONST_IDENT";
+		case HASH_TYPE_IDENT:
+			return "HASH_TYPE_IDENT";
+		case CONST_IDENT:
+			return "CONST_IDENT";
+		case TYPE_IDENT:
+			return "TYPE_IDENT";
+
+		case AT_IDENT:
+			return "MACRO_IDENT";
+		case AT_TYPE_IDENT:
+			return "MACRO_TYPE_IDENT";
+		case AT_CONST_IDENT:
+			return "MACRO_CONST_IDENT";
+
+		// Values
+		case STRING:
+			return "STRING";
+		case RAW_STRING:
+			return "RAW_STRING";
+		case COMMENT_SINGLE:
+			return "COMMENT_SINGLE";
+		case COMMENT_SINGLE_INLINE:
+			return "COMMENT_SINGLE_INLINE";
+		case COMMENT_MULTI:
+			return "COMMENT_MULTI";
+		case COMMENT_MULTI_INLINE:
+			return "COMMENT_MULTI_INLINE";
+		case INTEGER:
+			return "INTEGER";
+		case REAL:
+			return "FLOAT";
+		case CHAR_LITERAL:
+			return "CHAR_LITERAL";
+		case BYTES:
+			return "BYTES";
+
+		// Comments
+		case DOC_COMMENT:
+			return "DOC_COMMENT";
+
+		// Keywords
+		case ANYFAULT:
+			return "anyfault";
+		case ASM:
+			return "asm";
+		case ASSERT:
+			return "assert";
+		case BITSTRUCT:
+			return "bitstruct";
+		case BREAK:
+			return "break";
+		case CASE:
+			return "case";
+		case CATCH:
+			return "catch";
+		case CONST:
+			return "const";
+		case CONTINUE:
+			return "continue";
+		case DEF:
+			return "def";
+		case DEFAULT:
+			return "default";
+		case DEFER:
+			return "defer";
+		case DISTINCT:
+			return "distinct";
+		case DO:
+			return "do";
+		case ELSE:
+			return "else";
+		case ENUM:
+			return "enum";
+		case EXTERN:
+			return "extern";
+		case FALSE:
+			return "false";
+		case FAULT:
+			return "fault";
+		case FOR:
+			return "for";
+		case FOREACH:
+			return "foreach";
+		case FOREACH_R:
+			return "foreach_r";
+		case FN:
+			return "fn";
+		case IF:
+			return "if";
+		case INLINE:
+			return "inline";
+		case INTERFACE:
+			return "interface";
+		case IMPORT:
+			return "import";
+		case MACRO:
+			return "macro";
+		case MODULE:
+			return "module";
+		case NEXTCASE:
+			return "nextcase";
+		case NULL:
+			return "null";
+		case RETURN:
+			return "return";
+		case STATIC:
+			return "static";
+		case STRUCT:
+			return "struct";
+		case SWITCH:
+			return "switch";
+		case TLOCAL:
+			return "tlocal";
+		case TRUE:
+			return "true";
+		case TRY:
+			return "try";
+		case TYPEID:
+			return "typeid";
+		case UNION:
+			return "union";
+		case VAR:
+			return "var";
+		case WHILE:
+			return "while";
+
+		// Named types
+		case VOID:
+			return "void";
+		case ANY:
+			return "any";
+		case BOOL:
+			return "bool";
+		case FLOAT128:
+			return "float128";
+		case DOUBLE:
+			return "double";
+		case FLOAT:
+			return "float";
+		case BFLOAT:
+			return "bfloat";
+		case FLOAT16:
+			return "float16";
+		case LONG:
+			return "long";
+		case ULONG:
+			return "ulong";
+		case INT128:
+			return "int128";
+		case UINT128:
+			return "uint128";
+		case INT:
+			return "int";
+		case UINT:
+			return "uint";
+		case SHORT:
+			return "short";
+		case USHORT:
+			return "ushort";
+		case ICHAR:
+			return "ichar";
+		case CHAR:
+			return "char";
+		case ISZ:
+			return "isz";
+		case USZ:
+			return "usz";
+		case IPTR:
+			return "iptr";
+		case UPTR:
+			return "uptr";
+		case DOCS_START:
+			return "<*";
+		case DOCS_END:
+			return "*>";
+		case CT_ALIGNOF:
+			return "$alignof";
+		case CT_ANDFN:
+			return "$and";
+		case CT_APPEND:
+			return "$append";
+		case CT_ASSERT:
+			return "$assert";
+		case CT_ASSIGNABLE:
+			return "$assignable";
+		case CT_CASE:
+			return "$case";
+		case CT_CONCATFN:
+			return "$concat";
+		case CT_DEFAULT:
+			return "$default";
+		case CT_DEFINED:
+			return "$defined";
+		case CT_ELSE:
+			return "$else";
+		case CT_EMBED:
+			return "$embed";
+		case CT_ENDIF:
+			return "$endif";
+		case CT_ENDSWITCH:
+			return "$endswitch";
+		case CT_ENDFOR:
+			return "$endfor";
+		case CT_ENDFOREACH:
+			return "$endforeach";
+		case CT_EVAL:
+			return "$eval";
+		case CT_EVALTYPE:
+			return "$evaltype";
+		case CT_ERROR:
+			return "$error";
+		case CT_EXEC:
+			return "$exec";
+		case CT_EXTNAMEOF:
+			return "$extnameof";
+		case CT_FEATURE:
+			return "$feature";
+		case CT_FOR:
+			return "$for";
+		case CT_FOREACH:
+			return "$foreach";
+		case CT_IF:
+			return "$if";
+		case CT_IS_CONST:
+			return "$is_const";
+		case CT_INCLUDE:
+			return "$include";
+		case CT_VACOUNT:
+			return "$vacount";
+		case CT_VATYPE:
+			return "$vatype";
+		case CT_VACONST:
+			return "$vaconst";
+		case CT_VAARG:
+			return "$vaarg";
+		case CT_VAREF:
+			return "$varef";
+		case CT_VAEXPR:
+			return "$vaexpr";
+		case CT_VASPLAT:
+			return "$vasplat";
+		case CT_NAMEOF:
+			return "$nameof";
+		case CT_OFFSETOF:
+			return "$offsetof";
+		case CT_ORFN:
+			return "$or";
+		case CT_QNAMEOF:
+			return "$qnameof";
+		case CT_SIZEOF:
+			return "$sizeof";
+		case CT_SWITCH:
+			return "$switch";
+		case CT_TYPEFROM:
+			return "$typefrom";
+		case CT_TYPEOF:
+			return "$typeof";
+		case CT_STRINGIFY:
+			return "$stringify";
+		case CT_ECHO:
+			return "$echo";
+		case DOCS_EOL:
+			return "<EOL>";
+		case EOF:
+			return "EOF";
+		default:
+			unreachable();
+
+
+	}
+}
+
+fn TokenType token_from_identifier(String indentifier)
+{
+	switch (indentifier)
+	{
+		case "anyfault":
+			return  ANYFAULT;
+		case "asm":
+			return  ASM;
+		case "assert":
+			return  ASSERT;
+		case "bitstruct":
+			return  BITSTRUCT;
+		case "break":
+			return  BREAK;
+		case "case":
+			return  CASE;
+		case "catch":
+			return  CATCH;
+		case "const":
+			return  CONST;
+		case "continue":
+			return  CONTINUE;
+		case "def":
+			return  DEF;
+		case "default":
+			return  DEFAULT;
+		case "defer":
+			return  DEFER;
+		case "distinct":
+			return  DISTINCT;
+		case "do":
+			return  DO;
+		case "else":
+			return  ELSE;
+		case "enum":
+			return  ENUM;
+		case "extern":
+			return  EXTERN;
+		case "false":
+			return  FALSE;
+		case "fault":
+			return  FAULT;
+		case "for":
+			return  FOR;
+		case "foreach":
+			return  FOREACH;
+		case "foreach_r":
+			return  FOREACH_R;
+		case "fn":
+			return  FN;
+		case "if":
+			return  IF;
+		case "inline":
+			return  INLINE;
+		case "interface":
+			return  INTERFACE;
+		case "import":
+			return  IMPORT;
+		case "macro":
+			return  MACRO;
+		case "module":
+			return  MODULE;
+		case "nextcase":
+			return  NEXTCASE;
+		case "null":
+			return  NULL;
+		case "return":
+			return  RETURN;
+		case "static":
+			return  STATIC;
+		case "struct":
+			return  STRUCT;
+		case "switch":
+			return  SWITCH;
+		case "tlocal":
+			return  TLOCAL;
+		case "true":
+			return  TRUE;
+		case "try":
+			return  TRY;
+		case "typeid":
+			return  TYPEID;
+		case "union":
+			return  UNION;
+		case "var":
+			return  VAR;
+		case "while":
+			return  WHILE;
+		case "void":
+		case "any":
+		case "bool":
+		case "float128":
+		case "double":
+		case "float":
+		case "bfloat":
+		case "float16":
+		case "long":
+		case "ulong":
+		case "int128":
+		case "uint128":
+		case "int":
+		case "uint":
+		case "short":
+		case "ushort":
+		case "ichar":
+		case "char":
+		case "isz":
+		case "usz":
+		case "iptr":
+		case "uptr":
+			return  TYPE_IDENT;
+		case "$alignof":
+			return  CT_ALIGNOF;
+		case "$and":
+			return  CT_ANDFN;
+		case "$append":
+			return  CT_APPEND;
+		case "$assert":
+			return  CT_ASSERT;
+		case "$assignable":
+			return  CT_ASSIGNABLE;
+		case "$case":
+			return  CT_CASE;
+		case "$concat":
+			return  CT_CONCATFN;
+		case "$default":
+			return  CT_DEFAULT;
+		case "$defined":
+			return  CT_DEFINED;
+		case "$else":
+			return  CT_ELSE;
+		case "$embed":
+			return  CT_EMBED;
+		case "$endif":
+			return  CT_ENDIF;
+		case "$endswitch":
+			return  CT_ENDSWITCH;
+		case "$endfor":
+			return  CT_ENDFOR;
+		case "$endforeach":
+			return  CT_ENDFOREACH;
+		case "$eval":
+			return  CT_EVAL;
+		case "$evaltype":
+			return  CT_EVALTYPE;
+		case "$error":
+			return  CT_ERROR;
+		case "$exec":
+			return  CT_EXEC;
+		case "$extnameof":
+			return  CT_EXTNAMEOF;
+		case "$feature":
+			return  CT_FEATURE;
+		case "$for":
+			return  CT_FOR;
+		case "$foreach":
+			return  CT_FOREACH;
+		case "$if":
+			return  CT_IF;
+		case "$is_const":
+			return  CT_IS_CONST;
+		case "$include":
+			return  CT_INCLUDE;
+		case "$vacount":
+			return  CT_VACOUNT;
+		case "$vatype":
+			return  CT_VATYPE;
+		case "$vaconst":
+			return  CT_VACONST;
+		case "$vaarg":
+			return  CT_VAARG;
+		case "$varef":
+			return  CT_VAREF;
+		case "$vaexpr":
+			return  CT_VAEXPR;
+		case "$vasplat":
+			return  CT_VASPLAT;
+		case "$nameof":
+			return  CT_NAMEOF;
+		case "$offsetof":
+			return  CT_OFFSETOF;
+		case "$or":
+			return  CT_ORFN;
+		case "$qnameof":
+			return  CT_QNAMEOF;
+		case "$sizeof":
+			return  CT_SIZEOF;
+		case "$switch":
+			return  CT_SWITCH;
+		case "$typefrom":
+			return  CT_TYPEFROM;
+		case "$typeof":
+			return  CT_TYPEOF;
+		case "$stringify":
+			return  CT_STRINGIFY;
+		case "$echo":
+			return  CT_ECHO;
+		default:
+			return INVALID_TOKEN;
+	}
+}

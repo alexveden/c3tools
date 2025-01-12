@@ -18,27 +18,27 @@ fn void! process_file(String file_name) {
 	{
 		switch(t.type)
 		{
-			case TOKEN_IDENT:
-			case TOKEN_CT_IDENT:
-			case TOKEN_CT_CONST_IDENT:
-			case TOKEN_CT_TYPE_IDENT:
-			case TOKEN_HASH_IDENT:
-			case TOKEN_HASH_CONST_IDENT:
-			case TOKEN_HASH_TYPE_IDENT:
-			case TOKEN_CONST_IDENT:
-			case TOKEN_TYPE_IDENT:
-			case TOKEN_AT_IDENT:
-			case TOKEN_AT_TYPE_IDENT:
-			case TOKEN_AT_CONST_IDENT:
+			case IDENT:
+			case CT_IDENT:
+			case CT_CONST_IDENT:
+			case CT_TYPE_IDENT:
+			case HASH_IDENT:
+			case HASH_CONST_IDENT:
+			case HASH_TYPE_IDENT:
+			case CONST_IDENT:
+			case TYPE_IDENT:
+			case AT_IDENT:
+			case AT_TYPE_IDENT:
+			case AT_CONST_IDENT:
 				io::printf("%s[%s] ", common::token_type_to_string(t.type), t.value);
 				break;
-			case TOKEN_STRING:
-			case TOKEN_RAW_STRING:
-			case TOKEN_INTEGER:
-			case TOKEN_REAL:
-			case TOKEN_CHAR_LITERAL:
-			case TOKEN_BYTES:
-			case TOKEN_COMMENT_SINGLE:
+			case STRING:
+			case RAW_STRING:
+			case INTEGER:
+			case REAL:
+			case CHAR_LITERAL:
+			case BYTES:
+			case COMMENT_SINGLE:
 				io::printf("%s[%s] ", common::token_type_to_string(t.type), t.value);
 				break;
 			default:
