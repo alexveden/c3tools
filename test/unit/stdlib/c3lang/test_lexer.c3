@@ -6,14 +6,15 @@ import std::collections::list;
 
 fn void test_row_col_offset() {
     String contents = `module foo`;
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	int cnt = 0;
 	while(lexer.next_token()) {
 	    if (cnt == 1) {
-	        test::equal(lexer.token_type, TokenType.TOKEN_IDENT);
-	        test::equal(lexer.data.string, "foo");
-	        test::equal(lexer.tok_span.row, 1);
-	        test::equal(lexer.tok_span.col, 8);
+	        test::equal(lexer.token.type, TokenType.TOKEN_IDENT);
+	        test::equal(lexer.token.value, "foo");
+	        test::equal(lexer.token.row, 1);
+	        test::equal(lexer.token.col, 8);
 	    }
 	    
 	    cnt++;
@@ -22,7 +23,8 @@ fn void test_row_col_offset() {
 
 fn void test_simple_module() {
     String contents = `module foo;`;
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
 
@@ -150,7 +152,8 @@ fn void test_all_available_tokens() {
 		// breakpoint();
 		String source = s.str_view();
 		test::equal(source.len, 8+token_value.len);
-		Lexer lexer = lexer::new_init(s.str_view());
+		Lexer lexer;
+		lexer::init(&lexer, s.str_view());
 		List(<lexer::Token>) toks = lexer.new_parse_tokens();
 		defer toks.free();
 
@@ -189,7 +192,8 @@ fn void test_all_available_tokens() {
 
 fn void test_simple_comments() {
     String contents = "// foo;";
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	// breakpoint();
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
@@ -206,7 +210,8 @@ fn void test_simple_comments() {
 
 fn void test_simple_comments_after_ident() {
     String contents = "module // foo;";
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	// breakpoint();
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
@@ -225,7 +230,8 @@ fn void test_simple_comments_after_ident() {
 
 fn void test_simple_comments_with_new_line() {
     String contents = "module // foo;\n";
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
     // foreach(t: toks) t.print(new_line: true);
@@ -245,7 +251,8 @@ fn void test_simple_comments_with_new_line() {
 
 fn void test_simple_comments_with_new_line_prefix() {
     String contents = "module \n  \t  // foo;\n";
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
     // foreach(t: toks) t.print(new_line: true);
@@ -263,7 +270,8 @@ fn void test_simple_comments_with_new_line_prefix() {
 
 fn void test_simple_comments_with_new_line_prefix_inline() {
     String contents = "  \t  // foo;\n";
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
     // foreach(t: toks) t.print(new_line: true);
@@ -278,7 +286,8 @@ fn void test_simple_comments_with_new_line_prefix_inline() {
 
 fn void test_string_no_escape_codes() {
     String contents = `module "\n";`;
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
     // foreach(t: toks) t.print(new_line: true);
@@ -296,7 +305,8 @@ fn void test_string_no_escape_codes() {
 
 fn void test_multiline_comment() {
     String contents = `module /* asda`;
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
     // foreach(t: toks) t.print(new_line: true);
@@ -314,7 +324,8 @@ fn void test_multiline_comment() {
 
 fn void test_multiline_comment_with_end() {
     String contents = `module /* asda */`;
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
     // foreach(t: toks) t.print(new_line: true);
@@ -332,7 +343,8 @@ fn void test_multiline_comment_with_end() {
 
 fn void test_multiline_comment_with_nesting() {
     String contents = `module /* asda /* with /* another */ */ */`;
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
     // foreach(t: toks) t.print(new_line: true);
@@ -349,7 +361,8 @@ fn void test_multiline_comment_with_nesting() {
 
 fn void test_multiline_comment_multiline_end() {
     String contents = "module \n  \t /* foo \n asda */";
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
     // foreach(t: toks) t.print(new_line: true);
@@ -366,7 +379,8 @@ fn void test_multiline_comment_multiline_end() {
 
 fn void test_simple_module_multiline() {
     String contents = "module \n \t foo;";
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
 
@@ -409,7 +423,8 @@ Some text
 @require foo > 0
 *>
     `;
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
 
@@ -482,7 +497,8 @@ Some text
 
 fn void test_simple_docstring_inline() {
     String contents = `<*some text*>`;
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
 
@@ -503,7 +519,8 @@ fn void test_simple_docstring_compound_statement() {
 @require {| IntList* l = (IntList*) data; return l.allocator && l.capacity; |}
     *>
     `;
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
 
@@ -523,7 +540,8 @@ fn void test_simple_docstring_compound_statement() {
 fn void test_base64_bytes()
 {
     String contents = `module b64"SGVsbG8gV29ybGQh";`;
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
 
@@ -556,7 +574,8 @@ fn void test_base64_bytes()
 fn void test_hex_bytes()
 {
     String contents = `module x"4865 6c6c";`;
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
 
@@ -589,7 +608,8 @@ fn void test_hex_bytes()
 fn void test_fn_decl()
 {
     String contents = `fn void ! foo(int a)`;
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
 
@@ -609,7 +629,8 @@ fn void test_fn_decl()
 fn void test_fn_decl_bang_is_close()
 {
     String contents = `fn void! foo(int a)`;
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
 
@@ -628,7 +649,8 @@ fn void test_fn_decl_bang_is_close()
 
 fn void test_simple_bultin() {
     String contents = "module $$bui_ltin123;";
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	// breakpoint();
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
@@ -657,7 +679,8 @@ fn void test_simple_bultin() {
 
 fn void test_simple_bultin_type() {
     String contents = "module $$TypeBuiltin;";
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	// breakpoint();
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
@@ -686,7 +709,8 @@ fn void test_simple_bultin_type() {
 
 fn void test_simple_bultin_const() {
     String contents = "module $$BUILTIN_CONTS12;";
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	// breakpoint();
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
@@ -715,7 +739,8 @@ fn void test_simple_bultin_const() {
 
 fn void test_empty_string_token() {
     String contents = "module \n   \t \t \n;";
-	Lexer lexer = lexer::new_init(contents);
+	Lexer lexer;
+	lexer::init(&lexer,contents);
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
 

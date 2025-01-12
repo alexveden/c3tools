@@ -22,11 +22,8 @@ struct LexerImp
 	uint start_row;
 	char *line_start;
 	char *start_row_start;
-	// File *file;
-	TokenData data;
-	SourceSpan tok_span;
-	TokenType token_type;
-	LexMode mode; // only normal is supported
+	LexMode mode; 
+	Token token;
 }
 
 struct Token(Printable) {
@@ -92,11 +89,9 @@ fn void Token.print(&self, bool new_line = false) {
 <*
 Initializes new lexer instance
 @param contents `c3 source contents`
-@require contents.len > 0
 *>
-fn Lexer new_init(String contents)
+fn void init(Lexer* lexer, String contents)
 {
-	Lexer lexer = {};
 	// Set the current file.
 	// lexer.file_begin = lexer.file.contents;
 	lexer.file_begin = contents;
@@ -112,10 +107,7 @@ fn Lexer new_init(String contents)
 	// Mode is NORMAL
 	lexer.mode = LEX_NORMAL;
 	// Set up lexing for a new token.
-	begin_new_token(&lexer);
-	// Check for bidirectional markers.
-	check_bidirectional_markers(&lexer);
-	return lexer;
+	begin_new_token(lexer);
 }
 
 <*
@@ -124,7 +116,7 @@ Parses next token in a code
 *>
 fn bool Lexer.next_token(&self)
 {
-	if(self.token_type == TOKEN_EOF) {
+	if(self.token.type == TOKEN_EOF) {
 		return false;
 	}
 	// Scan for a token.
@@ -163,15 +155,7 @@ fn List(<lexer::Token>) Lexer.new_parse_tokens(&self, Allocator allocator = allo
 	
 	while (self.next_token())
 	{
-		result.push(
-			Token {
-				.type = self.token_type, 
-				.value = self.data.string, 
-				.row = self.tok_span.row,
-				.col = self.tok_span.col,
-				.offset = (usz)(self.lexing_start - self.file_begin), 
-			}
-		);
+		result.push(self.token);
 	}
 	return result;
 }
@@ -293,11 +277,10 @@ fn void set_generic_token(Lexer *lexer, TokenType type, String value) @inline @l
 {
 
 
-	lexer.token_type = type;
+	lexer.token.type = type;
 	// Set the location.
-	lexer.data.string = value;
-	lexer.data.lex_len = lexer.current - lexer.lexing_start;
-	lexer.data.lex_start = lexer.lexing_start;
+	lexer.token.value = value;
+	lexer.token.offset = lexer.lexing_start - lexer.file_begin;
 	uint line = lexer.start_row;
 	uint col;
 	uint length;
@@ -315,9 +298,9 @@ fn void set_generic_token(Lexer *lexer, TokenType type, String value) @inline @l
 		// But always set a single token length.
 		length = 1;
 	}
-	lexer.tok_span.length = (char)length; 
-	lexer.tok_span.col = (char)col;
-	lexer.tok_span.row = line;
+	// lexer.tok_span.length = (char)length; 
+	lexer.token.col = (char)col;
+	lexer.token.row = line;
 }
 
 // Error? We simply generate an invalid token and print out the error.
@@ -1293,60 +1276,6 @@ fn bool lexer_scan_token_inner(Lexer *lexer) @local
 			}
 			return add_error_token(lexer, "char may not be placed outside of a string or comment, did you perhaps forget a \" somewhere?");
 
-	}
-}
-
-fn void check_bidirectional_markers(Lexer *lexer) @inline
-{
-	// First we check for bidirectional markers.
-	char *check = (char *)lexer.current;
-	uint c;
-	int balance = 0;
-	char *last = check + lexer.file_len;
-	// Loop until end.
-	while LOOP: (check < last && (c = *(check++)) != '\0')
-	{
-		if (c != 0xE2) continue;
-		// Possible marker.
-		char next = check[0];
-		if (next == 0) break;
-		char type = check[1];
-		switch (check[0])
-		{
-			case 0x80:
-				if (type == 0xAC)
-				{
-					balance--;
-					// if (balance < 0) goto DONE;
-					if (balance < 0) break LOOP;
-				}
-				if (type >= 0xAA && type <= 0xAE)
-				{
-					balance++;
-				}
-				break;
-			case 0x81:
-				if (type >= 0xA6 && type <= 0xA8)
-				{
-					balance++;
-				}
-				else if (type == 0xA9)
-				{
-					balance--;
-					// if (balance < 0) goto DONE;
-					if (balance < 0) break LOOP;
-				}
-				break;
-			default:
-				break;
-		}
-	}
-	// DONE:
-	// Check for unbalanced result
-	if (balance != 0)
-	{
-		add_error_token_at_start(lexer, "Invalid encoding - Unbalanced bidirectional markers.");
-		return;
 	}
 }
 

@@ -9,6 +9,7 @@ struct Ast {
     String path;
     List(<AstModule>) modules;
     Allocator allc;
+    Lexer lexer;
 }
 
 struct AstNode {
@@ -88,22 +89,14 @@ fn Ast* parse(String contents, String file_path, Allocator allc = allocator::hea
         self.allc = allc;
         self.path = file_path;
 
-	    Lexer lexer = lexer::new_init(contents);
+	    lexer::init(&self.lexer, contents);
 	    NodeParser node_fn = null;
 	    AstNode* node = null;
 
-	    while LOOP: (lexer.next_token()) {
-		    Token t = Token {
-		    	.type = lexer.token_type, 
-		    	.value = lexer.data.string, 
-		    	.row = lexer.tok_span.row,
-		    	.col = lexer.tok_span.col,
-		    	.offset = (usz)(lexer.lexing_start - lexer.file_begin), 
-		    };
-
+	    while LOOP: (self.lexer.next_token()) {
 		    // io::printf("%s\n", t);
 		    if (!node_fn) {
-		        switch(t.type) {
+		        switch(self.lexer.token.type) {
                     case TOKEN_MODULE:
                         assert(node == null);
                         node_fn = &parse_module;
@@ -113,7 +106,7 @@ fn Ast* parse(String contents, String file_path, Allocator allc = allocator::hea
 		        }
 		    }
 
-		    if(node_fn(self, node, &t)) {
+		    if(node_fn(self, node, &self.lexer.token)) {
 		        // Node was finished, scan next;
 		        node_fn = null;
 		        node = null;

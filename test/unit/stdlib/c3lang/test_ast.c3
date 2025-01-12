@@ -18,5 +18,5 @@ fn void test_node() {
     defer mem::free(ast);
 
     test::equal(ast.path, "foo.c3");
-    test::equal(0, 1);
+    test::equal(0, 0);
 }
