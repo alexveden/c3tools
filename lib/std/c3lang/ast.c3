@@ -9,7 +9,7 @@ struct Ast {
     AstModule* modules;
     allocator::DynamicArenaAllocator _allocator;
     Lexer lexer;
-    any state;
+    void* state;
 }
 
 struct AstNode {
@@ -22,90 +22,133 @@ struct AstNode {
 
 struct AstModule {
     inline AstNode node;
-    String module_name;
+    AstNode* name;
     AstNode* attributes;
-    AstNode* conditions;
     // List(<AstImport>) imports;
     // List(<AstType>) types;
-    // List(<AstCallable>) callables;
     // AstDocString doc;
 }
-
-struct AstImport {
-    inline AstNode node;
-    String name;
-    List(<String>) attributes;
-}
-
-struct AstType {
-    inline AstNode node;
-    AstDocString doc;
-    String name;
-    List(<String>) attributes;
-}
-
-struct AstDocString {
-    inline AstNode node;
-    String text;
-    List(<AstDocContracts>) contracts;
-}
-
-struct AstDocContracts {
-    inline AstNode node;
-    String name;
-    String value;
-}
-
 struct AstCallable {
     inline AstNode node;
-    String name;
-    String returns;
-    AstDocString doc;
-    List(<String>) attributes;
-    List(<AstCallableParam>) params;
+    AstNode* name;
+    AstNode* ret_type;
 }
 
-struct AstCallableParam {
-    inline AstNode node;
-    String name;
-    String type;
-}
 
 def NodeParser = fn bool (Ast* ast, AstNode* node, Token* t);
-struct NodeParserModuleState @local {
-    TokenType current;
+struct NodeParserState @local {
+    TokenType current_state;
+    TokenType last_state;
+    AstNode** sub_node;
 }
+macro TokenType NodeParserState.check(&self) {
+    assert(self.current_state != INVALID_TOKEN, "missing initialization?");
+    self.last_state = self.current_state;
+    return self.current_state;
+}
+macro void NodeParserState.transition(&self, TokenType new_state) {
+    self.current_state = new_state;
+}
+macro bool NodeParserState.next(&self) {
+    if(self.current_state != self.last_state) {
+        self.last_state = self.current_state;
+        return true;
+    } else {
+        return false;
+    }
+}
+
 
 fn bool parse_module(Ast* ast, AstNode* node, Token* t) 
 {
     assert(node.type == MODULE);
     AstModule* m = (AstModule*)node;
 
-    t.print();
+    NodeParserState* state = ast.state;
+    if(state.current_state == INVALID_TOKEN) {
+        // Just newly created, initialize parser state
+        state.transition(MODULE);
+    }
 
-    switch (t.type){
+    switch (state.check()){
         case MODULE:
-            // initial statement
-	        // mem::clear(&ast._state, $sizeof(ast._state));
-            m.module_name = "";
+            state.transition(IDENT);  // expecting module identifiers
         case IDENT:
-            nextcase;
-        case SCOPE:
-            break;
+            switch(t.type) {
+                case IDENT:
+                    ast.@allc_add(AstNode, &m.name, t);
+                case SCOPE:
+                    break; // skipping ::
+                case AT_IDENT:
+                case EOS:
+                    state.transition(t.type);
+                default:
+                    break;
+            }
+            if(state.next()) nextcase state.current_state;
         case AT_IDENT:
-            AstNode* attr = ast.@allc_add(AstNode, &m.attributes, t);
+            switch(t.type) {
+                case AT_IDENT:
+                    ast.@allc_add(AstNode, &m.attributes, t);
+                case EOS:
+                    state.transition(t.type);
+                default:
+                    break;
+            }
+            if(state.next()) nextcase state.current_state;
 
         case EOS:
-            // if (ast._state.stmt_begin) {
-            //     uint stmt_len = ast._state.stmt_len;
-            //     assert(stmt_len > 0 && stmt_len < 100);
-            //     m.module_name = ast.@allc_str((String)ast._state.stmt_begin[..stmt_len-1]);
-            // }
             m.iend = t.offset + t.value.len;
-            // t.print(new_line: true);
             return true;
         default:
-            // t.print();
+            break;
+    }
+
+    return false;
+}
+
+fn bool parse_fn(Ast* ast, AstNode* node, Token* t) 
+{
+    assert(node.type == FN);
+    AstModule* m = (AstModule*)node;
+
+    NodeParserState* state = ast.state;
+    if(state.current_state == INVALID_TOKEN) {
+        // Just newly created, initialize parser state
+        state.transition(FN);
+    }
+
+    switch (state.check()){
+        case FN:
+            state.transition(IDENT);  // expecting module identifiers
+        case IDENT:
+            switch(t.type) {
+                case IDENT:
+                    ast.@allc_add(AstNode, &m.name, t);
+                case SCOPE:
+                    break; // skipping ::
+                case AT_IDENT:
+                case EOS:
+                    state.transition(t.type);
+                default:
+                    break;
+            }
+            if(state.next()) nextcase state.current_state;
+        case AT_IDENT:
+            switch(t.type) {
+                case AT_IDENT:
+                    ast.@allc_add(AstNode, &m.attributes, t);
+                case EOS:
+                    state.transition(t.type);
+                default:
+                    break;
+            }
+            if(state.next()) nextcase state.current_state;
+
+        case EOS:
+            m.iend = t.offset + t.value.len;
+            return true;
+        default:
             break;
     }
 
@@ -147,12 +190,47 @@ macro Ast.@allc_add(&self, $Type, AstNode** collection, lexer::Token* token) @lo
     return @node_add(collection,  result);
 }
 
+macro Ast.@node_join(self, node, DString out_str, String sep = ",")
+{
+    out_str.clear();
+    $typeof(node) _node = node;
+    while(_node) {
+        out_str.append(_node.value);
+        _node = ($typeof(node))_node.next;            
+        if (_node) {
+            out_str.append(sep);
+        }
+    }
+    return out_str.str_view();
+}
+macro uint Ast.@node_len(self, node)
+{
+    uint len = 0;
+    $typeof(node) _node = node;
+    while(_node) {
+        len++;
+        _node = ($typeof(node))_node.next;            
+    }
+    return len;
+}
+macro Ast.@node_at(self, node, uint index)
+{
+    uint len = 0;
+    $typeof(node) _node = node;
+    while(_node) {
+        if(len == index) return _node;
+        len++;
+        _node = ($typeof(node))_node.next;            
+    }
+    return _node;
+}
+
 macro String Ast.@allc_str(&self, String s) @local {
     String result = s.copy(&self._allocator);
     return result;
 }
 
-fn Ast parse(String contents, String file_path) {
+fn Ast parse(String contents, String file_path, bool print_lex = false) {
     Ast self;
     self._allocator.init(1024, allocator::heap());
     self.path = self.@allc_str(file_path);
@@ -160,15 +238,22 @@ fn Ast parse(String contents, String file_path) {
 	lexer::init(&self.lexer, contents);
 	NodeParser node_fn = null;
 	AstNode* node = null;
+	AstNode* current_module = self.@allc_add(AstModule, &self.modules, &self.lexer.token);
+
+	const STATE_CAPACITY = 1024;
+	self.state = mem::calloc(STATE_CAPACITY);
+	assert(self.state);
 
 	while LOOP: (self.lexer.next_token()) {
-		// io::printf("%s\n", t);
+	    if (print_lex) self.lexer.token.print();
+
 		if (!node_fn) {
 		    switch(self.lexer.token.type) {
                 case MODULE:
                     assert(node == null);
                     node_fn = &parse_module;
                     node = self.@allc_add(AstModule, &self.modules, &self.lexer.token); 
+                    current_module = node;
                 default:
                     continue LOOP;
 		    }
@@ -178,6 +263,7 @@ fn Ast parse(String contents, String file_path) {
 		    // Node was finished, scan next;
 		    node_fn = null;
 		    node = null;
+            mem::clear(self.state, STATE_CAPACITY);
 		}
 	}
 
@@ -185,6 +271,7 @@ fn Ast parse(String contents, String file_path) {
         AstModule* last_mod = @node_last(self.modules); 
         last_mod.iend = self.lexer.token.offset - 1;
     }
+	mem::free(self.state);
 	self.state = null;
 	return self;
 }

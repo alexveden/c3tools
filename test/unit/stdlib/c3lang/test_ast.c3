@@ -1,3 +1,7 @@
+fn int far(int a , int b) {
+    return a + b;
+}
+
 module test::std::c3lang::ast @test;
 import std::c3lang::ast;
 import std::c3lang::lexer;
@@ -6,7 +10,7 @@ import std::io;
 
 
 fn void test_module(){
-   String code =  `module test::std::c3lang::ast  @test;
+   String code =  `module test::std::c3lang::ast  @test @if(env::NO_LIBC || $feature(C3_MATH));
 import std::c3lang::ast;
 
 fn void test_node() {
@@ -17,7 +21,7 @@ fn void test_node() {
     
     
     String path = "foo.c3";
-    Ast ast = ast::parse(contents.str_view(), path);
+    Ast ast = ast::parse(contents.str_view(), path, print_lex: true);
     defer ast.free();
     contents.clear();
 
@@ -26,17 +30,41 @@ fn void test_node() {
     test::@check(path.ptr != ast.path.ptr, "should be copied");
 
     test::not_equal(ast.modules, null);
-    test::equal(ast.modules.value, "module");
-    test::equal(ast.modules.type, TokenType.MODULE);
-    test::equal(ast.modules.module_name, "test::std::c3lang::ast");
-    test::equal(ast.modules.istart, 0);
-    test::equal(ast.modules.iend, code.len-1);
+    test::equal(ast.@node_len(ast.modules), 2);
+    test::equal(ast.@node_join(ast.modules, contents, ","), ",module");
 
-    test::not_equal(ast.modules.attributes, null);
-    test::equal(ast.modules.attributes.value, "@test");
-    test::equal(ast.modules.attributes.type, TokenType.AT_IDENT);
-    test::equal(ast.modules.attributes.istart, 31);
-    test::equal(ast.modules.attributes.iend, 31+5);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+    
+    test::equal(m.value, "module");
+    test::equal(m.type, TokenType.MODULE);
+    
+    test::equal(ast.@node_join(m.name, contents, "::"), "test::std::c3lang::ast");
+    test::equal(m.istart, 0);
+    test::equal(m.iend, code.len-1);
+
+    test::not_equal(m.attributes, null);
+    test::equal(m.attributes.value, "@test");
+    test::equal(m.attributes.type, TokenType.AT_IDENT);
+    test::equal(ast.@node_join(m.attributes, contents, ","), "@test,@if");
+    test::equal(m.attributes.istart, 31);
+    test::equal(m.attributes.iend, 31+5);
+
+    // test::equal(0, 1);
+}
+
+fn void test_module_no_attr(){
+   String code =  `module test::std::c3lang::ast;`;
+    DString contents = dstring::temp_new(code);
+    
+    String path = "foo.c3";
+    Ast ast = ast::parse(contents.str_view(), path);
+    defer ast.free();
+    contents.clear();
+
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::equal(ast.@node_join(m.name, contents, "::"), "test::std::c3lang::ast");
+    test::equal(m.attributes, null);
 
     // test::equal(0, 1);
 }
