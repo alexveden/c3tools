@@ -7,18 +7,20 @@ import std::io;
 
 
 fn void test_node(){
-   String contents = `module test::std::c3lang::ast  @test;
+   String code =  `module test::std::c3lang::ast  @test;
 import std::c3lang::ast;
 
 fn void test_node() {
     return 1;
 }
 `;
+    DString contents = dstring::temp_new(code);
     
     
     String path = "foo.c3";
-    Ast ast = ast::parse(contents, path);
+    Ast ast = ast::parse(contents.str_view(), path);
     defer ast.free();
+    contents.clear();
 
 
     test::equal(ast.path, "foo.c3");
@@ -29,7 +31,7 @@ fn void test_node() {
     test::equal(ast.modules.type, TokenType.TOKEN_MODULE);
     test::equal(ast.modules.module_name, "test::std::c3lang::ast");
     test::equal(ast.modules.istart, 0);
-    test::equal(ast.modules.iend, contents.len-1);
+    test::equal(ast.modules.iend, code.len-1);
 
     test::not_equal(ast.modules.attributes, null);
     test::equal(ast.modules.attributes.value, "@test");

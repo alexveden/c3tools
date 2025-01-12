@@ -129,6 +129,8 @@ macro @node_last(self) @local
 
 macro AstNode* @node_add(AstNode** self, AstNode* new) @local 
 {
+    assert(self != null);
+
     if (*self == null) {
         ((AstNode*)*self) = new;
     } else {
