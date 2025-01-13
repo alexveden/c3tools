@@ -84,11 +84,13 @@ fn void test_node() {
     AstModule* m = ast.@node_at(ast.modules, 1);
     test::not_equal(m, null);
 
-    AstCallable* func = ast.@node_at(m.callables, 0);
+    AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
     test::not_equal(m, null);
 
+    test::equal(func.type, TokenType.FN);
     test::equal(ast.@node_join(func.name, contents), "test_node");
     // io::printfn("```%s```", code[func.istart..func.iend+1]);
     test::equal(func.istart, 31);
-    test::equal(func.iend, 66);
+    test::equal(code[func.iend], '}');
+    test::equal(func.iend, code.len-2);
 }

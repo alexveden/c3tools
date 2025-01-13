@@ -24,7 +24,9 @@ struct AstModule {
     inline AstNode node;
     AstNode* name;
     AstNode* attributes;
-    AstCallable* callables;
+    AstNode* imports;
+    AstNode* decls;
+    // AstCallable* callables;
     // List(<AstImport>) imports;
     // List(<AstType>) types;
     // AstDocString doc;
@@ -33,6 +35,10 @@ struct AstCallable {
     inline AstNode node;
     AstNode* name;
     AstNode* ret_type;
+}
+struct AstImport {
+    inline AstNode node;
+    AstNode* attributes;
 }
 
 
@@ -159,7 +165,7 @@ fn bool parse_function(Ast* ast, AstNode* node, Token* t)
             if(state.next()) nextcase state.current_state;
 
         case EOS:
-            node_func.iend = t.offset + t.value.len;
+            node_func.iend = t.offset + t.value.len + 1;
             return true;
         default:
             break;
@@ -268,7 +274,7 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
                     current_module = (AstModule*)node;
                 case FN:
                     node_fn = &parse_function;
-                    node = self.@allc_add(AstCallable, &current_module.callables, &self.lexer.token); 
+                    node = self.@allc_add(AstCallable, &current_module.decls, &self.lexer.token); 
                 default:
                     continue LOOP;
 		    }
