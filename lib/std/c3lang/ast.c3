@@ -24,6 +24,7 @@ struct AstModule {
     inline AstNode node;
     AstNode* name;
     AstNode* attributes;
+    AstCallable* callables;
     // List(<AstImport>) imports;
     // List(<AstType>) types;
     // AstDocString doc;
@@ -107,10 +108,10 @@ fn bool parse_module(Ast* ast, AstNode* node, Token* t)
     return false;
 }
 
-fn bool parse_fn(Ast* ast, AstNode* node, Token* t) 
+fn bool parse_function(Ast* ast, AstNode* node, Token* t) 
 {
     assert(node.type == FN);
-    AstModule* m = (AstModule*)node;
+    AstCallable* node_func = (AstCallable*)node;
 
     NodeParserState* state = ast.state;
     if(state.current_state == INVALID_TOKEN) {
@@ -120,24 +121,36 @@ fn bool parse_fn(Ast* ast, AstNode* node, Token* t)
 
     switch (state.check()){
         case FN:
-            state.transition(IDENT);  // expecting module identifiers
+            state.transition(TYPE_IDENT);  // expecting module identifiers
+        case TYPE_IDENT:
+            switch(t.type) {
+                case TYPE_IDENT:
+                    ast.@allc_add(AstNode, &node_func.ret_type, t);
+                case IDENT:
+                    state.transition(t.type);
+                default:
+                    break;
+            }
+            if(state.next()) nextcase state.current_state;
         case IDENT:
             switch(t.type) {
                 case IDENT:
-                    ast.@allc_add(AstNode, &m.name, t);
-                case SCOPE:
-                    break; // skipping ::
-                case AT_IDENT:
+                    ast.@allc_add(AstNode, &node_func.name, t);
+                case LPAREN:
+                    // TODO: state.add_scope()
+                    state.transition(t.type);
                 case EOS:
                     state.transition(t.type);
                 default:
                     break;
             }
             if(state.next()) nextcase state.current_state;
-        case AT_IDENT:
+        case LPAREN:
             switch(t.type) {
-                case AT_IDENT:
-                    ast.@allc_add(AstNode, &m.attributes, t);
+                case IDENT:
+                    ast.@allc_add(AstNode, &node_func.name, t);
+                case LPAREN:
+                    state.transition(t.type);
                 case EOS:
                     state.transition(t.type);
                 default:
@@ -146,7 +159,7 @@ fn bool parse_fn(Ast* ast, AstNode* node, Token* t)
             if(state.next()) nextcase state.current_state;
 
         case EOS:
-            m.iend = t.offset + t.value.len;
+            node_func.iend = t.offset + t.value.len;
             return true;
         default:
             break;
@@ -238,7 +251,7 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
 	lexer::init(&self.lexer, contents);
 	NodeParser node_fn = null;
 	AstNode* node = null;
-	AstNode* current_module = self.@allc_add(AstModule, &self.modules, &self.lexer.token);
+	AstModule* current_module = (AstModule*)self.@allc_add(AstModule, &self.modules, &self.lexer.token);
 
 	const STATE_CAPACITY = 1024;
 	self.state = mem::calloc(STATE_CAPACITY);
@@ -250,10 +263,12 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
 		if (!node_fn) {
 		    switch(self.lexer.token.type) {
                 case MODULE:
-                    assert(node == null);
                     node_fn = &parse_module;
                     node = self.@allc_add(AstModule, &self.modules, &self.lexer.token); 
-                    current_module = node;
+                    current_module = (AstModule*)node;
+                case FN:
+                    node_fn = &parse_function;
+                    node = self.@allc_add(AstCallable, &current_module.callables, &self.lexer.token); 
                 default:
                     continue LOOP;
 		    }

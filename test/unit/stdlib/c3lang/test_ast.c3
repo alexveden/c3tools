@@ -68,3 +68,27 @@ fn void test_module_no_attr(){
 
     // test::equal(0, 1);
 }
+
+fn void test_func(){
+   String code =  `module test::std::c3lang::ast;
+fn void test_node() {
+    return 1;
+}
+`;
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+
+    AstCallable* func = ast.@node_at(m.callables, 0);
+    test::not_equal(m, null);
+
+    test::equal(ast.@node_join(func.name, contents), "test_node");
+    // io::printfn("```%s```", code[func.istart..func.iend+1]);
+    test::equal(func.istart, 31);
+    test::equal(func.iend, 66);
+}
