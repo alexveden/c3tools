@@ -26,7 +26,7 @@ struct AstModule {
     AstNode* attributes;
     AstImport* imports;
     AstNode* decls;
-    AstDocs* docs;
+    AstDoc* docs;
 }
 
 struct AstCallable {
@@ -35,7 +35,7 @@ struct AstCallable {
     AstNode* ret_type;
     AstCallableParam* params;
     AstNode* attributes;
-    AstDocs* docs;
+    AstDoc* docs;
     uint iscope_start;
 }
 struct AstCallableParam {
@@ -49,12 +49,12 @@ struct AstImport {
     AstNode* attributes;
 }
 
-struct AstDocs {
+struct AstDoc {
     inline AstNode node;
-    AstDocsContract* contracts;
+    AstDocContract* contracts;
 }
 
-struct AstDocsContract {
+struct AstDocContract {
     inline AstNode node;
     AstNode* items;
 }
@@ -361,7 +361,7 @@ fn bool parse_function(Ast* ast, AstNode* node, Token* t)
 fn bool parse_docstring(Ast* ast, AstNode* node, Token* t) 
 {
     assert(node.type == DOCS_START);
-    AstDocs* doc = (AstDocs*)node;
+    AstDoc* doc = (AstDoc*)node;
     NodeParserState* state = ast.state;
 
     if(state.current_state == INVALID_TOKEN) {
@@ -374,12 +374,32 @@ fn bool parse_docstring(Ast* ast, AstNode* node, Token* t)
             switch(t.type) {
                 case DOCS_END:
                     state.transition(DOCS_END);
+                case AT_IDENT:
+                    state.transition(AT_IDENT);
                 default:
                     break;
             }
             if(state.next()) nextcase state.current_state;
+        case AT_IDENT:
+            switch(t.type) {
+                case AT_IDENT:
+                    if (state.sub_node == null) {
+                        // add new contract, otherwise malformed contract or something
+                        state.sub_node = ast.@allc_add(AstDocContract, &doc.contracts, &ast.lexer.token); 
+                    }
+                case DOCS_EOL:
+                    state.sub_node = null;
+                case DOCS_END:
+                    state.transition(DOCS_END);
+                default:
+                    assert(state.sub_node != null);
+                    AstDocContract* contract = (AstDocContract*)state.sub_node;
+                    ast.@allc_add(AstNode, &contract.items, &ast.lexer.token); 
+                    break;
+            }
+            if(state.next()) nextcase state.current_state;
         case DOCS_END:
-            doc.iend = t.offset + t.value.len;
+            doc.iend = t.offset + t.value.len - 1;
             return true;
         default:
             break;
@@ -474,7 +494,7 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
 	lexer::init(&self.lexer, contents);
 	NodeParser node_fn = null;
 	AstNode* node = null;
-	AstDocs* docstring = null;
+	AstDoc* docstring = null;
 	AstModule* current_module = (AstModule*)self.@allc_add(AstModule, &self.modules, &self.lexer.token);
 
 	const STATE_CAPACITY = 1024;
@@ -505,7 +525,7 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
                 case DOCS_START:
                     docstring = null; // reset all previous docs
                     node_fn = &parse_docstring;
-                    node = self.@allc_add(AstDocs, &docstring, &self.lexer.token); 
+                    node = self.@allc_add(AstDoc, &docstring, &self.lexer.token); 
                 default:
                     continue LOOP;
 		    }

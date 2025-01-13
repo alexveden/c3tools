@@ -359,8 +359,8 @@ fn void test_import(){
 
 fn void test_docstring_module(){
    String code =  `
-   <* My module *>
-   module test::std::c3lang::ast;
+<* My module *>
+module test::std::c3lang::ast;
    `;
     DString contents = dstring::temp_new(code);
     
@@ -375,6 +375,9 @@ fn void test_docstring_module(){
 
     test::not_equal(m.docs, null);
     test::equal(m.docs.value, "<* My module ");
+    test::equal(m.docs.istart, 1);
+    test::equal(code[m.docs.istart], '<');
+    test::equal(code[m.docs.iend], '>');
 
     // test::equal(1, 0);
 }
@@ -408,4 +411,43 @@ fn void test_node() {
     test::not_equal(func.docs, null);
 
     test::@check(func.docs.value.contains("My func"));
+}
+
+fn void test_docstring_contracts(){
+   String code =  `
+<* 
+My module 
+@param foo "some info"
+@test
+*>
+module test::std::c3lang::ast;
+   `;
+    DString contents = dstring::temp_new(code);
+    
+    String path = "foo.c3";
+    Ast ast = ast::parse(contents.str_view(), path, true);
+    defer ast.free();
+    contents.clear();
+
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::equal(ast.@node_join(m.name, contents, "::"), "test::std::c3lang::ast");
+    test::equal(m.attributes, null);
+
+    test::not_equal(m.docs, null);
+    test::@check(m.docs.value.contains("My module"));
+
+    test::not_equal(m.docs.contracts, null);
+    test::equal(ast.@node_len(m.docs.contracts), 2);
+
+    AstDocContract* contract;
+
+    contract = ast.@node_at(m.docs.contracts, 0);
+    test::equal(contract.value, "@param");
+    test::equal(contract.type, TokenType.AT_IDENT);
+    test::equal(ast.@node_join(contract.items, contents), `foo,"some info"`);
+
+    contract = ast.@node_at(m.docs.contracts, 1);
+    test::equal(contract.value, "@test");
+    test::equal(contract.type, TokenType.AT_IDENT);
+    test::equal(ast.@node_join(contract.items, contents), ``);
 }
