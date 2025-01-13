@@ -419,6 +419,10 @@ fn void test_docstring_contracts(){
 My module 
 @param foo "some info"
 @test
+@param [&inout] foo "some info"
+@return "some stuff"
+@return! Fault.SOME,IoError.ANOTHER 
+@requre a > 0, a < d
 *>
 module test::std::c3lang::ast;
    `;
@@ -437,7 +441,7 @@ module test::std::c3lang::ast;
     test::@check(m.docs.value.contains("My module"));
 
     test::not_equal(m.docs.contracts, null);
-    test::equal(ast.@node_len(m.docs.contracts), 2);
+    test::equal(ast.@node_len(m.docs.contracts), 6);
 
     AstDocContract* contract;
 
@@ -450,4 +454,25 @@ module test::std::c3lang::ast;
     test::equal(contract.value, "@test");
     test::equal(contract.type, TokenType.AT_IDENT);
     test::equal(ast.@node_join(contract.items, contents), ``);
+
+    contract = ast.@node_at(m.docs.contracts, 2);
+    test::equal(contract.value, "@param");
+    test::equal(contract.type, TokenType.AT_IDENT);
+    test::equal(ast.@node_join(contract.items, contents), `foo,"some info"`);
+
+    contract = ast.@node_at(m.docs.contracts, 3);
+    test::equal(contract.value, "@return");
+    test::equal(contract.type, TokenType.AT_IDENT);
+    test::equal(ast.@node_join(contract.items, contents), `"some stuff"`);
+
+    contract = ast.@node_at(m.docs.contracts, 4);
+    test::equal(contract.value, "@return");
+    test::equal(contract.type, TokenType.AT_IDENT);
+    test::equal(ast.@node_join(contract.items, contents), `!,Fault,.,SOME,,,IoError,.,ANOTHER`);
+
+    contract = ast.@node_at(m.docs.contracts, 5);
+    test::equal(contract.value, "@requre");
+    test::equal(contract.type, TokenType.AT_IDENT);
+    test::equal(ast.@node_join(contract.items, contents), `a,>,0,,,a,<,d`);
+
 }

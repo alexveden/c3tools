@@ -394,7 +394,14 @@ fn bool parse_docstring(Ast* ast, AstNode* node, Token* t)
                 default:
                     assert(state.sub_node != null);
                     AstDocContract* contract = (AstDocContract*)state.sub_node;
-                    ast.@allc_add(AstNode, &contract.items, &ast.lexer.token); 
+                    if (contract.value == "@param") {
+                        // excluding [&inout] shit
+                        if(state.scope_depth == 0 && t.type != RBRACKET) {
+                            ast.@allc_add(AstNode, &contract.items, &ast.lexer.token); 
+                        }
+                    } else {
+                        ast.@allc_add(AstNode, &contract.items, &ast.lexer.token); 
+                    }
                     break;
             }
             if(state.next()) nextcase state.current_state;
