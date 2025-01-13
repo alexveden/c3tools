@@ -35,22 +35,83 @@ struct AstCallable {
     inline AstNode node;
     AstNode* name;
     AstNode* ret_type;
+    AstCallableParam* params;
+    AstNode* attributes;
 }
+struct AstCallableParam {
+    inline AstNode node;
+    AstNode* param_type;
+    String param_name;
+}
+
 struct AstImport {
     inline AstNode node;
+    AstNode* import_name;
     AstNode* attributes;
 }
 
-
+//
+//                 PARSER STATE
+//
 def NodeParser = fn bool (Ast* ast, AstNode* node, Token* t);
-struct NodeParserState @local {
+struct NodeParserState @private {
     TokenType current_state;
     TokenType last_state;
     AstNode** sub_node;
+    uint scope_depth;
+    TokenType[32] scope_stack;
 }
-macro TokenType NodeParserState.check(&self) {
+macro NodeParserState.check_scope(&self, TokenType t) {
+
+    switch(t){
+        //
+        //  Entering new scope
+        //  
+        case LBRACE:           // {
+        case LBRACKET:         // [
+        case LPAREN:           // (
+        case LBRAPIPE:         // {|
+        case LGENPAR:          // (<
+        case LVEC:             // [<
+            if (self.scope_depth >= self.scope_stack.len) return;
+            self.scope_stack[self.scope_depth] = t;
+            self.scope_depth++;
+        //
+        //  Exiting scope
+        //  
+        case RBRACE:           // }
+            if (self.scope_depth == 0) nextcase default;
+            if (self.scope_stack[self.scope_depth-1] == LBRACE) nextcase EOF;
+        case RBRACKET:         // ]
+            if (self.scope_depth == 0) nextcase default;
+            if (self.scope_stack[self.scope_depth-1] == LBRACKET) nextcase EOF;
+        case RPAREN:           // )
+            if (self.scope_depth == 0) nextcase default;
+            if (self.scope_stack[self.scope_depth-1] == LPAREN) nextcase EOF;
+        case RBRAPIPE:         // |}
+            if (self.scope_depth == 0) nextcase default;
+            if (self.scope_stack[self.scope_depth-1] == LBRAPIPE) nextcase EOF;
+        case RGENPAR:          // >)
+            if (self.scope_depth == 0) nextcase default;
+            if (self.scope_stack[self.scope_depth-1] == LGENPAR) nextcase EOF;
+        case RVEC:             // >)
+            if (self.scope_depth == 0) nextcase default;
+            if (self.scope_stack[self.scope_depth-1] == LVEC) nextcase EOF;
+        case EOF:             
+            // synthetic action to unscope stack
+            if (self.scope_depth == 0) nextcase default;
+            self.scope_stack[self.scope_depth-1] = INVALID_TOKEN;
+            self.scope_depth--;
+        default:
+            break;
+    }
+
+}
+
+macro TokenType NodeParserState.check(&self, Token* t) {
     assert(self.current_state != INVALID_TOKEN, "missing initialization?");
     self.last_state = self.current_state;
+    self.check_scope(t.type);
     return self.current_state;
 }
 macro void NodeParserState.transition(&self, TokenType new_state) {
@@ -77,7 +138,7 @@ fn bool parse_module(Ast* ast, AstNode* node, Token* t)
         state.transition(MODULE);
     }
 
-    switch (state.check()){
+    switch (state.check(t)){
         case MODULE:
             state.transition(IDENT);  // expecting module identifiers
         case IDENT:
@@ -125,55 +186,116 @@ fn bool parse_function(Ast* ast, AstNode* node, Token* t)
         state.transition(FN);
     }
 
-    switch (state.check()){
+    switch (state.check(t)){
         case FN:
-            state.transition(TYPE_IDENT);  // expecting module identifiers
-        case TYPE_IDENT:
+            // function starts with return type definition
+            state.transition(RETURN);
+        case RETURN:
+            // function return type
+            // breakpoint();
             switch(t.type) {
-                case TYPE_IDENT:
-                    ast.@allc_add(AstNode, &node_func.ret_type, t);
                 case IDENT:
-                    state.transition(t.type);
+                    // function name, make a transition if no scope and ret_type is set
+                    if (state.scope_depth == 0 && node_func.ret_type) state.transition(IDENT);
                 default:
-                    break;
+                    ast.@allc_add(AstNode, &node_func.ret_type, t);
             }
             if(state.next()) nextcase state.current_state;
         case IDENT:
+            // function name 
             switch(t.type) {
                 case IDENT:
                     ast.@allc_add(AstNode, &node_func.name, t);
+                case TYPE_IDENT:
+                    // struct based functions may contain TypeName.func_name
+                    ast.@allc_add(AstNode, &node_func.name, t);
                 case LPAREN:
-                    // TODO: state.add_scope()
-                    state.transition(t.type);
-                case EOS:
-                    state.transition(t.type);
+                    if(state.scope_depth == 1) state.transition(VAR);
                 default:
                     break;
             }
             if(state.next()) nextcase state.current_state;
-        case LPAREN:
+        case VAR:
+            // Defining function arguments
+            AstCallableParam* current_param = state.sub_node ? (AstCallableParam*)*state.sub_node : null;
+            
             switch(t.type) {
-                case IDENT:
-                    ast.@allc_add(AstNode, &node_func.name, t);
                 case LPAREN:
-                    state.transition(t.type);
-                case EOS:
-                    state.transition(t.type);
-                default:
+                    // opening '(' or a part of type definition
+                    if (state.scope_depth != 1) nextcase default;
+                case COMMA:
+                    // next parameter
+                    if (state.scope_depth == 1) {
+                        // Next parameter definition
+                        current_param = (AstCallableParam*)ast.@allc_add(AstCallableParam, &node_func.params, &ast.lexer.token); 
+                        current_param.param_name = "";
+                        state.sub_node = &node;
+                    } else {
+                        nextcase default;
+                    }
+                case RPAREN:
+                    // Done with parameters, looking for AT_IDENT or SCOPE
+                    if (state.scope_depth == 0) {
+                        state.transition(AT_IDENT);
+                        state.sub_node = null;
+                    } else {
+                        nextcase default;
+                    }
+                case COMMENT_SINGLE_INLINE:
+                case COMMENT_SINGLE:
+                case COMMENT_MULTI:
+                case EMPTY_LINE:
+                case COMMENT_MULTI_INLINE:
                     break;
+                default:
+                    if (state.sub_node == null) {
+                        current_param = (AstCallableParam*)ast.@allc_add(AstCallableParam, &node_func.params, &ast.lexer.token); 
+                        current_param.param_name = "";
+                        state.sub_node = &current_param;
+                    }
+                    if (state.scope_depth == 1 && t.type == IDENT) {
+                        if (!current_param.param_name)
+                        {
+                            current_param.param_name = ast.@allc_str(t.value);
+                        }
+                    } else {
+                        // all other goes to type
+                        ast.@allc_add(AstNode, &current_param.param_type, t);
+                    }
             }
             if(state.next()) nextcase state.current_state;
 
-        case EOS:
-            node_func.iend = t.offset + t.value.len + 1;
+        case AT_IDENT:
+            switch(t.type) {
+                case AT_IDENT:
+                    ast.@allc_add(AstNode, &node_func.attributes, t);
+                case LBRACE:           // {
+                    if (state.scope_depth == 1) state.transition(SCOPE);
+                default:
+                    break;
+            }
+            if(state.next()) nextcase state.current_state;
+        case SCOPE:
+            switch(t.type) {
+                case RBRACE:           // ending brace
+                    if (state.scope_depth == 0) state.transition(EOF);
+                default:
+                    break;
+            }
+            if(state.next()) nextcase state.current_state;
+        case EOF:
+            node_func.iend = t.offset;
             return true;
         default:
-            break;
+            unreachable();
     }
 
     return false;
 }
 
+//
+//                 NODE MANAGEMENT
+//
 
 macro @node_last(self) @local 
 {

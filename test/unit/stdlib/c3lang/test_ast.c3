@@ -3,8 +3,9 @@ fn int far(int a , int b) {
 }
 
 module test::std::c3lang::ast @test;
-import std::c3lang::ast;
+import std::c3lang::ast @public;
 import std::c3lang::lexer;
+import std::math;
 import std::collections::list;
 import std::io;
 
@@ -69,12 +70,98 @@ fn void test_module_no_attr(){
     // test::equal(0, 1);
 }
 
+
+
+fn void test_scope(){
+    NodeParserState state;
+    TokenType t;
+
+    t = TokenType.LBRACE;
+    state.check_scope(t);
+    test::equal(state.scope_depth, 1);
+    test::equal(state.scope_stack[state.scope_depth-1], t);
+
+    t = TokenType.LBRACKET;
+    state.check_scope(t);
+    test::equal(state.scope_depth, 2);
+    test::equal(state.scope_stack[state.scope_depth-1], t);
+
+    t = TokenType.LPAREN;
+    state.check_scope(t);
+    test::equal(state.scope_depth, 3);
+    test::equal(state.scope_stack[state.scope_depth-1], t);
+
+    t = TokenType.LBRAPIPE;
+    state.check_scope(t);
+    test::equal(state.scope_depth, 4);
+    test::equal(state.scope_stack[state.scope_depth-1], t);
+
+    t = TokenType.LGENPAR;
+    state.check_scope(t);
+    test::equal(state.scope_depth, 5);
+    test::equal(state.scope_stack[state.scope_depth-1], t);
+
+    t = TokenType.LVEC;
+    state.check_scope(t);
+    test::equal(state.scope_depth, 6);
+    test::equal(state.scope_stack[state.scope_depth-1], t);
+    
+    // EXIT SCOPE in reverse order
+    
+    t = TokenType.RVEC;
+    state.check_scope(t);
+    test::equal(state.scope_depth, 5);
+
+    t = TokenType.RGENPAR;
+    state.check_scope(t);
+    test::equal(state.scope_depth, 4);
+
+    t = TokenType.RBRAPIPE;
+    state.check_scope(t);
+    test::equal(state.scope_depth, 3);
+
+    t = TokenType.RPAREN;
+    state.check_scope(t);
+    test::equal(state.scope_depth, 2);
+
+    t = TokenType.RBRACKET;
+    state.check_scope(t);
+    test::equal(state.scope_depth, 1);
+
+    t = TokenType.RBRACE;
+    state.check_scope(t);
+    test::equal(state.scope_depth, 0);
+
+    // This should be ignored
+    t = TokenType.RBRACE;
+    state.check_scope(t);
+    test::equal(state.scope_depth, 0);
+
+    foreach(tok: state.scope_stack) {
+        // all old tokens set to zero
+        test::equal(tok, TokenType.INVALID_TOKEN);
+    }
+}
+
+fn void test_scope_oveflow_protection(){
+    NodeParserState state;
+
+    TokenType t = TokenType.LBRACE;
+
+    for(uint i = 0; i < state.scope_stack.len * 2; i++){
+        state.check_scope(t);
+    }
+
+    test::equal(state.scope_depth, state.scope_stack.len);
+    test::equal(state.scope_stack[state.scope_depth-1], t);
+}
+
 fn void test_func(){
    String code =  `module test::std::c3lang::ast;
 fn void test_node() {
     return 1;
 }
-`;
+//`; // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer ast.free();
@@ -89,8 +176,11 @@ fn void test_node() {
 
     test::equal(func.type, TokenType.FN);
     test::equal(ast.@node_join(func.name, contents), "test_node");
-    // io::printfn("```%s```", code[func.istart..func.iend+1]);
+    test::equal(ast.@node_join(func.ret_type, contents), "void");
+    test::equal(func.params, null);
+
+    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
     test::equal(func.istart, 31);
+    test::equal(func.iend, code.len-4);
     test::equal(code[func.iend], '}');
-    test::equal(func.iend, code.len-2);
 }
