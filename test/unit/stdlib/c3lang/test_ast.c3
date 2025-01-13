@@ -183,6 +183,9 @@ fn void test_node() {
     test::equal(func.istart, 31);
     test::equal(func.iend, code.len-4);
     test::equal(code[func.iend], '}');
+
+    test::greater(func.iscope_start, func.istart);
+    test::equal(code[func.iscope_start], '{');
 }
 
 fn void test_func_generic_ret_type(){
@@ -316,4 +319,39 @@ fn void test_node(int a, List(<int>) b) @test @inline @if(env::LIBC) {
     test::equal(func.istart, 31);
     test::equal(func.iend, code.len-4);
     test::equal(code[func.iend], '}');
+}
+
+fn void test_import(){
+   String code =  `
+   module test::std::c3lang::ast;
+   import test::std::c3lang::ast::foo @test @if(env::FOO) ;
+   import single_mod;
+   `;
+    DString contents = dstring::temp_new(code);
+    
+    String path = "foo.c3";
+    Ast ast = ast::parse(contents.str_view(), path);
+    defer ast.free();
+    contents.clear();
+
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::equal(ast.@node_join(m.name, contents, "::"), "test::std::c3lang::ast");
+    test::equal(m.attributes, null);
+
+    test::not_equal(m.imports, null);
+    test::equal(ast.@node_len(m.imports), 2);
+    AstImport* imp;
+
+    imp = ast.@node_at(m.imports, 0);
+    test::equal(imp.type, TokenType.IMPORT);
+    test::equal(imp.value, "import");
+    test::equal(ast.@node_join(imp.name, contents, "::"), "test::std::c3lang::ast::foo");
+    test::equal(ast.@node_join(imp.attributes, contents), "@test,@if");
+
+    imp = ast.@node_at(m.imports, 1);
+    test::equal(imp.type, TokenType.IMPORT);
+    test::equal(imp.value, "import");
+    test::equal(ast.@node_join(imp.name, contents, "::"), "single_mod");
+    test::equal(ast.@node_join(imp.attributes, contents), "");
+
 }
