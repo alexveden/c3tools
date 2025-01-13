@@ -72,9 +72,16 @@ fn void Token.print(&self, bool new_line = false) {
 		case REAL:
 		case CHAR_LITERAL:
 		case BYTES:
-		case COMMENT_SINGLE:
 			io::printf("%s[%s]%s", 
 					   lexer::token_type_to_string(self.type), self.value, new_line ? "\n" : " ");
+			break;
+		case DOCS_START:
+		case COMMENT_SINGLE:
+		case COMMENT_SINGLE_INLINE:
+		case COMMENT_MULTI:
+		case COMMENT_MULTI_INLINE:
+			io::printf("%s`#%d`%s", 
+					   lexer::token_type_to_string(self.type), self.value.len, new_line ? "\n" : " ");
 			break;
 		case EOS:
 		case EMPTY_LINE:

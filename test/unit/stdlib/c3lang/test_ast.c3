@@ -262,7 +262,7 @@ fn MyType* test_node() {
     test::not_equal(m, null);
 
     AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
-    test::not_equal(m, null);
+    test::not_equal(func, null);
 
     test::equal(func.type, TokenType.FN);
     test::equal(ast.@node_join(func.name, contents), "test_node");
@@ -354,4 +354,58 @@ fn void test_import(){
     test::equal(ast.@node_join(imp.name, contents, "::"), "single_mod");
     test::equal(ast.@node_join(imp.attributes, contents), "");
 
+}
+
+
+fn void test_docstring_module(){
+   String code =  `
+   <* My module *>
+   module test::std::c3lang::ast;
+   `;
+    DString contents = dstring::temp_new(code);
+    
+    String path = "foo.c3";
+    Ast ast = ast::parse(contents.str_view(), path, true);
+    defer ast.free();
+    contents.clear();
+
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::equal(ast.@node_join(m.name, contents, "::"), "test::std::c3lang::ast");
+    test::equal(m.attributes, null);
+
+    test::not_equal(m.docs, null);
+    test::equal(m.docs.value, "<* My module ");
+
+    // test::equal(1, 0);
+}
+
+fn void test_docstring_module_func(){
+   String code =  `
+<* My module *>
+module test::std::c3lang::ast;
+
+<* My func *>
+fn void test_node() {
+    return 1;
+}
+   `;
+    DString contents = dstring::temp_new(code);
+    
+    String path = "foo.c3";
+    Ast ast = ast::parse(contents.str_view(), path, true);
+    defer ast.free();
+    contents.clear();
+
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::equal(ast.@node_join(m.name, contents, "::"), "test::std::c3lang::ast");
+    test::equal(m.attributes, null);
+
+    test::not_equal(m.docs, null);
+    test::@check(m.docs.value.contains("My module"));
+
+    AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
+    test::not_equal(func, null);
+    test::not_equal(func.docs, null);
+
+    test::@check(func.docs.value.contains("My func"));
 }

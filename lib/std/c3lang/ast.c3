@@ -26,6 +26,7 @@ struct AstModule {
     AstNode* attributes;
     AstImport* imports;
     AstNode* decls;
+    AstDocs* docs;
 }
 
 struct AstCallable {
@@ -34,6 +35,7 @@ struct AstCallable {
     AstNode* ret_type;
     AstCallableParam* params;
     AstNode* attributes;
+    AstDocs* docs;
     uint iscope_start;
 }
 struct AstCallableParam {
@@ -45,6 +47,16 @@ struct AstImport {
     inline AstNode node;
     AstNode* name;
     AstNode* attributes;
+}
+
+struct AstDocs {
+    inline AstNode node;
+    AstDocsContract* contracts;
+}
+
+struct AstDocsContract {
+    inline AstNode node;
+    AstNode* items;
 }
 
 //
@@ -346,6 +358,36 @@ fn bool parse_function(Ast* ast, AstNode* node, Token* t)
     return false;
 }
 
+fn bool parse_docstring(Ast* ast, AstNode* node, Token* t) 
+{
+    assert(node.type == DOCS_START);
+    AstDocs* doc = (AstDocs*)node;
+    NodeParserState* state = ast.state;
+
+    if(state.current_state == INVALID_TOKEN) {
+        // Just newly created, initialize parser state
+        state.transition(DOCS_START);
+    }
+
+    switch (state.check(t)){
+        case DOCS_START:
+            switch(t.type) {
+                case DOCS_END:
+                    state.transition(DOCS_END);
+                default:
+                    break;
+            }
+            if(state.next()) nextcase state.current_state;
+        case DOCS_END:
+            doc.iend = t.offset + t.value.len;
+            return true;
+        default:
+            break;
+    }
+
+    return false;
+}
+
 //
 //                 NODE MANAGEMENT
 //
@@ -432,13 +474,16 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
 	lexer::init(&self.lexer, contents);
 	NodeParser node_fn = null;
 	AstNode* node = null;
+	AstDocs* docstring = null;
 	AstModule* current_module = (AstModule*)self.@allc_add(AstModule, &self.modules, &self.lexer.token);
 
 	const STATE_CAPACITY = 1024;
 	self.state = mem::calloc(STATE_CAPACITY);
 	assert(self.state);
-	// defer {
-	// }
+	defer {
+	    mem::free(self.state);
+	    self.state = null;
+	}
 
 	while LOOP: (self.lexer.next_token()) {
 	    if (print_lex) self.lexer.token.print();
@@ -449,12 +494,18 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
                     node_fn = &parse_module;
                     node = self.@allc_add(AstModule, &self.modules, &self.lexer.token); 
                     current_module = (AstModule*)node;
+                    current_module.docs = docstring;
                 case FN:
                     node_fn = &parse_function;
                     node = self.@allc_add(AstCallable, &current_module.decls, &self.lexer.token); 
+                    ((AstCallable*)node).docs = docstring;
                 case IMPORT:
                     node_fn = &parse_import;
                     node = self.@allc_add(AstImport, &current_module.imports, &self.lexer.token); 
+                case DOCS_START:
+                    docstring = null; // reset all previous docs
+                    node_fn = &parse_docstring;
+                    node = self.@allc_add(AstDocs, &docstring, &self.lexer.token); 
                 default:
                     continue LOOP;
 		    }
@@ -462,6 +513,7 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
 
 		if(node_fn(&self, node, &self.lexer.token)) {
 		    // Node was finished, scan next;
+		    if(node.type != DOCS_START) docstring = null;
 		    node_fn = null;
 		    node = null;
             mem::clear(self.state, STATE_CAPACITY);
@@ -472,8 +524,6 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
         AstModule* last_mod = @node_last(self.modules); 
         last_mod.iend = self.lexer.token.offset - 1;
     }
-	mem::free(self.state);
-	self.state = null;
 	return self;
 }
 
