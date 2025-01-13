@@ -41,7 +41,6 @@ struct AstCallable {
 struct AstCallableParam {
     inline AstNode node;
     AstNode* param_type;
-    String param_name;
 }
 
 struct AstImport {
@@ -192,7 +191,6 @@ fn bool parse_function(Ast* ast, AstNode* node, Token* t)
             state.transition(RETURN);
         case RETURN:
             // function return type
-            // breakpoint();
             switch(t.type) {
                 case IDENT:
                     // function name, make a transition if no scope and ret_type is set
@@ -227,9 +225,10 @@ fn bool parse_function(Ast* ast, AstNode* node, Token* t)
                     // next parameter
                     if (state.scope_depth == 1) {
                         // Next parameter definition
-                        current_param = (AstCallableParam*)ast.@allc_add(AstCallableParam, &node_func.params, &ast.lexer.token); 
-                        current_param.param_name = "";
-                        state.sub_node = &node;
+                        current_param = (AstCallableParam*)ast.@allc_add(AstCallableParam, &current_param, &ast.lexer.token); 
+                        current_param.value = "";
+                        current_param.type = TokenType.VAR;
+                        state.sub_node = &current_param;
                     } else {
                         nextcase default;
                     }
@@ -250,13 +249,14 @@ fn bool parse_function(Ast* ast, AstNode* node, Token* t)
                 default:
                     if (state.sub_node == null) {
                         current_param = (AstCallableParam*)ast.@allc_add(AstCallableParam, &node_func.params, &ast.lexer.token); 
-                        current_param.param_name = "";
+                        current_param.value = "";
+                        current_param.type = TokenType.VAR;
                         state.sub_node = &current_param;
                     }
                     if (state.scope_depth == 1 && t.type == IDENT) {
-                        if (!current_param.param_name)
+                        if (!current_param.value)
                         {
-                            current_param.param_name = ast.@allc_str(t.value);
+                            current_param.value = ast.@allc_str(t.value);
                         }
                     } else {
                         // all other goes to type

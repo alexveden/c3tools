@@ -184,3 +184,136 @@ fn void test_node() {
     test::equal(func.iend, code.len-4);
     test::equal(code[func.iend], '}');
 }
+
+fn void test_func_generic_ret_type(){
+   String code =  `module test::std::c3lang::ast;
+fn List(<int>) test_node() {
+    return 1;
+}
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+
+    AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
+    test::not_equal(m, null);
+
+    test::equal(func.type, TokenType.FN);
+    test::equal(ast.@node_join(func.name, contents), "test_node");
+    test::equal(ast.@node_join(func.ret_type, contents), "List,(<,int,>)");
+    test::equal(func.params, null);
+
+    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    test::equal(func.istart, 31);
+    test::equal(func.iend, code.len-4);
+    test::equal(code[func.iend], '}');
+}
+
+fn void test_func_vector_ret_type(){
+   String code =  `module test::std::c3lang::ast;
+fn int[<2>] test_node() {
+    return 1;
+}
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+
+    AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
+    test::not_equal(m, null);
+
+    test::equal(func.type, TokenType.FN);
+    test::equal(ast.@node_join(func.name, contents), "test_node");
+    test::equal(ast.@node_join(func.ret_type, contents), "int,[<,2,>]");
+    test::equal(func.params, null);
+
+    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    test::equal(func.istart, 31);
+    test::equal(func.iend, code.len-4);
+    test::equal(code[func.iend], '}');
+}
+
+fn void test_func_struct_pointer_type(){
+   String code =  `module test::std::c3lang::ast;
+fn MyType* test_node() {
+    return 1;
+}
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+
+    AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
+    test::not_equal(m, null);
+
+    test::equal(func.type, TokenType.FN);
+    test::equal(ast.@node_join(func.name, contents), "test_node");
+    test::equal(ast.@node_join(func.ret_type, contents), "MyType,*");
+    test::equal(func.params, null);
+
+    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    test::equal(func.istart, 31);
+    test::equal(func.iend, code.len-4);
+    test::equal(code[func.iend], '}');
+}
+
+fn void test_func_params(){
+   String code =  `module test::std::c3lang::ast;
+fn void test_node(int a, List(<int>) b) @test @inline @if(env::LIBC) {
+    return 1;
+}
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+
+    AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
+    test::not_equal(m, null);
+
+    test::equal(func.type, TokenType.FN);
+    test::equal(ast.@node_join(func.name, contents), "test_node");
+    test::equal(ast.@node_join(func.ret_type, contents), "void");
+
+    test::not_equal(func.params, null);
+    test::equal(ast.@node_len(func.params), 2);
+    AstCallableParam* param;
+
+    param = (AstCallableParam*)ast.@node_at(func.params, 0);
+    test::equal(param.type, TokenType.VAR);
+    test::equal(param.value, "a");
+    test::equal(ast.@node_join(param.param_type, contents), "int");
+
+    param = (AstCallableParam*)ast.@node_at(func.params, 1);
+    test::equal(param.type, TokenType.VAR);
+    test::equal(param.value, "b");
+    test::equal(ast.@node_join(param.param_type, contents), "List,(<,int,>)");
+
+    test::not_equal(func.attributes, null);
+    test::equal(ast.@node_len(func.attributes), 3);
+    test::equal(ast.@node_join(func.attributes, contents), "@test,@inline,@if");
+
+    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    test::equal(func.istart, 31);
+    test::equal(func.iend, code.len-4);
+    test::equal(code[func.iend], '}');
+}
