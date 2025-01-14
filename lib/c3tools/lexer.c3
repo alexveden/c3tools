@@ -1,6 +1,6 @@
-module std::c3lang::lexer;
+module c3tools::lexer;
+import c3tools::utils_port;
 import std::io;
-import std::c3lang::utils_port;
 import std::collections::list;
 
 // Copyright (c) 2019 Christoffer Lerno. All rights reserved.
@@ -202,7 +202,7 @@ fn ushort check_col(usz col) @inline @local
 }
 fn uint check_row(usz line) @inline @local
 {
-	return line > std::c3lang::lexer::MAX_SOURCE_LOCATION_LEN ? 0 : (uint)line;
+	return line > lexer::MAX_SOURCE_LOCATION_LEN ? 0 : (uint)line;
 }
 
 // --- Lexing general methods.

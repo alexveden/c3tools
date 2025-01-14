@@ -1,6 +1,6 @@
-module test::std::c3lang::lexer @test;
+module test::c3tools::lexer @test;
+import c3tools::lexer;
 import std::io;
-import std::c3lang::lexer;
 import std::collections::list;
 
 fn void test_row_col_offset() {

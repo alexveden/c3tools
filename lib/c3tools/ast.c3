@@ -1,6 +1,6 @@
-module std::c3lang::ast;
+module c3tools::ast;
+import c3tools::lexer;
 import std::io;
-import std::c3lang::lexer;
 import std::collections::list;
 
 

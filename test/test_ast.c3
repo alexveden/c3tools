@@ -2,9 +2,9 @@ fn int far(int a , int b) {
     return a + b;
 }
 
-module test::std::c3lang::ast @test;
-import std::c3lang::ast @public;
-import std::c3lang::lexer;
+module test::c3tools::ast @test;
+import c3tools::ast @public;
+import c3tools::lexer;
 import std::math;
 import std::collections::list;
 import std::io;
