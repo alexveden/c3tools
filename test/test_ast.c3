@@ -1,7 +1,3 @@
-fn int far(int a , int b) {
-    return a + b;
-}
-
 module test::c3tools::ast @test;
 import c3tools::ast @public;
 import c3tools::lexer;
@@ -476,3 +472,131 @@ module test::std::c3lang::ast;
     test::equal(ast.@node_join(contract.items, contents), `a,>,0,,,a,<,d`);
 
 }
+
+fn void test_func_default_params(){
+   String code =  `module test::std::c3lang::ast;
+fn void test_node(int a, int b = 2) @test @inline @if(env::LIBC) {
+    return 1;
+}
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+
+    AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
+    test::not_equal(m, null);
+
+    test::equal(func.type, TokenType.FN);
+    test::equal(ast.@node_join(func.name, contents), "test_node");
+    test::equal(ast.@node_join(func.ret_type, contents), "void");
+
+    test::not_equal(func.params, null);
+    test::equal(ast.@node_len(func.params), 2);
+    AstCallableParam* param;
+
+    param = (AstCallableParam*)ast.@node_at(func.params, 0);
+    test::equal(param.type, TokenType.VAR);
+    test::equal(param.value, "a");
+    test::equal(ast.@node_join(param.param_type, contents), "int");
+
+    param = (AstCallableParam*)ast.@node_at(func.params, 1);
+    test::equal(param.type, TokenType.VAR);
+    test::equal(param.value, "b");
+    test::equal(ast.@node_join(param.param_type, contents), "int,=,2");
+
+    test::not_equal(func.attributes, null);
+    test::equal(ast.@node_len(func.attributes), 3);
+    test::equal(ast.@node_join(func.attributes, contents), "@test,@inline,@if");
+
+    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    test::equal(func.istart, 31);
+    test::equal(func.iend, code.len-4);
+    test::equal(code[func.iend], '}');
+}
+
+fn void test_func_type_method(){
+   String code =  `module test::std::c3lang::ast;
+fn MyType* MyFoo.test_node(&self) {
+    return 1;
+}
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+
+    AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
+    test::not_equal(func, null);
+
+    test::equal(func.type, TokenType.FN);
+    test::equal(ast.@node_join(func.name, contents), "MyFoo,test_node");
+    test::equal(ast.@node_join(func.ret_type, contents), "MyType,*");
+
+    test::equal(ast.@node_len(func.params), 1);
+    AstCallableParam* param;
+
+    param = (AstCallableParam*)ast.@node_at(func.params, 0);
+    test::equal(param.type, TokenType.VAR);
+    test::equal(param.value, "self");
+    // test::equal(param.param_type, null);
+    test::equal(ast.@node_join(param.param_type, contents), "MyFoo");
+
+    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    test::equal(func.istart, 31);
+    test::equal(func.iend, code.len-4);
+    test::equal(code[func.iend], '}');
+}
+
+
+fn void test_one_linefunc(){
+   String code =  `module test::std::c3lang::ast;
+fn char! String.to_uchar(s, int base = 10) @inline @test => s.@to_integer(char, base) @foo;
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+
+    AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
+    test::not_equal(func, null);
+
+    test::equal(func.type, TokenType.FN);
+    test::equal(ast.@node_join(func.ret_type, contents), "char,!");
+    test::equal(ast.@node_join(func.name, contents), "String,to_uchar");
+    test::equal(ast.@node_join(func.attributes, contents), "@inline,@test");
+    test::not_equal(func.params, null);
+
+    test::equal(ast.@node_len(func.params), 2);
+    AstCallableParam* param;
+
+    param = (AstCallableParam*)ast.@node_at(func.params, 0);
+    test::equal(param.type, TokenType.VAR);
+    test::equal(param.value, "s");
+    test::equal(param.param_type.type, TokenType.TYPE_IDENT);
+    test::equal(ast.@node_join(param.param_type, contents), "String");
+
+    param = (AstCallableParam*)ast.@node_at(func.params, 1);
+    test::equal(param.type, TokenType.VAR);
+    test::equal(param.value, "base");
+    test::equal(ast.@node_join(param.param_type, contents), "int,=,10");
+
+
+    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    test::equal(func.istart, 31);
+    test::equal(func.iend, code.len-4);
+    test::equal(code[func.iend], ';');
+}
+
