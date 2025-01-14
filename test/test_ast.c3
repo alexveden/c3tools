@@ -600,3 +600,248 @@ fn char! String.to_uchar(s, int base = 10) @inline @test => s.@to_integer(char, 
     test::equal(code[func.iend], ';');
 }
 
+fn void test_macro_type(){
+   String code =  `module test::std::c3lang::ast;
+macro MyFoo.@test_macro(self) {
+    return 1;
+}
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+
+    AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
+    test::not_equal(func, null);
+
+    test::equal(func.type, TokenType.MACRO);
+    test::equal(ast.@node_join(func.ret_type, contents), "");
+    test::equal(ast.@node_join(func.name, contents), "MyFoo,@test_macro");
+
+    test::equal(ast.@node_len(func.params), 1);
+    AstCallableParam* param;
+
+    param = (AstCallableParam*)ast.@node_at(func.params, 0);
+    test::equal(param.type, TokenType.VAR);
+    test::equal(param.value, "self");
+    // test::equal(param.param_type, null);
+    test::equal(ast.@node_join(param.param_type, contents), "MyFoo");
+
+    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    test::equal(func.istart, 31);
+    test::equal(func.iend, code.len-4);
+    test::equal(code[func.iend], '}');
+}
+
+fn void test_macro_type_with_ret_type(){
+   String code =  `module test::std::c3lang::ast;
+macro MyType(<$it>) MyFoo.@test_macro(self) {
+    return 1;
+}
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+
+    AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
+    test::not_equal(func, null);
+
+    test::equal(func.type, TokenType.MACRO);
+    test::equal(ast.@node_join(func.ret_type, contents), "MyType,(<,$it,>)");
+    test::equal(ast.@node_join(func.name, contents), "MyFoo,@test_macro");
+
+    test::equal(ast.@node_len(func.params), 1);
+    AstCallableParam* param;
+
+    param = (AstCallableParam*)ast.@node_at(func.params, 0);
+    test::equal(param.type, TokenType.VAR);
+    test::equal(param.value, "self");
+    // test::equal(param.param_type, null);
+    test::equal(ast.@node_join(param.param_type, contents), "MyFoo");
+
+    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    test::equal(func.istart, 31);
+    test::equal(func.iend, code.len-4);
+    test::equal(code[func.iend], '}');
+}
+
+fn void test_macro_at_ident(){
+   String code =  `module test::std::c3lang::ast;
+macro @test_macro(self) {
+    return 1;
+}
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+
+    AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
+    test::not_equal(func, null);
+
+    test::equal(func.type, TokenType.MACRO);
+    test::equal(func.ret_type, null);
+    test::equal(ast.@node_join(func.ret_type, contents), "");
+    test::equal(ast.@node_join(func.name, contents), "@test_macro");
+
+    test::equal(ast.@node_len(func.params), 1);
+    AstCallableParam* param;
+
+    param = (AstCallableParam*)ast.@node_at(func.params, 0);
+    test::equal(param.type, TokenType.VAR);
+    test::equal(param.value, "self");
+    test::equal(param.param_type, null);
+    test::equal(ast.@node_join(param.param_type, contents), "");
+
+    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    test::equal(func.istart, 31);
+    test::equal(func.iend, code.len-4);
+    test::equal(code[func.iend], '}');
+}
+
+fn void test_macro_hash_argument(){
+   String code =  `module test::std::c3lang::ast;
+macro @test_macro(Type* #self, $bar) {
+    return 1;
+}
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+
+    AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
+    test::not_equal(func, null);
+
+    test::equal(func.type, TokenType.MACRO);
+    test::equal(func.ret_type, null);
+    test::equal(ast.@node_join(func.ret_type, contents), "");
+    test::equal(ast.@node_join(func.name, contents), "@test_macro");
+
+    test::equal(ast.@node_len(func.params), 2);
+    AstCallableParam* param;
+
+    param = (AstCallableParam*)ast.@node_at(func.params, 0);
+    test::equal(param.type, TokenType.VAR);
+    test::equal(param.value, "#self");
+    // test::equal(param.param_type, null);
+    test::equal(ast.@node_join(param.param_type, contents), "Type,*");
+
+    param = (AstCallableParam*)ast.@node_at(func.params, 1);
+    test::equal(param.type, TokenType.VAR);
+    test::equal(param.value, "$bar");
+    test::equal(ast.@node_join(param.param_type, contents), "");
+
+
+    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    test::equal(func.istart, 31);
+    test::equal(func.iend, code.len-4);
+    test::equal(code[func.iend], '}');
+}
+
+fn void test_ellipsis(){
+   String code =  `module test::std::c3lang::ast;
+macro @test_macro(double... a, ...args) {
+    return 1;
+}
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+
+    AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
+    test::not_equal(func, null);
+
+    test::equal(func.type, TokenType.MACRO);
+    test::equal(func.ret_type, null);
+    test::equal(ast.@node_join(func.ret_type, contents), "");
+    test::equal(ast.@node_join(func.name, contents), "@test_macro");
+
+    test::equal(ast.@node_len(func.params), 2);
+    AstCallableParam* param;
+
+    param = (AstCallableParam*)ast.@node_at(func.params, 0);
+    test::equal(param.type, TokenType.VAR);
+    test::equal(param.value, "a");
+    // test::equal(param.param_type, null);
+    test::equal(ast.@node_join(param.param_type, contents), "double,...");
+
+    param = (AstCallableParam*)ast.@node_at(func.params, 1);
+    test::equal(param.type, TokenType.VAR);
+    test::equal(param.value, "args");
+    test::equal(ast.@node_join(param.param_type, contents), "...");
+
+
+    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    test::equal(func.istart, 31);
+    test::equal(func.iend, code.len-4);
+    test::equal(code[func.iend], '}');
+}
+
+fn void test_macro_parameter_attributes(){
+   String code =  `module test::std::c3lang::ast;
+macro @test_macro(Type* #self @unused, $bar @test @ok) {
+    return 1;
+}
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+
+    AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
+    test::not_equal(func, null);
+
+    test::equal(func.type, TokenType.MACRO);
+    test::equal(func.ret_type, null);
+    test::equal(ast.@node_join(func.ret_type, contents), "");
+    test::equal(ast.@node_join(func.name, contents), "@test_macro");
+
+    test::equal(ast.@node_len(func.params), 2);
+    AstCallableParam* param;
+
+    param = (AstCallableParam*)ast.@node_at(func.params, 0);
+    test::equal(param.type, TokenType.VAR);
+    test::equal(param.value, "#self");
+    // test::equal(param.param_type, null);
+    test::equal(ast.@node_join(param.param_type, contents), "Type,*");
+    test::equal(ast.@node_join(param.attributes, contents), "@unused");
+
+    param = (AstCallableParam*)ast.@node_at(func.params, 1);
+    test::equal(param.type, TokenType.VAR);
+    test::equal(param.value, "$bar");
+    test::equal(ast.@node_join(param.param_type, contents), "");
+    test::equal(ast.@node_join(param.attributes, contents), "@test,@ok");
+
+
+    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    test::equal(func.istart, 31);
+    test::equal(func.iend, code.len-4);
+    test::equal(code[func.iend], '}');
+}

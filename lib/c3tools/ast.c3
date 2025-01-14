@@ -41,6 +41,7 @@ struct AstCallable {
 struct AstCallableParam {
     inline AstNode node;
     AstNode* param_type;
+    AstNode* attributes;
 }
 
 struct AstImport {
@@ -167,6 +168,7 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
                     node = self.@allc_add(AstModule, &self.modules, &self.lexer.token); 
                     current_module = (AstModule*)node;
                     current_module.docs = docstring;
+                case MACRO:
                 case FN:
                     node_fn = &Ast.parse_function;
                     node = self.@allc_add(AstCallable, &current_module.decls, &self.lexer.token); 

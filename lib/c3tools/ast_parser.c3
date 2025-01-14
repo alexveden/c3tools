@@ -210,44 +210,56 @@ macro parse_callable_params(Ast* ast, Token* t, AstCallable* node_func, NodePars
         case COMMENT_SINGLE:
         case COMMENT_MULTI:
         case EMPTY_LINE:
-        case AMP:
+        case AMP:  // & in parameters, i.e. &self case, it's safe to ignore
         case COMMENT_MULTI_INLINE:
             break;
-        default:
+        case TYPE_IDENT:
+        case IDENT:
+        case HASH_IDENT:
+        case CT_IDENT:
             if (state.sub_node == null) {
                 current_param = (AstCallableParam*)ast.@allc_add(AstCallableParam, &node_func.params, &ast.lexer.token); 
                 current_param.value = "";
                 current_param.type = TokenType.VAR;
                 state.sub_node = current_param;
             }
-
-            if (state.scope_depth == 1 && t.type == IDENT) {
-                if (!current_param.value)
-                {
-                    if (node_func.name && node_func.name.next && !node_func.params.next) {
-                        // If it's a first parameter without type and signatue is MyType.my_func()
-                        // set it as a method `self` to MyType
-                        Token ptok = {
-                            .type = TokenType.TYPE_IDENT,
-                            .value = node_func.name.value,
-                            .row = t.row,
-                            .col = t.col,
-                            .offset = t.offset,
-                        };
-                        ast.@allc_add(AstNode, &current_param.param_type, &ptok);
-                    }
-                    current_param.value = ast.@allc_str(t.value);
-                } 
+            if (!current_param.value && t.type != TYPE_IDENT)
+            {
+                if (node_func.name && node_func.name.next && !node_func.params.next) {
+                    // If it's a first parameter without type and signatue is MyType.my_func()
+                    // set it as a method `self` to MyType
+                    Token ptok = {
+                        .type = TokenType.TYPE_IDENT,
+                        .value = node_func.name.value,
+                        .row = t.row,
+                        .col = t.col,
+                        .offset = t.offset,
+                    };
+                    ast.@allc_add(AstNode, &current_param.param_type, &ptok);
+                }
+                current_param.value = ast.@allc_str(t.value);
             } else {
-                // all other goes to type
+                nextcase default;
+            }
+        case AT_IDENT:
+            if (current_param) {
+                ast.@allc_add(AstNode, &current_param.attributes, t);
+            }
+        default:
+            // all other goes to type
+            if (current_param) {
                 ast.@allc_add(AstNode, &current_param.param_type, t);
             }
     }
 }
 
+// fn bool osldfkjslf(int self, int b @used) {
+//     return true;
+// }
+
 fn bool Ast.parse_function(&ast, AstNode* node, Token* t) 
 {
-    assert(node.type == FN);
+    assert(node.type == FN || node.type == MACRO);
     AstCallable* node_func = (AstCallable*)node;
 
     NodeParserState* state = ast.state;
@@ -264,13 +276,32 @@ fn bool Ast.parse_function(&ast, AstNode* node, Token* t)
         case RETURN:
             // function return type
             switch(t.type) {
+                case AT_IDENT:
+                    state.transition(IDENT);
+                case DOT:
+                    // macro MyType.test_macro() case
+                    AstNode** last_rtype = &node_func.ret_type;
+                    while(*last_rtype) {
+                        if(!last_rtype[0].next) {
+                            assert(node_func.name == null);
+                            if(last_rtype[0].type == TYPE_IDENT) {
+                                // attaching the func name to the last ret type node
+                                node_func.name = *last_rtype;                            
+                                // no return type anymore
+                                last_rtype[0] = null;
+                            }
+                            break;
+                        } 
+                        last_rtype = &last_rtype[0].next;
+                    }
+                    state.transition(IDENT);
                 case TYPE_IDENT:
                 case IDENT:
                     // function name, make a transition if no scope and ret_type is set
                     if (state.scope_depth == 0 && node_func.ret_type) {
                         state.transition(IDENT);
                     } else {
-                        nextcase;
+                        nextcase default;
                     }
                 default:
                     ast.@allc_add(AstNode, &node_func.ret_type, t);
@@ -279,8 +310,8 @@ fn bool Ast.parse_function(&ast, AstNode* node, Token* t)
         case IDENT:
             // function name 
             switch(t.type) {
+                case AT_IDENT:
                 case IDENT:
-                    ast.@allc_add(AstNode, &node_func.name, t);
                 case TYPE_IDENT:
                     // struct based functions may contain TypeName.func_name
                     ast.@allc_add(AstNode, &node_func.name, t);
