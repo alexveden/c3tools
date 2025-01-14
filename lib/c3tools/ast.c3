@@ -37,7 +37,7 @@ struct AstTypeDef {
 }
 struct AstTypeDefEnumerable {
     inline AstTypeDef node;
-    AstNode* items;
+    AstNode* values;
 }
 
 struct AstCallable {

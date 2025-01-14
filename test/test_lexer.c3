@@ -764,3 +764,75 @@ fn void test_empty_string_token() {
 
 	test::equal(toks[3].type, TokenType.EOF);
 }
+
+fn void test_extending_atts() {
+    String contents = `@test  (  ddd) @if($foo(@bar) || @test) @export("@bar")`;
+	Lexer lexer;
+	lexer::init(&lexer,contents);
+	
+    Token* t = &lexer.token;
+
+	int att_cnt = 0;
+	while (lexer.next_token()) {
+    	io::printf("%s", t);
+    	// io::printf("current char: `%c`\n", lexer.current[0]);
+
+		if(t.type == AT_IDENT){
+    		lexer.extend_current_attribute();
+			switch(att_cnt){
+				case 0:
+					test::equal(t.type, TokenType.AT_IDENT);
+					test::equal(t.value, "@test  (  ddd)");
+				case 1:
+					test::equal(t.type, TokenType.AT_IDENT);
+					test::equal(t.value, "@if($foo(@bar) || @test)");
+				case 2:
+					test::equal(t.type, TokenType.AT_IDENT);
+					test::equal(t.value, `@export("@bar")`);
+				default: 
+					unreachable();
+			}
+		}
+    	// foreach(t: toks) t.print(new_line: true);
+
+    	att_cnt++;
+	}
+
+	test::equal(t.type, TokenType.EOF);
+	test::equal(4, att_cnt);
+}
+
+fn void test_extending_atts_safety() {
+    String contents = `@test   @export("sdf") @if($foo(@bar) || @test) @export`;
+	Lexer lexer;
+	lexer::init(&lexer,contents);
+	
+    Token* t = &lexer.token;
+
+	int att_cnt = 0;
+	while (lexer.next_token()) {
+		if(t.type == AT_IDENT){
+			lexer.extend_current_attribute();
+			switch(att_cnt){
+				case 0:
+					test::equal(t.type, TokenType.AT_IDENT);
+					test::equal(t.value, "@test  (  ddd)");
+				case 1:
+					test::equal(t.type, TokenType.AT_IDENT);
+					test::equal(t.value, "@if($foo(@bar) || @test)");
+				case 2:
+					test::equal(t.type, TokenType.AT_IDENT);
+					test::equal(t.value, `@export("@bar")`);
+				default: 
+					unreachable();
+			}
+		}
+    	// foreach(t: toks) t.print(new_line: true);
+    	io::printf("%s", t);
+
+    	att_cnt++;
+	}
+
+	test::equal(t.type, TokenType.EOF);
+	test::equal(4, att_cnt);
+}

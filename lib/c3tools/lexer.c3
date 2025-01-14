@@ -1,6 +1,7 @@
 module c3tools::lexer;
 import c3tools::utils_port;
 import std::io;
+import std::math;
 import std::collections::list;
 
 // Copyright (c) 2019 Christoffer Lerno. All rights reserved.
@@ -450,7 +451,7 @@ fn bool parse_multiline_comment(Lexer *lexer) @inline @local
 fn bool skip_whitespace(Lexer *lexer) @local
 {
 	bool has_empty_line = false;
-	while (1)
+	while LOOP: (!reached_end(lexer))
 	{
 		switch (peek(lexer))
 		{
@@ -497,10 +498,48 @@ fn bool skip_whitespace(Lexer *lexer) @local
 				return false;
 		}
 	}
-	// unreachable();
+	return false;
 }
 
-// --- Identifier scanning
+// tries to extent current AT_IDENT
+// for handling @if(env::SOO || SOME) @export("something")
+fn void Lexer.extend_current_attribute(Lexer *lexer)
+{
+	Token* result = &lexer.token;
+	assert(lexer.token.type == AT_IDENT);
+	assert(math::abs(lexer.current - lexer.token.value.ptr) < 64, "this must be called AT_IDENT parsed");
+	assert(lexer.token.value);
+	assert(lexer.token.value.ptr >= lexer.file_begin);
+	assert(lexer.token.value.ptr < lexer.file_begin + lexer.file_len);
+
+	int nesting = 0;
+	int extra_len = 0;
+	while LOOP: (!reached_end(lexer)) {
+		char c = peek(lexer);
+    	io::printf("current char: `%c`\n", c);
+		switch (c)
+		{
+			case '(':
+				nesting++;
+			case ')':
+				nesting--;
+				if (nesting == 0) next(lexer);
+				nextcase default;
+			case ' ':
+				break;
+			default:
+				if (nesting == 0){
+					if(extra_len){
+						result.value = (String)((char*) result.value.ptr)[..result.value.len + extra_len]; 
+					}
+					break LOOP;
+				}
+		}
+		next(lexer);
+		extra_len++;
+	}
+	// unreachable();
+}
 
 // Parses identifiers. Note that this is a bit complicated here since
 // we split identifiers into 2 types + find keywords.

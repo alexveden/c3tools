@@ -1,5 +1,5 @@
 module c3tools::ast;
-import c3tools::lexer;
+import c3tools::lexer @public;
 
 def NodeParser = fn bool (Ast* ast, AstNode* node, Token* t);
 
@@ -175,7 +175,7 @@ fn bool Ast.parse_import(&ast, AstNode* node, Token* t)
     return false;
 }
 
-macro parse_callable_params(Ast* ast, Token* t, AstCallable* node_func, NodeParserState* state) @local {
+macro parse_callable_params(Ast* ast, Token* t, AstCallable* node_func, NodeParserState* state) @local  {
     AstCallableParam* current_param = state.sub_node ? (AstCallableParam*)state.sub_node : null;
 
     switch(t.type) {
@@ -451,7 +451,7 @@ fn bool Ast.parse_enumerable(&ast, AstNode* node, Token* t)
         case IDENT:
             switch(t.type) {
                 case TYPE_IDENT:
-                    node_enum.name = ast.@allc_str(t.value);
+                    if (!node_enum.name) node_enum.name = ast.@allc_str(t.value);
                 case LBRACE:
                     if(state.scope_depth == 1) state.transition(SCOPE);
                 default:
@@ -481,6 +481,13 @@ fn bool Ast.parse_enumerable(&ast, AstNode* node, Token* t)
                     break;
                 case RBRACE:           // ending brace
                     if (state.scope_depth == 0) state.transition(EOF);
+                case CONST_IDENT:
+                    if(state.scope_depth == 1 && !state.sub_node) {
+                        state.sub_node = ast.@allc_add(AstNode, &node_enum.values, &ast.lexer.token); 
+                    }
+                case COMMA:
+                    // next iterm resetting state
+                    state.sub_node = null; 
                 default:
                     break;
             }

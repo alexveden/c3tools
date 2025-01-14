@@ -899,7 +899,8 @@ fn void test_enum_simple(){
    String code =  `module test::std::c3lang::ast;
 enum Foo {
     A,
-    B,
+    RUNNING    = { OtherEnum.FAILING, true,  {12,22} },
+    FOO = SOME_OTHER_CONST,
 }
 //`; // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
@@ -916,6 +917,109 @@ enum Foo {
 
     test::equal(enum_type.type, TokenType.ENUM);
     test::equal(enum_type.name, "Foo");
+
+    test::equal(ast.@node_len(enum_type.values), 3);
+    AstNode* eval;
+
+    eval = ast.@node_at(enum_type.values, 0);
+    test::equal(eval.type, TokenType.CONST_IDENT);
+    test::equal(eval.value, "A");
+
+    eval = ast.@node_at(enum_type.values, 1);
+    test::equal(eval.type, TokenType.CONST_IDENT);
+    test::equal(eval.value, "RUNNING");
+
+    eval = ast.@node_at(enum_type.values, 2);
+    test::equal(eval.type, TokenType.CONST_IDENT);
+    test::equal(eval.value, "FOO");
+
+    io::printf("\n\n``%s``", code[enum_type.istart..math::min((isz)enum_type.iend, (isz)(code.len-1))]);
+    test::equal(enum_type.istart, 31);
+    test::equal(code[enum_type.iend], '}');
+    test::equal(enum_type.iend, code.len-4);
+}
+
+fn void test_typed_enum_simple(){
+   String code =  `module test::std::c3lang::ast;
+enum Foo : int {
+    A,
+    RUNNING    = { OtherEnum.FAILING, true,  {12,22} },
+    FOO = SOME_OTHER_CONST,
+}
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+
+    AstTypeDefEnumerable* enum_type = (AstTypeDefEnumerable*)ast.@node_at(m.decls, 0);
+    test::not_equal(enum_type, null);
+
+    test::equal(enum_type.type, TokenType.ENUM);
+    test::equal(enum_type.name, "Foo");
+
+    test::equal(ast.@node_len(enum_type.values), 3);
+    AstNode* eval;
+
+    eval = ast.@node_at(enum_type.values, 0);
+    test::equal(eval.type, TokenType.CONST_IDENT);
+    test::equal(eval.value, "A");
+
+    eval = ast.@node_at(enum_type.values, 1);
+    test::equal(eval.type, TokenType.CONST_IDENT);
+    test::equal(eval.value, "RUNNING");
+
+    eval = ast.@node_at(enum_type.values, 2);
+    test::equal(eval.type, TokenType.CONST_IDENT);
+    test::equal(eval.value, "FOO");
+
+    io::printf("\n\n``%s``", code[enum_type.istart..math::min((isz)enum_type.iend, (isz)(code.len-1))]);
+    test::equal(enum_type.istart, 31);
+    test::equal(code[enum_type.iend], '}');
+    test::equal(enum_type.iend, code.len-4);
+}
+
+fn void test_typed_enum_associated(){
+   String code =  `module test::std::c3lang::ast;
+enum Foo : int (String desc, bool active, Position pos) {
+    A,
+    RUNNING    = { OtherEnum.FAILING, true,  {12,22} },
+    FOO = SOME_OTHER_CONST,
+}
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+
+    AstTypeDefEnumerable* enum_type = (AstTypeDefEnumerable*)ast.@node_at(m.decls, 0);
+    test::not_equal(enum_type, null);
+
+    test::equal(enum_type.type, TokenType.ENUM);
+    test::equal(enum_type.name, "Foo");
+
+    test::equal(ast.@node_len(enum_type.values), 3);
+    AstNode* eval;
+
+    eval = ast.@node_at(enum_type.values, 0);
+    test::equal(eval.type, TokenType.CONST_IDENT);
+    test::equal(eval.value, "A");
+
+    eval = ast.@node_at(enum_type.values, 1);
+    test::equal(eval.type, TokenType.CONST_IDENT);
+    test::equal(eval.value, "RUNNING");
+
+    eval = ast.@node_at(enum_type.values, 2);
+    test::equal(eval.type, TokenType.CONST_IDENT);
+    test::equal(eval.value, "FOO");
 
     io::printf("\n\n``%s``", code[enum_type.istart..math::min((isz)enum_type.iend, (isz)(code.len-1))]);
     test::equal(enum_type.istart, 31);
