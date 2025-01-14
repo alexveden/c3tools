@@ -43,7 +43,7 @@ fn void test_node() {
     test::not_equal(m.attributes, null);
     test::equal(m.attributes.value, "@test");
     test::equal(m.attributes.type, TokenType.AT_IDENT);
-    test::equal(ast.@node_join(m.attributes, contents, ","), "@test,@if");
+    test::equal(ast.@node_join(m.attributes, contents, ","), "@test,@if(env::NO_LIBC || $feature(C3_MATH))");
     test::equal(m.attributes.istart, 31);
     test::equal(m.attributes.iend, 31+5);
 
@@ -309,7 +309,7 @@ fn void test_node(int a, List(<int>) b) @test @inline @if(env::LIBC) {
 
     test::not_equal(func.attributes, null);
     test::equal(ast.@node_len(func.attributes), 3);
-    test::equal(ast.@node_join(func.attributes, contents), "@test,@inline,@if");
+    test::equal(ast.@node_join(func.attributes, contents), "@test,@inline,@if(env::LIBC)");
 
     io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
     test::equal(func.istart, 31);
@@ -342,7 +342,7 @@ fn void test_import(){
     test::equal(imp.type, TokenType.IMPORT);
     test::equal(imp.value, "import");
     test::equal(ast.@node_join(imp.name, contents, "::"), "test::std::c3lang::ast::foo");
-    test::equal(ast.@node_join(imp.attributes, contents), "@test,@if");
+    test::equal(ast.@node_join(imp.attributes, contents), "@test,@if(env::FOO)");
 
     imp = ast.@node_at(m.imports, 1);
     test::equal(imp.type, TokenType.IMPORT);
@@ -511,7 +511,7 @@ fn void test_node(int a, int b = 2) @test @inline @if(env::LIBC) {
 
     test::not_equal(func.attributes, null);
     test::equal(ast.@node_len(func.attributes), 3);
-    test::equal(ast.@node_join(func.attributes, contents), "@test,@inline,@if");
+    test::equal(ast.@node_join(func.attributes, contents), "@test,@inline,@if(env::LIBC)");
 
     io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
     test::equal(func.istart, 31);
@@ -802,7 +802,7 @@ macro @test_macro(double... a, ...args) {
 
 fn void test_macro_parameter_attributes(){
    String code =  `module test::std::c3lang::ast;
-macro @test_macro(Type* #self @unused, $bar @test @ok) {
+macro @test_macro(Type* #self @unused, $bar @export("foo") @ok) {
     return 1;
 }
 //`; // NOTE: // - is sanity guard comment, don't delete it!
@@ -837,7 +837,7 @@ macro @test_macro(Type* #self @unused, $bar @test @ok) {
     test::equal(param.type, TokenType.VAR);
     test::equal(param.value, "$bar");
     test::equal(ast.@node_join(param.param_type, contents), "");
-    test::equal(ast.@node_join(param.attributes, contents), "@test,@ok");
+    test::equal(ast.@node_join(param.attributes, contents), `@export("foo"),@ok`);
 
 
     io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);

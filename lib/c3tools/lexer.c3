@@ -517,7 +517,7 @@ fn void Lexer.extend_current_attribute(Lexer *lexer)
 	bool had_nesting = false;
 	while LOOP: (!reached_end(lexer)) {
 		char c = peek(lexer);
-    	io::printf("current char: `%c`\n", c);
+    	// io::printf("current char: `%c`\n", c);
 		switch (c)
 		{
 			case '(':
@@ -530,7 +530,7 @@ fn void Lexer.extend_current_attribute(Lexer *lexer)
 			case ' ':
 				break;
 			default:
-				if (nesting == 0){
+				if (nesting <= 0){
 					if(had_nesting){
 						result.value = (String)((char*) result.value.ptr)[..result.value.len + extra_len]; 
 					}

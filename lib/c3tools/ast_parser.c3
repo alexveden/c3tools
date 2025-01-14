@@ -109,6 +109,7 @@ fn bool Ast.parse_module(&ast, AstNode* node, Token* t)
         case AT_IDENT:
             switch(t.type) {
                 case AT_IDENT:
+                    ast.lexer.extend_current_attribute();
                     ast.@allc_add(AstNode, &m.attributes, t);
                 case EOS:
                     state.transition(t.type);
@@ -157,6 +158,7 @@ fn bool Ast.parse_import(&ast, AstNode* node, Token* t)
         case AT_IDENT:
             switch(t.type) {
                 case AT_IDENT:
+                    ast.lexer.extend_current_attribute();
                     ast.@allc_add(AstNode, &imp.attributes, t);
                 case EOS:
                     state.transition(EOS);
@@ -245,6 +247,7 @@ macro parse_callable_params(Ast* ast, Token* t, AstCallable* node_func, NodePars
         case AT_IDENT:
             if (current_param) {
                 if(current_param.value){
+                    ast.lexer.extend_current_attribute();
                     ast.@allc_add(AstNode, &current_param.attributes, t);
                 } else {
                     // macro @for_each(list; @body(it))
@@ -335,6 +338,7 @@ fn bool Ast.parse_function(&ast, AstNode* node, Token* t)
         case AT_IDENT: // regular function attributes
             switch(t.type) {
                 case AT_IDENT:
+                    ast.lexer.extend_current_attribute();
                     ast.@allc_add(AstNode, &node_func.attributes, t);
                 case IMPLIES:           // => 
                     state.transition(IMPLIES);

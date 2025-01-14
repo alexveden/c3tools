@@ -803,7 +803,7 @@ fn void test_extending_atts() {
 }
 
 fn void test_extending_atts_safety() {
-    String contents = `@test   @export("sdf") @if($foo(@bar) || @test) @export`;
+    String contents = `@test   @export("sdf") @if($foo(@bar) || @test) @export) @foo(   add`;
 	Lexer lexer;
 	lexer::init(&lexer,contents);
 	
@@ -828,14 +828,15 @@ fn void test_extending_atts_safety() {
 				case 3:
 					test::equal(t.type, TokenType.AT_IDENT);
 					test::equal(t.value, `@export`);
+				case 4:
+					test::equal(t.type, TokenType.AT_IDENT);
+					test::equal(t.value, `@foo`);
 				default: 
 					unreachable();
 			}
-		}
-    	// foreach(t: toks) t.print(new_line: true);
-    	// io::printf("%s", t);
 
-    	att_cnt++;
+    		att_cnt++;
+		}
 	}
 
 	test::equal(t.type, TokenType.EOF);
