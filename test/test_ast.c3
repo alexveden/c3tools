@@ -845,3 +845,52 @@ macro @test_macro(Type* #self @unused, $bar @test @ok) {
     test::equal(func.iend, code.len-4);
     test::equal(code[func.iend], '}');
 }
+
+fn void test_macro_with_body_scope(){
+   String code =  `module test::std::c3lang::ast;
+macro @for_each(list; @body(it))
+{
+    for ($typeof(list) x = list; x; x = x.next)
+    {
+        @body(x);
+    }
+}//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+
+    AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
+    test::not_equal(func, null);
+
+    test::equal(func.type, TokenType.MACRO);
+    test::equal(func.ret_type, null);
+    test::equal(ast.@node_join(func.ret_type, contents), "");
+    test::equal(ast.@node_join(func.name, contents), "@for_each");
+
+    test::equal(ast.@node_len(func.params), 2);
+    AstCallableParam* param;
+
+    param = (AstCallableParam*)ast.@node_at(func.params, 0);
+    test::equal(param.type, TokenType.VAR);
+    test::equal(param.value, "list");
+    test::equal(param.param_type, null);
+    // test::equal(ast.@node_join(param.param_type, contents), "Type,*");
+    // test::equal(ast.@node_join(param.attributes, contents), "@unused");
+
+    param = (AstCallableParam*)ast.@node_at(func.params, 1);
+    test::equal(param.type, TokenType.VAR);
+    test::equal(param.value, "@body");
+    test::equal(ast.@node_join(param.param_type, contents), "(,it,)");
+    test::equal(ast.@node_join(param.attributes, contents), "");
+
+
+    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    test::equal(func.istart, 31);
+    test::equal(code[func.iend], '}');
+    test::equal(func.iend, code.len-3);
+}

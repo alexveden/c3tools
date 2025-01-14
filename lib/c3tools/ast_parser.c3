@@ -183,6 +183,7 @@ macro parse_callable_params(Ast* ast, Token* t, AstCallable* node_func, NodePars
             // opening '(' or a part of type definition
             if (state.scope_depth != 1) nextcase default;
         case COMMA:
+        case EOS:
             // next parameter
             if (state.scope_depth == 1 && current_param) {
                 // Next parameter definition
@@ -243,7 +244,12 @@ macro parse_callable_params(Ast* ast, Token* t, AstCallable* node_func, NodePars
             }
         case AT_IDENT:
             if (current_param) {
-                ast.@allc_add(AstNode, &current_param.attributes, t);
+                if(current_param.value){
+                    ast.@allc_add(AstNode, &current_param.attributes, t);
+                } else {
+                    // macro @for_each(list; @body(it))
+                    current_param.value = ast.@allc_str(t.value);
+                }
             }
         default:
             // all other goes to type
