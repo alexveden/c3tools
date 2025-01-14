@@ -514,6 +514,7 @@ fn void Lexer.extend_current_attribute(Lexer *lexer)
 
 	int nesting = 0;
 	int extra_len = 0;
+	bool had_nesting = false;
 	while LOOP: (!reached_end(lexer)) {
 		char c = peek(lexer);
     	io::printf("current char: `%c`\n", c);
@@ -521,6 +522,7 @@ fn void Lexer.extend_current_attribute(Lexer *lexer)
 		{
 			case '(':
 				nesting++;
+				had_nesting = true;
 			case ')':
 				nesting--;
 				if (nesting == 0) next(lexer);
@@ -529,14 +531,14 @@ fn void Lexer.extend_current_attribute(Lexer *lexer)
 				break;
 			default:
 				if (nesting == 0){
-					if(extra_len){
+					if(had_nesting){
 						result.value = (String)((char*) result.value.ptr)[..result.value.len + extra_len]; 
 					}
 					break LOOP;
 				}
 		}
-		next(lexer);
 		extra_len++;
+		next(lexer);
 	}
 	// unreachable();
 }

@@ -811,28 +811,33 @@ fn void test_extending_atts_safety() {
 
 	int att_cnt = 0;
 	while (lexer.next_token()) {
+    	io::printf("%s", t);
+
 		if(t.type == AT_IDENT){
 			lexer.extend_current_attribute();
 			switch(att_cnt){
 				case 0:
 					test::equal(t.type, TokenType.AT_IDENT);
-					test::equal(t.value, "@test  (  ddd)");
+					test::equal(t.value, "@test");
 				case 1:
 					test::equal(t.type, TokenType.AT_IDENT);
-					test::equal(t.value, "@if($foo(@bar) || @test)");
+					test::equal(t.value, `@export("sdf")`);
 				case 2:
 					test::equal(t.type, TokenType.AT_IDENT);
-					test::equal(t.value, `@export("@bar")`);
+					test::equal(t.value, `@if($foo(@bar) || @test)`);
+				case 3:
+					test::equal(t.type, TokenType.AT_IDENT);
+					test::equal(t.value, `@export`);
 				default: 
 					unreachable();
 			}
 		}
     	// foreach(t: toks) t.print(new_line: true);
-    	io::printf("%s", t);
+    	// io::printf("%s", t);
 
     	att_cnt++;
 	}
 
 	test::equal(t.type, TokenType.EOF);
-	test::equal(4, att_cnt);
+	test::equal(5, att_cnt);
 }
