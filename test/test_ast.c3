@@ -894,3 +894,31 @@ macro @for_each(list; @body(it))
     test::equal(code[func.iend], '}');
     test::equal(func.iend, code.len-3);
 }
+
+fn void test_enum_simple(){
+   String code =  `module test::std::c3lang::ast;
+enum Foo {
+    A,
+    B,
+}
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+
+    AstTypeDefEnumerable* enum_type = (AstTypeDefEnumerable*)ast.@node_at(m.decls, 0);
+    test::not_equal(enum_type, null);
+
+    test::equal(enum_type.type, TokenType.ENUM);
+    test::equal(enum_type.name, "Foo");
+
+    io::printf("\n\n``%s``", code[enum_type.istart..math::min((isz)enum_type.iend, (isz)(code.len-1))]);
+    test::equal(enum_type.istart, 31);
+    test::equal(code[enum_type.iend], '}');
+    test::equal(enum_type.iend, code.len-4);
+}

@@ -432,3 +432,66 @@ fn bool Ast.parse_docstring(&ast, AstNode* node, Token* t)
 
     return false;
 }
+
+fn bool Ast.parse_enumerable(&ast, AstNode* node, Token* t) 
+{
+    assert(node.type == ENUM);
+    AstTypeDefEnumerable* node_enum = (AstTypeDefEnumerable*)node;
+
+    NodeParserState* state = ast.state;
+    if(state.current_state == INVALID_TOKEN) {
+        // Just newly created, initialize parser state
+        state.transition(ENUM);
+    }
+
+
+    switch (state.check(t)){
+        case ENUM:
+            state.transition(IDENT);
+        case IDENT:
+            switch(t.type) {
+                case TYPE_IDENT:
+                    node_enum.name = ast.@allc_str(t.value);
+                case LBRACE:
+                    if(state.scope_depth == 1) state.transition(SCOPE);
+                default:
+                    break;
+            }
+            if(state.next()) nextcase state.current_state;
+        // case VAR:
+        //     parse_callable_params(ast, t, node_enum, state);
+        //     // Defining function arguments
+        //     if(state.next()) nextcase state.current_state;
+        //
+        // case AT_IDENT: // regular function attributes
+        //     switch(t.type) {
+        //         case AT_IDENT:
+        //             ast.@allc_add(AstNode, &node_enum.attributes, t);
+        //         case IMPLIES:           // => 
+        //             state.transition(IMPLIES);
+        //         case LBRACE:           // {
+        //             if (state.scope_depth == 1) state.transition(SCOPE);
+        //         default:
+        //             break;
+        //     }
+        //     if(state.next()) nextcase state.current_state;
+        case SCOPE: // regular function scope { ... }
+            switch(t.type) {
+                case LBRACE:           // {
+                    break;
+                case RBRACE:           // ending brace
+                    if (state.scope_depth == 0) state.transition(EOF);
+                default:
+                    break;
+            }
+            if(state.next()) nextcase state.current_state;
+        case EOF:
+            node_enum.iend = t.offset;
+            return true;
+        default:
+            unreachable();
+            // return false; //
+    }
+
+    return false;
+}

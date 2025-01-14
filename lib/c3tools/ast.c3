@@ -29,6 +29,17 @@ struct AstModule {
     AstDoc* docs;
 }
 
+struct AstTypeDef {
+    inline AstNode node;
+    String name;
+    AstNode* attributes;
+    AstDoc* docs;
+}
+struct AstTypeDefEnumerable {
+    inline AstTypeDef node;
+    AstNode* items;
+}
+
 struct AstCallable {
     inline AstNode node;
     AstNode* name;
@@ -180,6 +191,10 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
                     docstring = null; // reset all previous docs
                     node_fn = &Ast.parse_docstring;
                     node = self.@allc_add(AstDoc, &docstring, &self.lexer.token); 
+                case ENUM:
+                    node_fn = &Ast.parse_enumerable;
+                    node = self.@allc_add(AstTypeDefEnumerable, &current_module.decls, &self.lexer.token); 
+                    ((AstTypeDefEnumerable*)node).docs = docstring;
                 default:
                     continue LOOP;
 		    }
