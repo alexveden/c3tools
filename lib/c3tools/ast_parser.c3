@@ -629,11 +629,11 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
                     if (state.scope_depth == 0) state.transition(EOF);
                 case DOCS_START:
                     if(state.scope_depth == 2 && !state.sub_node) {
-                        ast.@allc_add(AstDoc, &state.sub_node, &ast.lexer.token); 
-                        ast.state_stack.push(NodeParserState{});
-                        assert(state.sub_node.type == TokenType.DOCS_START);
-                        ast.parse_docstring(state.sub_node, &ast.lexer.token, &ast.state_stack[1]);
+                        AstDoc* doc = (AstDoc*)ast.@allc_add(AstDoc, &state.sub_node, &ast.lexer.token); 
+                        ast.state_stack.push(NodeParserState{.sub_node = doc});
+                        ast.parse_docstring(doc, &ast.lexer.token, &ast.state_stack[1]);
                         assert(ast.state_stack.len() == 2);
+                        state.sub_node = doc;
                     }
                 case AT_IDENT:
                     if(state.scope_depth == 0) break;
@@ -651,40 +651,56 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
                             break;
                     }
             
+                case UNION:
+                case STRUCT:
+                    AstTypeDefStructural* s = (AstTypeDefStructural*)ast.@allc_add(
+                                AstTypeDefStructural, &node_struct.members, &ast.lexer.token); 
+
+                    if(state.sub_node && state.sub_node.type == DOCS_START){
+                         s.docs = (AstDoc*)state.sub_node;
+                    }
+                    ast.state_stack.push(NodeParserState{.sub_node = s});
                 case TYPE_IDENT:
                     if (state.scope_depth != 1) break;
 
-                    assert(!state.sub_node || state.sub_node.type == DOCS_START);
-
                     AstTypeDefStructural* s = (AstTypeDefStructural*)ast.@allc_add(
                                 AstTypeDefStructural, &node_struct.members, &ast.lexer.token); 
-                    s.docs = (AstDoc*)state.sub_node;
-
-                    if(ast.state_stack.len() > 1) ast.state_stack.remove_last()!!;
-                    ast.state_stack.push(NodeParserState{});
-
+                    if(state.sub_node && state.sub_node.type == DOCS_START){
+                         s.docs = (AstDoc*)state.sub_node;
+                    }
                     state.sub_node = s;
                 case IDENT:
                     if(state.scope_depth == 1) {
-                        assert(!state.sub_node || state.sub_node.type == TYPE_IDENT);
+                        // assert(!state.sub_node || state.sub_node.type == TYPE_IDENT);
                         ((AstTypeDefStructural*)state.sub_node).name = ast.@allc_str(t.value);
                     }
                 case EOS:
                     // ';' item resetting state, but skipping all the stuff in doc strings
                     if (state.scope_depth == 1) {
-                        if(ast.state_stack.len() > 1) {
-                            while(ast.state_stack.len() > 1) {
-                                ast.state_stack.remove_last()!!;
-                            }
-                        }
+                        if(ast.state_stack.len() > 1) ast.state_stack.remove_last()!!;
                         state.sub_node = null; 
                     } 
                 default:
-                    if(!state.sub_node) break;
+                    assert(ast.state_stack.len() > 0);
+
+                    if(ast.state_stack.len() == 1) break;
+                    if(!ast.state_stack[^1].sub_node) break;
                     
+                    switch(ast.state_stack[^1].sub_node.type) {
+                        case DOCS_START:
+                            if(ast.parse_docstring(ast.state_stack[^1].sub_node, &ast.lexer.token, &ast.state_stack[^1])){
+                                ast.state_stack.remove_last()!!;
+                            }
+                        case STRUCT:
+                        case UNION:
+                            if(ast.parse_structural(ast.state_stack[^1].sub_node, &ast.lexer.token, &ast.state_stack[^1])){
+                                ast.state_stack.remove_last()!!;
+                            }
+                        default:
+                            unreachable();
+                    }
                     // if(state.sub_node.type == TokenType.DOCS_START) {
                     //     assert(ast.state_stack.len() == 2);
-                    //     ast.parse_docstring(state.sub_node, &ast.lexer.token, &ast.state_stack[1]);
                     // }
             }
             if(state.next()) nextcase state.current_state;

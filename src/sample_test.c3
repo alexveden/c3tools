@@ -1,6 +1,7 @@
 module sample::m;
 import std::io;
 
+
 fault MathError
 {
     DIVISION_BY_ZERO
