@@ -1228,6 +1228,62 @@ fn void test_struct_typedef()
 <* docs *>
 struct MyStruct @local {
     int a;
+    MyType b @test;
+}
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+
+    AstTypeDefStructural* struct_type = (AstTypeDefStructural*)ast.@node_at(m.decls, 0);
+    test::not_equal(struct_type, null);
+
+    test::equal(struct_type.type, TokenType.STRUCT);
+    test::equal(struct_type.name, "MyStruct");
+
+    test::equal(ast.@node_join(struct_type.attributes, contents), "@local");
+    test::equal(ast.@node_join(struct_type.docs, contents), "<* docs ");
+
+    test::equal(ast.@node_len(struct_type.members), 2);
+
+    AstTypeDefStructural* member;
+
+    member = (AstTypeDefStructural*)ast.@node_at(struct_type.members, 0);
+    test::not_equal(member, null);
+    test::equal(member.type, TokenType.TYPE_IDENT);
+    test::equal(member.value, "int");
+    test::equal(member.name, "a");
+    test::equal(ast.@node_join(member.attributes, contents), "");
+    test::equal(ast.@node_join(member.docs, contents), "");
+
+
+    member = (AstTypeDefStructural*)ast.@node_at(struct_type.members, 1);
+    test::not_equal(member, null);
+    test::equal(member.type, TokenType.TYPE_IDENT);
+    test::equal(member.value, "MyType");
+    test::equal(member.name, "b");
+    test::equal(ast.@node_join(member.attributes, contents), "@test");
+    test::equal(ast.@node_join(member.docs, contents), "");
+
+    io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
+    test::equal(struct_type.istart, 42);
+    test::equal(code[struct_type.iend], '}');
+    test::equal(struct_type.iend, code.len-4);
+}
+
+fn void test_struct_typedef_member_docs()
+{
+   String code =  `module test::std::c3lang::ast;
+<* docs *>
+struct MyStruct @local {
+    <* some stuff *>
+    int a;
+    <* another doc *>
     MyType b;
 }
 //`; // NOTE: // - is sanity guard comment, don't delete it!
@@ -1258,7 +1314,7 @@ struct MyStruct @local {
     test::equal(member.type, TokenType.TYPE_IDENT);
     test::equal(member.name, "a");
     test::equal(ast.@node_join(member.attributes, contents), "");
-    test::equal(ast.@node_join(member.docs, contents), "");
+    test::equal(ast.@node_join(member.docs, contents), "<* some stuff ");
 
 
     io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
