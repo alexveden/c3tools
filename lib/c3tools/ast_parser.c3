@@ -1,15 +1,6 @@
 module c3tools::ast;
 import c3tools::lexer @public;
 
-def NodeParser = fn bool (Ast* ast, AstNode* node, Token* t);
-
-struct NodeParserState {
-    TokenType current_state;
-    TokenType last_state;
-    AstNode* sub_node;
-    uint scope_depth;
-    TokenType[32] scope_stack;
-}
 
 macro NodeParserState.check_scope(&self, TokenType t) {
 
@@ -79,12 +70,12 @@ macro bool NodeParserState.next(&self) {
 }
 
 
-fn bool Ast.parse_module(&ast, AstNode* node, Token* t) 
+fn bool Ast.parse_module(&ast, AstNode* node, Token* t, NodeParserState* state) 
 {
     assert(node.type == MODULE);
     AstModule* m = (AstModule*)node;
 
-    NodeParserState* state = ast.state;
+    
     if(state.current_state == INVALID_TOKEN) {
         // Just newly created, initialize parser state
         state.transition(MODULE);
@@ -128,12 +119,12 @@ fn bool Ast.parse_module(&ast, AstNode* node, Token* t)
     return false;
 }
 
-fn bool Ast.parse_import(&ast, AstNode* node, Token* t) 
+fn bool Ast.parse_import(&ast, AstNode* node, Token* t, NodeParserState* state) 
 {
     assert(node.type == IMPORT);
     AstImport* imp = (AstImport*)node;
 
-    NodeParserState* state = ast.state;
+    
     if(state.current_state == INVALID_TOKEN) {
         // Just newly created, initialize parser state
         state.transition(IMPORT);
@@ -266,12 +257,12 @@ macro parse_callable_params(Ast* ast, Token* t, AstCallable* node_func, NodePars
 //     return true;
 // }
 
-fn bool Ast.parse_function(&ast, AstNode* node, Token* t) 
+fn bool Ast.parse_function(&ast, AstNode* node, Token* t, NodeParserState* state) 
 {
     assert(node.type == FN || node.type == MACRO);
     AstCallable* node_func = (AstCallable*)node;
 
-    NodeParserState* state = ast.state;
+    
     if(state.current_state == INVALID_TOKEN) {
         // Just newly created, initialize parser state
         state.transition(FN);
@@ -380,11 +371,11 @@ fn bool Ast.parse_function(&ast, AstNode* node, Token* t)
     return false;
 }
 
-fn bool Ast.parse_docstring(&ast, AstNode* node, Token* t) 
+fn bool Ast.parse_docstring(&ast, AstNode* node, Token* t, NodeParserState* state) 
 {
     assert(node.type == DOCS_START);
     AstDoc* doc = (AstDoc*)node;
-    NodeParserState* state = ast.state;
+    
 
     if(state.current_state == INVALID_TOKEN) {
         // Just newly created, initialize parser state
@@ -437,12 +428,12 @@ fn bool Ast.parse_docstring(&ast, AstNode* node, Token* t)
     return false;
 }
 
-fn bool Ast.parse_enumerable(&ast, AstNode* node, Token* t) 
+fn bool Ast.parse_enumerable(&ast, AstNode* node, Token* t, NodeParserState* state) 
 {
     assert(node.type == ENUM || node.type == FAULT);
     AstTypeDefEnumerable* node_enum = (AstTypeDefEnumerable*)node;
 
-    NodeParserState* state = ast.state;
+    
     if(state.current_state == INVALID_TOKEN) {
         // Just newly created, initialize parser state
         state.transition(ENUM);
@@ -496,6 +487,78 @@ fn bool Ast.parse_enumerable(&ast, AstNode* node, Token* t)
             if(state.next()) nextcase state.current_state;
         case EOF:
             node_enum.iend = t.offset;
+            return true;
+        default:
+            unreachable();
+            // return false; //
+    }
+
+    return false;
+}
+
+fn bool Ast.parse_interface(&ast, AstNode* node, Token* t, NodeParserState* state) 
+{
+    assert(node.type == INTERFACE);
+    AstTypeDefInterface* node_ifc = (AstTypeDefInterface*)node;
+
+    
+    if(state.current_state == INVALID_TOKEN) {
+        // Just newly created, initialize parser state
+        state.transition(INTERFACE);
+    }
+
+
+    switch (state.check(t)){
+        case INTERFACE:
+            state.transition(TYPE_IDENT);
+        case TYPE_IDENT:
+            switch(t.type) {
+                case TYPE_IDENT:
+                    if (!node_ifc.name) node_ifc.name = ast.@allc_str(t.value);
+                case AT_IDENT:
+                    if(state.scope_depth == 0) {
+                        ast.lexer.extend_current_attribute();
+                        ast.@allc_add(AstNode, &node_ifc.attributes, t);
+                    }
+                case LBRACE:
+                    if(state.scope_depth == 1) state.transition(SCOPE);
+                default:
+                    break;
+            }
+            if(state.next()) nextcase state.current_state;
+        case SCOPE: // regular function scope { ... }
+            switch(t.type) {
+                case LBRACE:           // {
+                    break;
+                case RBRACE:           // ending brace
+                    if (state.scope_depth == 0) state.transition(EOF);
+                case FN:
+                    if(state.scope_depth == 1 && !state.sub_node) {
+                        state.sub_node = ast.@allc_add(AstCallable, &node_ifc.functions, &ast.lexer.token); 
+                        ast.state_stack.push(NodeParserState{});
+                        assert(state.sub_node.type == TokenType.FN);
+                        assert(ast.state_stack.len() == 2);
+                        ast.parse_function(state.sub_node, &ast.lexer.token, &ast.state_stack[1]);
+                    }
+                case EOS:
+                    // next item resetting state
+                    if(ast.state_stack.len() > 1) {
+                        while(ast.state_stack.len() > 1) {
+                            ast.state_stack.remove_last()!!;
+                        }
+                    }
+                    state.sub_node = null; 
+                default:
+                    if(!state.sub_node) break;
+                    
+                    if(state.sub_node.type == TokenType.FN) {
+                        assert(ast.state_stack.len() == 2);
+                        ast.parse_function(state.sub_node, &ast.lexer.token, &ast.state_stack[1]);
+                    }
+            }
+            if(state.next()) nextcase state.current_state;
+        case EOF:
+            node_ifc.iend = t.offset;
             return true;
         default:
             unreachable();

@@ -9,7 +9,17 @@ struct Ast {
     AstModule* modules;
     allocator::DynamicArenaAllocator _allocator;
     Lexer lexer;
-    void* state;
+    List(<NodeParserState>) state_stack;
+}
+
+def NodeParser = fn bool (Ast* ast, AstNode* node, Token* t, NodeParserState* state);
+
+struct NodeParserState {
+    TokenType current_state;
+    TokenType last_state;
+    AstNode* sub_node;
+    uint scope_depth;
+    TokenType[32] scope_stack;
 }
 
 struct AstNode {
@@ -38,6 +48,10 @@ struct AstTypeDef {
 struct AstTypeDefEnumerable {
     inline AstTypeDef node;
     AstNode* values;
+}
+struct AstTypeDefInterface {
+    inline AstTypeDef node;
+    AstCallable* functions;
 }
 
 struct AstCallable {
@@ -161,18 +175,14 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
 	AstDoc* docstring = null;
 	AstModule* current_module = (AstModule*)self.@allc_add(AstModule, &self.modules, &self.lexer.token);
 
-	const STATE_CAPACITY = 1024;
-	self.state = mem::calloc(STATE_CAPACITY);
-	assert(self.state);
-	defer {
-	    mem::free(self.state);
-	    self.state = null;
-	}
+	self.state_stack.new_init();
+	defer self.state_stack.free();
 
 	while LOOP: (self.lexer.next_token()) {
 	    if (print_lex) self.lexer.token.print();
 
 		if (!node_fn) {
+		    self.state_stack.push(NodeParserState{});
 		    switch(self.lexer.token.type) {
                 case MODULE:
                     node_fn = &Ast.parse_module;
@@ -188,6 +198,7 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
                     node_fn = &Ast.parse_import;
                     node = self.@allc_add(AstImport, &current_module.imports, &self.lexer.token); 
                 case DOCS_START:
+                    // Global doc strings
                     docstring = null; // reset all previous docs
                     node_fn = &Ast.parse_docstring;
                     node = self.@allc_add(AstDoc, &docstring, &self.lexer.token); 
@@ -196,17 +207,21 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
                     node_fn = &Ast.parse_enumerable;
                     node = self.@allc_add(AstTypeDefEnumerable, &current_module.decls, &self.lexer.token); 
                     ((AstTypeDefEnumerable*)node).docs = docstring;
+                case INTERFACE:
+                    node_fn = &Ast.parse_interface;
+                    node = self.@allc_add(AstTypeDefInterface, &current_module.decls, &self.lexer.token); 
+                    ((AstTypeDefInterface*)node).docs = docstring;
                 default:
                     continue LOOP;
 		    }
 		}
 
-		if(node_fn(&self, node, &self.lexer.token)) {
+		if(node_fn(&self, node, &self.lexer.token, &self.state_stack[0])) {
 		    // Node was finished, scan next;
 		    if(node.type != DOCS_START) docstring = null;
 		    node_fn = null;
 		    node = null;
-            mem::clear(self.state, STATE_CAPACITY);
+		    self.state_stack.clear();
 		}
 	}
 
