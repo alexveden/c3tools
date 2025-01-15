@@ -597,6 +597,7 @@ fn bool Ast.parse_interface(&ast, AstNode* node, Token* t, NodeParserState* stat
 
 fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* state) 
 {
+    assert(node);
     assert(node.type == STRUCT);
     AstTypeDefStructural* node_struct = (AstTypeDefStructural*)node;
     
@@ -614,6 +615,11 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
             switch(t.type) {
                 case TYPE_IDENT:
                     if (!node_struct.value) node_struct.value = ast.@allc_str(t.value);
+                case IDENT:
+                    if(ast.state_stack.len() > 1) {
+                        // sub-structs have IDENT instead of TYPE_IDENT!
+                        if (!node_struct.value) node_struct.value = ast.@allc_str(t.value);
+                    }
                 case AT_IDENT:
                     if(state.scope_depth == 0) {
                         ast.lexer.extend_current_attribute();
@@ -632,12 +638,10 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
                 case RBRACE:           // ending brace
                     if (state.scope_depth == 0) state.transition(EOF);
             
-                // case UNION:
-                // case STRUCT:
-                //     AstTypeDefStructural* s = (AstTypeDefStructural*)ast.@allc_add(
-                //                 AstTypeDefStructural, &node_struct.members, &ast.lexer.token); 
-                //     ast.state_stack.push(NodeParserState{});
-                //     nextcase default; // initialize processing substructure
+                case UNION:
+                case STRUCT:
+                    if (state.scope_depth == 1) state.transition(FOREACH);
+
                 case TYPE_IDENT:
                     if (state.scope_depth != 1) break;
                     state.transition(VAR); // start parsing structure field
@@ -715,6 +719,31 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
                     break;
             }
             if(state.next()) nextcase state.current_state;
+        case FOREACH: // parsing sub structs
+            switch(t.type) {
+                case STRUCT:
+                case UNION:
+                case BITSTRUCT:
+                    assert(!state.sub_node);
+                    AstTypeDefStructural* s = (AstTypeDefStructural*)ast.@allc_add(
+                                AstTypeDefStructural, &node_struct.members, &ast.lexer.token); 
+                    ast.state_stack.push(NodeParserState{});
+                    state.sub_node = s;
+                    nextcase default; // initialize processing substructure
+                default:
+                    assert(state.sub_node);
+                    AstTypeDefStructural* s = (AstTypeDefStructural*)state.sub_node;
+                    if(ast.parse_structural(s, &ast.lexer.token, &ast.state_stack[^1])){
+                        ast.state_stack.remove_last()!!;
+                        state.transition(SCOPE);
+                        state.sub_node = null;
+                        // sub-struct was parsed successfully (return and don't mess with parent)
+                        return false;
+                    }
+                    break;
+            }
+            if(state.next()) nextcase state.current_state;
+
         case EOF:
             node_struct.iend = t.offset;
             return true;
