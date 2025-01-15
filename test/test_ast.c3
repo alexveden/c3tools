@@ -1340,9 +1340,9 @@ struct MyStruct @local {
     struct my_sub @test {
         int x;
         int y;
-        int z;
+        int z @test;
     }
-    int b;
+    int b @test;
 }
 //`; // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
@@ -1372,11 +1372,22 @@ struct MyStruct @local {
     test::not_equal(member, null);
     test::equal(member.type, TokenType.STRUCT);
     test::equal(member.value, "my_sub");
+    test::equal(ast.@node_join(member.field, contents), ``);
+
     test::equal(ast.@node_join(member.attributes, contents), "@test");
     test::equal(ast.@node_join(member.docs, contents), ``);
     test::equal(ast.@node_len(member.members), 3);
     test::equal(ast.@node_join(member.members, contents), `x,y,z`);
 
+    member = (AstTypeDefStructural*)ast.@node_at(struct_type.members, 1);
+    test::not_equal(member, null);
+    test::equal(member.type, TokenType.TYPE_IDENT);
+    test::equal(member.value, "b");
+    test::equal(ast.@node_join(member.field, contents), `int`);
+
+    test::equal(ast.@node_join(member.attributes, contents), "@test");
+    test::equal(ast.@node_join(member.docs, contents), ``);
+    test::equal(ast.@node_len(member.members), 0);
 
     io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
     test::equal(struct_type.istart, 31);
