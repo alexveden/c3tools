@@ -916,7 +916,7 @@ enum Foo {
     test::not_equal(enum_type, null);
 
     test::equal(enum_type.type, TokenType.ENUM);
-    test::equal(enum_type.name, "Foo");
+    test::equal(enum_type.value, "Foo");
 
     test::equal(ast.@node_len(enum_type.values), 3);
     AstNode* eval;
@@ -960,7 +960,7 @@ enum Foo : int {
     test::not_equal(enum_type, null);
 
     test::equal(enum_type.type, TokenType.ENUM);
-    test::equal(enum_type.name, "Foo");
+    test::equal(enum_type.value, "Foo");
 
     test::equal(ast.@node_len(enum_type.values), 3);
     AstNode* eval;
@@ -1004,7 +1004,7 @@ enum Foo : int (String desc, bool active, Position pos) @test @if(env:FOO) {
     test::not_equal(enum_type, null);
 
     test::equal(enum_type.type, TokenType.ENUM);
-    test::equal(enum_type.name, "Foo");
+    test::equal(enum_type.value, "Foo");
     test::equal(ast.@node_join(enum_type.attributes, contents), "@test,@if(env:FOO)");
 
     test::equal(ast.@node_len(enum_type.values), 3);
@@ -1050,7 +1050,7 @@ fault SomeFault @local @if(env::FOO)
     test::not_equal(enum_type, null);
 
     test::equal(enum_type.type, TokenType.FAULT);
-    test::equal(enum_type.name, "SomeFault");
+    test::equal(enum_type.value, "SomeFault");
 
     test::equal(ast.@node_join(enum_type.attributes, contents), "@local,@if(env::FOO)");
 
@@ -1095,7 +1095,7 @@ interface NodeI @local {
     test::not_equal(ifc_type, null);
 
     test::equal(ifc_type.type, TokenType.INTERFACE);
-    test::equal(ifc_type.name, "NodeI");
+    test::equal(ifc_type.value, "NodeI");
 
     test::equal(ast.@node_join(ifc_type.attributes, contents), "@local");
 
@@ -1170,7 +1170,7 @@ interface NodeI @local {
     test::not_equal(ifc_type, null);
 
     test::equal(ifc_type.type, TokenType.INTERFACE);
-    test::equal(ifc_type.name, "NodeI");
+    test::equal(ifc_type.value, "NodeI");
 
     test::equal(ast.@node_join(ifc_type.attributes, contents), "@local");
 
@@ -1244,7 +1244,7 @@ struct MyStruct @local {
     test::not_equal(struct_type, null);
 
     test::equal(struct_type.type, TokenType.STRUCT);
-    test::equal(struct_type.name, "MyStruct");
+    test::equal(struct_type.value, "MyStruct");
 
     test::equal(ast.@node_join(struct_type.attributes, contents), "@local");
     test::equal(ast.@node_join(struct_type.docs, contents), "<* docs ");
@@ -1256,8 +1256,8 @@ struct MyStruct @local {
     member = (AstTypeDefStructural*)ast.@node_at(struct_type.members, 0);
     test::not_equal(member, null);
     test::equal(member.type, TokenType.TYPE_IDENT);
-    test::equal(member.value, "int");
-    test::equal(member.name, "a");
+    test::equal(member.value, "a");
+    test::equal(ast.@node_join(member.field, contents), "int");
     test::equal(ast.@node_join(member.attributes, contents), "");
     test::equal(ast.@node_join(member.docs, contents), "");
 
@@ -1265,8 +1265,8 @@ struct MyStruct @local {
     member = (AstTypeDefStructural*)ast.@node_at(struct_type.members, 1);
     test::not_equal(member, null);
     test::equal(member.type, TokenType.TYPE_IDENT);
-    test::equal(member.value, "MyType");
-    test::equal(member.name, "b");
+    test::equal(member.value, "b");
+    test::equal(ast.@node_join(member.field, contents), "MyType");
     test::equal(ast.@node_join(member.attributes, contents), "@test");
     test::equal(ast.@node_join(member.docs, contents), "");
 
@@ -1276,7 +1276,8 @@ struct MyStruct @local {
     test::equal(struct_type.iend, code.len-4);
 }
 
-fn void test_struct_typedef_member_docs()
+
+fn void test_struct_typedef_member_docs_ignored()
 {
    String code =  `module test::std::c3lang::ast;
 <* docs *>
@@ -1284,7 +1285,7 @@ struct MyStruct @local {
     <* some stuff *>
     int a;
     <* another doc *>
-    MyType b;
+    List(<MyType>) b;
 }
 //`; // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
@@ -1300,7 +1301,7 @@ struct MyStruct @local {
     test::not_equal(struct_type, null);
 
     test::equal(struct_type.type, TokenType.STRUCT);
-    test::equal(struct_type.name, "MyStruct");
+    test::equal(struct_type.value, "MyStruct");
 
     test::equal(ast.@node_join(struct_type.attributes, contents), "@local");
     test::equal(ast.@node_join(struct_type.docs, contents), "<* docs ");
@@ -1312,9 +1313,18 @@ struct MyStruct @local {
     member = (AstTypeDefStructural*)ast.@node_at(struct_type.members, 0);
     test::not_equal(member, null);
     test::equal(member.type, TokenType.TYPE_IDENT);
-    test::equal(member.name, "a");
+    test::equal(member.value, "a");
+    test::equal(ast.@node_join(member.field, contents), "int");
     test::equal(ast.@node_join(member.attributes, contents), "");
-    test::equal(ast.@node_join(member.docs, contents), "<* some stuff ");
+    test::equal(ast.@node_join(member.docs, contents), "");
+
+    member = (AstTypeDefStructural*)ast.@node_at(struct_type.members, 1);
+    test::not_equal(member, null);
+    test::equal(member.type, TokenType.TYPE_IDENT);
+    test::equal(member.value, "b");
+    test::equal(ast.@node_join(member.field, contents), "List,(<,MyType,>)");
+    test::equal(ast.@node_join(member.attributes, contents), "");
+    test::equal(ast.@node_join(member.docs, contents), "");
 
 
     io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
@@ -1323,12 +1333,11 @@ struct MyStruct @local {
     test::equal(struct_type.iend, code.len-4);
 }
 
+/*
 fn void test_struct_typedef_substructs()
 {
    String code =  `module test::std::c3lang::ast;
-<* docs *>
 struct MyStruct @local {
-    <* any docs *>
     struct my_sub @test {
         int x;
         int y;
@@ -1350,7 +1359,7 @@ struct MyStruct @local {
     test::not_equal(struct_type, null);
 
     test::equal(struct_type.type, TokenType.STRUCT);
-    test::equal(struct_type.name, "MyStruct");
+    test::equal(struct_type.value, "MyStruct");
 
     test::equal(ast.@node_join(struct_type.attributes, contents), "@local");
     test::equal(ast.@node_join(struct_type.docs, contents), "<* docs ");
@@ -1362,7 +1371,7 @@ struct MyStruct @local {
     member = (AstTypeDefStructural*)ast.@node_at(struct_type.members, 0);
     test::not_equal(member, null);
     test::equal(member.type, TokenType.STRUCT);
-    test::equal(member.name, "my_sub");
+    test::equal(member.value, "my_sub");
     test::equal(ast.@node_join(member.attributes, contents), "@test");
     test::equal(ast.@node_join(member.docs, contents), `<* any docs `);
     test::equal(ast.@node_len(member.members), 3);

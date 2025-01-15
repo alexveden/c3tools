@@ -41,7 +41,7 @@ struct AstModule {
 
 struct AstTypeDef {
     inline AstNode node;
-    String name;
+    AstNode* field;
     AstNode* attributes;
     AstDoc* docs;
 }

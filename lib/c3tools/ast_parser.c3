@@ -60,8 +60,9 @@ macro TokenType NodeParserState.check(&self, Token* t) {
     return self.current_state;
 }
 
-macro void NodeParserState.transition(&self, TokenType new_state) {
+macro TokenType NodeParserState.transition(&self, TokenType new_state) {
     self.current_state = new_state;
+    return new_state;
 }
 
 macro bool NodeParserState.next(&self) {
@@ -446,11 +447,12 @@ fn bool Ast.parse_enumerable(&ast, AstNode* node, Token* t, NodeParserState* sta
 
     switch (state.check(t)){
         case ENUM:
+            node_enum.value = ""; // place for a type name
             state.transition(IDENT);
         case IDENT:
             switch(t.type) {
                 case TYPE_IDENT:
-                    if (!node_enum.name) node_enum.name = ast.@allc_str(t.value);
+                    if (!node_enum.value) node_enum.value = ast.@allc_str(t.value);
                 case LBRACE:
                     if(state.scope_depth == 1) state.transition(SCOPE);
                 case AT_IDENT:
@@ -514,11 +516,12 @@ fn bool Ast.parse_interface(&ast, AstNode* node, Token* t, NodeParserState* stat
 
     switch (state.check(t)){
         case INTERFACE:
+            node_ifc.value = "";
             state.transition(TYPE_IDENT);
         case TYPE_IDENT:
             switch(t.type) {
                 case TYPE_IDENT:
-                    if (!node_ifc.name) node_ifc.name = ast.@allc_str(t.value);
+                    if (!node_ifc.value) node_ifc.value = ast.@allc_str(t.value);
                 case AT_IDENT:
                     if(state.scope_depth == 0) {
                         ast.lexer.extend_current_attribute();
@@ -604,12 +607,13 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
 
 
     switch (state.check(t)){
-        case STRUCT:
+        case STRUCT: // got struct keyword
+            node_struct.value = "";
             state.transition(TYPE_IDENT);
-        case TYPE_IDENT:
+        case TYPE_IDENT: // parse struct type and attributes
             switch(t.type) {
                 case TYPE_IDENT:
-                    if (!node_struct.name) node_struct.name = ast.@allc_str(t.value);
+                    if (!node_struct.value) node_struct.value = ast.@allc_str(t.value);
                 case AT_IDENT:
                     if(state.scope_depth == 0) {
                         ast.lexer.extend_current_attribute();
@@ -621,23 +625,73 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
                     break;
             }
             if(state.next()) nextcase state.current_state;
-        case SCOPE: // regular function scope { ... }
+        case SCOPE: // struct scope, let's find any sub-structs or members
             switch(t.type) {
                 case LBRACE:           // {
                     break;
                 case RBRACE:           // ending brace
                     if (state.scope_depth == 0) state.transition(EOF);
-                case DOCS_START:
-                    if(state.scope_depth == 2 && !state.sub_node) {
-                        AstDoc* doc = (AstDoc*)ast.@allc_add(AstDoc, &state.sub_node, &ast.lexer.token); 
-                        ast.state_stack.push(NodeParserState{.sub_node = doc});
-                        ast.parse_docstring(doc, &ast.lexer.token, &ast.state_stack[1]);
-                        assert(ast.state_stack.len() == 2);
-                        state.sub_node = doc;
+            
+                // case UNION:
+                // case STRUCT:
+                //     AstTypeDefStructural* s = (AstTypeDefStructural*)ast.@allc_add(
+                //                 AstTypeDefStructural, &node_struct.members, &ast.lexer.token); 
+                //     ast.state_stack.push(NodeParserState{});
+                //     nextcase default; // initialize processing substructure
+                case TYPE_IDENT:
+                    if (state.scope_depth != 1) break;
+                    state.transition(VAR); // start parsing structure field
+                default:
+                    break;
+                    // assert(ast.state_stack.len() > 0);
+                    //
+                    // if(ast.state_stack.len() == 1) break;
+                    // if(!ast.state_stack[^1].sub_node) break;
+                    // 
+                    // switch(ast.state_stack[^1].sub_node.type) {
+                    //     case DOCS_START:
+                    //         if(ast.parse_docstring(ast.state_stack[^1].sub_node, &ast.lexer.token, &ast.state_stack[^1])){
+                    //             ast.state_stack.remove_last()!!;
+                    //         }
+                    //     case STRUCT:
+                    //     case UNION:
+                    //         if(ast.parse_structural(ast.state_stack[^1].sub_node, &ast.lexer.token, &ast.state_stack[^1])){
+                    //             ast.state_stack.remove_last()!!;
+                    //         }
+                    //     default:
+                    //         unreachable();
+                    // }
+                    // if(state.sub_node.type == TokenType.DOCS_START) {
+                    //     assert(ast.state_stack.len() == 2);
+                    // }
+            }
+            if(state.next()) nextcase state.current_state;
+        case VAR: // found individual field start parsing it
+            switch(t.type) {
+                case RBRACE:           // ending brace
+                    if (state.scope_depth == 0) state.transition(EOF);
+                case TYPE_IDENT:
+                    AstTypeDefStructural* s = (AstTypeDefStructural*)state.sub_node;
+                    if(state.sub_node == null) {
+                        // new field, state enter
+                        s = (AstTypeDefStructural*)ast.@allc_add(
+                                    AstTypeDefStructural, &node_struct.members, &ast.lexer.token); 
+                        ast.@allc_add(AstNode, &s.field, t);
+                        s.value = "";
+                        state.sub_node = s;
+                    } else {
+                        // Adding to existing type field (e.g. generic List(<MyType>) )
+                        assert(s.field);
+                        ast.@allc_add(AstNode, &s.field, t);
                     }
-                case AT_IDENT:
-                    if(state.scope_depth == 0) break;
-                    if(!state.sub_node) break;
+                case IDENT:
+                    assert(state.sub_node);
+                    if(state.scope_depth != 1) break;
+                    state.sub_node.value = ast.@allc_str(t.value);
+
+                case AT_IDENT: // member level attributes
+                    assert(state.sub_node);
+                    if(state.scope_depth != 1) break;
 
                     switch(state.sub_node.type){
                         case TYPE_IDENT:
@@ -650,58 +704,15 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
                         default:
                             break;
                     }
-            
-                case UNION:
-                case STRUCT:
-                    AstTypeDefStructural* s = (AstTypeDefStructural*)ast.@allc_add(
-                                AstTypeDefStructural, &node_struct.members, &ast.lexer.token); 
-
-                    if(state.sub_node && state.sub_node.type == DOCS_START){
-                         s.docs = (AstDoc*)state.sub_node;
-                    }
-                    ast.state_stack.push(NodeParserState{.sub_node = s});
-                case TYPE_IDENT:
-                    if (state.scope_depth != 1) break;
-
-                    AstTypeDefStructural* s = (AstTypeDefStructural*)ast.@allc_add(
-                                AstTypeDefStructural, &node_struct.members, &ast.lexer.token); 
-                    if(state.sub_node && state.sub_node.type == DOCS_START){
-                         s.docs = (AstDoc*)state.sub_node;
-                    }
-                    state.sub_node = s;
-                case IDENT:
-                    if(state.scope_depth == 1) {
-                        // assert(!state.sub_node || state.sub_node.type == TYPE_IDENT);
-                        ((AstTypeDefStructural*)state.sub_node).name = ast.@allc_str(t.value);
-                    }
-                case EOS:
-                    // ';' item resetting state, but skipping all the stuff in doc strings
-                    if (state.scope_depth == 1) {
-                        if(ast.state_stack.len() > 1) ast.state_stack.remove_last()!!;
-                        state.sub_node = null; 
-                    } 
+                case EOS:           
+                    // field was defined, try find next in SCOPE
+                    state.transition(SCOPE);
+                    state.sub_node = null;
                 default:
-                    assert(ast.state_stack.len() > 0);
-
-                    if(ast.state_stack.len() == 1) break;
-                    if(!ast.state_stack[^1].sub_node) break;
-                    
-                    switch(ast.state_stack[^1].sub_node.type) {
-                        case DOCS_START:
-                            if(ast.parse_docstring(ast.state_stack[^1].sub_node, &ast.lexer.token, &ast.state_stack[^1])){
-                                ast.state_stack.remove_last()!!;
-                            }
-                        case STRUCT:
-                        case UNION:
-                            if(ast.parse_structural(ast.state_stack[^1].sub_node, &ast.lexer.token, &ast.state_stack[^1])){
-                                ast.state_stack.remove_last()!!;
-                            }
-                        default:
-                            unreachable();
-                    }
-                    // if(state.sub_node.type == TokenType.DOCS_START) {
-                    //     assert(ast.state_stack.len() == 2);
-                    // }
+                    assert(state.sub_node);
+                    AstTypeDefStructural* s = (AstTypeDefStructural*)state.sub_node;
+                    ast.@allc_add(AstNode, &s.field, t);
+                    break;
             }
             if(state.next()) nextcase state.current_state;
         case EOF:
