@@ -53,6 +53,10 @@ struct AstTypeDefInterface {
     inline AstTypeDef node;
     AstCallable* functions;
 }
+struct AstTypeDefStructural {
+    inline AstTypeDef node;
+    AstTypeDef* members;
+}
 
 struct AstCallable {
     inline AstNode node;
@@ -211,6 +215,10 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
                     node_fn = &Ast.parse_interface;
                     node = self.@allc_add(AstTypeDefInterface, &current_module.decls, &self.lexer.token); 
                     ((AstTypeDefInterface*)node).docs = docstring;
+                case STRUCT:
+                    node_fn = &Ast.parse_structural;
+                    node = self.@allc_add(AstTypeDefStructural, &current_module.decls, &self.lexer.token); 
+                    ((AstTypeDefStructural*)node).docs = docstring;
                 default:
                     continue LOOP;
 		    }

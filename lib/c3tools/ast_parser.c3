@@ -591,3 +591,94 @@ fn bool Ast.parse_interface(&ast, AstNode* node, Token* t, NodeParserState* stat
 
     return false;
 }
+
+fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* state) 
+{
+    assert(node.type == STRUCT);
+    AstTypeDefStructural* node_struct = (AstTypeDefStructural*)node;
+    
+    if(state.current_state == INVALID_TOKEN) {
+        // Just newly created, initialize parser state
+        state.transition(STRUCT);
+    }
+
+
+    switch (state.check(t)){
+        case STRUCT:
+            state.transition(TYPE_IDENT);
+        case TYPE_IDENT:
+            switch(t.type) {
+                case TYPE_IDENT:
+                    if (!node_struct.name) node_struct.name = ast.@allc_str(t.value);
+                case AT_IDENT:
+                    if(state.scope_depth == 0) {
+                        ast.lexer.extend_current_attribute();
+                        ast.@allc_add(AstNode, &node_struct.attributes, t);
+                    }
+                case LBRACE:
+                    if(state.scope_depth == 1) state.transition(SCOPE);
+                default:
+                    break;
+            }
+            if(state.next()) nextcase state.current_state;
+        case SCOPE: // regular function scope { ... }
+            switch(t.type) {
+                case LBRACE:           // {
+                    break;
+                case RBRACE:           // ending brace
+                    if (state.scope_depth == 0) state.transition(EOF);
+                // case DOCS_START:
+                //     if(state.scope_depth == 2 && !state.sub_node) {
+                //         ast.@allc_add(AstDoc, &state.sub_node, &ast.lexer.token); 
+                //         ast.state_stack.push(NodeParserState{});
+                //         assert(state.sub_node.type == TokenType.DOCS_START);
+                //         ast.parse_docstring(state.sub_node, &ast.lexer.token, &ast.state_stack[1]);
+                //         assert(ast.state_stack.len() == 2);
+                //     }
+                case TYPE_IDENT:
+                    if(state.scope_depth == 1) {
+                        assert(!state.sub_node || state.sub_node.type == DOCS_START);
+
+                        AstTypeDefStructural* s = (AstTypeDefStructural*)ast.@allc_add(
+                                    AstTypeDefStructural, &node_struct.members, &ast.lexer.token); 
+                        s.docs = (AstDoc*)state.sub_node;
+
+                        if(ast.state_stack.len() > 1) ast.state_stack.remove_last()!!;
+                        ast.state_stack.push(NodeParserState{});
+
+                        state.sub_node = s;
+                    }
+                case IDENT:
+                    if(state.scope_depth == 1) {
+                        assert(!state.sub_node || state.sub_node.type == TYPE_IDENT);
+                        ((AstTypeDefStructural*)state.sub_node).name = ast.@allc_str(t.value);
+                    }
+                case EOS:
+                    // ';' item resetting state, but skipping all the stuff in doc strings
+                    if (state.scope_depth == 1) {
+                        if(ast.state_stack.len() > 1) {
+                            while(ast.state_stack.len() > 1) {
+                                ast.state_stack.remove_last()!!;
+                            }
+                        }
+                        state.sub_node = null; 
+                    } 
+                default:
+                    if(!state.sub_node) break;
+                    
+                    // if(state.sub_node.type == TokenType.DOCS_START) {
+                    //     assert(ast.state_stack.len() == 2);
+                    //     ast.parse_docstring(state.sub_node, &ast.lexer.token, &ast.state_stack[1]);
+                    // }
+            }
+            if(state.next()) nextcase state.current_state;
+        case EOF:
+            node_struct.iend = t.offset;
+            return true;
+        default:
+            unreachable();
+            // return false; //
+    }
+
+    return false;
+}
