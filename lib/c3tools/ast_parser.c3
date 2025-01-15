@@ -14,6 +14,7 @@ macro NodeParserState.check_scope(&self, TokenType t) {
         case LBRAPIPE:         // {|
         case LGENPAR:          // (<
         case LVEC:             // [<
+        case DOCS_START:       // <*
             if (self.scope_depth >= self.scope_stack.len) return;
             self.scope_stack[self.scope_depth] = t;
             self.scope_depth++;
@@ -38,6 +39,9 @@ macro NodeParserState.check_scope(&self, TokenType t) {
         case RVEC:             // >)
             if (self.scope_depth == 0) nextcase default;
             if (self.scope_stack[self.scope_depth-1] == LVEC) nextcase EOF;
+        case DOCS_END:             // *>
+            if (self.scope_depth == 0) nextcase default;
+            if (self.scope_stack[self.scope_depth-1] == DOCS_START) nextcase EOF;
         case EOF:             
             // synthetic action to unscope stack
             if (self.scope_depth == 0) nextcase default;
@@ -409,7 +413,7 @@ fn bool Ast.parse_docstring(&ast, AstNode* node, Token* t, NodeParserState* stat
                     AstDocContract* contract = (AstDocContract*)state.sub_node;
                     if (contract.value == "@param") {
                         // excluding [&inout] shit
-                        if(state.scope_depth == 0 && t.type != RBRACKET) {
+                        if(state.scope_depth == 1 && t.type != RBRACKET) {
                             ast.@allc_add(AstNode, &contract.items, &ast.lexer.token); 
                         }
                     } else {
@@ -532,28 +536,48 @@ fn bool Ast.parse_interface(&ast, AstNode* node, Token* t, NodeParserState* stat
                     break;
                 case RBRACE:           // ending brace
                     if (state.scope_depth == 0) state.transition(EOF);
-                case FN:
-                    if(state.scope_depth == 1 && !state.sub_node) {
-                        state.sub_node = ast.@allc_add(AstCallable, &node_ifc.functions, &ast.lexer.token); 
+                case DOCS_START:
+                    if(state.scope_depth == 2 && !state.sub_node) {
+                        ast.@allc_add(AstDoc, &state.sub_node, &ast.lexer.token); 
                         ast.state_stack.push(NodeParserState{});
+                        assert(state.sub_node.type == TokenType.DOCS_START);
+                        ast.parse_docstring(state.sub_node, &ast.lexer.token, &ast.state_stack[1]);
+                        assert(ast.state_stack.len() == 2);
+                    }
+                case FN:
+                    if(state.scope_depth == 1) {
+                        assert(!state.sub_node || state.sub_node.type == DOCS_START);
+
+                        AstCallable* f = (AstCallable*)ast.@allc_add(AstCallable, &node_ifc.functions, &ast.lexer.token); 
+                        f.docs = (AstDoc*)state.sub_node;
+
+                        if(ast.state_stack.len() > 1) ast.state_stack.remove_last()!!;
+                        ast.state_stack.push(NodeParserState{});
+
+                        state.sub_node = f;
                         assert(state.sub_node.type == TokenType.FN);
                         assert(ast.state_stack.len() == 2);
                         ast.parse_function(state.sub_node, &ast.lexer.token, &ast.state_stack[1]);
                     }
                 case EOS:
-                    // next item resetting state
-                    if(ast.state_stack.len() > 1) {
-                        while(ast.state_stack.len() > 1) {
-                            ast.state_stack.remove_last()!!;
+                    // ';' item resetting state, but skipping all the stuff in doc strings
+                    if (state.scope_depth == 1) {
+                        if(ast.state_stack.len() > 1) {
+                            while(ast.state_stack.len() > 1) {
+                                ast.state_stack.remove_last()!!;
+                            }
                         }
-                    }
-                    state.sub_node = null; 
+                        state.sub_node = null; 
+                    } 
                 default:
                     if(!state.sub_node) break;
                     
                     if(state.sub_node.type == TokenType.FN) {
                         assert(ast.state_stack.len() == 2);
                         ast.parse_function(state.sub_node, &ast.lexer.token, &ast.state_stack[1]);
+                    } else if(state.sub_node.type == TokenType.DOCS_START) {
+                        assert(ast.state_stack.len() == 2);
+                        ast.parse_docstring(state.sub_node, &ast.lexer.token, &ast.state_stack[1]);
                     }
             }
             if(state.next()) nextcase state.current_state;
