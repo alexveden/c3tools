@@ -439,7 +439,7 @@ fn bool Ast.parse_docstring(&ast, AstNode* node, Token* t)
 
 fn bool Ast.parse_enumerable(&ast, AstNode* node, Token* t) 
 {
-    assert(node.type == ENUM);
+    assert(node.type == ENUM || node.type == FAULT);
     AstTypeDefEnumerable* node_enum = (AstTypeDefEnumerable*)node;
 
     NodeParserState* state = ast.state;
@@ -458,27 +458,25 @@ fn bool Ast.parse_enumerable(&ast, AstNode* node, Token* t)
                     if (!node_enum.name) node_enum.name = ast.@allc_str(t.value);
                 case LBRACE:
                     if(state.scope_depth == 1) state.transition(SCOPE);
+                case AT_IDENT:
+                    if(state.scope_depth == 0) state.transition(AT_IDENT);
                 default:
                     break;
             }
             if(state.next()) nextcase state.current_state;
-        // case VAR:
-        //     parse_callable_params(ast, t, node_enum, state);
-        //     // Defining function arguments
-        //     if(state.next()) nextcase state.current_state;
-        //
-        // case AT_IDENT: // regular function attributes
-        //     switch(t.type) {
-        //         case AT_IDENT:
-        //             ast.@allc_add(AstNode, &node_enum.attributes, t);
-        //         case IMPLIES:           // => 
-        //             state.transition(IMPLIES);
-        //         case LBRACE:           // {
-        //             if (state.scope_depth == 1) state.transition(SCOPE);
-        //         default:
-        //             break;
-        //     }
-        //     if(state.next()) nextcase state.current_state;
+        case AT_IDENT: // regular function attributes
+            switch(t.type) {
+                case AT_IDENT:
+                    if(state.scope_depth == 0) {
+                        ast.lexer.extend_current_attribute();
+                        ast.@allc_add(AstNode, &node_enum.attributes, t);
+                    }
+                case LBRACE:           // {
+                    if (state.scope_depth == 1) state.transition(SCOPE);
+                default:
+                    break;
+            }
+            if(state.next()) nextcase state.current_state;
         case SCOPE: // regular function scope { ... }
             switch(t.type) {
                 case LBRACE:           // {
