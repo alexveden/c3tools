@@ -1461,3 +1461,68 @@ struct MyStruct @local {
     test::equal(code[struct_type.iend], '}');
     test::equal(struct_type.iend, code.len-4);
 }
+fn void test_struct_sub_sub()
+{
+   String code =  `module test::std::c3lang::ast;
+struct MyStruct @local {
+    struct my_sub @test {
+        int x;
+        struct my_sub_2 {
+            int y;
+            int z;
+        }
+        int f;
+    }
+    int b @test;
+}
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: false);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+
+    AstTypeDefStructural* struct_type = (AstTypeDefStructural*)ast.@node_at(m.decls, 0);
+    test::not_equal(struct_type, null);
+
+    test::equal(struct_type.type, TokenType.STRUCT);
+    test::equal(struct_type.value, "MyStruct");
+
+    test::equal(ast.@node_join(struct_type.attributes, contents), "@local");
+    test::equal(ast.@node_join(struct_type.docs, contents), "");
+
+    test::equal(ast.@node_len(struct_type.members), 2);
+    test::equal(ast.@node_join(struct_type.members, contents), `my_sub,b`);
+
+    AstTypeDefStructural* field1, field2;
+
+    field1 = (AstTypeDefStructural*)ast.@node_at(struct_type.members, 0);
+    test::not_equal(field1, null);
+    test::equal(field1.type, TokenType.STRUCT);
+    test::equal(field1.value, "my_sub");
+    test::equal(ast.@node_join(field1.field, contents), ``);
+    test::equal(ast.@node_join(field1.members, contents), `x,my_sub_2,f`);
+    test::equal(ast.@node_len(field1.members), 3);
+
+    test::equal(ast.@node_join(field1.attributes, contents), "@test");
+    test::equal(ast.@node_join(field1.docs, contents), ``);
+
+    field2 = (AstTypeDefStructural*)ast.@node_at(struct_type.members, 1);
+    test::not_equal(field2, null);
+    test::equal(field2.type, TokenType.TYPE_IDENT);
+    test::equal(field2.value, "b");
+    test::equal(ast.@node_join(field2.field, contents), `int`);
+
+    test::equal(ast.@node_join(field2.attributes, contents), "@test");
+    test::equal(ast.@node_join(field2.docs, contents), ``);
+    test::equal(ast.@node_len(field2.members), 0);
+
+    io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
+    test::equal(struct_type.istart, 31);
+    test::equal(code[struct_type.iend], '}');
+    test::equal(struct_type.iend, code.len-4);
+    
+}

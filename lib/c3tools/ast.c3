@@ -186,7 +186,6 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
 	    if (print_lex) self.lexer.token.print();
 
 		if (!node_fn) {
-		    self.state_stack.push(NodeParserState{});
 		    switch(self.lexer.token.type) {
                 case MODULE:
                     node_fn = &Ast.parse_module;
@@ -222,6 +221,9 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
                 default:
                     continue LOOP;
 		    }
+
+		    assert(self.state_stack.len() == 0);
+		    self.state_stack.push(NodeParserState{});
 		}
 
 		if(node_fn(&self, node, &self.lexer.token, &self.state_stack[0])) {
@@ -229,7 +231,7 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
 		    if(node.type != DOCS_START) docstring = null;
 		    node_fn = null;
 		    node = null;
-		    self.state_stack.clear();
+		    assert(self.state_stack.len() == 0, "not cleared?");
 		}
 	}
 

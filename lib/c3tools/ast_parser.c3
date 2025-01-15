@@ -1,4 +1,5 @@
 module c3tools::ast;
+import std::io;
 import c3tools::lexer @public;
 
 
@@ -115,6 +116,7 @@ fn bool Ast.parse_module(&ast, AstNode* node, Token* t, NodeParserState* state)
             if(state.next()) nextcase state.current_state;
 
         case EOS:
+            ast.state_stack.remove_last();
             m.iend = t.offset + t.value.len;
             return true;
         default:
@@ -164,6 +166,7 @@ fn bool Ast.parse_import(&ast, AstNode* node, Token* t, NodeParserState* state)
             if(state.next()) nextcase state.current_state;
 
         case EOS:
+            ast.state_stack.remove_last();
             imp.iend = t.offset + t.value.len;
             return true;
         default:
@@ -367,6 +370,7 @@ fn bool Ast.parse_function(&ast, AstNode* node, Token* t, NodeParserState* state
             }
             if(state.next()) nextcase state.current_state;
         case EOF:
+            ast.state_stack.remove_last();
             node_func.iend = t.offset;
             return true;
         default:
@@ -425,6 +429,7 @@ fn bool Ast.parse_docstring(&ast, AstNode* node, Token* t, NodeParserState* stat
             if(state.next()) nextcase state.current_state;
         case DOCS_END:
             doc.iend = t.offset + t.value.len - 1;
+            ast.state_stack.remove_last();
             return true;
         default:
             break;
@@ -493,6 +498,7 @@ fn bool Ast.parse_enumerable(&ast, AstNode* node, Token* t, NodeParserState* sta
             if(state.next()) nextcase state.current_state;
         case EOF:
             node_enum.iend = t.offset;
+            ast.state_stack.remove_last();
             return true;
         default:
             unreachable();
@@ -585,6 +591,7 @@ fn bool Ast.parse_interface(&ast, AstNode* node, Token* t, NodeParserState* stat
             }
             if(state.next()) nextcase state.current_state;
         case EOF:
+            ast.state_stack.remove_last();
             node_ifc.iend = t.offset;
             return true;
         default:
@@ -605,6 +612,9 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
         // Just newly created, initialize parser state
         state.transition(STRUCT);
     }
+    t.print(new_line: false);
+    io::printf("node: %s\n\n", node.value);
+    // io::printf("token: %s\n", t);
 
 
     switch (state.check(t)){
@@ -724,27 +734,33 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
                 case STRUCT:
                 case UNION:
                 case BITSTRUCT:
-                    assert(!state.sub_node);
-                    AstTypeDefStructural* s = (AstTypeDefStructural*)ast.@allc_add(
-                                AstTypeDefStructural, &node_struct.members, &ast.lexer.token); 
-                    ast.state_stack.push(NodeParserState{});
-                    state.sub_node = s;
+                    if(!state.sub_node) {
+                        // adding only when where are no pending FOREACH parsers
+                        AstTypeDefStructural* s = (AstTypeDefStructural*)ast.@allc_add(
+                                    AstTypeDefStructural, &node_struct.members, &ast.lexer.token); 
+                        ast.state_stack.push(NodeParserState{});
+                        state.sub_node = s;
+                        io::printf("new sub-node: %s\n", s.value);
+                    }
                     nextcase default; // initialize processing substructure
                 default:
+                    assert(ast.state_stack.len() > 1);
                     assert(state.sub_node);
                     AstTypeDefStructural* s = (AstTypeDefStructural*)state.sub_node;
-                    if(ast.parse_structural(s, &ast.lexer.token, &ast.state_stack[^1])){
+                    if(ast.parse_structural(ast.state_stack[^2].sub_node, &ast.lexer.token, &ast.state_stack[^1])){
                         ast.state_stack.remove_last()!!;
                         state.transition(SCOPE);
                         state.sub_node = null;
+                        // state.sub_node = ast.state_stack[^1].sub_node;
                         // sub-struct was parsed successfully (return and don't mess with parent)
-                        return false;
                     }
-                    break;
+                    return false;
             }
-            if(state.next()) nextcase state.current_state;
+            unreachable();
+            // if(state.next()) nextcase state.current_state;
 
         case EOF:
+            ast.state_stack.remove_last();
             node_struct.iend = t.offset;
             return true;
         default:
