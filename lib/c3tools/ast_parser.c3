@@ -612,10 +612,6 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
         // Just newly created, initialize parser state
         state.transition(STRUCT);
     }
-    t.print(new_line: false);
-    io::printf("node: %s\n\n", node.value);
-    // io::printf("token: %s\n", t);
-
 
     switch (state.check(t)){
         case STRUCT: // got struct keyword
@@ -650,6 +646,7 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
             
                 case UNION:
                 case STRUCT:
+                case BITSTRUCT:
                     if (state.scope_depth == 1) state.transition(FOREACH);
 
                 case TYPE_IDENT:
@@ -740,7 +737,6 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
                                     AstTypeDefStructural, &node_struct.members, &ast.lexer.token); 
                         ast.state_stack.push(NodeParserState{});
                         state.sub_node = s;
-                        io::printf("new sub-node: %s\n", s.value);
                     }
                     nextcase default; // initialize processing substructure
                 default:
@@ -748,17 +744,12 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
                     assert(state.sub_node);
                     AstTypeDefStructural* s = (AstTypeDefStructural*)state.sub_node;
                     if(ast.parse_structural(ast.state_stack[^2].sub_node, &ast.lexer.token, &ast.state_stack[^1])){
-                        ast.state_stack.remove_last()!!;
-                        state.transition(SCOPE);
-                        state.sub_node = null;
-                        // state.sub_node = ast.state_stack[^1].sub_node;
-                        // sub-struct was parsed successfully (return and don't mess with parent)
+                        // substructure stack was cleared at EOF, use last stack to change state
+                        ast.state_stack[^1].sub_node = null;
+                        ast.state_stack[^1].transition(SCOPE);
                     }
                     return false;
             }
-            unreachable();
-            // if(state.next()) nextcase state.current_state;
-
         case EOF:
             ast.state_stack.remove_last();
             node_struct.iend = t.offset;

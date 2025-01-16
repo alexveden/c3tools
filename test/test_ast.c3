@@ -1467,7 +1467,7 @@ fn void test_struct_sub_sub()
 struct MyStruct @local {
     struct my_sub @test {
         int x;
-        struct my_sub_2 {
+        struct my_sub_2 @foo {
             int y;
             int z;
         }
@@ -1477,7 +1477,7 @@ struct MyStruct @local {
 }
 //`; // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
-    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: false);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer ast.free();
     contents.clear();
 
@@ -1510,6 +1510,41 @@ struct MyStruct @local {
     test::equal(ast.@node_join(field1.attributes, contents), "@test");
     test::equal(ast.@node_join(field1.docs, contents), ``);
 
+    // my_sub field x
+    field2 = (AstTypeDefStructural*)ast.@node_at(field1.members, 0);
+    test::not_equal(field2, null);
+    test::equal(field2.type, TokenType.TYPE_IDENT);
+    test::equal(field2.value, "x");
+    test::equal(ast.@node_join(field2.field, contents), `int`);
+    test::equal(ast.@node_join(field2.members, contents), ``);
+    test::equal(ast.@node_len(field2.members), 0);
+    test::equal(ast.@node_join(field2.attributes, contents), "");
+    test::equal(ast.@node_join(field2.docs, contents), ``);
+
+    // my_sub field my_sub_2
+    field2 = (AstTypeDefStructural*)ast.@node_at(field1.members, 1);
+    test::not_equal(field2, null);
+    test::equal(field2.type, TokenType.STRUCT);
+    test::equal(field2.value, "my_sub_2");
+    test::equal(ast.@node_join(field2.field, contents), ``);
+    test::equal(ast.@node_join(field2.members, contents), `y,z`);
+    test::equal(ast.@node_len(field2.members), 2);
+    test::equal(ast.@node_join(field2.attributes, contents), "@foo");
+    test::equal(ast.@node_join(field2.docs, contents), ``);
+
+    // my_sub field x
+    field2 = (AstTypeDefStructural*)ast.@node_at(field1.members, 2);
+    test::not_equal(field2, null);
+    test::equal(field2.type, TokenType.TYPE_IDENT);
+    test::equal(field2.value, "f");
+    test::equal(ast.@node_join(field2.field, contents), `int`);
+    test::equal(ast.@node_join(field2.members, contents), ``);
+    test::equal(ast.@node_len(field2.members), 0);
+    test::equal(ast.@node_join(field2.attributes, contents), "");
+    test::equal(ast.@node_join(field2.docs, contents), ``);
+
+
+    // Main struct second field
     field2 = (AstTypeDefStructural*)ast.@node_at(struct_type.members, 1);
     test::not_equal(field2, null);
     test::equal(field2.type, TokenType.TYPE_IDENT);
