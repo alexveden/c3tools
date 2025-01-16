@@ -55,6 +55,7 @@ struct AstTypeDefInterface {
 }
 struct AstTypeDefStructural {
     inline AstTypeDef node;
+    AstTypeDef* inlines;
     AstTypeDef* members;
 }
 

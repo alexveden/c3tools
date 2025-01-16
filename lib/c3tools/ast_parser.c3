@@ -662,6 +662,7 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
                 case BITSTRUCT:        // sub type member 
                     if (state.scope_depth == 1) state.transition(FOREACH);
 
+                case INLINE:
                 case TYPE_IDENT:
                     if (state.scope_depth != 1) break;
                     state.transition(VAR); // start parsing structure field
@@ -678,19 +679,20 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
             switch(t.type) {
                 case RBRACE:           // ending brace
                     if (state.scope_depth == 0) state.transition(EOF);
+                case INLINE:
                 case TYPE_IDENT:
                     AstTypeDefStructural* s = (AstTypeDefStructural*)state.sub_node;
                     if(state.sub_node == null || state.sub_node.type == DOCS_START) {
                         // new field, state enter
                         s = (AstTypeDefStructural*)ast.@allc_add(
                                     AstTypeDefStructural, &node_struct.members, &ast.lexer.token); 
+
                         s.docs = (AstDoc*)state.sub_node;
-                        ast.@allc_add(AstNode, &s.field, t);
+                        if (t.type == TYPE_IDENT)  ast.@allc_add(AstNode, &s.field, t);
                         s.value = "";
                         state.sub_node = s;
                     } else {
                         // Adding to existing type field (e.g. generic List(<MyType>) )
-                        assert(s.field);
                         ast.@allc_add(AstNode, &s.field, t);
                     }
                 case IDENT:
@@ -703,6 +705,7 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
                     if(state.scope_depth != 1) break;
 
                     switch(state.sub_node.type){
+                        case INLINE:
                         case TYPE_IDENT:
                         case STRUCT:
                         case UNION:
