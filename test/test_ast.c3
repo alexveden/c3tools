@@ -66,6 +66,30 @@ fn void test_module_no_attr(){
     // test::equal(0, 1);
 }
 
+fn void test_module_imports(){
+   String code =  `
+   import std::io; // imports to emty module
+
+   module test::std::c3lang::ast; // new module
+   `;
+    DString contents = dstring::temp_new(code);
+    
+    String path = "foo.c3";
+    Ast ast = ast::parse(contents.str_view(), path);
+    defer ast.free();
+    contents.clear();
+
+    test::equal(ast.@node_len(ast.modules), 2);
+    test::equal(ast.@node_join(ast.modules, contents, ","), ",module");
+    
+
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::equal(ast.@node_join(m.name, contents, "::"), "test::std::c3lang::ast");
+    test::equal(m.attributes, null);
+
+    // test::equal(0, 1);
+}
+
 
 
 fn void test_scope(){
