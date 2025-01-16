@@ -251,6 +251,8 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
         AstModule* last_mod = @node_last(self.modules); 
         last_mod.iend = self.lexer.token.offset - 1;
     }
+    self.state_stack.clear();
+
 	return self;
 }
 
