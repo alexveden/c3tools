@@ -217,6 +217,7 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
                     ((AstTypeDefInterface*)node).docs = docstring;
                 case STRUCT:
                 case UNION:
+                case BITSTRUCT:
                     node_fn = &Ast.parse_structural;
                     node = self.@allc_add(AstTypeDefStructural, &current_module.decls, &self.lexer.token); 
                     ((AstTypeDefStructural*)node).docs = docstring;
