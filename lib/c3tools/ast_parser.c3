@@ -763,3 +763,57 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
 
     return false;
 }
+
+fn bool Ast.parse_typedef(&ast, AstNode* node, Token* t, NodeParserState* state) 
+{
+    assert(node.type == DEF);
+    AstTypeDef* node_typedef = (AstTypeDef*)node;
+    
+    if(state.current_state == INVALID_TOKEN) {
+        // Just newly created, initialize parser state
+        state.transition(DEF);
+    } 
+
+    switch (state.check(t)){
+        case DEF:
+            node_typedef.value = "";
+            state.transition(IDENT);
+        case IDENT:
+            switch(t.type) {
+                case TYPE_IDENT:
+                    if (!node_typedef.value) node_typedef.value = ast.@allc_str(t.value);
+                case IDENT:
+                    if (!node_typedef.value) node_typedef.value = ast.@allc_str(t.value);
+                case AT_IDENT:
+                    ast.lexer.extend_current_attribute();
+                    ast.@allc_add(AstNode, &node_typedef.attributes, t);
+                case EQ:
+                    state.transition(TYPE_IDENT);
+                case EOS:
+                    state.transition(EOF);
+                default:
+                    break;
+            }
+            if(state.next()) nextcase state.current_state;
+        case TYPE_IDENT:
+            switch(t.type) {
+                case EQ:
+                case INLINE:
+                    break;
+                case EOS:
+                    state.transition(EOF);
+                default:
+                    ast.@allc_add(AstNode, &node_typedef.field, t);
+            }
+            if(state.next()) nextcase state.current_state;
+
+        case EOF:
+            ast.state_stack.remove_last();
+            node_typedef.iend = t.offset + t.value.len - 1;
+            return true;
+        default:
+            break;
+    }
+
+    return false;
+}
