@@ -222,7 +222,12 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
                     node = self.@allc_add(AstTypeDefStructural, &current_module.decls, &self.lexer.token); 
                     ((AstTypeDefStructural*)node).docs = docstring;
                 case DEF:
+                case DISTINCT:
                     node_fn = &Ast.parse_typedef;
+                    node = self.@allc_add(AstTypeDef, &current_module.decls, &self.lexer.token); 
+                    ((AstTypeDef*)node).docs = docstring;
+                case CONST:
+                    node_fn = &Ast.parse_constants;
                     node = self.@allc_add(AstTypeDef, &current_module.decls, &self.lexer.token); 
                     ((AstTypeDef*)node).docs = docstring;
                 default:

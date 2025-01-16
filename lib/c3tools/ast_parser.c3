@@ -766,7 +766,7 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
 
 fn bool Ast.parse_typedef(&ast, AstNode* node, Token* t, NodeParserState* state) 
 {
-    assert(node.type == DEF);
+    assert(node.type == DEF || node.type == DISTINCT);
     AstTypeDef* node_typedef = (AstTypeDef*)node;
     
     if(state.current_state == INVALID_TOKEN) {
@@ -804,6 +804,57 @@ fn bool Ast.parse_typedef(&ast, AstNode* node, Token* t, NodeParserState* state)
                     state.transition(EOF);
                 default:
                     ast.@allc_add(AstNode, &node_typedef.field, t);
+            }
+            if(state.next()) nextcase state.current_state;
+
+        case EOF:
+            ast.state_stack.remove_last();
+            node_typedef.iend = t.offset + t.value.len - 1;
+            return true;
+        default:
+            break;
+    }
+
+    return false;
+}
+
+fn bool Ast.parse_constants(&ast, AstNode* node, Token* t, NodeParserState* state) 
+{
+    assert(node.type == CONST);
+    AstTypeDef* node_typedef = (AstTypeDef*)node;
+    
+    if(state.current_state == INVALID_TOKEN) {
+        // Just newly created, initialize parser state
+        state.transition(CONST);
+    } 
+
+    switch (state.check(t)){
+        case CONST:
+            node_typedef.value = "";
+            state.transition(IDENT);
+        case IDENT:
+            switch(t.type) {
+                case CONST_IDENT:
+                    if (!node_typedef.value) node_typedef.value = ast.@allc_str(t.value);
+                case TYPE_IDENT:
+                    ast.@allc_add(AstNode, &node_typedef.field, t);
+                case AT_IDENT:
+                    ast.lexer.extend_current_attribute();
+                    ast.@allc_add(AstNode, &node_typedef.attributes, t);
+                case EQ:
+                    state.transition(EOS);
+                case EOS:
+                    state.transition(EOF);
+                default:
+                    break;
+            }
+            if(state.next()) nextcase state.current_state;
+        case EOS:
+            switch(t.type) {
+                case EOS:
+                    state.transition(EOF);
+                default:
+                    break;
             }
             if(state.next()) nextcase state.current_state;
 
