@@ -605,7 +605,7 @@ fn bool Ast.parse_interface(&ast, AstNode* node, Token* t, NodeParserState* stat
 fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* state) 
 {
     assert(node);
-    assert(node.type == STRUCT);
+    assert(node.type == STRUCT || node.type == UNION);
     AstTypeDefStructural* node_struct = (AstTypeDefStructural*)node;
     
     if(state.current_state == INVALID_TOKEN) {
