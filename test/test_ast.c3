@@ -1277,7 +1277,7 @@ struct MyStruct @local {
 }
 
 
-fn void test_struct_typedef_member_docs_ignored()
+fn void test_struct_typedef_member_docs()
 {
    String code =  `module test::std::c3lang::ast;
 <* docs *>
@@ -1316,7 +1316,7 @@ struct MyStruct @local {
     test::equal(member.value, "a");
     test::equal(ast.@node_join(member.field, contents), "int");
     test::equal(ast.@node_join(member.attributes, contents), "");
-    test::equal(ast.@node_join(member.docs, contents), "");
+    test::equal(ast.@node_join(member.docs, contents), "<* some stuff ");
 
     member = (AstTypeDefStructural*)ast.@node_at(struct_type.members, 1);
     test::not_equal(member, null);
@@ -1324,7 +1324,7 @@ struct MyStruct @local {
     test::equal(member.value, "b");
     test::equal(ast.@node_join(member.field, contents), "List,(<,MyType,>)");
     test::equal(ast.@node_join(member.attributes, contents), "");
-    test::equal(ast.@node_join(member.docs, contents), "");
+    test::equal(ast.@node_join(member.docs, contents), "<* another doc ");
 
 
     io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
@@ -1396,7 +1396,7 @@ struct MyStruct @local {
     
 }
 
-fn void test_struct_typedef_substructs_doc_strings_ignored()
+fn void test_struct_typedef_substructs_doc_strings()
 {
    String code =  `module test::std::c3lang::ast;
 <*doc1*>
@@ -1442,7 +1442,7 @@ struct MyStruct @local {
     test::equal(ast.@node_join(member.field, contents), ``);
 
     test::equal(ast.@node_join(member.attributes, contents), "@test");
-    test::equal(ast.@node_join(member.docs, contents), ``);
+    test::equal(ast.@node_join(member.docs, contents), `<*doc2`);
     test::equal(ast.@node_len(member.members), 3);
     test::equal(ast.@node_join(member.members, contents), `x,y,z`);
 
@@ -1453,7 +1453,7 @@ struct MyStruct @local {
     test::equal(ast.@node_join(member.field, contents), `int`);
 
     test::equal(ast.@node_join(member.attributes, contents), "@test");
-    test::equal(ast.@node_join(member.docs, contents), ``);
+    test::equal(ast.@node_join(member.docs, contents), `<*doc4`);
     test::equal(ast.@node_len(member.members), 0);
 
     io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);

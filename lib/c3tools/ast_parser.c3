@@ -637,44 +637,41 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
                     break;
             }
             if(state.next()) nextcase state.current_state;
+        case DOCS_START:
+            switch(t.type) {
+                case DOCS_START:
+                    assert(state.sub_node == null);
+                    ast.@allc_add(AstDoc, &state.sub_node, &ast.lexer.token); 
+                    nextcase default;
+                case DOCS_END:
+                    state.transition(SCOPE);
+                default:
+                    break;
+            }
+            if(state.next()) nextcase state.current_state;
         case SCOPE: // struct scope, let's find any sub-structs or members
             switch(t.type) {
-                case LBRACE:           // {
+                case LBRACE:           // scope entry
                     break;
+
                 case RBRACE:           // ending brace
                     if (state.scope_depth == 0) state.transition(EOF);
             
                 case UNION:
                 case STRUCT:
-                case BITSTRUCT:
+                case BITSTRUCT:        // sub type member 
                     if (state.scope_depth == 1) state.transition(FOREACH);
 
                 case TYPE_IDENT:
                     if (state.scope_depth != 1) break;
                     state.transition(VAR); // start parsing structure field
+
+                case DOCS_START:
+                    if (state.scope_depth != 2) break;
+                    state.transition(DOCS_START); // docstrings for field
+
                 default:
                     break;
-                    // assert(ast.state_stack.len() > 0);
-                    //
-                    // if(ast.state_stack.len() == 1) break;
-                    // if(!ast.state_stack[^1].sub_node) break;
-                    // 
-                    // switch(ast.state_stack[^1].sub_node.type) {
-                    //     case DOCS_START:
-                    //         if(ast.parse_docstring(ast.state_stack[^1].sub_node, &ast.lexer.token, &ast.state_stack[^1])){
-                    //             ast.state_stack.remove_last()!!;
-                    //         }
-                    //     case STRUCT:
-                    //     case UNION:
-                    //         if(ast.parse_structural(ast.state_stack[^1].sub_node, &ast.lexer.token, &ast.state_stack[^1])){
-                    //             ast.state_stack.remove_last()!!;
-                    //         }
-                    //     default:
-                    //         unreachable();
-                    // }
-                    // if(state.sub_node.type == TokenType.DOCS_START) {
-                    //     assert(ast.state_stack.len() == 2);
-                    // }
             }
             if(state.next()) nextcase state.current_state;
         case VAR: // found individual field start parsing it
@@ -683,10 +680,11 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
                     if (state.scope_depth == 0) state.transition(EOF);
                 case TYPE_IDENT:
                     AstTypeDefStructural* s = (AstTypeDefStructural*)state.sub_node;
-                    if(state.sub_node == null) {
+                    if(state.sub_node == null || state.sub_node.type == DOCS_START) {
                         // new field, state enter
                         s = (AstTypeDefStructural*)ast.@allc_add(
                                     AstTypeDefStructural, &node_struct.members, &ast.lexer.token); 
+                        s.docs = (AstDoc*)state.sub_node;
                         ast.@allc_add(AstNode, &s.field, t);
                         s.value = "";
                         state.sub_node = s;
@@ -731,10 +729,11 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
                 case STRUCT:
                 case UNION:
                 case BITSTRUCT:
-                    if(!state.sub_node) {
+                    if(state.sub_node == null || state.sub_node.type == DOCS_START) {
                         // adding only when where are no pending FOREACH parsers
                         AstTypeDefStructural* s = (AstTypeDefStructural*)ast.@allc_add(
                                     AstTypeDefStructural, &node_struct.members, &ast.lexer.token); 
+                        s.docs = (AstDoc*)state.sub_node;
                         ast.state_stack.push(NodeParserState{});
                         state.sub_node = s;
                     }
