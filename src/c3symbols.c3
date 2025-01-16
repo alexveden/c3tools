@@ -16,12 +16,19 @@ fn void! process_file(String file_name) {
     Ast ast = ast::parse(contents, file_name, print_lex: false);
     defer ast.free();
 
-    AstModule* m = ast.modules;
-    while(m) {
+    ast::@node_foreach(ast.modules; AstModule* m){
         io::printfn("%s %s;", m.value, ast.@node_join(m.name, tstr, "::"));
-        
-        m = (AstModule*)m.next;
-    }
+
+        io::printfn("imports:");
+        ast::@node_foreach(m.imports; AstImport* imp){
+            io::printfn("\t%s %s;", imp.value, ast.@node_join(imp.name, tstr, "::"));
+        };
+
+        io::printfn("decls:");
+        ast::@node_foreach(m.decls; AstNode* decl){
+            io::printfn("\t%s %s;", decl.type, decl.value);
+        };
+    };
 
 	io::printfn("DONE");
 }

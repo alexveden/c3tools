@@ -118,6 +118,15 @@ macro AstNode* @node_add(AstNode** self, AstNode* new) @private
     return new;
 }
 
+macro @node_foreach(#self; @body(item))
+{
+    var node = #self;
+    while(node) {
+        @body(node);
+        node = ($typeof(#self))node.next;            
+    }
+}
+
 macro Ast.@allc_add(&self, $Type, AstNode** collection, lexer::Token* token) @private {
     $Type* result = self._allocator.acquire($Type.sizeof, NO_ZERO, $Type.alignof)!!;
     *result = {
@@ -168,6 +177,7 @@ macro String Ast.@allc_str(&self, String s) @private {
     String result = s.copy(&self._allocator);
     return result;
 }
+
 
 fn Ast parse(String contents, String file_path, bool print_lex = false) {
     Ast self;
