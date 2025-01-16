@@ -780,6 +780,7 @@ fn bool Ast.parse_typedef(&ast, AstNode* node, Token* t, NodeParserState* state)
             state.transition(IDENT);
         case IDENT:
             switch(t.type) {
+                case AT_TYPE_IDENT:
                 case TYPE_IDENT:
                     if (!node_typedef.value) node_typedef.value = ast.@allc_str(t.value);
                 case IDENT:

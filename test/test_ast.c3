@@ -1935,6 +1935,37 @@ def Int32 = int;
     test::equal(struct_type.iend, code.len-4);
 }
 
+fn void test_def_attr_type()
+{
+   String code =  `module test::std::c3lang::ast;
+<*def doc*>
+def @Int32 = { @foo @bar };
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 1);
+    test::not_equal(m, null);
+
+    AstTypeDefStructural* struct_type = (AstTypeDefStructural*)ast.@node_at(m.decls, 0);
+    test::not_equal(struct_type, null);
+
+    test::equal(struct_type.type, TokenType.DEF);
+    test::equal(struct_type.value, "@Int32");
+
+    test::equal(ast.@node_join(struct_type.attributes, contents), "");
+    test::equal(ast.@node_join(struct_type.docs, contents), "<*def doc");
+    test::equal(ast.@node_join(struct_type.field, contents), "{,@foo,@bar,}");
+
+    io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
+    test::equal(struct_type.istart, 43);
+    test::equal(code[struct_type.iend], ';');
+    test::equal(struct_type.iend, code.len-4);
+}
+
 fn void test_def_inline_list()
 {
    String code =  `module test::std::c3lang::ast;
