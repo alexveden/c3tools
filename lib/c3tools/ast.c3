@@ -190,6 +190,14 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
 		    switch(self.lexer.token.type) {
                 case MODULE:
                     node_fn = &Ast.parse_module;
+                    if (self.modules.next == null) {
+                        // first `module` keyword, check if there is no decls/imports in default
+                        // and remove it from modules list if it's completely empty
+                        assert(!self.modules.name);
+                        if(!self.modules.decls && !self.modules.imports){
+                            self.modules = null;
+                        }
+                    }
                     node = self.@allc_add(AstModule, &self.modules, &self.lexer.token); 
                     current_module = (AstModule*)node;
                     current_module.docs = docstring;

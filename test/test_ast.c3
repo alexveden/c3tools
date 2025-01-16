@@ -27,10 +27,10 @@ fn void test_node() {
     test::@check(path.ptr != ast.path.ptr, "should be copied");
 
     test::not_equal(ast.modules, null);
-    test::equal(ast.@node_len(ast.modules), 2);
-    test::equal(ast.@node_join(ast.modules, contents, ","), ",module");
+    test::equal(ast.@node_len(ast.modules), 1);
+    test::equal(ast.@node_join(ast.modules, contents, ","), "module");
 
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
     
     test::equal(m.value, "module");
@@ -59,7 +59,7 @@ fn void test_module_no_attr(){
     defer ast.free();
     contents.clear();
 
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::equal(ast.@node_join(m.name, contents, "::"), "test::std::c3lang::ast");
     test::equal(m.attributes, null);
 
@@ -164,7 +164,7 @@ fn void test_node() {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
@@ -196,7 +196,7 @@ fn List(<int>) test_node() {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
@@ -225,7 +225,7 @@ fn int[<2>] test_node() {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
@@ -254,7 +254,7 @@ fn MyType* test_node() {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
@@ -283,7 +283,7 @@ fn void test_node(int a, List(<int>) b) @test @inline @if(env::LIBC) {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
@@ -330,7 +330,7 @@ fn void test_import(){
     defer ast.free();
     contents.clear();
 
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::equal(ast.@node_join(m.name, contents, "::"), "test::std::c3lang::ast");
     test::equal(m.attributes, null);
 
@@ -365,7 +365,7 @@ module test::std::c3lang::ast;
     defer ast.free();
     contents.clear();
 
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::equal(ast.@node_join(m.name, contents, "::"), "test::std::c3lang::ast");
     test::equal(m.attributes, null);
 
@@ -395,7 +395,7 @@ fn void test_node() {
     defer ast.free();
     contents.clear();
 
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::equal(ast.@node_join(m.name, contents, "::"), "test::std::c3lang::ast");
     test::equal(m.attributes, null);
 
@@ -429,7 +429,7 @@ module test::std::c3lang::ast;
     defer ast.free();
     contents.clear();
 
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::equal(ast.@node_join(m.name, contents, "::"), "test::std::c3lang::ast");
     test::equal(m.attributes, null);
 
@@ -485,7 +485,7 @@ fn void test_node(int a, int b = 2) @test @inline @if(env::LIBC) {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
@@ -531,7 +531,7 @@ fn MyType* MyFoo.test_node(&self) {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
@@ -567,7 +567,7 @@ fn char! String.to_uchar(s, int base = 10) @inline @test => s.@to_integer(char, 
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
@@ -612,7 +612,7 @@ macro MyFoo.@test_macro(self) {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
@@ -649,7 +649,7 @@ macro MyType(<$it>) MyFoo.@test_macro(self) {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
@@ -686,7 +686,7 @@ macro @test_macro(self) {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
@@ -724,7 +724,7 @@ macro @test_macro(Type* #self, $bar) {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
@@ -768,7 +768,7 @@ macro @test_macro(double... a, ...args) {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
@@ -812,7 +812,7 @@ macro @test_macro(Type* #self @unused, $bar @export("foo") @ok) {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
@@ -861,7 +861,7 @@ macro @for_each(list; @body(it))
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
@@ -909,7 +909,7 @@ enum Foo {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefEnumerable* enum_type = (AstTypeDefEnumerable*)ast.@node_at(m.decls, 0);
@@ -953,7 +953,7 @@ enum Foo : int {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefEnumerable* enum_type = (AstTypeDefEnumerable*)ast.@node_at(m.decls, 0);
@@ -997,7 +997,7 @@ enum Foo : int (String desc, bool active, Position pos) @test @if(env:FOO) {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefEnumerable* enum_type = (AstTypeDefEnumerable*)ast.@node_at(m.decls, 0);
@@ -1043,7 +1043,7 @@ fault SomeFault @local @if(env::FOO)
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefEnumerable* enum_type = (AstTypeDefEnumerable*)ast.@node_at(m.decls, 0);
@@ -1088,7 +1088,7 @@ interface NodeI @local {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefInterface* ifc_type = (AstTypeDefInterface*)ast.@node_at(m.decls, 0);
@@ -1163,7 +1163,7 @@ interface NodeI @local {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefInterface* ifc_type = (AstTypeDefInterface*)ast.@node_at(m.decls, 0);
@@ -1237,7 +1237,7 @@ struct MyStruct @local {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefStructural* struct_type = (AstTypeDefStructural*)ast.@node_at(m.decls, 0);
@@ -1294,7 +1294,7 @@ struct MyStruct @local {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefStructural* struct_type = (AstTypeDefStructural*)ast.@node_at(m.decls, 0);
@@ -1351,7 +1351,7 @@ struct MyStruct @local {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefStructural* struct_type = (AstTypeDefStructural*)ast.@node_at(m.decls, 0);
@@ -1418,7 +1418,7 @@ struct MyStruct @local {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefStructural* struct_type = (AstTypeDefStructural*)ast.@node_at(m.decls, 0);
@@ -1482,7 +1482,7 @@ struct MyStruct @local {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefStructural* struct_type = (AstTypeDefStructural*)ast.@node_at(m.decls, 0);
@@ -1580,7 +1580,7 @@ struct MyStruct @local {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefStructural* struct_type = (AstTypeDefStructural*)ast.@node_at(m.decls, 0);
@@ -1641,7 +1641,7 @@ struct MyStruct @local {
 
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefStructural* struct_type = (AstTypeDefStructural*)ast.@node_at(m.decls, 0);
@@ -1700,7 +1700,7 @@ union MyUnion @local {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefStructural* struct_type = (AstTypeDefStructural*)ast.@node_at(m.decls, 0);
@@ -1759,7 +1759,7 @@ struct MyUnion @local {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefStructural* struct_type = (AstTypeDefStructural*)ast.@node_at(m.decls, 0);
@@ -1815,7 +1815,7 @@ bitstruct MyBit @local : char
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefStructural* struct_type = (AstTypeDefStructural*)ast.@node_at(m.decls, 0);
@@ -1872,7 +1872,7 @@ struct MyBit {
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefStructural* struct_type = (AstTypeDefStructural*)ast.@node_at(m.decls, 0);
@@ -1916,7 +1916,7 @@ def Int32 = int;
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefStructural* struct_type = (AstTypeDefStructural*)ast.@node_at(m.decls, 0);
@@ -1947,7 +1947,7 @@ def @Int32 = { @foo @bar };
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefStructural* struct_type = (AstTypeDefStructural*)ast.@node_at(m.decls, 0);
@@ -1978,7 +1978,7 @@ def IntList32 @test @foo = inline List(<int>);
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefStructural* struct_type = (AstTypeDefStructural*)ast.@node_at(m.decls, 0);
@@ -2010,7 +2010,7 @@ distinct Int32 = int;
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefStructural* struct_type = (AstTypeDefStructural*)ast.@node_at(m.decls, 0);
@@ -2041,7 +2041,7 @@ const Int32 A_FOO_BAR = 123;
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefStructural* struct_type = (AstTypeDefStructural*)ast.@node_at(m.decls, 0);
@@ -2072,7 +2072,7 @@ def NodeParser = fn bool (Ast* ast, AstNode* node, Token* t, NodeParserState* st
     contents.clear();
 
     test::not_equal(ast.modules, null);
-    AstModule* m = ast.@node_at(ast.modules, 1);
+    AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
 
     AstTypeDefStructural* struct_type = (AstTypeDefStructural*)ast.@node_at(m.decls, 0);

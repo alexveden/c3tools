@@ -16,6 +16,10 @@
     "c3lexer": {
       "type": "executable",
       "sources":  [ "src/c3lexer.c3" ]
+    },
+    "c3symbols": {
+      "type": "executable",
+      "sources":  [ "src/c3symbols.c3" ]
     }
   },
   "cpu": "generic",
