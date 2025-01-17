@@ -203,8 +203,8 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
                     if (self.modules.next == null) {
                         // first `module` keyword, check if there is no decls/imports in default
                         // and remove it from modules list if it's completely empty
-                        assert(!self.modules.name);
                         if(!self.modules.decls && !self.modules.imports){
+                            assert(!self.modules.name);
                             self.modules = null;
                         }
                     }

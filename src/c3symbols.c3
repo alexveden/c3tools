@@ -1,5 +1,6 @@
 module c3symbols;
 import c3tools::ast;
+import c3tools::lexer;
 import std::io;
 import std::os::argparse;
 import std::collections::list;
@@ -11,26 +12,53 @@ fn void! process_file(String file_name) {
     DString tstr = dstring::temp_new(contents);
     defer tstr.free();
 
-	io::printfn("File source:\n%s", file_name);
+	// io::printfn("File source:\n%s", file_name);
 
     Ast ast = ast::parse(contents, file_name, print_lex: false);
     defer ast.free();
-
+    io::printfn("{");
+    io::printfn(`  "modules": [`);
     ast::@node_foreach(ast.modules; AstModule* m){
-        io::printfn("%s %s;", m.value, ast.@node_join(m.name, tstr, "::"));
+        io::printfn("    {");
+        io::printfn(`      "file": "%s",`, file_name);
+        io::printfn(`      "name": "%s",`, ast.@node_join(m.name, tstr, "::"));
+        io::printf(`      "attr": [`, ast.@node_join(m.attributes, tstr, ","));
 
-        io::printfn("imports:");
+        bool is_first = true;
+        ast::@node_foreach(m.attributes; AstNode* att){
+            if (!att.value.starts_with("@link")){
+                if (!is_first) io::printf(`, `);
+                io::printf(`"%s"`, att.value);
+                is_first = false;
+            }
+        };
+        io::printfn(`],`, ast.@node_join(m.attributes, tstr, ","));
+
+        io::printf(`      "imports": [`, ast.@node_join(m.attributes, tstr, ","));
         ast::@node_foreach(m.imports; AstImport* imp){
-            io::printfn("\t%s %s;", imp.value, ast.@node_join(imp.name, tstr, "::"));
+            io::printf(`"%s"`, ast.@node_join(imp.name, tstr, "::"));
+            if (imp.next) io::printf(`, `);
         };
+        io::printfn(`],`, ast.@node_join(m.attributes, tstr, ","));
 
-        io::printfn("decls:");
+        io::printf(`      "callable": [`, ast.@node_join(m.attributes, tstr, ","));
+        is_first = true;
         ast::@node_foreach(m.decls; AstNode* decl){
-            io::printfn("\t%s %s;", decl.type, decl.value);
+            if (decl.type == FN || decl.type == MACRO) {
+                AstCallable* func = (AstCallable*)decl;
+                if (!is_first) io::printf(`, `);
+                io::printf(`"%s"`, ast.@node_join(func.name, tstr, "."));
+                is_first = false;
+            } 
         };
-    };
+        io::printfn(`]`);
+        io::printf("    }");
 
-	io::printfn("DONE");
+        if (m.next) io::printf(`,`);
+        io::printfn("");
+    };
+    io::printfn("  ]");
+    io::printfn("}, ");
 }
 
 fn int main(String[] args)
