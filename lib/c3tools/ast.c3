@@ -273,7 +273,17 @@ fn Ast parse(String contents, String file_path, bool print_lex = false, DynamicA
 
 		if(node_fn(&self, node, &self.lexer.token, &self.state_stack[0])) {
 		    // Node was finished, scan next;
-		    if(node.type != DOCS_START) docstring = null;
+		    switch(node.type) {
+		        case MODULE:
+		            assert (node == current_module);
+		            DString mname = dstring::temp_new();
+		            node.value = self.@allc_str(self.@node_join(current_module.name, mname, "::"));
+		            nextcase default;
+		        case DOCS_START:
+		            break;
+		        default:
+		            docstring = null;
+		    }
 		    node_fn = null;
 		    node = null;
 		    assert(self.state_stack.len() == 0, "not cleared?");

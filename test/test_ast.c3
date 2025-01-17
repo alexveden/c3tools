@@ -28,12 +28,12 @@ fn void test_node() {
 
     test::not_equal(ast.modules, null);
     test::equal(ast.@node_len(ast.modules), 1);
-    test::equal(ast.@node_join(ast.modules, contents, ","), "module");
+    test::equal(ast.@node_join(ast.modules, contents, ","), "test::std::c3lang::ast");
 
     AstModule* m = ast.@node_at(ast.modules, 0);
     test::not_equal(m, null);
     
-    test::equal(m.value, "module");
+    test::equal(m.value, "test::std::c3lang::ast");
     test::equal(m.type, TokenType.MODULE);
     
     test::equal(ast.@node_join(m.name, contents, "::"), "test::std::c3lang::ast");
@@ -80,7 +80,7 @@ fn void test_module_imports(){
     contents.clear();
 
     test::equal(ast.@node_len(ast.modules), 2);
-    test::equal(ast.@node_join(ast.modules, contents, ","), ",module");
+    test::equal(ast.@node_join(ast.modules, contents, ","), ",test::std::c3lang::ast");
 
     AstModule* m = ast.@node_at(ast.modules, 1);
     test::equal(ast.@node_join(m.name, contents, "::"), "test::std::c3lang::ast");
@@ -2134,7 +2134,7 @@ fn void test_module_imports_comma_sep(){
     contents.clear();
 
     test::equal(ast.@node_len(ast.modules), 1);
-    test::equal(ast.@node_join(ast.modules, contents, ","), "module");
+    test::equal(ast.@node_join(ast.modules, contents, ","), "test::std::c3lang::ast");
     
     AstModule* m = ast.@node_at(ast.modules, 0);
     test::equal(ast.@node_join(m.name, contents, "::"), "test::std::c3lang::ast");
