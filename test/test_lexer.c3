@@ -844,3 +844,50 @@ fn void test_extending_atts() {
 	// test::equal(t.type, TokenType.EOF);
 	// test::equal(4, att_cnt);
 }
+
+fn void test_escape_chars() {
+    String contents = `'\n'`;
+	Lexer lexer;
+	lexer::init(&lexer,contents);
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+
+    // foreach(t: toks) t.print(new_line: true);
+    foreach(i, t: toks) io::printf("%d: %s", i, t);
+
+    // module IDENT[foo] ; EOF
+	test::equal(2, toks.len());
+	test::equal(toks[0].type, TokenType.CHAR_LITERAL);
+	test::equal(toks[0].value, `'\n'`);
+}
+
+fn void test_escape_chars_single_quote() {
+    String contents = `'\''`;
+	Lexer lexer;
+	lexer::init(&lexer,contents);
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+
+    // foreach(t: toks) t.print(new_line: true);
+    foreach(i, t: toks) io::printf("%d: %s", i, t);
+
+	test::equal(2, toks.len());
+	test::equal(toks[0].type, TokenType.CHAR_LITERAL);
+	test::equal(toks[0].value, `'\''`);
+}
+
+
+fn void test_escape_chars_double_backslash() {
+    String contents = `'\\'`;
+	Lexer lexer;
+	lexer::init(&lexer,contents);
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+
+    // foreach(t: toks) t.print(new_line: true);
+    foreach(i, t: toks) io::printf("%d: %s", i, t);
+
+	test::equal(2, toks.len());
+	test::equal(toks[0].type, TokenType.CHAR_LITERAL);
+	test::equal(toks[0].value, `'\\'`);
+}

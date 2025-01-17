@@ -493,10 +493,9 @@ fn bool skip_whitespace(Lexer *lexer) @local
 			case ' ':
 			case '\t':
 			case '\f':
+			case '\r':
 				next(lexer);
 				break;
-			case '\r':
-				unreachable(`\r has to be filtered out`);
 			default:
 				has_empty_line = false;
 				return false;
@@ -902,9 +901,15 @@ fn bool scan_char(Lexer *lexer) @inline @local
 		c = peek(lexer);
 		next(lexer);
 		// End of file may occur:
-		if (c == '\0')
-		{
-			return add_error_token_at_start(lexer, "The character literal did not terminate.");
+		switch(c){
+			case '\0':
+				return add_error_token_at_start(lexer, "The character literal did not terminate.");
+			case '\\': // escape sequence
+				c = peek(lexer);
+				if (c == '\'' || c == '\\') {
+ 	 	 	 	 	 next(lexer);
+ 	 	 	 	 	 width++;
+				}
 		}
 		width++;
 	}
