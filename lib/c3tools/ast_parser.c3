@@ -55,7 +55,7 @@ macro NodeParserState.check_scope(&self, TokenType t) {
 }
 
 macro TokenType NodeParserState.check(&self, Token* t) {
-    assert(self.current_state != INVALID_TOKEN, "missing initialization?");
+    // assert(self.current_state != INVALID_TOKEN, "missing initialization?");
     self.last_state = self.current_state;
     self.check_scope(t.type);
     return self.current_state;
@@ -66,29 +66,13 @@ macro TokenType NodeParserState.transition(&self, TokenType new_state) {
     return new_state;
 }
 
-macro bool NodeParserState.next(&self) {
-    if(self.current_state != self.last_state) {
-        self.last_state = self.current_state;
-        return true;
-    } else {
-        return false;
-    }
-}
-
-
 fn bool Ast.parse_module(&ast, AstNode* node, Token* t, NodeParserState* state) 
 {
     assert(node.type == MODULE);
     AstModule* m = (AstModule*)node;
 
-    
-    if(state.current_state == INVALID_TOKEN) {
-        // Just newly created, initialize parser state
-        state.transition(MODULE);
-    }
-
-    switch (state.check(t)){
-        case MODULE:
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN:
             state.transition(IDENT);  // expecting module identifiers
         case IDENT:
             switch(t.type) {
@@ -98,22 +82,20 @@ fn bool Ast.parse_module(&ast, AstNode* node, Token* t, NodeParserState* state)
                     break; // skipping ::
                 case AT_IDENT:
                 case EOS:
-                    state.transition(t.type);
+                    nextcase STATE: state.transition(t.type);
                 default:
                     break;
             }
-            if(state.next()) nextcase state.current_state;
         case AT_IDENT:
             switch(t.type) {
                 case AT_IDENT:
                     ast.lexer.extend_current_attribute();
                     ast.@allc_add(AstNode, &m.attributes, t);
                 case EOS:
-                    state.transition(t.type);
+                    nextcase STATE: state.transition(t.type);
                 default:
                     break;
             }
-            if(state.next()) nextcase state.current_state;
 
         case EOS:
             ast.state_stack.remove_last();
@@ -132,13 +114,8 @@ fn bool Ast.parse_import(&ast, AstNode* node, Token* t, NodeParserState* state)
     AstImport* imp = (AstImport*)ast::@node_last(node);
 
     
-    if(state.current_state == INVALID_TOKEN) {
-        // Just newly created, initialize parser state
-        state.transition(IMPORT);
-    } 
-
     switch STATE: (state.check(t)){
-        case IMPORT:
+        case INVALID_TOKEN:
             state.transition(IDENT);  // expecting module identifiers
         case COMMA:
             Token ptok = {
@@ -190,7 +167,7 @@ fn bool Ast.parse_import(&ast, AstNode* node, Token* t, NodeParserState* state)
 macro parse_callable_params(Ast* ast, Token* t, AstCallable* node_func, NodeParserState* state) @local  {
     AstCallableParam* current_param = state.sub_node ? (AstCallableParam*)state.sub_node : null;
 
-    switch(t.type) {
+    switch (t.type) {
         case LPAREN:
             // opening '(' or a part of type definition
             if (state.scope_depth != 1) nextcase default;
@@ -210,15 +187,15 @@ macro parse_callable_params(Ast* ast, Token* t, AstCallable* node_func, NodePars
         case RPAREN:
             // Done with parameters, looking for AT_IDENT or SCOPE
             if (state.scope_depth == 0) {
-                state.transition(AT_IDENT);
                 state.sub_node = null;
+                state.transition(AT_IDENT);
             } else {
                 nextcase default;
             }
         case IMPLIES:  // =>
             // one liner lambda function
-            state.transition(IMPLIES);
             state.sub_node = null;
+            state.transition(IMPLIES);
         case COMMENT_SINGLE_INLINE:
         case COMMENT_SINGLE:
         case COMMENT_MULTI:
@@ -281,22 +258,15 @@ fn bool Ast.parse_function(&ast, AstNode* node, Token* t, NodeParserState* state
     assert(node.type == FN || node.type == MACRO);
     AstCallable* node_func = (AstCallable*)node;
 
-    
-    if(state.current_state == INVALID_TOKEN) {
-        // Just newly created, initialize parser state
-        state.transition(FN);
-        node_func.iscope_start = t.offset;
-    }
-
-    switch (state.check(t)){
-        case FN:
-            // function starts with return type definition
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN:
+            node_func.iscope_start = t.offset;
             state.transition(RETURN);
         case RETURN:
             // function return type
             switch(t.type) {
                 case AT_IDENT:
-                    state.transition(IDENT);
+                    nextcase STATE: state.transition(IDENT);
                 case DOT:
                     // macro MyType.test_macro() case
                     AstNode** last_rtype = &node_func.ret_type;
@@ -313,19 +283,18 @@ fn bool Ast.parse_function(&ast, AstNode* node, Token* t, NodeParserState* state
                         } 
                         last_rtype = &last_rtype[0].next;
                     }
-                    state.transition(IDENT);
+                    nextcase STATE: state.transition(IDENT);
                 case TYPE_IDENT:
                 case IDENT:
                     // function name, make a transition if no scope and ret_type is set
                     if (state.scope_depth == 0 && node_func.ret_type) {
-                        state.transition(IDENT);
+                        nextcase STATE: state.transition(IDENT);
                     } else {
                         nextcase default;
                     }
                 default:
                     ast.@allc_add(AstNode, &node_func.ret_type, t);
             }
-            if(state.next()) nextcase state.current_state;
         case IDENT:
             // function name 
             switch(t.type) {
@@ -335,15 +304,13 @@ fn bool Ast.parse_function(&ast, AstNode* node, Token* t, NodeParserState* state
                     // struct based functions may contain TypeName.func_name
                     ast.@allc_add(AstNode, &node_func.name, t);
                 case LPAREN:
-                    if(state.scope_depth == 1) state.transition(VAR);
+                    if(state.scope_depth == 1) nextcase STATE: state.transition(VAR);
                 default:
                     break;
             }
-            if(state.next()) nextcase state.current_state;
         case VAR:
-            parse_callable_params(ast, t, node_func, state);
             // Defining function arguments
-            if(state.next()) nextcase state.current_state;
+            parse_callable_params(ast, t, node_func, state);
 
         case AT_IDENT: // regular function attributes
             switch(t.type) {
@@ -351,13 +318,12 @@ fn bool Ast.parse_function(&ast, AstNode* node, Token* t, NodeParserState* state
                     ast.lexer.extend_current_attribute();
                     ast.@allc_add(AstNode, &node_func.attributes, t);
                 case IMPLIES:           // => 
-                    state.transition(IMPLIES);
+                    nextcase STATE: state.transition(IMPLIES);
                 case LBRACE:           // {
-                    if (state.scope_depth == 1) state.transition(SCOPE);
+                    if (state.scope_depth == 1) nextcase STATE: state.transition(SCOPE);
                 default:
                     break;
             }
-            if(state.next()) nextcase state.current_state;
         case SCOPE: // regular function scope { ... }
             switch(t.type) {
                 case LBRACE:           // {
@@ -365,21 +331,19 @@ fn bool Ast.parse_function(&ast, AstNode* node, Token* t, NodeParserState* state
                         node_func.iscope_start = t.offset;
                     }
                 case RBRACE:           // ending brace
-                    if (state.scope_depth == 0) state.transition(EOF);
+                    if (state.scope_depth == 0) nextcase STATE: state.transition(EOF);
                 default:
                     break;
             }
-            if(state.next()) nextcase state.current_state;
         case IMPLIES:  // lambda function fn () => ... @attr;
             switch(t.type) {
                 case IMPLIES:           // => 
                     node_func.iscope_start = t.offset;
                 case EOS:           // ending semicolon
-                    if (state.scope_depth == 0) state.transition(EOF);
+                    if (state.scope_depth == 0) nextcase STATE: state.transition(EOF);
                 default:
                     break;
             }
-            if(state.next()) nextcase state.current_state;
         case EOF:
             ast.state_stack.remove_last();
             node_func.iend = t.offset;
@@ -396,23 +360,18 @@ fn bool Ast.parse_docstring(&ast, AstNode* node, Token* t, NodeParserState* stat
     assert(node.type == DOCS_START);
     AstDoc* doc = (AstDoc*)node;
     
-
-    if(state.current_state == INVALID_TOKEN) {
-        // Just newly created, initialize parser state
-        state.transition(DOCS_START);
-    }
-
-    switch (state.check(t)){
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN:
+            nextcase STATE: state.transition(DOCS_START);
         case DOCS_START:
             switch(t.type) {
                 case DOCS_END:
-                    state.transition(DOCS_END);
+                    nextcase STATE: state.transition(DOCS_END);
                 case AT_IDENT:
-                    state.transition(AT_IDENT);
+                    nextcase STATE: state.transition(AT_IDENT);
                 default:
                     break;
             }
-            if(state.next()) nextcase state.current_state;
         case AT_IDENT:
             switch(t.type) {
                 case AT_IDENT:
@@ -423,7 +382,7 @@ fn bool Ast.parse_docstring(&ast, AstNode* node, Token* t, NodeParserState* stat
                 case DOCS_EOL:
                     state.sub_node = null;
                 case DOCS_END:
-                    state.transition(DOCS_END);
+                    nextcase STATE: state.transition(DOCS_END);
                 default:
                     assert(state.sub_node != null);
                     AstDocContract* contract = (AstDocContract*)state.sub_node;
@@ -437,7 +396,6 @@ fn bool Ast.parse_docstring(&ast, AstNode* node, Token* t, NodeParserState* stat
                     }
                     break;
             }
-            if(state.next()) nextcase state.current_state;
         case DOCS_END:
             doc.iend = t.offset + t.value.len - 1;
             ast.state_stack.remove_last();
@@ -454,15 +412,8 @@ fn bool Ast.parse_enumerable(&ast, AstNode* node, Token* t, NodeParserState* sta
     assert(node.type == ENUM || node.type == FAULT);
     AstTypeDefEnumerable* node_enum = (AstTypeDefEnumerable*)node;
 
-    
-    if(state.current_state == INVALID_TOKEN) {
-        // Just newly created, initialize parser state
-        state.transition(ENUM);
-    }
-
-
-    switch (state.check(t)){
-        case ENUM:
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN:
             node_enum.value = ""; // place for a type name
             state.transition(IDENT);
         case IDENT:
@@ -470,13 +421,12 @@ fn bool Ast.parse_enumerable(&ast, AstNode* node, Token* t, NodeParserState* sta
                 case TYPE_IDENT:
                     if (!node_enum.value) node_enum.value = ast.@allc_str(t.value);
                 case LBRACE:
-                    if(state.scope_depth == 1) state.transition(SCOPE);
+                    if(state.scope_depth == 1) nextcase STATE: state.transition(SCOPE);
                 case AT_IDENT:
-                    if(state.scope_depth == 0) state.transition(AT_IDENT);
+                    if(state.scope_depth == 0) nextcase STATE: state.transition(AT_IDENT);
                 default:
                     break;
             }
-            if(state.next()) nextcase state.current_state;
         case AT_IDENT: // regular function attributes
             switch(t.type) {
                 case AT_IDENT:
@@ -485,17 +435,16 @@ fn bool Ast.parse_enumerable(&ast, AstNode* node, Token* t, NodeParserState* sta
                         ast.@allc_add(AstNode, &node_enum.attributes, t);
                     }
                 case LBRACE:           // {
-                    if (state.scope_depth == 1) state.transition(SCOPE);
+                    if (state.scope_depth == 1) nextcase STATE: state.transition(SCOPE);
                 default:
                     break;
             }
-            if(state.next()) nextcase state.current_state;
         case SCOPE: // regular function scope { ... }
             switch(t.type) {
                 case LBRACE:           // {
                     break;
                 case RBRACE:           // ending brace
-                    if (state.scope_depth == 0) state.transition(EOF);
+                    if (state.scope_depth == 0) nextcase STATE: state.transition(EOF);
                 case CONST_IDENT:
                     if(state.scope_depth == 1 && !state.sub_node) {
                         state.sub_node = ast.@allc_add(AstNode, &node_enum.values, &ast.lexer.token); 
@@ -506,7 +455,6 @@ fn bool Ast.parse_enumerable(&ast, AstNode* node, Token* t, NodeParserState* sta
                 default:
                     break;
             }
-            if(state.next()) nextcase state.current_state;
         case EOF:
             node_enum.iend = t.offset;
             ast.state_stack.remove_last();
@@ -524,15 +472,8 @@ fn bool Ast.parse_interface(&ast, AstNode* node, Token* t, NodeParserState* stat
     assert(node.type == INTERFACE);
     AstTypeDefInterface* node_ifc = (AstTypeDefInterface*)node;
 
-    
-    if(state.current_state == INVALID_TOKEN) {
-        // Just newly created, initialize parser state
-        state.transition(INTERFACE);
-    }
-
-
-    switch (state.check(t)){
-        case INTERFACE:
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN:
             node_ifc.value = "";
             state.transition(TYPE_IDENT);
         case TYPE_IDENT:
@@ -545,17 +486,16 @@ fn bool Ast.parse_interface(&ast, AstNode* node, Token* t, NodeParserState* stat
                         ast.@allc_add(AstNode, &node_ifc.attributes, t);
                     }
                 case LBRACE:
-                    if(state.scope_depth == 1) state.transition(SCOPE);
+                    if(state.scope_depth == 1) nextcase STATE: state.transition(SCOPE);
                 default:
                     break;
             }
-            if(state.next()) nextcase state.current_state;
         case SCOPE: // regular function scope { ... }
             switch(t.type) {
                 case LBRACE:           // {
                     break;
                 case RBRACE:           // ending brace
-                    if (state.scope_depth == 0) state.transition(EOF);
+                    if (state.scope_depth == 0) nextcase STATE: state.transition(EOF);
                 case DOCS_START:
                     if(state.scope_depth == 2 && !state.sub_node) {
                         ast.@allc_add(AstDoc, &state.sub_node, &ast.lexer.token); 
@@ -600,7 +540,6 @@ fn bool Ast.parse_interface(&ast, AstNode* node, Token* t, NodeParserState* stat
                         ast.parse_docstring(state.sub_node, &ast.lexer.token, &ast.state_stack[1]);
                     }
             }
-            if(state.next()) nextcase state.current_state;
         case EOF:
             ast.state_stack.remove_last();
             node_ifc.iend = t.offset;
@@ -619,13 +558,8 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
     assert(node.type == STRUCT || node.type == UNION || node.type == BITSTRUCT);
     AstTypeDefStructural* node_struct = (AstTypeDefStructural*)node;
     
-    if(state.current_state == INVALID_TOKEN) {
-        // Just newly created, initialize parser state
-        state.transition(STRUCT);
-    }
-
-    switch (state.check(t)){
-        case STRUCT: // got struct keyword
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN: // got struct keyword
             node_struct.value = "";
             state.transition(TYPE_IDENT);
         case TYPE_IDENT: // parse struct type and attributes
@@ -643,11 +577,10 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
                         ast.@allc_add(AstNode, &node_struct.attributes, t);
                     }
                 case LBRACE:
-                    if(state.scope_depth == 1) state.transition(SCOPE);
+                    if(state.scope_depth == 1) nextcase STATE: state.transition(SCOPE);
                 default:
                     break;
             }
-            if(state.next()) nextcase state.current_state;
         case DOCS_START:
             switch(t.type) {
                 case DOCS_START:
@@ -655,41 +588,39 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
                     ast.@allc_add(AstDoc, &state.sub_node, &ast.lexer.token); 
                     nextcase default;
                 case DOCS_END:
-                    state.transition(SCOPE);
+                    nextcase STATE: state.transition(SCOPE);
                 default:
                     break;
             }
-            if(state.next()) nextcase state.current_state;
         case SCOPE: // struct scope, let's find any sub-structs or members
             switch(t.type) {
                 case LBRACE:           // scope entry
                     break;
 
                 case RBRACE:           // ending brace
-                    if (state.scope_depth == 0) state.transition(EOF);
+                    if (state.scope_depth == 0) nextcase STATE: state.transition(EOF);
             
                 case UNION:
                 case STRUCT:
                 case BITSTRUCT:        // sub type member 
-                    if (state.scope_depth == 1) state.transition(FOREACH);
+                    if (state.scope_depth == 1) nextcase STATE: state.transition(FOREACH);
 
                 case INLINE:
                 case TYPE_IDENT:
                     if (state.scope_depth != 1) break;
-                    state.transition(VAR); // start parsing structure field
+                    nextcase STATE: state.transition(VAR); // start parsing structure field
 
                 case DOCS_START:
                     if (state.scope_depth != 2) break;
-                    state.transition(DOCS_START); // docstrings for field
+                    nextcase STATE: state.transition(DOCS_START); // docstrings for field
 
                 default:
                     break;
             }
-            if(state.next()) nextcase state.current_state;
         case VAR: // found individual field start parsing it
             switch(t.type) {
                 case RBRACE:           // ending brace
-                    if (state.scope_depth == 0) state.transition(EOF);
+                    if (state.scope_depth == 0) nextcase STATE: state.transition(EOF);
                 case INLINE:
                 case TYPE_IDENT:
                     AstTypeDefStructural* s = (AstTypeDefStructural*)state.sub_node;
@@ -729,15 +660,14 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
                     }
                 case EOS:           
                     // field was defined, try find next in SCOPE
-                    state.transition(SCOPE);
                     state.sub_node = null;
+                    nextcase STATE: state.transition(SCOPE);
                 default:
                     assert(state.sub_node);
                     AstTypeDefStructural* s = (AstTypeDefStructural*)state.sub_node;
                     ast.@allc_add(AstNode, &s.field, t);
                     break;
             }
-            if(state.next()) nextcase state.current_state;
         case FOREACH: // parsing sub structs
             switch(t.type) {
                 case STRUCT:
@@ -780,13 +710,8 @@ fn bool Ast.parse_typedef(&ast, AstNode* node, Token* t, NodeParserState* state)
     assert(node.type == DEF || node.type == DISTINCT);
     AstTypeDef* node_typedef = (AstTypeDef*)node;
     
-    if(state.current_state == INVALID_TOKEN) {
-        // Just newly created, initialize parser state
-        state.transition(DEF);
-    } 
-
-    switch (state.check(t)){
-        case DEF:
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN:
             node_typedef.value = "";
             state.transition(IDENT);
         case IDENT:
@@ -800,24 +725,22 @@ fn bool Ast.parse_typedef(&ast, AstNode* node, Token* t, NodeParserState* state)
                     ast.lexer.extend_current_attribute();
                     ast.@allc_add(AstNode, &node_typedef.attributes, t);
                 case EQ:
-                    state.transition(TYPE_IDENT);
+                    nextcase STATE: state.transition(TYPE_IDENT);
                 case EOS:
-                    state.transition(EOF);
+                    nextcase STATE: state.transition(EOF);
                 default:
                     break;
             }
-            if(state.next()) nextcase state.current_state;
         case TYPE_IDENT:
             switch(t.type) {
                 case EQ:
                 case INLINE:
                     break;
                 case EOS:
-                    state.transition(EOF);
+                    nextcase STATE: state.transition(EOF);
                 default:
                     ast.@allc_add(AstNode, &node_typedef.field, t);
             }
-            if(state.next()) nextcase state.current_state;
 
         case EOF:
             ast.state_stack.remove_last();
@@ -835,13 +758,8 @@ fn bool Ast.parse_constants(&ast, AstNode* node, Token* t, NodeParserState* stat
     assert(node.type == CONST);
     AstTypeDef* node_typedef = (AstTypeDef*)node;
     
-    if(state.current_state == INVALID_TOKEN) {
-        // Just newly created, initialize parser state
-        state.transition(CONST);
-    } 
-
-    switch (state.check(t)){
-        case CONST:
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN:
             node_typedef.value = "";
             state.transition(IDENT);
         case IDENT:
@@ -854,22 +772,19 @@ fn bool Ast.parse_constants(&ast, AstNode* node, Token* t, NodeParserState* stat
                     ast.lexer.extend_current_attribute();
                     ast.@allc_add(AstNode, &node_typedef.attributes, t);
                 case EQ:
-                    state.transition(EOS);
+                    nextcase STATE: state.transition(EOS);
                 case EOS:
-                    state.transition(EOF);
+                    nextcase STATE: state.transition(EOF);
                 default:
                     break;
             }
-            if(state.next()) nextcase state.current_state;
         case EOS:
             switch(t.type) {
                 case EOS:
-                    state.transition(EOF);
+                    nextcase STATE: state.transition(EOF);
                 default:
                     break;
             }
-            if(state.next()) nextcase state.current_state;
-
         case EOF:
             ast.state_stack.remove_last();
             node_typedef.iend = t.offset + t.value.len - 1;
