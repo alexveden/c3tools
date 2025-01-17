@@ -284,8 +284,9 @@ fn bool Ast.parse_function(&ast, AstNode* node, Token* t, NodeParserState* state
                         last_rtype = &last_rtype[0].next;
                     }
                     nextcase STATE: state.transition(IDENT);
-                case TYPE_IDENT:
                 case IDENT:
+                    if (state.scope_depth == 0) nextcase STATE: state.transition(IDENT);
+                case TYPE_IDENT:
                     // function name, make a transition if no scope and ret_type is set
                     if (state.scope_depth == 0 && node_func.ret_type) {
                         nextcase STATE: state.transition(IDENT);

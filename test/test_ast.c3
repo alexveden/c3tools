@@ -2151,3 +2151,79 @@ fn void test_module_imports_comma_sep(){
     test::equal(ast.@node_join(imp.name, contents, "::"), "test::math");
     test::equal(ast.@node_join(imp.attributes, contents), "@foo");
 }
+/*
+
+*/
+fn void test_macro_atomic_regression1(){
+   String code =  `module test::std::c3lang::ast;
+
+macro fetch_add(ptr, y, AtomicOrdering $ordering = SEQ_CONSISTENT, bool $volatile = false, usz $alignment = 0)
+{
+	$if $alignment == 0:
+		$alignment = $typeof(*ptr).sizeof;
+	$endif
+	return $$atomic_fetch_add(ptr, y, $volatile, $ordering.ordinal, $alignment);
+}
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 0);
+    test::not_equal(m, null);
+
+    AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
+    test::not_equal(func, null);
+
+    test::equal(func.type, TokenType.MACRO);
+    test::equal(func.ret_type, null);
+    test::equal(ast.@node_join(func.ret_type, contents), "");
+    test::equal(ast.@node_join(func.name, contents), "fetch_add");
+
+    test::equal(ast.@node_join(func.params, contents), "ptr,y,$ordering,$volatile,$alignment");
+
+
+    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    test::equal(func.istart, 32);
+    test::equal(func.iend, code.len-4);
+    test::equal(code[func.iend], '}');
+}
+
+fn void test_macro_type_based(){
+   String code =  `module test::std::c3lang::ast;
+
+macro MyType.fetch_add(ptr, y, AtomicOrdering $ordering = SEQ_CONSISTENT, bool $volatile = false, usz $alignment = 0)
+{
+	$if $alignment == 0:
+		$alignment = $typeof(*ptr).sizeof;
+	$endif
+	return $$atomic_fetch_add(ptr, y, $volatile, $ordering.ordinal, $alignment);
+}
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer ast.free();
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 0);
+    test::not_equal(m, null);
+
+    AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
+    test::not_equal(func, null);
+
+    test::equal(func.type, TokenType.MACRO);
+    test::equal(func.ret_type, null);
+    test::equal(ast.@node_join(func.ret_type, contents), "");
+    test::equal(ast.@node_join(func.name, contents), "MyType,fetch_add");
+
+    test::equal(ast.@node_join(func.params, contents), "ptr,y,$ordering,$volatile,$alignment");
+
+
+    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    test::equal(func.istart, 32);
+    test::equal(func.iend, code.len-4);
+    test::equal(code[func.iend], '}');
+}
