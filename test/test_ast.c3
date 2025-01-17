@@ -81,12 +81,17 @@ fn void test_module_imports(){
 
     test::equal(ast.@node_len(ast.modules), 2);
     test::equal(ast.@node_join(ast.modules, contents, ","), ",module");
-    
 
     AstModule* m = ast.@node_at(ast.modules, 1);
     test::equal(ast.@node_join(m.name, contents, "::"), "test::std::c3lang::ast");
     test::equal(m.attributes, null);
+    test::equal(m.file_path, ast.path);
 
+    m = ast.@node_at(ast.modules, 0);
+    test::equal(ast.@node_join(m.name, contents, "::"), "");
+    test::equal(m.attributes, null);
+    test::equal(m.file_path, ast.path);
+    test::equal(m.file_path.ptr, ast.path.ptr);
     // test::equal(0, 1);
 }
 

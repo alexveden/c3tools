@@ -43,6 +43,7 @@ struct AstModule {
     AstImport* imports;
     AstNode* decls;
     AstDoc* docs;
+    String file_path;
 }
 
 struct AstTypeDef {
@@ -201,6 +202,7 @@ fn Ast parse(String contents, String file_path, bool print_lex = false, DynamicA
 	AstNode* node = null;
 	AstDoc* docstring = null;
 	AstModule* current_module = (AstModule*)self.@allc_add(AstModule, &self.modules, &self.lexer.token);
+	current_module.file_path = self.path;
 
 	self.state_stack.new_init();
 	defer self.state_stack.free();
@@ -223,6 +225,7 @@ fn Ast parse(String contents, String file_path, bool print_lex = false, DynamicA
                     node = self.@allc_add(AstModule, &self.modules, &self.lexer.token); 
                     current_module = (AstModule*)node;
                     current_module.docs = docstring;
+	                current_module.file_path = self.path;
                 case MACRO:
                 case FN:
                     node_fn = &Ast.parse_function;
