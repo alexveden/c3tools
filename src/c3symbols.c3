@@ -5,6 +5,11 @@ import std::io;
 import std::os::argparse;
 import std::collections::list;
 
+fn void! process_dir(String dir_name) {
+    AstProject proj = AstProject.new_init(dir_name, "");
+    proj.load()!!;
+    io::printfn("Project [%s]: #%d modules", dir_name, proj.modules.len());
+}
 fn void! process_file(String file_name) {
 	String contents = (String)file::load_new(file_name)!;
 	defer contents.free();
@@ -15,7 +20,7 @@ fn void! process_file(String file_name) {
 	// io::printfn("File source:\n%s", file_name);
 
     Ast ast = ast::parse(contents, file_name, print_lex: false);
-    defer ast.free();
+    // defer ast.free();
     io::printfn("{");
     io::printfn(`  "modules": [`);
     ast::@node_foreach(ast.modules; AstModule* m){
@@ -85,7 +90,8 @@ fn int main(String[] args)
 		return 1;
 	}
 	
-	if(catch err = process_file(agp.arguments[0])) {
+	// if(catch err = process_file(agp.arguments[0])) {
+	if(catch err = process_dir(agp.arguments[0])) {
 	    io::printfn("process_file error with: %s", err);
 	    return 1;
 	}

@@ -3,11 +3,17 @@ import c3tools::lexer;
 import std::io;
 import std::collections::list;
 
+struct AstProject {
+    String proj_path;
+    String stdlib_path;
+    List(<AstModule*>) modules;
+    allocator::DynamicArenaAllocator _allocator;
+}
 
 struct Ast {
     String path;
     AstModule* modules;
-    allocator::DynamicArenaAllocator _allocator;
+    allocator::DynamicArenaAllocator* _allocator;
     Lexer lexer;
     List(<NodeParserState>) state_stack;
 }
@@ -174,14 +180,20 @@ macro Ast.@node_at(self, node, uint index)
 }
 
 macro String Ast.@allc_str(&self, String s) @private {
-    String result = s.copy(&self._allocator);
+    String result = s.copy(self._allocator);
     return result;
 }
 
 
-fn Ast parse(String contents, String file_path, bool print_lex = false) {
+fn Ast parse(String contents, String file_path, bool print_lex = false, DynamicArenaAllocator* allc = null) {
     Ast self;
-    self._allocator.init(1024, allocator::heap());
+    if (allc == null){
+        // typically this will be actual only for tests
+        self._allocator = mem::alloc(DynamicArenaAllocator);
+        self._allocator.init(1024, allocator::heap());
+    } else {
+        self._allocator = allc;
+    }
     self.path = self.@allc_str(file_path);
 
 	lexer::init(&self.lexer, contents);
@@ -274,6 +286,55 @@ fn Ast parse(String contents, String file_path, bool print_lex = false) {
 	return self;
 }
 
-fn void Ast.free(&self){
+fn AstProject AstProject.new_init(String proj_path, String stdlib_path) @operator(construct) {
+    AstProject self = {
+        .proj_path = proj_path,
+        .stdlib_path = stdlib_path,
+    };
+
+    //  Arena allocator for storing all AST metadata (DynamicArenaAllocator backed by heap)
+    self._allocator.init(5*1024*1024, allocator::heap());
+
+    // All other allocations are done on heap to isolate AST data and make it sequential
+    self.modules.new_init(initial_capacity: 1024, allocator: allocator::heap());
+
+    return self;
+}
+
+fn void! AstProject.load(&self) {
+    if (self.proj_path) {
+        path::Path p = path::temp_new(self.proj_path)!;
+        if (!path::is_dir(p)) {
+            return IoError.FILE_NOT_DIR?;
+        }
+
+        path::PathWalker fnwalk = fn bool!(Path p, bool is_dir, void* ctx) {
+            AstProject* self = (AstProject*)ctx;
+            if (is_dir) return false;
+
+	        String contents = (String)file::load_new(p.str_view())!;
+	        defer contents.free();
+
+            Ast ast = ast::parse(contents, file_path: p.str_view(), allc: &self._allocator);
+            self.import_ast(&ast)!;
+
+            return false;
+        };
+        p.walk(fnwalk, self)!!;
+    }
+}
+
+fn void! AstProject.import_ast(&self, Ast* ast) {
+    assert(ast);
+
+    for(AstModule* m = ast.modules; m != null; m = (AstModule*)m.next) {
+        io::printfn("%s: module: %s", ast.path, m);
+        self.modules.push(m);
+    }
+    return;
+}
+
+fn void AstProject.free(&self) {
+    self.modules.free();
     self._allocator.free();
 }
