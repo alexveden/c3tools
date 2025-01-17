@@ -17,9 +17,9 @@
       "type": "executable",
       "sources":  [ "src/c3lexer.c3" ]
     },
-    "c3symbols": {
+    "c3fzf": {
       "type": "executable",
-      "sources":  [ "src/c3symbols.c3" ]
+      "sources":  [ "src/c3fzf.c3" ]
     }
   },
   "cpu": "generic",

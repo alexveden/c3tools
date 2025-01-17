@@ -10,6 +10,7 @@ fn void! process_dir(String dir_name) {
     proj.load()!!;
     io::printfn("Project [%s]: #%d modules", dir_name, proj.modules.len());
 }
+
 fn void! process_file(String file_name) {
 	String contents = (String)file::load_new(file_name)!;
 	defer contents.free();
