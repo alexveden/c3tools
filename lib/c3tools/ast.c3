@@ -1,12 +1,15 @@
 module c3tools::ast;
 import c3tools::lexer;
 import std::io;
+import std::sort;
 import std::collections::list;
+import std::collections::map;
 
 struct AstProject {
     String proj_path;
     String stdlib_path;
     List(<AstModule*>) modules;
+    HashMap(<String, uint>) mod_index;
     allocator::DynamicArenaAllocator _allocator;
 }
 
@@ -308,43 +311,65 @@ fn AstProject AstProject.new_init(String proj_path, String stdlib_path) @operato
     //  Arena allocator for storing all AST metadata (DynamicArenaAllocator backed by heap)
     self._allocator.init(5*1024*1024, allocator::heap());
 
+    uint initial_capacity = 1024;
     // All other allocations are done on heap to isolate AST data and make it sequential
-    self.modules.new_init(initial_capacity: 1024, allocator: allocator::heap());
+    self.modules.new_init(initial_capacity, allocator: allocator::heap());
+
+    // All other allocations are done on heap to isolate AST data and make it sequential
+    self.mod_index.new_init(initial_capacity, allocator: allocator::heap());
 
     return self;
 }
+fn void! AstProject.load_path(&self, String path) @local {
+    path::Path p = path::temp_new(self.proj_path)!;
+    if (!path::is_dir(p)) {
+        return IoError.FILE_NOT_DIR?;
+    }
 
-fn void! AstProject.load(&self) {
-    if (self.proj_path) {
-        path::Path p = path::temp_new(self.proj_path)!;
-        if (!path::is_dir(p)) {
-            return IoError.FILE_NOT_DIR?;
+    path::PathWalker fnwalk = fn bool!(Path p, bool is_dir, void* ctx) {
+        AstProject* self = (AstProject*)ctx;
+        if (is_dir) return false;
+
+	    String contents = (String)file::load_new(p.str_view())!;
+	    defer contents.free();
+
+        Ast ast = ast::parse(contents, file_path: p.str_view(), allc: &self._allocator);
+        for(AstModule* m = ast.modules; m != null; m = (AstModule*)m.next) {
+            self.modules.push(m);
         }
 
-        path::PathWalker fnwalk = fn bool!(Path p, bool is_dir, void* ctx) {
-            AstProject* self = (AstProject*)ctx;
-            if (is_dir) return false;
-
-	        String contents = (String)file::load_new(p.str_view())!;
-	        defer contents.free();
-
-            Ast ast = ast::parse(contents, file_path: p.str_view(), allc: &self._allocator);
-            self.import_ast(&ast)!;
-
-            return false;
-        };
-        p.walk(fnwalk, self)!!;
-    }
+        return false;
+    };
+    p.walk(fnwalk, self)!!;
 }
 
-fn void! AstProject.import_ast(&self, Ast* ast) {
-    assert(ast);
+fn int cmp_module(AstModule* a, AstModule* b) @private
+{
+	usz an = a.value.len;
+	usz bn = b.value.len;
+	if (an > bn) @swap(a, b);
+	foreach (i, ac : a.value)
+	{
+		char bc = b.value[i];
+		if (ac != bc) return an > bn ? bc - ac : ac - bc;
+	}
+	return (int)(an - bn);
+}
 
-    for(AstModule* m = ast.modules; m != null; m = (AstModule*)m.next) {
-        io::printfn("%s: module: %s", ast.path, m);
-        self.modules.push(m);
+fn void! AstProject.load(&self) {
+    assert(self.modules.len() == 0, "double load?");
+
+    if (self.proj_path) self.load_path(self.proj_path)!;
+    if (self.stdlib_path) self.load_path(self.stdlib_path)!;
+    
+	sort::quicksort(self.modules, &cmp_module);
+
+    foreach(i, m: self.modules) {
+        if(!self.mod_index.has_key(m.value)){
+            io::printfn("module: %s", m.value);
+            self.mod_index[m.value] = (uint)i;
+        }
     }
-    return;
 }
 
 fn void AstProject.free(&self) {
