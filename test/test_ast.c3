@@ -2114,3 +2114,40 @@ def NodeParser = fn bool (Ast* ast, AstNode* node, Token* t, NodeParserState* st
     test::equal(code[struct_type.iend], ';');
     test::equal(struct_type.iend, code.len-4);
 }
+
+fn void test_module_imports_comma_sep(){
+   String code =  `
+   module test::std::c3lang::ast; 
+   import std::io @test, test::math @foo;
+
+   `;
+    DString contents = dstring::temp_new(code);
+    
+    String path = "foo.c3";
+    Ast ast = ast::parse(contents.str_view(), path, true);
+    defer ast.free();
+    contents.clear();
+
+    test::equal(ast.@node_len(ast.modules), 1);
+    test::equal(ast.@node_join(ast.modules, contents, ","), "module");
+    
+    AstModule* m = ast.@node_at(ast.modules, 0);
+    test::equal(ast.@node_join(m.name, contents, "::"), "test::std::c3lang::ast");
+    test::equal(m.attributes, null);
+
+    test::not_equal(m.imports, null);
+    test::equal(ast.@node_len(m.imports), 2);
+    AstImport* imp;
+
+    imp = ast.@node_at(m.imports, 0);
+    test::equal(imp.type, TokenType.IMPORT);
+    test::equal(imp.value, "import");
+    test::equal(ast.@node_join(imp.name, contents, "::"), "std::io");
+    test::equal(ast.@node_join(imp.attributes, contents), "@test");
+
+    imp = ast.@node_at(m.imports, 1);
+    test::equal(imp.type, TokenType.IMPORT);
+    test::equal(imp.value, "import");
+    test::equal(ast.@node_join(imp.name, contents, "::"), "test::math");
+    test::equal(ast.@node_join(imp.attributes, contents), "@foo");
+}

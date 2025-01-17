@@ -129,7 +129,7 @@ fn bool Ast.parse_module(&ast, AstNode* node, Token* t, NodeParserState* state)
 fn bool Ast.parse_import(&ast, AstNode* node, Token* t, NodeParserState* state) 
 {
     assert(node.type == IMPORT);
-    AstImport* imp = (AstImport*)node;
+    AstImport* imp = (AstImport*)ast::@node_last(node);
 
     
     if(state.current_state == INVALID_TOKEN) {
@@ -137,9 +137,19 @@ fn bool Ast.parse_import(&ast, AstNode* node, Token* t, NodeParserState* state)
         state.transition(IMPORT);
     } 
 
-    switch (state.check(t)){
+    switch STATE: (state.check(t)){
         case IMPORT:
             state.transition(IDENT);  // expecting module identifiers
+        case COMMA:
+            Token ptok = {
+                .type = TokenType.IMPORT,
+                .value = "import",
+                .row = t.row,
+                .col = t.col,
+                .offset = t.offset,
+            };
+            ast.@allc_add(AstImport, &imp.next, &ptok);
+            state.transition(IDENT);
         case IDENT:
             switch(t.type) {
                 case IDENT:
@@ -148,23 +158,24 @@ fn bool Ast.parse_import(&ast, AstNode* node, Token* t, NodeParserState* state)
                     break; // skipping ::
                 case AT_IDENT:
                 case EOS:
-                    state.transition(t.type);
+                    nextcase STATE: state.transition(t.type);
+                case COMMA:
+                    nextcase STATE: state.transition(COMMA);
                 default:
                     break;
             }
-            if(state.next()) nextcase state.current_state;
         case AT_IDENT:
             switch(t.type) {
                 case AT_IDENT:
                     ast.lexer.extend_current_attribute();
                     ast.@allc_add(AstNode, &imp.attributes, t);
                 case EOS:
-                    state.transition(EOS);
+                    nextcase STATE: state.transition(EOS);
+                case COMMA:
+                    nextcase STATE: state.transition(COMMA);
                 default:
                     break;
             }
-            if(state.next()) nextcase state.current_state;
-
         case EOS:
             ast.state_stack.remove_last();
             imp.iend = t.offset + t.value.len;
