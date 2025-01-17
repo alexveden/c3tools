@@ -232,18 +232,22 @@ macro char peek_next(lexer_) @local {
 //
 // // Is the current character '\0' if so we assume we reached the end.
 macro bool reached_end(lexer_) {
-    return (lexer_.current[0] == '\0' || lexer_.current >= (lexer_.file_begin+lexer_.file_len));
+    return (lexer_.current >= (lexer_.file_begin+lexer_.file_len) || lexer_.current[0] == '\0');
 }
 
 // Step one character forward and return that character
 fn char next(Lexer *lexer) @inline
 {
-	if (*lexer.current == '\n')
+	if (@unlikely(*lexer.current == '\n'))
 	{
 		lexer.line_start = lexer.current + 1;
 		lexer.current_row++;
 	}
-	return (++lexer.current)[0];
+	lexer.current++;
+	if (@unlikely(lexer.current >= (lexer.file_begin+lexer.file_len))) {
+		return '\0';
+	}
+	return (lexer.current)[0];
 }
 
 // Backtrack the buffer read one step.

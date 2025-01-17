@@ -190,7 +190,7 @@ fn Ast parse(String contents, String file_path, bool print_lex = false, DynamicA
     if (allc == null){
         // typically this will be actual only for tests
         self._allocator = mem::alloc(DynamicArenaAllocator);
-        self._allocator.init(1024, allocator::heap());
+        self._allocator.init(1024, allocator::temp());
     } else {
         self._allocator = allc;
     }
