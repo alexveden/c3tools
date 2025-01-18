@@ -305,7 +305,11 @@ fn bool Ast.parse_function(&ast, AstNode* node, Token* t, NodeParserState* state
                     // struct based functions may contain TypeName.func_name
                     ast.@allc_add(AstNode, &node_func.name, t);
                 case LPAREN:
-                    if(state.scope_depth == 1) nextcase STATE: state.transition(VAR);
+                    if(state.scope_depth == 1) {
+		                DString fname = dstring::temp_new();
+		                node_func.value = ast.@allc_str(ast.@node_join(node_func.name, fname, "."));
+                        nextcase STATE: state.transition(VAR);
+                    }
                 default:
                     break;
             }

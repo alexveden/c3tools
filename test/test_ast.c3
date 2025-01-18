@@ -567,6 +567,7 @@ fn MyType* MyFoo.test_node(&self) {
     test::not_equal(func, null);
 
     test::equal(func.type, TokenType.FN);
+    test::equal(func.value, "MyFoo.test_node");
     test::equal(ast.@node_join(func.name, contents), "MyFoo,test_node");
     test::equal(ast.@node_join(func.ret_type, contents), "MyType,*");
 
