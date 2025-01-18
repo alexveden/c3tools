@@ -198,6 +198,8 @@ fn Ast parse(String contents, String file_path, bool print_lex = false, DynamicA
     } else {
         self._allocator = allc;
     }
+    assert(file_path, "empty path");
+    assert(file_path.ends_with(".c3"), "wrong extension");
     self.path = self.@allc_str(file_path);
 
 	lexer::init(&self.lexer, contents);
@@ -321,7 +323,12 @@ fn AstProject AstProject.new_init(String proj_path, String stdlib_path) @operato
     return self;
 }
 fn void! AstProject.load_path(&self, String path) @local {
-    path::Path p = path::temp_new(self.proj_path)!;
+    assert(path);
+
+    path::Path p = path::temp_new(path)!;
+    if (!path::exists(p)) {
+        return IoError.FILE_NOT_FOUND?;
+    }
     if (!path::is_dir(p)) {
         return IoError.FILE_NOT_DIR?;
     }
@@ -329,6 +336,9 @@ fn void! AstProject.load_path(&self, String path) @local {
     path::PathWalker fnwalk = fn bool!(Path p, bool is_dir, void* ctx) {
         AstProject* self = (AstProject*)ctx;
         if (is_dir) return false;
+        if (!p.has_extension("c3")) {
+            return false;
+        }
 
 	    String contents = (String)file::load_new(p.str_view())!;
 	    defer contents.free();
@@ -343,18 +353,32 @@ fn void! AstProject.load_path(&self, String path) @local {
     p.walk(fnwalk, self)!!;
 }
 
-fn int cmp_module(AstModule* a, AstModule* b) @private
+fn int cmp_str(String a, String b) @private
 {
-	usz an = a.value.len;
-	usz bn = b.value.len;
+	usz an = a.len;
+	usz bn = b.len;
 	if (an > bn) @swap(a, b);
-	foreach (i, ac : a.value)
+	foreach (i, ac : a)
 	{
-		char bc = b.value[i];
+		char bc = b[i];
 		if (ac != bc) return an > bn ? bc - ac : ac - bc;
 	}
 	return (int)(an - bn);
+
 }
+
+fn int cmp_module(AstModule* a, AstModule* b) @private
+{
+    return cmp_str(a.value, b.value);
+
+}
+
+// fn int cmp_decl(AstNode* a, AstNode* b) @private
+// {
+//     if (a.type == b.type) return cmp_str(a.value, b.value);
+//
+//     return a.type - b.type;
+// }
 
 fn void! AstProject.load(&self) {
     assert(self.modules.len() == 0, "double load?");
@@ -366,7 +390,7 @@ fn void! AstProject.load(&self) {
 
     foreach(i, m: self.modules) {
         if(!self.mod_index.has_key(m.value)){
-            io::printfn("module: %s", m.value);
+            // io::printfn("module: %s", m.value);
             self.mod_index[m.value] = (uint)i;
         }
     }
