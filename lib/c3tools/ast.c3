@@ -47,6 +47,7 @@ struct AstModule {
     AstNode* decls;
     AstDoc* docs;
     String file_path;
+    uint src_line;
 }
 
 struct AstTypeDef {
@@ -229,6 +230,7 @@ fn Ast parse(String contents, String file_path, bool print_lex = false, DynamicA
                     }
                     node = self.@allc_add(AstModule, &self.modules, &self.lexer.token); 
                     current_module = (AstModule*)node;
+                    current_module.src_line = self.lexer.token.row;
                     current_module.docs = docstring;
 	                current_module.file_path = self.path;
                 case MACRO:
