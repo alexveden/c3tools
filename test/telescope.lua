@@ -10,91 +10,90 @@ local make_entry = require("telescope.make_entry")
 local actions = require("telescope.actions")
 local action_state = require("telescope.actions.state")
 
-local tbl_clone = function(original)
-	local copy = {}
-	for key, value in pairs(original) do
-		copy[key] = value
-	end
-	return copy
-end
-
-local setup_opts = {
-	auto_quoting = true,
-	mappings = {},
-}
-
-local c3previewer = function(opts)
-	return previewers.new_buffer_previewer({
-		title = "C3 module preview",
-		get_buffer_by_name = function(_, entry)
-			return entry.value
-		end,
-
-		define_preview = function(self, entry)
-			-- print(vim.inspect(entry))
-
-			local words = {}
-			local arg_cnt = 0
-			for word in entry.value:gmatch("[%w%d_%p]+") do
-				table.insert(words, word)
-				arg_cnt = arg_cnt + 1
-				if arg_cnt == 2 then
-					break
-				end
-			end
-			if arg_cnt == 0 then
-				return nil
-			end
-
-			local cmd = vim.tbl_flatten({
-				"/home/ubertrader/code/c3test/build/c3fzf",
-				"--preview",
-				words,
-			})
-
-			putils.job_maker(cmd, self.state.bufnr, {
-				value = entry.value,
-				bufname = self.state.bufname,
-				cwd = opts.cwd,
-				callback = function(bufnr, content)
-					if not content then
-						return
-					end
-					-- print(content)
-					require("telescope.previewers.utils").highlighter(bufnr, "c3")
-				end,
-			})
-		end,
-	})
-end
-
-local c3fzf_sorter = function(opts)
-	opts = opts or {}
-	local fzy = opts.fzy_mod or require("telescope.algos.fzy")
-
-	local fzy_sorter = sorters.get_generic_fuzzy_sorter(opts)
-
-	return sorters.Sorter:new({
-		scoring_function = function(_, prompt, line, _)
-			local words = {}
-			for word in prompt:gmatch("[%w%d_%p]+") do
-				table.insert(words, word)
-			end
-			if #words > 2 then
-				-- print(words[#words])
-				return fzy_sorter.scoring_function(nil, words[#words], line, nil)
-			else
-				return 1
-			end
-		end,
-
-		highlighter = function(_, prompt, display)
-			return fzy.positions(prompt, display)
-		end,
-	})
-end
-
 local c3fzf = function(opts)
+	local tbl_clone = function(original)
+		local copy = {}
+		for key, value in pairs(original) do
+			copy[key] = value
+		end
+		return copy
+	end
+
+	local setup_opts = {
+		auto_quoting = true,
+		mappings = {},
+	}
+
+	local c3previewer = function(opts)
+		return previewers.new_buffer_previewer({
+			title = "C3 module preview",
+			get_buffer_by_name = function(_, entry)
+				return entry.value
+			end,
+
+			define_preview = function(self, entry)
+				-- print(vim.inspect(entry))
+
+				local words = {}
+				local arg_cnt = 0
+				for word in entry.value:gmatch("[%w%d_%p]+") do
+					table.insert(words, word)
+					arg_cnt = arg_cnt + 1
+					if arg_cnt == 2 then
+						break
+					end
+				end
+				if arg_cnt == 0 then
+					return nil
+				end
+
+				local cmd = vim.tbl_flatten({
+					"/home/ubertrader/code/c3test/build/c3fzf",
+					"--preview",
+					words,
+				})
+
+				putils.job_maker(cmd, self.state.bufnr, {
+					value = entry.value,
+					bufname = self.state.bufname,
+					cwd = opts.cwd,
+					callback = function(bufnr, content)
+						if not content then
+							return
+						end
+						-- print(content)
+						require("telescope.previewers.utils").highlighter(bufnr, "c3")
+					end,
+				})
+			end,
+		})
+	end
+
+	local c3fzf_sorter = function(opts)
+		opts = opts or {}
+		local fzy = opts.fzy_mod or require("telescope.algos.fzy")
+
+		local fzy_sorter = sorters.get_generic_fuzzy_sorter(opts)
+
+		return sorters.Sorter:new({
+			scoring_function = function(_, prompt, line, _)
+				local words = {}
+				for word in prompt:gmatch("[%w%d_%p]+") do
+					table.insert(words, word)
+				end
+				if #words > 2 then
+					-- print(words[#words])
+					return fzy_sorter.scoring_function(nil, words[#words], line, nil)
+				else
+					return 1
+				end
+			end,
+
+			highlighter = function(_, prompt, display)
+				return fzy.positions(prompt, display)
+			end,
+		})
+	end
 	opts = vim.tbl_extend("force", setup_opts, opts or {})
 
 	opts.vimgrep_arguments = opts.vimgrep_arguments or conf.vimgrep_arguments
@@ -137,7 +136,7 @@ local c3fzf = function(opts)
 
 				local sel_prompt = selection[1]
 				if not sel_prompt:find(" ") then
-				  sel_prompt = sel_prompt .. " ."
+					sel_prompt = sel_prompt .. " ."
 				end
 				current_picker:reset_prompt(sel_prompt)
 			end)
@@ -147,34 +146,5 @@ local c3fzf = function(opts)
 
 	picker:find()
 end
-c3fzf()
 
--- local pickers = require "telescope.pickers"
--- local finders = require "telescope.finders"
--- local conf = require("telescope.config").values
--- local actions = require "telescope.actions"
--- local action_state = require "telescope.actions.state"
---
--- -- our picker function: colors
--- local colors = function(opts)
---   opts = opts or {}
---   pickers.new(opts, {
---     prompt_title = "colors",
---     finder = finders.new_oneshot_job({
---         "/home/ubertrader/code/c3test/build/c3fzf"
---     }, opts ),
---     sorter = conf.generic_sorter(opts),
---     attach_mappings = function(prompt_bufnr, map)
---       actions.select_default:replace(function()
---         actions.close(prompt_bufnr)
---         local selection = action_state.get_selected_entry()
---         print(vim.inspect(selection))
---         -- vim.api.nvim_put({ selection[1] }, "", false, true)
---       end)
---       return true
---     end,
---   }):find()
--- end
---
--- -- to execute the function
--- colors()
+c3fzf()
