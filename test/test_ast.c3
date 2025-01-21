@@ -201,7 +201,7 @@ fn void test_node() {
 
     test::equal(func.type, TokenType.FN);
     test::equal(ast.@node_join(func.name, contents), "test_node");
-    test::equal(ast.@node_join(func.ret_type, contents), "void");
+    test::equal(ast.@node_join(func.ftype, contents), "void");
     test::equal(func.params, null);
 
     io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
@@ -233,7 +233,7 @@ fn List(<int>) test_node() {
 
     test::equal(func.type, TokenType.FN);
     test::equal(ast.@node_join(func.name, contents), "test_node");
-    test::equal(ast.@node_join(func.ret_type, contents), "List,(<,int,>)");
+    test::equal(ast.@node_join(func.ftype, contents), "List,(<,int,>)");
     test::equal(func.params, null);
 
     io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
@@ -262,7 +262,7 @@ fn int[<2>] test_node() {
 
     test::equal(func.type, TokenType.FN);
     test::equal(ast.@node_join(func.name, contents), "test_node");
-    test::equal(ast.@node_join(func.ret_type, contents), "int,[<,2,>]");
+    test::equal(ast.@node_join(func.ftype, contents), "int,[<,2,>]");
     test::equal(func.params, null);
 
     io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
@@ -291,7 +291,7 @@ fn MyType* test_node() {
 
     test::equal(func.type, TokenType.FN);
     test::equal(ast.@node_join(func.name, contents), "test_node");
-    test::equal(ast.@node_join(func.ret_type, contents), "MyType,*");
+    test::equal(ast.@node_join(func.ftype, contents), "MyType,*");
     test::equal(func.params, null);
 
     io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
@@ -320,7 +320,7 @@ fn void test_node(int a, List(<int>) b) @test @inline @if(env::LIBC) {
 
     test::equal(func.type, TokenType.FN);
     test::equal(ast.@node_join(func.name, contents), "test_node");
-    test::equal(ast.@node_join(func.ret_type, contents), "void");
+    test::equal(ast.@node_join(func.ftype, contents), "void");
 
     test::not_equal(func.params, null);
     test::equal(ast.@node_len(func.params), 2);
@@ -522,7 +522,7 @@ fn void test_node(int a, int b = 2) @test @inline @if(env::LIBC) {
 
     test::equal(func.type, TokenType.FN);
     test::equal(ast.@node_join(func.name, contents), "test_node");
-    test::equal(ast.@node_join(func.ret_type, contents), "void");
+    test::equal(ast.@node_join(func.ftype, contents), "void");
 
     test::not_equal(func.params, null);
     test::equal(ast.@node_len(func.params), 2);
@@ -569,7 +569,7 @@ fn MyType* MyFoo.test_node(&self) {
     test::equal(func.type, TokenType.FN);
     test::equal(func.value, "MyFoo.test_node");
     test::equal(ast.@node_join(func.name, contents), "MyFoo,test_node");
-    test::equal(ast.@node_join(func.ret_type, contents), "MyType,*");
+    test::equal(ast.@node_join(func.ftype, contents), "MyType,*");
 
     test::equal(ast.@node_len(func.params), 1);
     AstCallableParam* param;
@@ -604,7 +604,7 @@ fn char! String.to_uchar(s, int base = 10) @inline @test => s.@to_integer(char, 
     test::not_equal(func, null);
 
     test::equal(func.type, TokenType.FN);
-    test::equal(ast.@node_join(func.ret_type, contents), "char,!");
+    test::equal(ast.@node_join(func.ftype, contents), "char,!");
     test::equal(ast.@node_join(func.name, contents), "String,to_uchar");
     test::equal(ast.@node_join(func.attributes, contents), "@inline,@test");
     test::not_equal(func.params, null);
@@ -649,7 +649,7 @@ macro MyFoo.@test_macro(self) {
     test::not_equal(func, null);
 
     test::equal(func.type, TokenType.MACRO);
-    test::equal(ast.@node_join(func.ret_type, contents), "");
+    test::equal(ast.@node_join(func.ftype, contents), "");
     test::equal(ast.@node_join(func.name, contents), "MyFoo,@test_macro");
 
     test::equal(ast.@node_len(func.params), 1);
@@ -686,7 +686,7 @@ macro MyType(<$it>) MyFoo.@test_macro(self) {
     test::not_equal(func, null);
 
     test::equal(func.type, TokenType.MACRO);
-    test::equal(ast.@node_join(func.ret_type, contents), "MyType,(<,$it,>)");
+    test::equal(ast.@node_join(func.ftype, contents), "MyType,(<,$it,>)");
     test::equal(ast.@node_join(func.name, contents), "MyFoo,@test_macro");
 
     test::equal(ast.@node_len(func.params), 1);
@@ -723,8 +723,8 @@ macro @test_macro(self) {
     test::not_equal(func, null);
 
     test::equal(func.type, TokenType.MACRO);
-    test::equal(func.ret_type, null);
-    test::equal(ast.@node_join(func.ret_type, contents), "");
+    test::equal(func.ftype, null);
+    test::equal(ast.@node_join(func.ftype, contents), "");
     test::equal(ast.@node_join(func.name, contents), "@test_macro");
 
     test::equal(ast.@node_len(func.params), 1);
@@ -761,8 +761,8 @@ macro @test_macro(Type* #self, $bar) {
     test::not_equal(func, null);
 
     test::equal(func.type, TokenType.MACRO);
-    test::equal(func.ret_type, null);
-    test::equal(ast.@node_join(func.ret_type, contents), "");
+    test::equal(func.ftype, null);
+    test::equal(ast.@node_join(func.ftype, contents), "");
     test::equal(ast.@node_join(func.name, contents), "@test_macro");
 
     test::equal(ast.@node_len(func.params), 2);
@@ -805,8 +805,8 @@ macro @test_macro(double... a, ...args) {
     test::not_equal(func, null);
 
     test::equal(func.type, TokenType.MACRO);
-    test::equal(func.ret_type, null);
-    test::equal(ast.@node_join(func.ret_type, contents), "");
+    test::equal(func.ftype, null);
+    test::equal(ast.@node_join(func.ftype, contents), "");
     test::equal(ast.@node_join(func.name, contents), "@test_macro");
 
     test::equal(ast.@node_len(func.params), 2);
@@ -849,8 +849,8 @@ macro @test_macro(Type* #self @unused, $bar @export("foo") @ok) {
     test::not_equal(func, null);
 
     test::equal(func.type, TokenType.MACRO);
-    test::equal(func.ret_type, null);
-    test::equal(ast.@node_join(func.ret_type, contents), "");
+    test::equal(func.ftype, null);
+    test::equal(ast.@node_join(func.ftype, contents), "");
     test::equal(ast.@node_join(func.name, contents), "@test_macro");
 
     test::equal(ast.@node_len(func.params), 2);
@@ -898,8 +898,8 @@ macro @for_each(list; @body(it))
     test::not_equal(func, null);
 
     test::equal(func.type, TokenType.MACRO);
-    test::equal(func.ret_type, null);
-    test::equal(ast.@node_join(func.ret_type, contents), "");
+    test::equal(func.ftype, null);
+    test::equal(ast.@node_join(func.ftype, contents), "");
     test::equal(ast.@node_join(func.name, contents), "@for_each");
 
     test::equal(ast.@node_len(func.params), 2);
@@ -1135,7 +1135,7 @@ interface NodeI @local {
     test::not_equal(func, null);
 
     test::equal(func.type, TokenType.FN);
-    test::equal(ast.@node_join(func.ret_type, contents), "bool");
+    test::equal(ast.@node_join(func.ftype, contents), "bool");
     test::equal(ast.@node_join(func.name, contents), "foo");
     test::equal(ast.@node_join(func.attributes, contents), "@local");
 
@@ -1163,7 +1163,7 @@ interface NodeI @local {
     test::not_equal(func, null);
 
     test::equal(func.type, TokenType.FN);
-    test::equal(ast.@node_join(func.ret_type, contents),`List,(<,int,>)` );
+    test::equal(ast.@node_join(func.ftype, contents),`List,(<,int,>)` );
     test::equal(ast.@node_join(func.name, contents), "bar");
     test::equal(ast.@node_join(func.attributes, contents), "@local");
 
@@ -1210,7 +1210,7 @@ interface NodeI @local {
     test::not_equal(func, null);
 
     test::equal(func.type, TokenType.FN);
-    test::equal(ast.@node_join(func.ret_type, contents), "bool");
+    test::equal(ast.@node_join(func.ftype, contents), "bool");
     test::equal(ast.@node_join(func.name, contents), "foo");
     test::equal(ast.@node_join(func.attributes, contents), "@local");
     test::equal(ast.@node_join(func.docs, contents), "<* Doc string\n    ");
@@ -1239,7 +1239,7 @@ interface NodeI @local {
     test::not_equal(func, null);
 
     test::equal(func.type, TokenType.FN);
-    test::equal(ast.@node_join(func.ret_type, contents),`List,(<,int,>)` );
+    test::equal(ast.@node_join(func.ftype, contents),`List,(<,int,>)` );
     test::equal(ast.@node_join(func.name, contents), "bar");
     test::equal(ast.@node_join(func.attributes, contents), "@local");
     test::equal(ast.@node_join(func.docs, contents), "<* another doc string ");
@@ -1287,7 +1287,7 @@ struct MyStruct @local {
     test::not_equal(member, null);
     test::equal(member.type, TokenType.TYPE_IDENT);
     test::equal(member.value, "a");
-    test::equal(ast.@node_join(member.field, contents), "int");
+    test::equal(ast.@node_join(member.ftype, contents), "int");
     test::equal(ast.@node_join(member.attributes, contents), "");
     test::equal(ast.@node_join(member.docs, contents), "");
 
@@ -1296,7 +1296,7 @@ struct MyStruct @local {
     test::not_equal(member, null);
     test::equal(member.type, TokenType.TYPE_IDENT);
     test::equal(member.value, "b");
-    test::equal(ast.@node_join(member.field, contents), "MyType");
+    test::equal(ast.@node_join(member.ftype, contents), "MyType");
     test::equal(ast.@node_join(member.attributes, contents), "@test");
     test::equal(ast.@node_join(member.docs, contents), "");
 
@@ -1344,7 +1344,7 @@ struct MyStruct @local {
     test::not_equal(member, null);
     test::equal(member.type, TokenType.TYPE_IDENT);
     test::equal(member.value, "a");
-    test::equal(ast.@node_join(member.field, contents), "int");
+    test::equal(ast.@node_join(member.ftype, contents), "int");
     test::equal(ast.@node_join(member.attributes, contents), "");
     test::equal(ast.@node_join(member.docs, contents), "<* some stuff ");
 
@@ -1352,7 +1352,7 @@ struct MyStruct @local {
     test::not_equal(member, null);
     test::equal(member.type, TokenType.TYPE_IDENT);
     test::equal(member.value, "b");
-    test::equal(ast.@node_join(member.field, contents), "List,(<,MyType,>)");
+    test::equal(ast.@node_join(member.ftype, contents), "List,(<,MyType,>)");
     test::equal(ast.@node_join(member.attributes, contents), "");
     test::equal(ast.@node_join(member.docs, contents), "<* another doc ");
 
@@ -1402,7 +1402,7 @@ struct MyStruct @local {
     test::not_equal(member, null);
     test::equal(member.type, TokenType.STRUCT);
     test::equal(member.value, "my_sub");
-    test::equal(ast.@node_join(member.field, contents), ``);
+    test::equal(ast.@node_join(member.ftype, contents), ``);
 
     test::equal(ast.@node_join(member.attributes, contents), "@test");
     test::equal(ast.@node_join(member.docs, contents), ``);
@@ -1413,7 +1413,7 @@ struct MyStruct @local {
     test::not_equal(member, null);
     test::equal(member.type, TokenType.TYPE_IDENT);
     test::equal(member.value, "b");
-    test::equal(ast.@node_join(member.field, contents), `int`);
+    test::equal(ast.@node_join(member.ftype, contents), `int`);
 
     test::equal(ast.@node_join(member.attributes, contents), "@test");
     test::equal(ast.@node_join(member.docs, contents), ``);
@@ -1469,7 +1469,7 @@ struct MyStruct @local {
     test::not_equal(member, null);
     test::equal(member.type, TokenType.STRUCT);
     test::equal(member.value, "my_sub");
-    test::equal(ast.@node_join(member.field, contents), ``);
+    test::equal(ast.@node_join(member.ftype, contents), ``);
 
     test::equal(ast.@node_join(member.attributes, contents), "@test");
     test::equal(ast.@node_join(member.docs, contents), `<*doc2`);
@@ -1480,7 +1480,7 @@ struct MyStruct @local {
     test::not_equal(member, null);
     test::equal(member.type, TokenType.TYPE_IDENT);
     test::equal(member.value, "b");
-    test::equal(ast.@node_join(member.field, contents), `int`);
+    test::equal(ast.@node_join(member.ftype, contents), `int`);
 
     test::equal(ast.@node_join(member.attributes, contents), "@test");
     test::equal(ast.@node_join(member.docs, contents), `<*doc4`);
@@ -1533,7 +1533,7 @@ struct MyStruct @local {
     test::not_equal(field1, null);
     test::equal(field1.type, TokenType.STRUCT);
     test::equal(field1.value, "my_sub");
-    test::equal(ast.@node_join(field1.field, contents), ``);
+    test::equal(ast.@node_join(field1.ftype, contents), ``);
     test::equal(ast.@node_join(field1.members, contents), `x,my_sub_2,f`);
     test::equal(ast.@node_len(field1.members), 3);
 
@@ -1545,7 +1545,7 @@ struct MyStruct @local {
     test::not_equal(field2, null);
     test::equal(field2.type, TokenType.TYPE_IDENT);
     test::equal(field2.value, "x");
-    test::equal(ast.@node_join(field2.field, contents), `int`);
+    test::equal(ast.@node_join(field2.ftype, contents), `int`);
     test::equal(ast.@node_join(field2.members, contents), ``);
     test::equal(ast.@node_len(field2.members), 0);
     test::equal(ast.@node_join(field2.attributes, contents), "");
@@ -1556,7 +1556,7 @@ struct MyStruct @local {
     test::not_equal(field2, null);
     test::equal(field2.type, TokenType.STRUCT);
     test::equal(field2.value, "my_sub_2");
-    test::equal(ast.@node_join(field2.field, contents), ``);
+    test::equal(ast.@node_join(field2.ftype, contents), ``);
     test::equal(ast.@node_join(field2.members, contents), `y,z`);
     test::equal(ast.@node_len(field2.members), 2);
     test::equal(ast.@node_join(field2.attributes, contents), "@foo");
@@ -1567,7 +1567,7 @@ struct MyStruct @local {
     test::not_equal(field2, null);
     test::equal(field2.type, TokenType.TYPE_IDENT);
     test::equal(field2.value, "f");
-    test::equal(ast.@node_join(field2.field, contents), `int`);
+    test::equal(ast.@node_join(field2.ftype, contents), `int`);
     test::equal(ast.@node_join(field2.members, contents), ``);
     test::equal(ast.@node_len(field2.members), 0);
     test::equal(ast.@node_join(field2.attributes, contents), "");
@@ -1579,7 +1579,7 @@ struct MyStruct @local {
     test::not_equal(field2, null);
     test::equal(field2.type, TokenType.TYPE_IDENT);
     test::equal(field2.value, "b");
-    test::equal(ast.@node_join(field2.field, contents), `int`);
+    test::equal(ast.@node_join(field2.ftype, contents), `int`);
 
     test::equal(ast.@node_join(field2.attributes, contents), "@test");
     test::equal(ast.@node_join(field2.docs, contents), ``);
@@ -1631,7 +1631,7 @@ struct MyStruct @local {
     test::not_equal(member, null);
     test::equal(member.type, TokenType.STRUCT);
     test::equal(member.value, "");
-    test::equal(ast.@node_join(member.field, contents), ``);
+    test::equal(ast.@node_join(member.ftype, contents), ``);
 
     test::equal(ast.@node_join(member.attributes, contents), "@test");
     test::equal(ast.@node_join(member.docs, contents), ``);
@@ -1642,7 +1642,7 @@ struct MyStruct @local {
     test::not_equal(member, null);
     test::equal(member.type, TokenType.TYPE_IDENT);
     test::equal(member.value, "b");
-    test::equal(ast.@node_join(member.field, contents), `int`);
+    test::equal(ast.@node_join(member.ftype, contents), `int`);
 
     test::equal(ast.@node_join(member.attributes, contents), "@test");
     test::equal(ast.@node_join(member.docs, contents), ``);
@@ -1692,7 +1692,7 @@ struct MyStruct @local {
     test::not_equal(member, null);
     test::equal(member.type, TokenType.INLINE);
     test::equal(member.value, "base");
-    test::equal(ast.@node_join(member.field, contents), `List,(<,int,>)`);
+    test::equal(ast.@node_join(member.ftype, contents), `List,(<,int,>)`);
 
     test::equal(ast.@node_join(member.attributes, contents), "@test");
     test::equal(ast.@node_join(member.docs, contents), `<*inline doc`);
@@ -1703,7 +1703,7 @@ struct MyStruct @local {
     test::not_equal(member, null);
     test::equal(member.type, TokenType.TYPE_IDENT);
     test::equal(member.value, "b");
-    test::equal(ast.@node_join(member.field, contents), `int`);
+    test::equal(ast.@node_join(member.ftype, contents), `int`);
 
     test::equal(ast.@node_join(member.attributes, contents), "@test");
     test::equal(ast.@node_join(member.docs, contents), ``);
@@ -1750,7 +1750,7 @@ union MyUnion @local {
     test::not_equal(member, null);
     test::equal(member.type, TokenType.TYPE_IDENT);
     test::equal(member.value, "a");
-    test::equal(ast.@node_join(member.field, contents), "int");
+    test::equal(ast.@node_join(member.ftype, contents), "int");
     test::equal(ast.@node_join(member.attributes, contents), "");
     test::equal(ast.@node_join(member.docs, contents), "");
 
@@ -1759,7 +1759,7 @@ union MyUnion @local {
     test::not_equal(member, null);
     test::equal(member.type, TokenType.TYPE_IDENT);
     test::equal(member.value, "b");
-    test::equal(ast.@node_join(member.field, contents), "int");
+    test::equal(ast.@node_join(member.ftype, contents), "int");
     test::equal(ast.@node_join(member.attributes, contents), "@test");
     test::equal(ast.@node_join(member.docs, contents), "");
 
@@ -1809,7 +1809,7 @@ struct MyUnion @local {
     test::not_equal(member, null);
     test::equal(member.type, TokenType.UNION);
     test::equal(member.value, "");
-    test::equal(ast.@node_join(member.field, contents), "");
+    test::equal(ast.@node_join(member.ftype, contents), "");
     test::equal(ast.@node_join(member.attributes, contents), "");
     test::equal(ast.@node_join(member.docs, contents), "");
 
@@ -1818,7 +1818,7 @@ struct MyUnion @local {
     test::not_equal(member, null);
     test::equal(member.type, TokenType.UNION);
     test::equal(member.value, "foo");
-    test::equal(ast.@node_join(member.field, contents), "");
+    test::equal(ast.@node_join(member.ftype, contents), "");
     test::equal(ast.@node_join(member.attributes, contents), "@test");
     test::equal(ast.@node_join(member.docs, contents), "");
     test::equal(ast.@node_join(member.members, contents), "x,z");
@@ -1865,7 +1865,7 @@ bitstruct MyBit @local : char
     test::not_equal(member, null);
     test::equal(member.type, TokenType.TYPE_IDENT);
     test::equal(member.value, "a");
-    test::equal(ast.@node_join(member.field, contents), "int,:,0,..,2");
+    test::equal(ast.@node_join(member.ftype, contents), "int,:,0,..,2");
     test::equal(ast.@node_join(member.attributes, contents), "");
     test::equal(ast.@node_join(member.docs, contents), "");
 
@@ -1874,7 +1874,7 @@ bitstruct MyBit @local : char
     test::not_equal(member, null);
     test::equal(member.type, TokenType.TYPE_IDENT);
     test::equal(member.value, "b");
-    test::equal(ast.@node_join(member.field, contents), "int,:,4,..,6");
+    test::equal(ast.@node_join(member.ftype, contents), "int,:,4,..,6");
     test::equal(ast.@node_join(member.attributes, contents), "@test");
     test::equal(ast.@node_join(member.docs, contents), "");
 
@@ -1922,7 +1922,7 @@ struct MyBit {
     test::not_equal(member, null);
     test::equal(member.type, TokenType.BITSTRUCT);
     test::equal(member.value, "my_bit");
-    test::equal(ast.@node_join(member.field, contents), "");
+    test::equal(ast.@node_join(member.ftype, contents), "");
     test::equal(ast.@node_join(member.attributes, contents), "@local");
     test::equal(ast.@node_join(member.docs, contents), "");
     test::equal(ast.@node_join(member.members, contents), "a,b,c");
@@ -1957,7 +1957,7 @@ def Int32 = int;
 
     test::equal(ast.@node_join(struct_type.attributes, contents), "");
     test::equal(ast.@node_join(struct_type.docs, contents), "<*def doc");
-    test::equal(ast.@node_join(struct_type.field, contents), "int");
+    test::equal(ast.@node_join(struct_type.ftype, contents), "int");
 
     io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
     test::equal(struct_type.istart, 43);
@@ -1988,7 +1988,7 @@ def @Int32 = { @foo @bar };
 
     test::equal(ast.@node_join(struct_type.attributes, contents), "");
     test::equal(ast.@node_join(struct_type.docs, contents), "<*def doc");
-    test::equal(ast.@node_join(struct_type.field, contents), "{,@foo,@bar,}");
+    test::equal(ast.@node_join(struct_type.ftype, contents), "{,@foo,@bar,}");
 
     io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
     test::equal(struct_type.istart, 43);
@@ -2020,7 +2020,7 @@ def IntList32 @test @foo = inline List(<int>);
     test::equal(ast.@node_join(struct_type.attributes, contents), "@test,@foo");
     test::equal(ast.@node_join(struct_type.docs, contents), "<*def doc");
     // NOTE: inline expected to be excluded from type fields
-    test::equal(ast.@node_join(struct_type.field, contents), "List,(<,int,>)");
+    test::equal(ast.@node_join(struct_type.ftype, contents), "List,(<,int,>)");
 
     io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
     test::equal(struct_type.istart, 43);
@@ -2051,7 +2051,7 @@ distinct Int32 = int;
 
     test::equal(ast.@node_join(struct_type.attributes, contents), "");
     test::equal(ast.@node_join(struct_type.docs, contents), "<*def doc");
-    test::equal(ast.@node_join(struct_type.field, contents), "int");
+    test::equal(ast.@node_join(struct_type.ftype, contents), "int");
 
     io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
     test::equal(struct_type.istart, 43);
@@ -2082,7 +2082,7 @@ const Int32 A_FOO_BAR = 123;
 
     test::equal(ast.@node_join(struct_type.attributes, contents), "");
     test::equal(ast.@node_join(struct_type.docs, contents), "<*def doc");
-    test::equal(ast.@node_join(struct_type.field, contents), "Int32");
+    test::equal(ast.@node_join(struct_type.ftype, contents), "Int32");
 
     io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
     test::equal(struct_type.istart, 43);
@@ -2113,7 +2113,7 @@ def NodeParser = fn bool (Ast* ast, AstNode* node, Token* t, NodeParserState* st
 
     test::equal(ast.@node_join(struct_type.attributes, contents), "");
     test::equal(ast.@node_join(struct_type.docs, contents), "<*def doc");
-    test::equal(ast.@node_join(struct_type.field, contents), "fn,bool,(,Ast,*,ast,,,AstNode,*,node,,,Token,*,t,,,NodeParserState,*,state,)");
+    test::equal(ast.@node_join(struct_type.ftype, contents), "fn,bool,(,Ast,*,ast,,,AstNode,*,node,,,Token,*,t,,,NodeParserState,*,state,)");
 
     io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
     test::equal(struct_type.istart, 43);
@@ -2184,8 +2184,8 @@ macro fetch_add(ptr, y, AtomicOrdering $ordering = SEQ_CONSISTENT, bool $volatil
     test::not_equal(func, null);
 
     test::equal(func.type, TokenType.MACRO);
-    test::equal(func.ret_type, null);
-    test::equal(ast.@node_join(func.ret_type, contents), "");
+    test::equal(func.ftype, null);
+    test::equal(ast.@node_join(func.ftype, contents), "");
     test::equal(ast.@node_join(func.name, contents), "fetch_add");
 
     test::equal(ast.@node_join(func.params, contents), "ptr,y,$ordering,$volatile,$alignment");
@@ -2221,8 +2221,8 @@ macro MyType.fetch_add(ptr, y, AtomicOrdering $ordering = SEQ_CONSISTENT, bool $
     test::not_equal(func, null);
 
     test::equal(func.type, TokenType.MACRO);
-    test::equal(func.ret_type, null);
-    test::equal(ast.@node_join(func.ret_type, contents), "");
+    test::equal(func.ftype, null);
+    test::equal(ast.@node_join(func.ftype, contents), "");
     test::equal(ast.@node_join(func.name, contents), "MyType,fetch_add");
 
     test::equal(ast.@node_join(func.params, contents), "ptr,y,$ordering,$volatile,$alignment");
@@ -2260,7 +2260,7 @@ fn MyType* MyFoo.test_node(&self) {
     test::equal(func.type, TokenType.FN);
     test::equal(func.value, "MyFoo.test_node");
     test::equal(ast.@node_join(func.name, contents), "MyFoo,test_node");
-    test::equal(ast.@node_join(func.ret_type, contents), "MyType,*");
+    test::equal(ast.@node_join(func.ftype, contents), "MyType,*");
 
     test::equal(ast.@node_len(func.params), 1);
     AstCallableParam* param;
@@ -2272,7 +2272,7 @@ fn MyType* MyFoo.test_node(&self) {
     test::equal(ast.@node_join(param.param_type, contents), "MyFoo");
 
     io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
-    test::equal(func.istart, 31);
+    test::equal(func.istart, 200);
     test::equal(func.iend, code.len-4);
     test::equal(code[func.iend], '}');
 }

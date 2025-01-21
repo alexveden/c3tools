@@ -63,37 +63,44 @@ fn void print_decl_def(AstTypeDef* d, bool is_full_preview) {
     assert(d.type == TokenType.DEF);
 
     io::printf("def %s = ", d.value);
-    print_nodes("%s", d.field, sep: " ");
+    print_nodes("%s", d.ftype, sep: " ");
     io::printfn(";");
 }
 fn void print_decl_distinct(AstTypeDef* d, bool is_full_preview) {
     assert(d.type == TokenType.DISTINCT);
 
     io::printf("distinct %s = ", d.value);
-    print_nodes("%s", d.field);
+    print_nodes("%s", d.ftype);
     io::printfn(";");
 }
 fn void print_decl_const(AstTypeDef* d, bool is_full_preview) {
     assert(d.type == TokenType.CONST);
 
     io::printf("const ");
-    print_nodes("%s", d.field);
+    print_nodes("%s", d.ftype);
     io::printfn(" %s;", d.value);
 }
 fn void print_decl_enum(AstTypeDefEnumerable* d, bool is_full_preview) {
     assert(d.type == TokenType.ENUM);
 
+    if (is_full_preview) io::print("\n");
+
     io::printf("enum %s ", d.value);
     if (is_full_preview){
-        io::printfn("{\n");
-        print_nodes("%s,\n", d.values);
-        io::printfn("\n}");
+        io::printfn("{");
+        print_nodes("    %s,\n", d.values);
+        io::printfn("}");
     } else {
         io::printfn("{ ... }");
     }
 }
 
 fn void print_decl_struct(AstTypeDefStructural* d, bool is_full_preview, uint indent = 0) {
+
+    if (is_full_preview && indent == 0){
+        io::print("\n");
+        print_docs(d.docs);
+    } 
 
 	DString idt = dstring::temp_new();
 	for(uint i = 0; i < indent; i++){
@@ -102,7 +109,7 @@ fn void print_decl_struct(AstTypeDefStructural* d, bool is_full_preview, uint in
     io::printf("%s%s %s ", idt, lexer::token_type_to_string(d.type), d.value);
 
     if (is_full_preview){
-        io::printfn("%s{", idt);
+        io::printfn("{");
         for(AstTypeDef* node = d.members; node != null; node = (AstTypeDef*)node.next){ 
             switch(node.type) {
                 case STRUCT:
@@ -111,7 +118,7 @@ fn void print_decl_struct(AstTypeDefStructural* d, bool is_full_preview, uint in
                     print_decl_struct((AstTypeDefStructural*)node, true, indent + 4);
                 default:
                     io::printf("%s    ", idt);
-                    print_nodes("%s", node.field);
+                    print_nodes("%s", node.ftype);
                     io::printf(" %s;\n", node.value);
             }
         }
@@ -121,7 +128,23 @@ fn void print_decl_struct(AstTypeDefStructural* d, bool is_full_preview, uint in
     }
 }
 
+fn void print_docs(AstDoc* docs) {
+    if(!docs) return;
+
+    io::printf(docs.value);
+    for(AstDocContract* node = docs.contracts; node != null; node = (AstDocContract*)node.next){
+        io::printf("\n%s ", node.value);
+        print_nodes(" %s", node.items, sep: " ");
+    }
+    if(docs.contracts) io::print("\n");
+    io::printfn("*>");
+} 
+
 fn void print_decl_callable(AstCallable* d, bool is_full_preview) {
+    if(is_full_preview){
+        io::printf("\n");
+        print_docs(d.docs);
+    }
     switch(d.type){
         case FN:
             io::printf("fn    ");
@@ -130,37 +153,49 @@ fn void print_decl_callable(AstCallable* d, bool is_full_preview) {
         default:
             unreachable();
     }
-    io::printf(" ");
+    if (is_full_preview) print_nodes("%s", d.ftype);
+    if (d.ftype.value) io::printf(" ");
+
     print_nodes("%s", d.name, sep: ".");
 
     io::printf("(");
     for(AstCallableParam* node = d.params; node != null; node = (AstCallableParam*)node.next){ 
         if (is_full_preview) {
-            print_nodes("%s", node.param_type);
-            io::print(" ");
+            if (node.param_type) {
+                io::printf("%s", node.param_type.value);
+                if(node.param_type.next && node.param_type.next.value != "="){
+                    print_nodes("%s", node.param_type.next);
+                }
+                io::print(" ");
+            }
         }
-
         
         io::printf("%s", node.value);
+
+        if (is_full_preview && node.param_type) {
+            if(node.param_type.next && node.param_type.next.value == "="){
+                print_nodes("%s", node.param_type.next);
+            }
+        }
         if(node.next) {
             io::printf(", ");
         }
     }
     io::printf(")");
 
-    if(is_full_preview) {
-        io::printf(" -> ");
-        print_nodes("%s", d.ret_type);
-        io::printf("\n");
-    } else {
-        io::printfn("");
-    }
+    if (is_full_preview) print_nodes(" %s", d.attributes, sep: "");
+
+    io::printfn(" {} ");
 }
 fn void! print_preview(FzfSettings* settings, AstProject* proj, List(<ModuleDecl>) declarations, bool is_full_preview) @local {
 
     uint mod_idx = proj.mod_index[settings.module_filter]!!;
     AstModule* mod = proj.modules[mod_idx];
     io::printfn("module %s;\n", mod.value);
+    if(mod.docs) {
+        io::printf(mod.docs.value);
+        io::printfn("*>");
+    }
     io::printfn("/*             FILES           */");
     for(mod_idx; mod_idx < proj.modules.len(); mod_idx++) {
         if (mod.value != proj.modules[mod_idx].value) break; // got another module
@@ -273,6 +308,7 @@ fn int cmp_decl(ModuleDecl a, ModuleDecl b) @private
                 return false;
         }
     |};
+
     if(is_comparable_type) {
         return ast::cmp_str(a.decl.value, b.decl.value);
     } else {
@@ -317,6 +353,10 @@ fn void! find(FzfSettings *settings) @local {
             if (settings.type_filter && settings.type_filter != ".") {
                 if (!decl.value.contains(settings.type_filter)) continue;
             }
+            bool attr_is_filtered = {|
+                for(AstNode* decl = m.decls; decl != null; decl = decl.next) {
+                
+            |}
             declarations.push(ModuleDecl{.mod = m, .decl = decl});
         }
         
@@ -345,6 +385,7 @@ fn int main(String[] args)
 	// Defaults
 	FzfSettings settings = {
 	    .stdlib_path = "/home/ubertrader/code/c3c/lib",
+	    // .stdlib_path = "",
 	    .project_path = ".",
 	    .module_filter = ".",
 	    .type_filter = "",

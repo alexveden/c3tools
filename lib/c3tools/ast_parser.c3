@@ -269,7 +269,7 @@ fn bool Ast.parse_function(&ast, AstNode* node, Token* t, NodeParserState* state
                     nextcase STATE: state.transition(IDENT);
                 case DOT:
                     // macro MyType.test_macro() case
-                    AstNode** last_rtype = &node_func.ret_type;
+                    AstNode** last_rtype = &node_func.ftype;
                     while(*last_rtype) {
                         if(!last_rtype[0].next) {
                             assert(node_func.name == null);
@@ -288,13 +288,13 @@ fn bool Ast.parse_function(&ast, AstNode* node, Token* t, NodeParserState* state
                     if (state.scope_depth == 0) nextcase STATE: state.transition(IDENT);
                 case TYPE_IDENT:
                     // function name, make a transition if no scope and ret_type is set
-                    if (state.scope_depth == 0 && node_func.ret_type) {
+                    if (state.scope_depth == 0 && node_func.ftype) {
                         nextcase STATE: state.transition(IDENT);
                     } else {
                         nextcase default;
                     }
                 default:
-                    ast.@allc_add(AstNode, &node_func.ret_type, t);
+                    ast.@allc_add(AstNode, &node_func.ftype, t);
             }
         case IDENT:
             // function name 
@@ -635,12 +635,12 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
                                     AstTypeDefStructural, &node_struct.members, &ast.lexer.token); 
 
                         s.docs = (AstDoc*)state.sub_node;
-                        if (t.type == TYPE_IDENT)  ast.@allc_add(AstNode, &s.field, t);
+                        if (t.type == TYPE_IDENT)  ast.@allc_add(AstNode, &s.ftype, t);
                         s.value = "";
                         state.sub_node = s;
                     } else {
                         // Adding to existing type field (e.g. generic List(<MyType>) )
-                        ast.@allc_add(AstNode, &s.field, t);
+                        ast.@allc_add(AstNode, &s.ftype, t);
                     }
                 case IDENT:
                     assert(state.sub_node);
@@ -670,7 +670,7 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
                 default:
                     assert(state.sub_node);
                     AstTypeDefStructural* s = (AstTypeDefStructural*)state.sub_node;
-                    ast.@allc_add(AstNode, &s.field, t);
+                    ast.@allc_add(AstNode, &s.ftype, t);
                     break;
             }
         case FOREACH: // parsing sub structs
@@ -744,7 +744,7 @@ fn bool Ast.parse_typedef(&ast, AstNode* node, Token* t, NodeParserState* state)
                 case EOS:
                     nextcase STATE: state.transition(EOF);
                 default:
-                    ast.@allc_add(AstNode, &node_typedef.field, t);
+                    ast.@allc_add(AstNode, &node_typedef.ftype, t);
             }
 
         case EOF:
@@ -772,7 +772,7 @@ fn bool Ast.parse_constants(&ast, AstNode* node, Token* t, NodeParserState* stat
                 case CONST_IDENT:
                     if (!node_typedef.value) node_typedef.value = ast.@allc_str(t.value);
                 case TYPE_IDENT:
-                    ast.@allc_add(AstNode, &node_typedef.field, t);
+                    ast.@allc_add(AstNode, &node_typedef.ftype, t);
                 case AT_IDENT:
                     ast.lexer.extend_current_attribute();
                     ast.@allc_add(AstNode, &node_typedef.attributes, t);

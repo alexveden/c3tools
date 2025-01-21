@@ -71,8 +71,8 @@ fn int main(String[] args)
 	if(agp.arguments.len == 0){
 		agp.print_usage()!!;
 		return 1;
-	}
 	
+	}
 	if(catch err = process_file(agp.arguments[0])) {
 	    io::printfn("process_file error with: %s", err);
 	    return 1;

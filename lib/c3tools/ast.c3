@@ -52,9 +52,9 @@ struct AstModule {
 
 struct AstTypeDef {
     inline AstNode node;
-    AstNode* field;
     AstNode* attributes;
     AstDoc* docs;
+    AstNode* ftype; // field or function return type
 }
 struct AstTypeDefEnumerable {
     inline AstTypeDef node;
@@ -71,14 +71,13 @@ struct AstTypeDefStructural {
 }
 
 struct AstCallable {
-    inline AstNode node;
+    inline AstTypeDef node;
     AstNode* name;
-    AstNode* ret_type;
     AstCallableParam* params;
-    AstNode* attributes;
-    AstDoc* docs;
     uint iscope_start;
 }
+
+
 struct AstCallableParam {
     inline AstNode node;
     AstNode* param_type;
