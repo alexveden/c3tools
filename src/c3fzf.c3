@@ -63,7 +63,7 @@ fn void print_decl_def(AstTypeDef* d, bool is_full_preview) {
     assert(d.type == TokenType.DEF);
 
     io::printf("def %s = ", d.value);
-    print_nodes("%s", d.field);
+    print_nodes("%s", d.field, sep: " ");
     io::printfn(";");
 }
 fn void print_decl_distinct(AstTypeDef* d, bool is_full_preview) {
@@ -112,7 +112,7 @@ fn void print_decl_struct(AstTypeDefStructural* d, bool is_full_preview, uint in
                 default:
                     io::printf("%s    ", idt);
                     print_nodes("%s", node.field);
-                    io::printf(" %s,\n", node.value);
+                    io::printf(" %s;\n", node.value);
             }
         }
         io::printfn("%s}", idt);
@@ -160,12 +160,13 @@ fn void! print_preview(FzfSettings* settings, AstProject* proj, List(<ModuleDecl
 
     uint mod_idx = proj.mod_index[settings.module_filter]!!;
     AstModule* mod = proj.modules[mod_idx];
-    io::printfn("FILES:");
+    io::printfn("module %s;\n", mod.value);
+    io::printfn("/*             FILES           */");
     for(mod_idx; mod_idx < proj.modules.len(); mod_idx++) {
         if (mod.value != proj.modules[mod_idx].value) break; // got another module
         mod = proj.modules[mod_idx];
 
-        io::printf("%s", mod.value);
+        io::printf("// %s", mod.value);
         for(AstNode* node = mod.attributes; node != null; node = node.next){
             io::printf(" %s", node.value);
         } 
@@ -173,8 +174,10 @@ fn void! print_preview(FzfSettings* settings, AstProject* proj, List(<ModuleDecl
         io::printf(" at: %s:%d\n", mod.file_path, mod.src_line);
     }
 
-    io::printfn("\n\nTYPES:");
+    io::printfn("\n\n/*             TYPES           */");
     foreach(d: declarations) {
+        if(d.decl == null) continue;
+
         switch(d.decl.type) {
             case DEF:
                 print_decl_def((AstTypeDef*)d.decl, is_full_preview);
@@ -198,8 +201,10 @@ fn void! print_preview(FzfSettings* settings, AstProject* proj, List(<ModuleDecl
 
     }
 
-    io::printfn("\n\nCALLABLES:");
+    io::printfn("\n\n/*             CALLABLE           */");
     foreach(d: declarations) {
+        if(d.decl == null) continue;
+
         switch(d.decl.type) {
             case FN:
             case MACRO:
@@ -228,19 +233,52 @@ fn void! print_preview(FzfSettings* settings, AstProject* proj, List(<ModuleDecl
 
 fn int cmp_decl(ModuleDecl a, ModuleDecl b) @private
 {
-    if (a.mod != b.mod){
-        // Check if it's a different files under the same module name
-        int mcmp = ast::cmp_module(a.mod, b.mod);
-        if (mcmp != 0) return mcmp;
+    // if (a.mod != b.mod){
+    //     // Check if it's a different files under the same module name
+    //     int mcmp = ast::cmp_module(a.mod, b.mod);
+    //     if (mcmp != 0) return mcmp;
+    // }
+    if (a.decl == null || b.decl == null) {
+        // synth module-wide decl filter
+        if (a.decl == null && b.decl != null) return -1;
+        if (a.decl != null && b.decl == null) return 1;
+        return 0;
     }
     if (a.decl.type == b.decl.type) {
         return ast::cmp_str(a.decl.value, b.decl.value);
     }
-    if((a.decl.type == FN || a.decl.type == MACRO) && (b.decl.type == FN || b.decl.type == MACRO)){
+    bool is_comparable_type = {|
+        switch(a.decl.type) {
+            case FN:
+            case MACRO:
+                switch(b.decl.type){
+                    case FN:
+                    case MACRO:
+                        return true;
+                    default:
+                        return false;
+                }
+            case STRUCT:
+            case DEF:
+            case DISTINCT:
+                switch(b.decl.type){
+                    case STRUCT:
+                    case DEF:
+                    case DISTINCT:
+                        return true;
+                    default:
+                        return false;
+                }
+            default:
+                return false;
+        }
+    |};
+    if(is_comparable_type) {
         return ast::cmp_str(a.decl.value, b.decl.value);
+    } else {
+        return a.decl.type - b.decl.type;
     }
 
-    return a.decl.type - b.decl.type;
 }
 
 fn void! find(FzfSettings *settings) @local {
@@ -271,6 +309,10 @@ fn void! find(FzfSettings *settings) @local {
             }
         }
 
+        if(settings.type_filter == "."){
+            declarations.push(ModuleDecl{.mod = m, .decl = null});
+        }
+
         for(AstNode* decl = m.decls; decl != null; decl = decl.next) {
             if (settings.type_filter && settings.type_filter != ".") {
                 if (!decl.value.contains(settings.type_filter)) continue;
@@ -289,7 +331,11 @@ fn void! find(FzfSettings *settings) @local {
 	    return print_preview(settings, &proj, declarations, is_full_preview: settings.type_filter != "");
 	} else {
         foreach(mdecl: declarations) {
-            io::printfn("%s %s:%s", mdecl.mod.value, mdecl.decl.type, mdecl.decl.value);
+            io::printfn("%s %s %s",
+                        mdecl.mod.value,
+                        mdecl.decl == null ? "." : mdecl.decl.value,
+                        mdecl.decl == null ? "" : lexer::token_type_to_string(mdecl.decl.type)
+                        );
         }
 	}
 }
@@ -298,7 +344,7 @@ fn int main(String[] args)
 {
 	// Defaults
 	FzfSettings settings = {
-	    .stdlib_path = "/home/ubertrader/code/c3c/build/lib",
+	    .stdlib_path = "/home/ubertrader/code/c3c/lib",
 	    .project_path = ".",
 	    .module_filter = ".",
 	    .type_filter = "",
