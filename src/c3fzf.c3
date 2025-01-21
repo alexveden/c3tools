@@ -349,14 +349,16 @@ fn void! find(FzfSettings *settings) @local {
             declarations.push(ModuleDecl{.mod = m, .decl = null});
         }
 
-        for(AstNode* decl = m.decls; decl != null; decl = decl.next) {
+        for LOOP: (AstTypeDef* decl = m.decls; decl != null; decl = (AstTypeDef*)decl.next) {
             if (settings.type_filter && settings.type_filter != ".") {
                 if (!decl.value.contains(settings.type_filter)) continue;
             }
-            bool attr_is_filtered = {|
-                for(AstNode* decl = m.decls; decl != null; decl = decl.next) {
-                
-            |}
+
+            for(AstNode* attr = decl.attributes; attr != null; attr = attr.next) {
+                if (attr.value.starts_with("@local")) continue LOOP;
+                if (attr.value.starts_with("@test")) continue LOOP;
+            }
+
             declarations.push(ModuleDecl{.mod = m, .decl = decl});
         }
         

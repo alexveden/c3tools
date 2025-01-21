@@ -44,7 +44,7 @@ struct AstModule {
     AstNode* name;
     AstNode* attributes;
     AstImport* imports;
-    AstNode* decls;
+    AstTypeDef* decls;
     AstDoc* docs;
     String file_path;
     uint src_line;
