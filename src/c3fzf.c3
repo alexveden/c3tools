@@ -81,11 +81,14 @@ fn void print_decl_const(AstTypeDef* d, bool is_full_preview) {
     io::printfn(" %s;", d.value);
 }
 fn void print_decl_enum(AstTypeDefEnumerable* d, bool is_full_preview) {
-    assert(d.type == TokenType.ENUM);
+    assert(d.type == TokenType.ENUM || d.type == TokenType.FAULT);
 
-    if (is_full_preview) io::print("\n");
+    if (is_full_preview){
+        io::print("\n");
+        print_docs(d.docs);
+    } 
 
-    io::printf("enum %s ", d.value);
+    io::printf("%s %s ", lexer::token_type_to_string(d.type), d.value);
     if (is_full_preview){
         io::printfn("{");
         print_nodes("    %s,\n", d.values);
@@ -109,6 +112,7 @@ fn void print_decl_struct(AstTypeDefStructural* d, bool is_full_preview, uint in
     io::printf("%s%s %s ", idt, lexer::token_type_to_string(d.type), d.value);
 
     if (is_full_preview){
+        print_nodes("%s ", d.attributes, sep: " ");
         io::printfn("{");
         for(AstTypeDef* node = d.members; node != null; node = (AstTypeDef*)node.next){ 
             switch(node.type) {
@@ -141,6 +145,7 @@ fn void print_docs(AstDoc* docs) {
 } 
 
 fn void print_decl_callable(AstCallable* d, bool is_full_preview) {
+    assert(d != null);
     if(is_full_preview){
         io::printf("\n");
         print_docs(d.docs);
@@ -153,8 +158,11 @@ fn void print_decl_callable(AstCallable* d, bool is_full_preview) {
         default:
             unreachable();
     }
-    if (is_full_preview) print_nodes("%s", d.ftype);
-    if (d.ftype.value) io::printf(" ");
+    if (is_full_preview && d.ftype) {
+
+        print_nodes("%s", d.ftype);
+        if (d.ftype.value) io::printf(" ");
+    }
 
     print_nodes("%s", d.name, sep: ".");
 
@@ -219,6 +227,7 @@ fn void! print_preview(FzfSettings* settings, AstProject* proj, List(<ModuleDecl
             case DISTINCT:
                 print_decl_distinct((AstTypeDef*)d.decl, is_full_preview);
             case ENUM:
+            case FAULT:
                 print_decl_enum((AstTypeDefEnumerable*)d.decl, is_full_preview);
             case CONST:
                 print_decl_const((AstTypeDef*)d.decl, is_full_preview);
@@ -226,9 +235,6 @@ fn void! print_preview(FzfSettings* settings, AstProject* proj, List(<ModuleDecl
             case BITSTRUCT:
             case UNION:
                 print_decl_struct((AstTypeDefStructural*)d.decl, is_full_preview);
-            case FAULT:
-                io::printfn("%s:%s",d.decl.type, d.decl.value);
-                break;
             default:
                 // io::printfn("UNKN %s:%s",d.decl.type, d.decl.value);
                 continue;
@@ -249,21 +255,6 @@ fn void! print_preview(FzfSettings* settings, AstProject* proj, List(<ModuleDecl
         }
 
     }
-
-    // foreach(mod: proj.modules){
-    //     if (mod.value != settings.module_filter) continue;
-    //     modules.push(mod);
-    // }
- //    if(!modules.len()) {
- //        io::printfn("No modules found with name: %s", settings.module_filter);
- //        return FzfFault.MODULE_NOT_FOUND?;
- //    }
-	//
-	// sort::quicksort(modules, &ast::cmp_module);
- //    foreach(i, m: modules) {
- //        io::printf("%s", m.value);
- //        io::print("\n");
- //    }
 }
 
 fn int cmp_decl(ModuleDecl a, ModuleDecl b) @private
