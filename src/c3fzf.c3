@@ -138,7 +138,11 @@ fn void print_docs(AstDoc* docs) {
     io::printf(docs.value);
     for(AstDocContract* node = docs.contracts; node != null; node = (AstDocContract*)node.next){
         io::printf("\n%s ", node.value);
-        print_nodes(" %s", node.items, sep: " ");
+
+        for(AstNode* contr = node.items; contr != null; contr = contr.next){ 
+            if (contr.type == STRING || contr.type == RAW_STRING) io::print(" ");
+            io::printf("%s", contr.value);
+        }
     }
     if(docs.contracts) io::print("\n");
     io::printfn("*>");
