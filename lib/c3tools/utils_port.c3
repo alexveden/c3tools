@@ -220,6 +220,7 @@ macro bool char_is_alphanum_(char c)
         case 'x':
         case 'y':
         case 'z':
+        	nextcase;
 
         // UPPER_CHAR_CASE
         case 'A':
@@ -248,6 +249,7 @@ macro bool char_is_alphanum_(char c)
         case 'X':
         case 'Y':
         case 'Z':
+        	nextcase;
 
         // NUMBER_CHAR_CASE CASE
         case '0': 
@@ -271,9 +273,7 @@ macro bool char_is_lower_alphanum_(char c)
 {
 	switch (c)
 	{
-        // LOWER_CHAR_CASE
         case 'a'..'z':
-        // NUMBER_CHAR_CASE CASE
         case '0'..'9': 
 		case '_':
 			return true;
