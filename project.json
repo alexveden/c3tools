@@ -8,6 +8,7 @@
   "sources":  [ "lib/**" ],
   "test-sources":  [ "test/**" ],
   "output": "build",
+  //"exec": ["c3c compile-run exec_me.c3"],
   "targets": {
     "c3test": {
       "type": "executable",
