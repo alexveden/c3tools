@@ -402,7 +402,7 @@ fn bool parse_multiline_comment(Lexer *lexer) @inline @local
 	backtrack(lexer);
 	begin_new_token(lexer);
 
-	int nesting = 1;
+	int nesting = 0;
 	while LOOP: (!reached_end(lexer)) {
 		switch (peek(lexer))
 		{

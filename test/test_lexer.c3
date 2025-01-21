@@ -891,3 +891,45 @@ fn void test_escape_chars_double_backslash() {
 	test::equal(toks[0].type, TokenType.CHAR_LITERAL);
 	test::equal(toks[0].value, `'\\'`);
 }
+
+fn void test_multiline_comment_with_many_stars() {
+    String contents = `module /******** asda **********/`;
+	Lexer lexer;
+	lexer::init(&lexer,contents);
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+    // foreach(t: toks) t.print(new_line: true);
+    // foreach(i, t: toks) io::printf("%d: %s", i, t);
+
+	test::equal(3, toks.len());
+	test::equal(toks[0].type, TokenType.MODULE);
+
+	test::equal(toks[1].type, TokenType.COMMENT_MULTI_INLINE);
+	test::equal(toks[1].value, `/******** asda **********/`);
+
+	test::equal(toks[2].type, TokenType.EOF);
+}
+
+fn void test_multiline_comment_with_many_stars_multi_line() {
+    String contents = `module 
+    /**
+    * asda 
+    */;`;
+	Lexer lexer;
+	lexer::init(&lexer,contents);
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+    // foreach(t: toks) t.print(new_line: true);
+    // foreach(i, t: toks) io::printf("%d: %s", i, t);
+
+	test::equal(4, toks.len());
+	test::equal(toks[0].type, TokenType.MODULE);
+
+	test::equal(toks[1].type, TokenType.COMMENT_MULTI);
+	test::equal(toks[1].value, `/**
+    * asda 
+    */`);
+
+	test::equal(toks[2].type, TokenType.EOS);
+	test::equal(toks[3].type, TokenType.EOF);
+}

@@ -2233,3 +2233,46 @@ macro MyType.fetch_add(ptr, y, AtomicOrdering $ordering = SEQ_CONSISTENT, bool $
     test::equal(func.iend, code.len-4);
     test::equal(code[func.iend], '}');
 }
+
+fn void test_func_with_c_docstring(){
+   String code =  `module test::std::c3lang::ast;
+/**
+ * Allocate data for a token, including source location.
+ * This call is doing the basic allocation, with other functions
+ * filling out additional information.
+**/
+fn MyType* MyFoo.test_node(&self) {
+    return 1;
+}
+//`; // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer mem::free(ast._allocator);
+    contents.clear();
+
+    test::not_equal(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 0);
+    test::not_equal(m, null);
+
+    AstCallable* func = (AstCallable*)ast.@node_at(m.decls, 0);
+    test::not_equal(func, null);
+
+    test::equal(func.type, TokenType.FN);
+    test::equal(func.value, "MyFoo.test_node");
+    test::equal(ast.@node_join(func.name, contents), "MyFoo,test_node");
+    test::equal(ast.@node_join(func.ret_type, contents), "MyType,*");
+
+    test::equal(ast.@node_len(func.params), 1);
+    AstCallableParam* param;
+
+    param = (AstCallableParam*)ast.@node_at(func.params, 0);
+    test::equal(param.type, TokenType.VAR);
+    test::equal(param.value, "self");
+    // test::equal(param.param_type, null);
+    test::equal(ast.@node_join(param.param_type, contents), "MyFoo");
+
+    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    test::equal(func.istart, 31);
+    test::equal(func.iend, code.len-4);
+    test::equal(code[func.iend], '}');
+}
