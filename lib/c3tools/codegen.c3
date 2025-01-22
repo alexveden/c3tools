@@ -14,11 +14,15 @@ fn CodeGen* CodeGen.new_init(&self) {
     return self;
 }
 
+fn void CodeGen.reset(&self) {
+    self.buf.clear();
+}
+
 macro CodeGen.wn(&self, String format, args...) {
-    self.w(format, ...args);
+    self.ws(format, ...args);
     self.buf.appendf(";\n");
 }
-macro CodeGen.w(&self, String format, args...) {
+macro CodeGen.ws(&self, String format, args...) {
     for(int i = 0; i < self.indent; i++) {
         self.buf.append(" ");
     }
@@ -37,41 +41,41 @@ macro CodeGen.@import(&self, #format, args...) {
 
 <* Gen c3 return statement *>
 macro CodeGen.@return(&self, #format, args...) {
-    self.w("return " +++ #format +++ ";\n", ...args);
+    self.ws("return " +++ #format +++ ";\n", ...args);
 }
 
 <* Gen c3 if statement *>
 macro CodeGen.@if(&self, #format, args...; @body())
 {
-    self.w("if(" +++ #format +++ ") {\n", ...args);
+    self.ws("if(" +++ #format +++ ") {\n", ...args);
     self.indent += 4;
     @body();
     self.indent -= 4;
-    self.w("}\n");
+    self.ws("}\n");
 }
 
 
 <* Gen c3 function body and scope *>
 macro CodeGen.@fn(&self, #format, args...; @body())
 {
-    if (self.indent == 0) self.w("\n");
+    if (self.indent == 0) self.ws("\n");
 
-    self.w("fn " +++ #format +++ " \n{\n", ...args);
+    self.ws("fn " +++ #format +++ " \n{\n", ...args);
     self.indent += 4;
     @body();
     self.indent -= 4;
-    self.w("}\n");
+    self.ws("}\n");
 }
 
 macro CodeGen.@struct(&self, #format, args...; @body())
 {
-    if (self.indent == 0) self.w("\n");
+    if (self.indent == 0) self.ws("\n");
 
-    self.w("struct " +++ #format +++ " \n", ...args);
-    self.w("{\n");
+    self.ws("struct " +++ #format +++ " \n", ...args);
+    self.ws("{\n");
     self.indent += 4;
     @body();
     self.indent -= 4;
-    self.w("}\n");
+    self.ws("}\n");
 }
 
