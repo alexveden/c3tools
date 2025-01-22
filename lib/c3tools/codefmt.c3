@@ -48,7 +48,9 @@ struct CodeCorpus {
 fn bool CodeCorpus.compare_output(&self, String actual) {
     String[] lines_expected = self.case_output.split("\n"); 
     String[] lines_actual = actual.split("\n"); 
-    // FIX: defer allocator::free(lines);
+
+    defer allocator::heap().release(lines_expected.ptr, true);
+    defer allocator::heap().release(lines_actual.ptr, true);
 
     int n_errors  = 0;
     for(int i=0, int j=0; i < lines_expected.len || j < lines_actual.len; i++, j++){
@@ -81,7 +83,7 @@ fn List(<CodeCorpus>)! new_parse(String file_name) {
     result.new_init();
 
     String[] lines = contents.split("\n"); 
-    // FIX: defer allocator::free(lines);
+    defer allocator::heap().release(lines.ptr, true);
 
     if (!lines) return CodeCorpusError.EMPTY_FILE?;
     
@@ -160,10 +162,12 @@ fn List(<CodeCorpus>)! new_parse(String file_name) {
                 current.case_input = l;
             } else {
                 assert(l.ptr != null);
-                if (l.ptr[0] == '\0') continue;
+                if (l.ptr >= contents.ptr + contents.len) continue;
 
                 // extending string by pointer arithmetic, because code is adjacent
                 usz input_len = l.ptr - current.case_input.ptr + l.len;
+                assert (input_len < 1024);
+
                 current.case_input = (String)(current.case_input.ptr)[..input_len];
             }
         }
@@ -174,15 +178,19 @@ fn List(<CodeCorpus>)! new_parse(String file_name) {
                 current.case_output = l;
             } else {
                 assert(l.ptr != null);
-                if (l.ptr[0] == '\0') continue;
+                if (l.ptr >= contents.ptr + contents.len) continue;
 
                 usz output_len = l.ptr - current.case_output.ptr + l.len;
                 assert (output_len < 1024);
 
-                // io::printfn("line #%d: (output_len: %d) `%s`", l.len, output_len, l);
                 current.case_output = (String)(current.case_output.ptr)[..output_len];
             }
         }
+        else {
+            io::printfn("Unexpected phase count (%s:%s)",  file_name, i+1);
+            return CodeCorpusError.BAD_FORMAT?;
+        }
+         
     }
 
     // handling last before EOF

@@ -7,6 +7,7 @@ import c3tools::codefmt;
 
 fn void test_corpus() {
     List(<CodeCorpus>) corp = codecorpus::new_parse("test/c3fmt_corpus/functions.txt")!!;
+    defer corp.free();
     
     test::greater_equal(2, corp.len());
     // test::@checks(1, 0);
