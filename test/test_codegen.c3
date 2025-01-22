@@ -4,7 +4,7 @@ import std::io;
 
 
 fn void test_codegen_module(){
-    CodeGen c = CodeGen.new_init(); 
+    CodeGen* c = CodeGen{}.new_init(); 
     defer c.free();
     
     c.@module("myfoo @if(%d)", c.indent);
