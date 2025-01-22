@@ -23,7 +23,7 @@ String[] args
 
 --------------------------------------------------------------------------------
 
-fn int main(String[] args) 
+fn int main(String[] args)
 {
     return 0;
 }

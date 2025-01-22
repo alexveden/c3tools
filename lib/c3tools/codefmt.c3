@@ -45,6 +45,36 @@ struct CodeCorpus {
     String case_output;
 }
 
+fn bool CodeCorpus.compare_output(&self, String actual) {
+    String[] lines_expected = self.case_output.split("\n"); 
+    String[] lines_actual = actual.split("\n"); 
+    // FIX: defer allocator::free(lines);
+
+    int n_errors  = 0;
+    for(int i=0, int j=0; i < lines_expected.len || j < lines_actual.len; i++, j++){
+        if (n_errors > 5) return false;
+
+        if (i < lines_expected.len && j < lines_actual.len) {
+            if (lines_expected[i] != lines_actual[j]){
+                io::printfn("Expected at line %3d: `%s`", i, lines_expected[i]);
+                io::printfn("Actual  at line  %3d: `%s`", j, lines_actual[j]);
+                n_errors++;
+            }
+        } else {
+            if (i < lines_expected.len){
+                io::printfn("Expected at line %3d: `%s`", i, lines_expected[i]);
+                io::printfn("Actual  at line  %3d: <too short>", i);
+            } else {
+                io::printfn("Expected at line %3d: <too short>", j);
+                io::printfn("Actual  at line  %3d: `%s`", j, lines_actual[j]);
+            }
+            n_errors++;
+        }
+    }
+
+    return n_errors == 0;
+}
+
 fn List(<CodeCorpus>)! new_parse(String file_name) {
     String contents = (String)file::load_new(file_name)!;
     List(<CodeCorpus>) result;
@@ -129,6 +159,8 @@ fn List(<CodeCorpus>)! new_parse(String file_name) {
                 if (!l) continue;
                 current.case_input = l;
             } else {
+                assert(l.ptr != null);
+                if (l.ptr[0] == '\0') continue;
 
                 // extending string by pointer arithmetic, because code is adjacent
                 usz input_len = l.ptr - current.case_input.ptr + l.len;
@@ -141,7 +173,13 @@ fn List(<CodeCorpus>)! new_parse(String file_name) {
                 if (!l) continue;
                 current.case_output = l;
             } else {
+                assert(l.ptr != null);
+                if (l.ptr[0] == '\0') continue;
+
                 usz output_len = l.ptr - current.case_output.ptr + l.len;
+                assert (output_len < 1024);
+
+                // io::printfn("line #%d: (output_len: %d) `%s`", l.len, output_len, l);
                 current.case_output = (String)(current.case_output.ptr)[..output_len];
             }
         }
