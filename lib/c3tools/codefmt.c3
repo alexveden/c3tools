@@ -46,6 +46,7 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
 	        if (self.state_stack.len() != 0) {
 	            self.@fail(&lexer.token, "Not all code structures resolved, or bad file format")!;
 	        }
+	        self.newline();
 	        break LOOP;
 	    }
 
@@ -53,6 +54,8 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
 		    switch(lexer.token.type) {
                 case FN:
                     self.enter_state(&CodeFmt.format_fn, &lexer.token)!;
+                case EMPTY_LINE:
+                    break;
                 default: 
 	                self.@fail(&lexer.token, "Unexpected global token type")!;
             } 
@@ -122,16 +125,15 @@ fn bool! CodeFmt.format_statement(CodeFmt* self, Token* t, NodeParserState* stat
         case INVALID_TOKEN:
             io::printfn("format_fn_statement entry");
             self.newline();
-            self.write("%s ", lexer::token_type_to_string(t.type));
+            self.write("%s", lexer::token_type_to_string(t.type));
             state.transition(SCOPE);
         case SCOPE:
             io::printfn("format_fn_statement SCOPE");
             switch(t.type) {
                 case EOS:
-                    self.write(";");
                     return true;
                 default:
-                    self.write("%s", t.value);
+                    self.write(" %s", t.value);
             }
         default:
             unreachable();
@@ -155,7 +157,7 @@ fn bool! CodeFmt.format_fn_scope(CodeFmt* self, Token* t, NodeParserState* state
                 case RETURN:
                     return self.enter_state(&CodeFmt.format_statement, t);
                 case EOS:
-                    break;
+                    self.write(";");
                 case RBRACE:
                     if (state.scope_depth == 0) {
                         self.dedent();
@@ -229,7 +231,7 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) {
                 case IDENT:
                 case TYPE_IDENT:
                     // struct based functions may contain TypeName.func_name
-                    self.write("%s ", t.value);
+                    self.write("%s", t.value);
                     break;
                 case LPAREN:
                     state.transition(VAR);

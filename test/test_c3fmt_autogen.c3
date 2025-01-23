@@ -17,7 +17,7 @@ main() { return;}
     io::print(formatted);
     io::printfn("```");
     String expected = `
-fn void main() 
+fn void main()
 {
     return;
 }
@@ -34,7 +34,7 @@ fn void test_corpus__functions__simple_main_int()
 fn int 
 main(
 String[] args
-) { return;}
+) { return   0   ;}
 
 `;
     String formatted = fmt.format(input[1..], print_lex: true)!!;
@@ -46,6 +46,7 @@ fn int main(String[] args)
 {
     return 0;
 }
+
 `;
     test::@check(codecorpus::compare_output(expected[1..], formatted));
 }

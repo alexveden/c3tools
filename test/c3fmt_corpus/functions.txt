@@ -7,7 +7,7 @@ main() { return;}
 
 --------------------------------------------------------------------------------
 
-fn void main() 
+fn void main()
 {
     return;
 }
@@ -19,7 +19,7 @@ simple_main_int
 fn int 
 main(
 String[] args
-) { return;}
+) { return   0   ;}
 
 --------------------------------------------------------------------------------
 
@@ -27,3 +27,4 @@ fn int main(String[] args)
 {
     return 0;
 }
+
