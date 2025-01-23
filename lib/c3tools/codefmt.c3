@@ -7,12 +7,12 @@ import std::collections::list;
 
 
 struct CodeFmt {
-    int max_line_width;
+    usz max_line_width;
     DString buf;
     List(<CodeFmtState>) state_stack;
-    List(<Token>) token_cache;
-    int _indent_level;
-    int _line_used;
+    List(<Token>) _token_cache;
+    usz _indent_level;
+    usz _line_used;
     bool _print_lex;
     Lexer _lexer;
 }
@@ -29,14 +29,14 @@ fn CodeFmt CodeFmt.new_init(int max_line_width=80) @operator(construct) {
     };
     self.buf.new_init(); 
     self.state_stack.new_init();
-    self.token_cache.new_init();
+    self._token_cache.new_init();
     return self;
 }
 
 fn void CodeFmt.free(&self) {
     self.buf.free();
     self.state_stack.free();
-    self.token_cache.free();
+    self._token_cache.free();
 }
 
 fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
@@ -111,53 +111,128 @@ macro void CodeFmt.newline(&self) {
     self._line_used = 0;
     for(int i = 0; i < self._indent_level; i++) {
         // TODO: add tabs too
-        self.buf.append(" ");
-        self.buf.append(" ");
-        self.buf.append(" ");
-        self.buf.append(" ");
+        self.buf.append("    ");
         self._line_used += 4;
     }
 }
 
-macro void CodeFmt.dump_token_cache(&self) {
+macro void CodeFmt.statement_add(&self, Token t) {
+    assert(t.type != EOS, "EOS should not be there");
+    TokenType prev_t = self._token_cache.len() > 0 ? self._token_cache[^1].type : TokenType.INVALID_TOKEN; 
+    bool pre_space = false;
+    bool post_space = false;
+
+    switch(t.type) {
+		case DIV:
+		case EQ:
+		case GREATER:
+		case LESS:
+		case MINUS:
+		case MOD:
+		case PLUS:
+		case STAR:
+		case BIT_AND_ASSIGN:
+		case BIT_OR_ASSIGN:
+		case BIT_XOR_ASSIGN:
+		case CT_AND:
+		case CT_OR:
+		case CT_CONCAT:
+		case DIV_ASSIGN:
+		case ELVIS:
+		case EQEQ:
+		case GREATER_EQ:
+		case IMPLIES:
+		case LESS_EQ:
+		case MINUS_ASSIGN:
+		case MULT_ASSIGN:
+		case MOD_ASSIGN:
+		case NOT_EQUAL:
+		case PLUS_ASSIGN:
+		case QUESTQUEST:
+		case SHL:
+		case SHR:
+		case SHL_ASSIGN:
+		case SHR_ASSIGN:
+            post_space = true;
+            pre_space = true;
+        case COMMA:
+        case RETURN:
+            post_space = true;
+        case IDENT:
+            switch(prev_t){
+                case TYPE_IDENT:
+                    pre_space = true;
+                default:
+                    break;
+            }
+        default:
+            break;
+    }
+
+    if (pre_space) self._token_cache.push(TOKEN_SPACE);
+    self._token_cache.push(t);
+    if (post_space) self._token_cache.push(TOKEN_SPACE);
+}
+
+macro void CodeFmt.statement_dump(&self) {
     usz token_len = 0;
-    foreach(t: self.token_cache) {
+    foreach(t: self._token_cache) {
         token_len += t.value.len;
     }
-    self.trace("dump_token_cache: _line_used: %d, cache_len: %d", self._line_used, token_len);
+    self.trace("statement_dump: _line_used: %d, cache_len: %d", self._line_used, token_len);
     if (self._line_used + token_len <= self.max_line_width) {
         // Fits in line no wrapping needed
-        foreach(t: self.token_cache) {
-            self.write(t.value);
+        foreach(i, t: self._token_cache) {
+            if (i < self._token_cache.len()-1){
+                self.write("%s", t.value);
+            } else {
+                // skip spaces before semicolon
+                if(t.type != SPACE) self.write("%s", t.value);
+            }
         }
     } else {
         NodeParserState state;
-        foreach(t: self.token_cache) {
+        bool is_multiline = token_len + (self._indent_level + 1) * 4 > self.max_line_width;
+
+        foreach(t: self._token_cache) {
             // NOTE: using this only for checking internal scope_depth
             state.check(&t);
             switch(t.type){
                 case LPAREN:
                     if (state.scope_depth == 1) {
-                        self.write(t.value);
+                        self.write("%s", t.value);
                         self.indent();
                         self.newline();
                     } else {
-                        self.write(t.value);
+                        self.write("%s", t.value);
                     }
                 case RPAREN:
                     if (state.scope_depth == 0) {
                         self.dedent();
                         self.newline();
-                        self.write(t.value);
+                        self.write("%s", t.value);
                     } else {
-                        self.write(t.value);
+                        self.write("%s", t.value);
                     }
+                case COMMA:
+                    if (!is_multiline) nextcase default;
+
+                    if (state.scope_depth == 1) {
+                        self.write("%s", t.value);
+                        self.newline();
+                    } else {
+                        self.write("%s", t.value);
+                    }
+                case SPACE:
+                    if (!is_multiline) nextcase default;
+                    if (state.last_token == COMMA) break;
+                    nextcase default;
                 default:
-                    self.write(t.value);
+                    self.write("%s", t.value);
             }
         }
     }
-    self.token_cache.clear();
+    self._token_cache.clear();
 }
 
 macro void CodeFmt.indent(&self) {
@@ -177,21 +252,24 @@ struct CodeFmtState {
     NodeParserState state;
 }
 
+const Token TOKEN_SPACE = Token{.type = SPACE, .value = " "};
+
 fn bool! CodeFmt.format_statement(CodeFmt* self, Token* t, NodeParserState* state) {
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
+            assert(self._token_cache.len() == 0, "forgot statement_dump?");
             self.trace("ENTRY");
             self.newline();
-            self.write("%s", lexer::token_type_to_string(t.type));
-            state.transition(SCOPE);
+            nextcase state.transition(SCOPE);
         case SCOPE:
             self.trace("SCOPE");
             switch(t.type) {
                 case EOS:
+                    self.statement_dump();
                     return true;
                 default:
-                    self.write(" %s", t.value);
+                    self.statement_add(*t);
             }
         default:
             unreachable();
@@ -212,8 +290,6 @@ fn bool! CodeFmt.format_fn_scope(CodeFmt* self, Token* t, NodeParserState* state
         case SCOPE:
             self.trace("SCOPE");
             switch(t.type) {
-                case RETURN:
-                    return self.enter_state(&CodeFmt.format_statement, t);
                 case EOS:
                     self.write(";");
                 case RBRACE:
@@ -224,7 +300,8 @@ fn bool! CodeFmt.format_fn_scope(CodeFmt* self, Token* t, NodeParserState* state
                         return true;
                     }
                 default:
-                    self.@fail(t, "unexpected token")!;
+                    // self.@fail(t, "unexpected token")!;
+                    return self.enter_state(&CodeFmt.format_statement, t);
             }
         default:
             self.trace("format_fn_args default");
@@ -236,29 +313,29 @@ fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state)
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
             assert(t.type == LPAREN);
-            assert(self.token_cache.len() == 0, "forgot dump_token_cache?");
+            assert(self._token_cache.len() == 0, "forgot statement_dump?");
             self.trace("ENTRY");
             nextcase STATE: state.transition(VAR);
         case VAR:
             self.trace("VAR");
             switch(t.type) {
                 case RPAREN:
-                    self.token_cache.push(*t);
+                    self._token_cache.push(*t);
 
-                    self.dump_token_cache();
+                    self.statement_dump();
                     return true;
                 case COMMA:
-                    self.token_cache.push(*t);
+                    self._token_cache.push(*t);
                     if (state.scope_depth == 1) {
-                        self.token_cache.push(Token{.type = SPACE, .value = " "});
+                        self._token_cache.push(TOKEN_SPACE);
                     }
                 case IDENT:
                     if (state.scope_depth == 1 && state.last_token != COMMA) {
-                        self.token_cache.push(Token{.type = SPACE, .value = " "});
+                        self._token_cache.push(TOKEN_SPACE);
                     }
                     nextcase default;
                 default:
-                    self.token_cache.push(*t);
+                    self._token_cache.push(*t);
                     break;
             }
         default:

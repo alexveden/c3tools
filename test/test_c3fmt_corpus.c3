@@ -3,6 +3,119 @@ import c3tools::codefmt;
 import c3tools::codecorpus;
 import std::io;
 
+fn void test_corpus__statements__generic_statements() 
+{
+    CodeFmt fmt = CodeFmt.new_init();
+    defer fmt.free();
+    String input = `
+fn void main() 
+{ 
+int a = b;
+b|= 10+a;
+ io :: printf(   "soo"   , a   );
+v  .  
+    @call(a, b);
+return;
+}
+
+`;
+    String formatted = fmt.format(input[1..], print_lex: false)!!;
+    io::printfn("formatted code\n```");
+    io::print(formatted);
+    io::printfn("```");
+    String expected = `
+fn void main()
+{
+    int a = b;
+    b |= 10 + a;
+    io::printf("soo", a);
+    v.@call(a, b);
+    return;
+}
+
+`;
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
+    String fmt_out = formatted.copy();
+    defer fmt_out.free();
+    formatted = fmt.format(fmt_out, print_lex: false)!!;
+    assert(fmt_out.ptr != formatted.ptr);
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `double format mismatch`);
+}
+
+fn void test_corpus__statements__expressions() 
+{
+    CodeFmt fmt = CodeFmt.new_init();
+    defer fmt.free();
+    String input = `
+fn void main() 
+{ 
+int a = b*2/1-1+3%1;
+b%= 10+a;
+b&=a;
+b|=a;
+b^=a;
+b&&&a;
+b|||a;
+b+++a;
+b/=a;
+a==s;
+a>=s;
+a<=s;
+a>=s;
+a-=s;
+a+=s;
+a*=s;
+a%=s;
+a!=s;
+a  ++  s;
+--  a;
+a<<1;
+a>>1;
+return;
+}
+
+`;
+    String formatted = fmt.format(input[1..], print_lex: false)!!;
+    io::printfn("formatted code\n```");
+    io::print(formatted);
+    io::printfn("```");
+    String expected = `
+fn void main()
+{
+    int a = b * 2 / 1 - 1 + 3 % 1;
+    b %= 10 + a;
+    b &= a;
+    b |= a;
+    b ^= a;
+    b &&& a;
+    b ||| a;
+    b +++ a;
+    b /= a;
+    a == s;
+    a >= s;
+    a <= s;
+    a >= s;
+    a -= s;
+    a += s;
+    a *= s;
+    a %= s;
+    a != s;
+    a++s;
+    --a;
+    a << 1;
+    a >> 1;
+    return;
+}
+
+`;
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
+    String fmt_out = formatted.copy();
+    defer fmt_out.free();
+    formatted = fmt.format(fmt_out, print_lex: false)!!;
+    assert(fmt_out.ptr != formatted.ptr);
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `double format mismatch`);
+}
+
 fn void test_corpus__functions__simple_main() 
 {
     CodeFmt fmt = CodeFmt.new_init();
@@ -12,7 +125,7 @@ fn void
 main() { return;}
 
 `;
-    String formatted = fmt.format(input[1..], print_lex: true)!!;
+    String formatted = fmt.format(input[1..], print_lex: false)!!;
     io::printfn("formatted code\n```");
     io::print(formatted);
     io::printfn("```");
@@ -42,7 +155,7 @@ String[] args
 ) { return   0   ;}
 
 `;
-    String formatted = fmt.format(input[1..], print_lex: true)!!;
+    String formatted = fmt.format(input[1..], print_lex: false)!!;
     io::printfn("formatted code\n```");
     io::print(formatted);
     io::printfn("```");
@@ -72,7 +185,7 @@ String[] args
 ) { return   0   ;}
 
 `;
-    String formatted = fmt.format(input[1..], print_lex: true)!!;
+    String formatted = fmt.format(input[1..], print_lex: false)!!;
     io::printfn("formatted code\n```");
     io::print(formatted);
     io::printfn("```");
@@ -102,7 +215,7 @@ String[] args
 ) { return   0   ;}
 
 `;
-    String formatted = fmt.format(input[1..], print_lex: true)!!;
+    String formatted = fmt.format(input[1..], print_lex: false)!!;
     io::printfn("formatted code\n```");
     io::print(formatted);
     io::printfn("```");
@@ -132,7 +245,7 @@ String[] args
 ) { return   0   ;}
 
 `;
-    String formatted = fmt.format(input[1..], print_lex: true)!!;
+    String formatted = fmt.format(input[1..], print_lex: false)!!;
     io::printfn("formatted code\n```");
     io::print(formatted);
     io::printfn("```");
@@ -162,7 +275,7 @@ String[] args
 ) @test @if("dio" || too) { return   0   ;}
 
 `;
-    String formatted = fmt.format(input[1..], print_lex: true)!!;
+    String formatted = fmt.format(input[1..], print_lex: false)!!;
     io::printfn("formatted code\n```");
     io::print(formatted);
     io::printfn("```");
@@ -192,7 +305,7 @@ String[] args
 ) { return   0   ;}
 
 `;
-    String formatted = fmt.format(input[1..], print_lex: true)!!;
+    String formatted = fmt.format(input[1..], print_lex: false)!!;
     io::printfn("formatted code\n```");
     io::print(formatted);
     io::printfn("```");
@@ -223,7 +336,7 @@ bar, na   ,    varg...
 ) { return   0   ;}
 
 `;
-    String formatted = fmt.format(input[1..], print_lex: true)!!;
+    String formatted = fmt.format(input[1..], print_lex: false)!!;
     io::printfn("formatted code\n```");
     io::print(formatted);
     io::printfn("```");
@@ -251,13 +364,48 @@ fn String[]! Foo.main(String[] args, int* foo, List(<float>) bar, MySuperClass[]
 ) { return   0   ;}
 
 `;
-    String formatted = fmt.format(input[1..], print_lex: true)!!;
+    String formatted = fmt.format(input[1..], print_lex: false)!!;
     io::printfn("formatted code\n```");
     io::print(formatted);
     io::printfn("```");
     String expected = `
 fn String[]! Foo.main(
     String[] args, int* foo, List(<float>) bar, MySuperClass[] last
+)
+{
+    return 0;
+}
+
+`;
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
+    String fmt_out = formatted.copy();
+    defer fmt_out.free();
+    formatted = fmt.format(fmt_out, print_lex: false)!!;
+    assert(fmt_out.ptr != formatted.ptr);
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `double format mismatch`);
+}
+
+fn void test_corpus__functions__long_arguments_multiline() 
+{
+    CodeFmt fmt = CodeFmt.new_init();
+    defer fmt.free();
+    String input = `
+fn String[]! Foo.main(SoTypeIsHuuuuuuge ok, String[] args, int* foo, List(<float>) bar, MySuperClass[] last, List(<ThisIsTooBig>) too_be_true
+) { return   0   ;}
+
+`;
+    String formatted = fmt.format(input[1..], print_lex: false)!!;
+    io::printfn("formatted code\n```");
+    io::print(formatted);
+    io::printfn("```");
+    String expected = `
+fn String[]! Foo.main(
+    SoTypeIsHuuuuuuge ok,
+    String[] args,
+    int* foo,
+    List(<float>) bar,
+    MySuperClass[] last,
+    List(<ThisIsTooBig>) too_be_true
 )
 {
     return 0;

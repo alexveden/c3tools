@@ -141,3 +141,24 @@ fn String[]! Foo.main(
     return 0;
 }
 
+================================================================================
+long_arguments_multiline
+================================================================================
+
+fn String[]! Foo.main(SoTypeIsHuuuuuuge ok, String[] args, int* foo, List(<float>) bar, MySuperClass[] last, List(<ThisIsTooBig>) too_be_true
+) { return   0   ;}
+
+--------------------------------------------------------------------------------
+
+fn String[]! Foo.main(
+    SoTypeIsHuuuuuuge ok,
+    String[] args,
+    int* foo,
+    List(<float>) bar,
+    MySuperClass[] last,
+    List(<ThisIsTooBig>) too_be_true
+)
+{
+    return 0;
+}
+
