@@ -10,7 +10,7 @@ struct CodeFmt {
     int max_line_width;
     DString buf;
     List(<CodeFmtState>) state_stack;
-    int indent;
+    int _indent_level;
 }
 
 
@@ -88,6 +88,26 @@ macro void CodeFmt.write(&self, String format, args...) {
     self.buf.appendf(format, ...args);
 }
 
+macro void CodeFmt.newline(&self) {
+    self.buf.append("\n");
+    for(int i = 0; i < self._indent_level; i++) {
+        // TODO: add tabs too
+        self.buf.append(" ");
+        self.buf.append(" ");
+        self.buf.append(" ");
+        self.buf.append(" ");
+    }
+}
+
+macro void CodeFmt.indent(&self) {
+    self._indent_level++;
+}
+
+macro void CodeFmt.dedent(&self) {
+    assert(self._indent_level > 0);
+    self._indent_level--;
+}
+
 def CodeFmtFn = fn bool! (CodeFmt* self, Token* t, NodeParserState* state);
 
 
@@ -96,24 +116,55 @@ struct CodeFmtState {
     NodeParserState state;
 }
 
+fn bool! CodeFmt.format_statement(CodeFmt* self, Token* t, NodeParserState* state) {
+
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN:
+            io::printfn("format_fn_statement entry");
+            self.newline();
+            self.write("%s ", lexer::token_type_to_string(t.type));
+            state.transition(SCOPE);
+        case SCOPE:
+            io::printfn("format_fn_statement SCOPE");
+            switch(t.type) {
+                case EOS:
+                    self.write(";");
+                    return true;
+                default:
+                    self.write("%s", t.value);
+            }
+        default:
+            unreachable();
+    }
+
+    return false;
+}
 fn bool! CodeFmt.format_fn_scope(CodeFmt* self, Token* t, NodeParserState* state) {
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
             assert(t.type == LBRACE);
             io::printfn("format_fn_scope entry");
-            self.write("\n{");
+            self.newline();
+            self.write("{");
+            self.indent();
             state.transition(SCOPE);
         case SCOPE:
             io::printfn("format_fn_args SCOPE");
             switch(t.type) {
+                case RETURN:
+                    return self.enter_state(&CodeFmt.format_statement, t);
+                case EOS:
+                    break;
                 case RBRACE:
                     if (state.scope_depth == 0) {
-                         self.write("\n}\n");
-                         return true;
+                        self.dedent();
+                        self.newline();
+                        self.write("}");
+                        return true;
                     }
                 default:
-                    break;
+                    self.@fail(t, "unexpected token")!;
             }
         default:
             io::printfn("format_fn_args default");
@@ -236,6 +287,7 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) {
         //             break;
         //     }
         case EOF:
+            self.newline();
             return true;
         default:
             unreachable();

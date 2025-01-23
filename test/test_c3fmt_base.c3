@@ -41,7 +41,11 @@ fn void test_format_basic() {
     test::equal(fmt.max_line_width, 80);
 
     String content = `
-    fn void main() {}
+    fn 
+    void
+    main() {
+    return 0;
+    }
     `;
     String out = fmt.format(content, print_lex: true)!!;
 
