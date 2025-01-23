@@ -49,8 +49,12 @@ fn void! load_corpus(CodeGen* code, String path) @local {
 				code.wn("io::print(formatted)");
 				code.wn("io::printfn(\"```\")");
 				code.wn("String expected = `\n%s`", c.case_output);
-				code.wn("test::@check(codecorpus::compare_output(expected[1..], formatted))");
-				// TODO: add reformatted test (no double formatting!)
+				code.wn("test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`)");
+				code.wn("String fmt_out = formatted.copy()");
+				code.wn("defer fmt_out.free()");
+				code.wn("formatted = fmt.format(fmt_out, print_lex: false)!!");
+				code.wn("assert(fmt_out.ptr != formatted.ptr)");
+				code.wn("test::@check(codecorpus::compare_output(expected[1..], formatted), `double format mismatch`)");
 			};
 		}
 

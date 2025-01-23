@@ -23,7 +23,12 @@ fn void main()
 }
 
 `;
-    test::@check(codecorpus::compare_output(expected[1..], formatted));
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
+    String fmt_out = formatted.copy();
+    defer fmt_out.free();
+    formatted = fmt.format(fmt_out, print_lex: false)!!;
+    assert(fmt_out.ptr != formatted.ptr);
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `double format mismatch`);
 }
 
 fn void test_corpus__functions__simple_main_int() 
@@ -48,5 +53,10 @@ fn int main(String[] args)
 }
 
 `;
-    test::@check(codecorpus::compare_output(expected[1..], formatted));
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
+    String fmt_out = formatted.copy();
+    defer fmt_out.free();
+    formatted = fmt.format(fmt_out, print_lex: false)!!;
+    assert(fmt_out.ptr != formatted.ptr);
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `double format mismatch`);
 }
