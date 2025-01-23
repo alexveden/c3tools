@@ -180,3 +180,33 @@ fn List(<int>)*! Foo.main(String[] args) @test @if("dio" || too)
     assert(fmt_out.ptr != formatted.ptr);
     test::@check(codecorpus::compare_output(expected[1..], formatted), `double format mismatch`);
 }
+
+fn void test_corpus__functions__returns_array_type() 
+{
+    CodeFmt fmt = CodeFmt.new_init();
+    defer fmt.free();
+    String input = `
+fn String[]! 
+Foo.main(
+String[] args
+) { return   0   ;}
+
+`;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
+    io::printfn("formatted code\n```");
+    io::print(formatted);
+    io::printfn("```");
+    String expected = `
+fn String[]! Foo.main(String[] args)
+{
+    return 0;
+}
+
+`;
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
+    String fmt_out = formatted.copy();
+    defer fmt_out.free();
+    formatted = fmt.format(fmt_out, print_lex: false)!!;
+    assert(fmt_out.ptr != formatted.ptr);
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `double format mismatch`);
+}
