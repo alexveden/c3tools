@@ -26,5 +26,5 @@ fn void test_codegen_module(){
     };
 
     io::printfn("%s", c.buf.str_view());
-    test::equal(1, 0);
+    // test::equal(1, 0);
 }

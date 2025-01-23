@@ -24,5 +24,5 @@ fn void test_format_basic() {
     io::printfn("\n\nFormatted code");
     io::printfn("```\n%s```", out);
 
-    test::equal(1, 0);
+    // test::equal(1, 0);
 }
