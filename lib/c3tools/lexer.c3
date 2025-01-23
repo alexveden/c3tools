@@ -117,6 +117,7 @@ Initializes new lexer instance
 *>
 fn void init(Lexer* lexer, String contents)
 {
+	*lexer = Lexer{};
 	// Set the current file.
 	// lexer.file_begin = lexer.file.contents;
 	lexer.file_begin = contents;

@@ -13,6 +13,7 @@ struct CodeFmt {
     List(<Token>) token_cache;
     int _indent_level;
     bool _print_lex;
+    Lexer _lexer;
 }
 
 
@@ -42,34 +43,34 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
     self.buf.clear();
     self.state_stack.clear();
 
-    Lexer lexer;
-	lexer::init(&lexer, contents);
-	while LOOP: (lexer.next_token()) {
-	    if (print_lex) lexer.token.print(new_line: true);
+	lexer::init(&self._lexer, contents);
 
-	    if (lexer.token.type == EOF) {
+	while LOOP: (self._lexer.next_token()) {
+	    if (print_lex) self._lexer.token.print(new_line: true);
+
+	    if (self._lexer.token.type == EOF) {
 	        if (self.state_stack.len() != 0) {
-	            self.@fail(&lexer.token, "Not all code structures resolved, or bad file format")!;
+	            self.@fail(&self._lexer.token, "Not all code structures resolved, or bad file format")!;
 	        }
 	        self.newline();
 	        break LOOP;
 	    }
 
 		if (self.state_stack.len() == 0) {
-		    switch(lexer.token.type) {
+		    switch(self._lexer.token.type) {
                 case FN:
-                    self.enter_state(&CodeFmt.format_fn, &lexer.token)!;
+                    self.enter_state(&CodeFmt.format_fn, &self._lexer.token)!;
                 case EMPTY_LINE:
                     break;
                 default: 
-	                self.@fail(&lexer.token, "Unexpected global token type")!;
+	                self.@fail(&self._lexer.token, "Unexpected global token type")!;
             } 
             continue LOOP;
         } 
 
         while (
             self.state_stack.len() > 0 
-            && self.state_stack[^1].state_fn(self, &lexer.token, &self.state_stack[^1].state)!
+            && self.state_stack[^1].state_fn(self, &self._lexer.token, &self.state_stack[^1].state)!
         ) {
             self.state_stack.remove_last();
         }
@@ -268,6 +269,9 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) {
             self.trace("AT_IDENT");
             switch(t.type) {
                 case AT_IDENT:
+                    self._lexer.extend_current_attribute();
+                    self.write(" ");
+                    self.write("%s", t.value);
                     break;
                 case IMPLIES:           // => 
                     nextcase STATE: state.transition(IMPLIES);
