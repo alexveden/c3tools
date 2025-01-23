@@ -1,6 +1,7 @@
 module test::c3tools::c3fmt_autogen @test;
 import c3tools::codefmt;
 import c3tools::codecorpus;
+import std::io;
 
 fn void test_c3fmt__functions__simple_main() 
 {
@@ -11,7 +12,10 @@ fn void
 main() { return;}
 
 `;
-    String formatted = fmt.format(input[1..])!!;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
+    io::printfn("formatted code\n```");
+    io::print(formatted);
+    io::printfn("```");
     String expected = `
 fn void main() 
 {
@@ -33,7 +37,10 @@ String[] args
 ) { return;}
 
 `;
-    String formatted = fmt.format(input[1..])!!;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
+    io::printfn("formatted code\n```");
+    io::print(formatted);
+    io::printfn("```");
     String expected = `
 fn int main(String[] args)
 {

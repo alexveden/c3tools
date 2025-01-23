@@ -53,6 +53,6 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
         // }
     }
 
-    return "";
+    return contents;
 }
 

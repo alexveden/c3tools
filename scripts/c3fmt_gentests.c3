@@ -44,7 +44,10 @@ fn void! load_corpus(CodeGen* code, String path) @local {
 				code.wn("defer fmt.free()");
 				// NOTE: adding \n to input + input[1..] when check for visual formatting reasons
 				code.wn("String input = `\n%s`", c.case_input);
-				code.wn("String formatted = fmt.format(input[1..])!!");
+				code.wn("String formatted = fmt.format(input[1..], print_lex: true)!!");
+				code.wn("io::printfn(\"formatted code\\n```\")");
+				code.wn("io::print(formatted)");
+				code.wn("io::printfn(\"```\")");
 				code.wn("String expected = `\n%s`", c.case_output);
 				code.wn("test::@check(codecorpus::compare_output(expected[1..], formatted))");
 			};
@@ -63,6 +66,7 @@ fn int main(String[] args)
 	code.@module("test::c3tools::c3fmt_autogen @test");
 	code.@import("c3tools::codefmt");
 	code.@import("c3tools::codecorpus");
+	code.@import("std::io");
 
 	Path p = path::temp_cwd()!!;
 	io::printfn("cwd: %s", p.str_view());
