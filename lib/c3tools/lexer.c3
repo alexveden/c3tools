@@ -1389,6 +1389,7 @@ enum TokenType : uint
 	RPAREN,           // )
 	STAR,             // *
 	UNDERSCORE,       // _
+	SPACE,            // ' '
 
 	// two character tokens.
 	AND,              // &&
@@ -1673,6 +1674,8 @@ fn String token_type_to_string(TokenType type)
 			return "*";
 		case UNDERSCORE:
 			return "_";
+		case SPACE:
+			return " ";
 
 		// Two character tokens
 		case AND:
