@@ -233,48 +233,31 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) {
         case INVALID_TOKEN:
             assert(t.type == FN);
             self.trace("ENTRY");
-            self.write("fn ");
+            self.write("fn");
             state.transition(RETURN);
         case RETURN:
             self.trace("RETURN");
             switch(t.type) {
                 case AT_IDENT:
-                    nextcase STATE: state.transition(IDENT);
-                case DOT:
-                    nextcase STATE: state.transition(IDENT);
                 case IDENT:
-                    if (state.scope_depth == 0) nextcase STATE: state.transition(IDENT);
+                    if (state.scope_depth == 0 && state.last_token != DOT) self.write(" ");
+                    nextcase default;
                 case TYPE_IDENT:
-                    // function name, make a transition if no scope and ret_type is set
-                    self.write("%s ", t.value);
-                    state.transition(IDENT);
-                default:
-                    break;
-            }
-        case IDENT:
-            self.trace("INDENT");
-            // function name 
-            switch(t.type) {
-                case AT_IDENT:
-                case IDENT:
-                case TYPE_IDENT:
-                    // struct based functions may contain TypeName.func_name
-                    self.write("%s", t.value);
-                    break;
+                    if (state.scope_depth == 0) self.write(" ");
+                    nextcase default;
                 case LPAREN:
-                    state.transition(VAR);
-                    return self.enter_state(&CodeFmt.format_fn_args, t);
+                    nextcase STATE: state.transition(VAR);
                 default:
-                    break;
+                    self.write("%s", t.value);
             }
         case VAR:
             self.trace("VAR");
             switch(t.type) {
-                case AT_IDENT:
-                    nextcase STATE: state.transition(AT_IDENT);
                 case LPAREN:
                     state.transition(VAR);
                     return self.enter_state(&CodeFmt.format_fn_args, t);
+                case AT_IDENT:
+                    nextcase STATE: state.transition(AT_IDENT);
                 case LBRACE:
                     state.transition(SCOPE);
                     return self.enter_state(&CodeFmt.format_fn_scope, t);

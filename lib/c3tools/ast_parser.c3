@@ -56,7 +56,8 @@ macro NodeParserState.check_scope(&self, TokenType t) {
 
 macro TokenType NodeParserState.check(&self, Token* t) {
     // assert(self.current_state != INVALID_TOKEN, "missing initialization?");
-    self.last_state = self.current_state;
+    self.last_token = self.current_token;
+    self.current_token = t.type;
     self.check_scope(t.type);
     return self.current_state;
 }

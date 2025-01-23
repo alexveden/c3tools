@@ -25,7 +25,8 @@ def NodeParser = fn bool (Ast* ast, AstNode* node, Token* t, NodeParserState* st
 
 struct NodeParserState {
     TokenType current_state;
-    TokenType last_state;
+    TokenType last_token;
+    TokenType current_token;
     AstNode* sub_node;
     uint scope_depth;
     TokenType[32] scope_stack;
