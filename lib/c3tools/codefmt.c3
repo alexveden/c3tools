@@ -12,6 +12,7 @@ struct CodeFmt {
     List(<CodeFmtState>) state_stack;
     List(<Token>) token_cache;
     int _indent_level;
+    int _line_used;
     bool _print_lex;
     Lexer _lexer;
 }
@@ -101,24 +102,60 @@ macro CodeFmt.trace(&self, $msg, args...) {
 }
 
 macro void CodeFmt.write(&self, String format, args...) {
-    self.buf.appendf(format, ...args);
+    usz len = self.buf.appendf(format, ...args)!!;
+    self._line_used += (int)len;
 }
 
 macro void CodeFmt.newline(&self) {
     self.buf.append("\n");
+    self._line_used = 0;
     for(int i = 0; i < self._indent_level; i++) {
         // TODO: add tabs too
         self.buf.append(" ");
         self.buf.append(" ");
         self.buf.append(" ");
         self.buf.append(" ");
+        self._line_used += 4;
     }
 }
 
 macro void CodeFmt.dump_token_cache(&self) {
-    self.trace("dump_token_cache");
+    usz token_len = 0;
     foreach(t: self.token_cache) {
-        self.write(t.value);
+        token_len += t.value.len;
+    }
+    self.trace("dump_token_cache: _line_used: %d, cache_len: %d", self._line_used, token_len);
+    if (self._line_used + token_len <= self.max_line_width) {
+        // Fits in line no wrapping needed
+        foreach(t: self.token_cache) {
+            self.write(t.value);
+        }
+    } else {
+        NodeParserState state;
+        foreach(t: self.token_cache) {
+            // NOTE: using this only for checking internal scope_depth
+            state.check(&t);
+            switch(t.type){
+                case LPAREN:
+                    if (state.scope_depth == 1) {
+                        self.write(t.value);
+                        self.indent();
+                        self.newline();
+                    } else {
+                        self.write(t.value);
+                    }
+                case RPAREN:
+                    if (state.scope_depth == 0) {
+                        self.dedent();
+                        self.newline();
+                        self.write(t.value);
+                    } else {
+                        self.write(t.value);
+                    }
+                default:
+                    self.write(t.value);
+            }
+        }
     }
     self.token_cache.clear();
 }
