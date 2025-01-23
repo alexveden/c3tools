@@ -156,7 +156,7 @@ fn void test_corpus__functions__ret_generic_method_attrs()
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
     String input = `
-fn List(<int>)*! 
+fn List(<int>) * ! 
 Foo.main(
 String[] args
 ) @test @if("dio" || too) { return   0   ;}
