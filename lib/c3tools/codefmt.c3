@@ -10,7 +10,9 @@ struct CodeFmt {
     int max_line_width;
     DString buf;
     List(<CodeFmtState>) state_stack;
+    List(<Token>) token_cache;
     int _indent_level;
+    bool _print_lex;
 }
 
 
@@ -25,22 +27,25 @@ fn CodeFmt CodeFmt.new_init(int max_line_width=80) @operator(construct) {
     };
     self.buf.new_init(); 
     self.state_stack.new_init();
+    self.token_cache.new_init();
     return self;
 }
 
 fn void CodeFmt.free(&self) {
     self.buf.free();
     self.state_stack.free();
+    self.token_cache.free();
 }
 
 fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
+    self._print_lex = print_lex;
     self.buf.clear();
     self.state_stack.clear();
 
     Lexer lexer;
 	lexer::init(&lexer, contents);
 	while LOOP: (lexer.next_token()) {
-	    if (print_lex) lexer.token.print();
+	    if (print_lex) lexer.token.print(new_line: true);
 
 	    if (lexer.token.type == EOF) {
 	        if (self.state_stack.len() != 0) {
@@ -87,6 +92,13 @@ macro bool! CodeFmt.@fail(&self, Token* t, String msg) {
     return IoError.GENERAL_ERROR?;
 }
 
+macro CodeFmt.trace(&self, $msg, args...) {
+    if (!self._print_lex) return;
+
+    io::eprintf("\t\t%s (%s:%d): ", $$FUNC, $$FILE, $$LINE);
+    io::eprintfn($msg, ...args);
+}
+
 macro void CodeFmt.write(&self, String format, args...) {
     self.buf.appendf(format, ...args);
 }
@@ -100,6 +112,14 @@ macro void CodeFmt.newline(&self) {
         self.buf.append(" ");
         self.buf.append(" ");
     }
+}
+
+macro void CodeFmt.dump_token_cache(&self) {
+    self.trace("dump_token_cache");
+    foreach(t: self.token_cache) {
+        self.write(t.value);
+    }
+    self.token_cache.clear();
 }
 
 macro void CodeFmt.indent(&self) {
@@ -123,12 +143,12 @@ fn bool! CodeFmt.format_statement(CodeFmt* self, Token* t, NodeParserState* stat
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
-            io::printfn("format_fn_statement entry");
+            self.trace("ENTRY");
             self.newline();
             self.write("%s", lexer::token_type_to_string(t.type));
             state.transition(SCOPE);
         case SCOPE:
-            io::printfn("format_fn_statement SCOPE");
+            self.trace("SCOPE");
             switch(t.type) {
                 case EOS:
                     return true;
@@ -146,13 +166,13 @@ fn bool! CodeFmt.format_fn_scope(CodeFmt* self, Token* t, NodeParserState* state
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
             assert(t.type == LBRACE);
-            io::printfn("format_fn_scope entry");
+            self.trace("ENTRY");
             self.newline();
             self.write("{");
             self.indent();
             state.transition(SCOPE);
         case SCOPE:
-            io::printfn("format_fn_args SCOPE");
+            self.trace("SCOPE");
             switch(t.type) {
                 case RETURN:
                     return self.enter_state(&CodeFmt.format_statement, t);
@@ -169,7 +189,7 @@ fn bool! CodeFmt.format_fn_scope(CodeFmt* self, Token* t, NodeParserState* state
                     self.@fail(t, "unexpected token")!;
             }
         default:
-            io::printfn("format_fn_args default");
+            self.trace("format_fn_args default");
             
     }
     return false;
@@ -178,20 +198,23 @@ fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state)
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
             assert(t.type == LPAREN);
-            io::printfn("format_fn_args entry");
-            self.write("(");
-            state.transition(VAR);
+            assert(self.token_cache.len() == 0, "forgot dump_token_cache?");
+            self.trace("ENTRY");
+            nextcase STATE: state.transition(VAR);
         case VAR:
-            io::printfn("format_fn_args VAR");
+            self.trace("VAR");
             switch(t.type) {
                 case RPAREN:
-                    self.write(")");
+                    self.token_cache.push(*t);
+
+                    self.dump_token_cache();
                     return true;
                 default:
+                    self.token_cache.push(*t);
                     break;
             }
         default:
-            io::printfn("format_fn_args default");
+            self.trace("format_fn_args default");
             
     }
 
@@ -204,11 +227,11 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) {
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
             assert(t.type == FN);
-            io::printfn("format_fn entry");
+            self.trace("ENTRY");
             self.write("fn ");
             state.transition(RETURN);
         case RETURN:
-            io::printfn("format_fn RETURN");
+            self.trace("RETURN");
             switch(t.type) {
                 case AT_IDENT:
                     nextcase STATE: state.transition(IDENT);
@@ -224,7 +247,7 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) {
                     break;
             }
         case IDENT:
-            io::printfn("format_fn INDENT");
+            self.trace("INDENT");
             // function name 
             switch(t.type) {
                 case AT_IDENT:
@@ -240,7 +263,7 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) {
                     break;
             }
         case VAR:
-            io::printfn("format_fn VAR");
+            self.trace("VAR");
             switch(t.type) {
                 case AT_IDENT:
                     nextcase STATE: state.transition(AT_IDENT);
@@ -254,7 +277,7 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) {
                     break;
             }
         case AT_IDENT: // regular function attributes
-            io::printfn("format_fn AT_IDENT");
+            self.trace("AT_IDENT");
             switch(t.type) {
                 case AT_IDENT:
                     break;
@@ -266,7 +289,7 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) {
                     break;
             }
         case SCOPE: // regular function scope { ... }
-            io::printfn("format_fn SCOPE");
+            self.trace("SCOPE");
             switch(t.type) {
                 case LBRACE:           // {
                     if (state.scope_depth == 1) {

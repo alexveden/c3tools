@@ -49,7 +49,10 @@ fn String Token.to_string(&self, Allocator allocator) @dynamic {
 	};
 }
 
-fn void Token.print(&self, bool new_line = false) {
+fn void Token.print(&self, bool new_line = false, int padding = 0) {
+	assert(padding >= 0);
+
+	usz plen = 0;
 	switch(self.type)
 	{
 		case IDENT:
@@ -64,8 +67,8 @@ fn void Token.print(&self, bool new_line = false) {
 		case AT_IDENT:
 		case AT_TYPE_IDENT:
 		case AT_CONST_IDENT:
-			io::printf("%s[%s]%s", 
-					   lexer::token_type_to_string(self.type), self.value, new_line ? "\n" : " ");
+			plen = io::printf("%s[%s]", 
+					   lexer::token_type_to_string(self.type), self.value)!!;
 			break;
 		case STRING:
 		case RAW_STRING:
@@ -73,26 +76,39 @@ fn void Token.print(&self, bool new_line = false) {
 		case REAL:
 		case CHAR_LITERAL:
 		case BYTES:
-			io::printf("%s[%s]%s", 
-					   lexer::token_type_to_string(self.type), self.value, new_line ? "\n" : " ");
+			plen = io::printf("%s[%s]", 
+					   lexer::token_type_to_string(self.type), self.value)!!;
 			break;
 		case DOCS_START:
 		case COMMENT_SINGLE:
 		case COMMENT_SINGLE_INLINE:
 		case COMMENT_MULTI:
 		case COMMENT_MULTI_INLINE:
-			io::printf("%s`#%d`%s", 
-					   lexer::token_type_to_string(self.type), self.value.len, new_line ? "\n" : " ");
+			plen = io::printf("%s`#%d`", 
+					   lexer::token_type_to_string(self.type), self.value.len)!!;
 			break;
 		case EOS:
 		case EOF:
 		case EMPTY_LINE:
-			io::printf("%s%s", lexer::token_type_to_string(self.type), new_line ? "\n": " ");
+			plen = io::printf("%s", lexer::token_type_to_string(self.type))!!;
 			break;
 		default:
-			io::printf("%s%s", lexer::token_type_to_string(self.type), new_line ? "\n" : " ");
+			plen = io::printf("%s", lexer::token_type_to_string(self.type))!!;
 	}
 
+	if (padding > 0) {
+		assert(plen > 0);
+		for(int i = 0; i < padding - plen; i++){
+			io::print(" ");
+		}
+	}
+
+	if (new_line){
+		io::print("\n");
+	} else {
+		io::print(" ");
+	}
+	
 }
 
 <*
