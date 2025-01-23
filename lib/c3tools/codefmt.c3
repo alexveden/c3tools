@@ -210,8 +210,13 @@ fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state)
 
                     self.dump_token_cache();
                     return true;
-                case IDENT:
+                case COMMA:
+                    self.token_cache.push(*t);
                     if (state.scope_depth == 1) {
+                        self.token_cache.push(Token{.type = SPACE, .value = " "});
+                    }
+                case IDENT:
+                    if (state.scope_depth == 1 && state.last_token != COMMA) {
                         self.token_cache.push(Token{.type = SPACE, .value = " "});
                     }
                     nextcase default;

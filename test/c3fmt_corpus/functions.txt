@@ -108,3 +108,20 @@ fn String[]! Foo.main(String[] args)
     return 0;
 }
 
+================================================================================
+returns_multiple_arguments
+================================================================================
+
+fn String[]! 
+Foo.main(
+String[] args, int* foo, List(<float>)     
+bar, na   ,    varg...
+) { return   0   ;}
+
+--------------------------------------------------------------------------------
+
+fn String[]! Foo.main(String[] args, int* foo, List(<float>) bar, na, varg...)
+{
+    return 0;
+}
+
