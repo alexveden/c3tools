@@ -45,5 +45,8 @@ fn void test_format_basic() {
     `;
     String out = fmt.format(content, print_lex: true)!!;
 
+    io::printfn("\n\nFormatted code");
+    io::printfn("```\n%s```", out);
+
     test::equal(1, 0);
 }
