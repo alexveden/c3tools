@@ -33,3 +33,17 @@ String[] args
 }
 `);
 }
+
+fn void test_format_basic() {
+    CodeFmt fmt = CodeFmt.new_init();
+    defer fmt.free();
+    
+    test::equal(fmt.max_line_width, 80);
+
+    String content = `
+    fn void main() {}
+    `;
+    String out = fmt.format(content, print_lex: true)!!;
+
+    test::equal(1, 0);
+}

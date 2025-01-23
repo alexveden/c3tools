@@ -39,7 +39,7 @@ fn void! load_corpus(CodeGen* code, String path) @local {
 	    file_part = file_part[:file_part.rindex_of(".txt")!!];
 
 		foreach(c: corpus){
-			code.@fn("void test_c3fmt__%s__%s()", file_part, c.case_name) {
+			code.@fn("void test_corpus__%s__%s()", file_part, c.case_name) {
 				code.wn("CodeFmt fmt = CodeFmt.new_init()");
 				code.wn("defer fmt.free()");
 				// NOTE: adding \n to input + input[1..] when check for visual formatting reasons
@@ -50,6 +50,7 @@ fn void! load_corpus(CodeGen* code, String path) @local {
 				code.wn("io::printfn(\"```\")");
 				code.wn("String expected = `\n%s`", c.case_output);
 				code.wn("test::@check(codecorpus::compare_output(expected[1..], formatted))");
+				// TODO: add reformatted test (no double formatting!)
 			};
 		}
 
@@ -72,7 +73,7 @@ fn int main(String[] args)
 	io::printfn("cwd: %s", p.str_view());
 
 	String cwd = "../test/c3fmt_corpus/";
-	String out_file = "../test/c3fmt_autogen.c3";
+	String out_file = "../test/test_c3fmt_autogen.c3";
 
 	load_corpus(code, cwd)!!;
 

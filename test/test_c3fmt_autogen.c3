@@ -3,7 +3,7 @@ import c3tools::codefmt;
 import c3tools::codecorpus;
 import std::io;
 
-fn void test_c3fmt__functions__simple_main() 
+fn void test_corpus__functions__simple_main() 
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -26,7 +26,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted));
 }
 
-fn void test_c3fmt__functions__simple_main_int() 
+fn void test_corpus__functions__simple_main_int() 
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();

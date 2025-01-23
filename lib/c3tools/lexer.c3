@@ -87,7 +87,7 @@ fn void Token.print(&self, bool new_line = false) {
 		case EOS:
 		case EOF:
 		case EMPTY_LINE:
-			io::printf("%s\n", lexer::token_type_to_string(self.type));
+			io::printf("%s%s", lexer::token_type_to_string(self.type), new_line ? "\n": " ");
 			break;
 		default:
 			io::printf("%s%s", lexer::token_type_to_string(self.type), new_line ? "\n" : " ");
