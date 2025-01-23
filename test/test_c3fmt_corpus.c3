@@ -1,4 +1,4 @@
-module test::c3tools::c3fmt_autogen @test;
+module test::c3tools::c3fmt_corpus @test;
 import c3tools::codefmt;
 import c3tools::codecorpus;
 import std::io;

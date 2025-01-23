@@ -68,7 +68,7 @@ fn int main(String[] args)
 	CodeGen* code = CodeGen{}.new_init();
 	defer code.free();
 
-	code.@module("test::c3tools::c3fmt_autogen @test");
+	code.@module("test::c3tools::c3fmt_corpus @test");
 	code.@import("c3tools::codefmt");
 	code.@import("c3tools::codecorpus");
 	code.@import("std::io");
@@ -77,7 +77,7 @@ fn int main(String[] args)
 	io::printfn("cwd: %s", p.str_view());
 
 	String cwd = "../test/c3fmt_corpus/";
-	String out_file = "../test/test_c3fmt_autogen.c3";
+	String out_file = "../test/test_c3fmt_corpus.c3";
 
 	load_corpus(code, cwd)!!;
 
