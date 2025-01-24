@@ -155,6 +155,85 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `double format mismatch`);
 }
 
+fn void test_corpus__statements__double_long_call() 
+{
+    CodeFmt fmt = CodeFmt.new_init();
+    defer fmt.free();
+    String input = `
+fn void main() 
+{ 
+    return io::printf("soo", a, sooo::  foo::bar  (    "adskjalsda", looooong, var)) + 
+    io::printf(
+        "soo", a, 
+        sooo::foo::bar("adskjalsda", looooong, var), another_var
+    );
+}
+
+`;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
+    io::printfn("formatted code\n```");
+    io::print(formatted);
+    io::printfn("```");
+    String expected = `
+fn void main()
+{
+    return io::printf(
+        "soo",
+        a,
+        sooo::foo::bar("adskjalsda",looooong,var)
+    ) + io::printf(
+        "soo",
+        a,
+        sooo::foo::bar("adskjalsda",looooong,var),
+        another_var
+    );
+}
+
+`;
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
+    String fmt_out = formatted.copy();
+    defer fmt_out.free();
+    formatted = fmt.format(fmt_out, print_lex: false)!!;
+    assert(fmt_out.ptr != formatted.ptr);
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `double format mismatch`);
+}
+
+fn void test_corpus__statements__arith_and_long_call() 
+{
+    CodeFmt fmt = CodeFmt.new_init();
+    defer fmt.free();
+    String input = `
+fn void main() 
+{ 
+    return 2 + foo_log_long + 
+    io::printf(
+        "soo", a, 
+        sooo::foo::bar("adskjalsda", looooong, var), another_var
+    ) + bar;
+}
+
+`;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
+    io::printfn("formatted code\n```");
+    io::print(formatted);
+    io::printfn("```");
+    String expected = `
+fn void main()
+{
+    return 2 + foo_log_long + io::printf(
+        "soo", a, sooo::foo::bar("adskjalsda", looooong, var), another_var
+    ) + bar;
+}
+
+`;
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
+    String fmt_out = formatted.copy();
+    defer fmt_out.free();
+    formatted = fmt.format(fmt_out, print_lex: false)!!;
+    assert(fmt_out.ptr != formatted.ptr);
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `double format mismatch`);
+}
+
 fn void test_corpus__functions__simple_main() 
 {
     CodeFmt fmt = CodeFmt.new_init();

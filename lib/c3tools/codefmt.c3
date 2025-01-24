@@ -88,6 +88,10 @@ fn bool! CodeFmt.enter_state(&self, CodeFmtFn new_state, Token* t) {
 
 macro bool! CodeFmt.@fail(&self, Token* t, String msg) {
     io::eprintfn(
+        "Patially formatted code:\n```\n%s```", 
+        self.buf.str_view()
+    );
+    io::eprintfn(
         "Error (%s:%d) at [Token: %s] line:col %d:%d - %s", 
         $$FILE, $$LINE, t.type, t.row, t.col, msg
     );
@@ -174,7 +178,7 @@ macro void CodeFmt.statement_add(&self, Token t) {
     if (post_space) self._token_cache.push(TOKEN_SPACE);
 }
 
-macro void CodeFmt.statement_dump(&self) {
+macro void! CodeFmt.statement_dump(&self) {
     usz token_len = 0;
     usz break_len = 0;
     int break_pos = -1;
@@ -263,9 +267,10 @@ macro void CodeFmt.statement_dump(&self) {
                     }
                 case brake_type:
                     if (tmpstate.scope_depth == 0) {
-                        self.dedent();
+                        self.dedent()!;
                         self.newline();
                         should_break = false;
+                        brake_type = INVALID_TOKEN;
                         self.write("%s", t.value);
                     } else {
                         self.write("%s", t.value);
@@ -296,11 +301,15 @@ macro void CodeFmt.statement_dump(&self) {
 }
 
 macro void CodeFmt.indent(&self) {
+    self.trace("indent");
     self._indent_level++;
 }
 
-macro void CodeFmt.dedent(&self) {
-    assert(self._indent_level > 0);
+macro void! CodeFmt.dedent(&self) {
+    self.trace("dedent");
+    if(self._indent_level == 0) {
+        self.@fail(&self._lexer.token, "indentation error")!;
+    }
     self._indent_level--;
 }
 
@@ -326,7 +335,7 @@ fn bool! CodeFmt.format_statement(CodeFmt* self, Token* t, NodeParserState* stat
             self.trace("SCOPE");
             switch(t.type) {
                 case EOS:
-                    self.statement_dump();
+                    self.statement_dump()!;
                     return true;
                 default:
                     self.statement_add(*t);
@@ -354,7 +363,7 @@ fn bool! CodeFmt.format_fn_scope(CodeFmt* self, Token* t, NodeParserState* state
                     self.write(";");
                 case RBRACE:
                     if (state.scope_depth == 0) {
-                        self.dedent();
+                        self.dedent()!;
                         self.newline();
                         self.write("}");
                         return true;
@@ -364,7 +373,7 @@ fn bool! CodeFmt.format_fn_scope(CodeFmt* self, Token* t, NodeParserState* state
                     return self.enter_state(&CodeFmt.format_statement, t);
             }
         default:
-            self.trace("format_fn_args default");
+            unreachable();
             
     }
     return false;
@@ -382,7 +391,7 @@ fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state)
                 case RPAREN:
                     self._token_cache.push(*t);
 
-                    self.statement_dump();
+                    self.statement_dump()!;
                     return true;
                 case COMMA:
                     self._token_cache.push(*t);

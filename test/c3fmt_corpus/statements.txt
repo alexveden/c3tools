@@ -108,3 +108,54 @@ fn void main()
     return;
 }
 
+================================================================================
+double_long_call
+================================================================================
+
+fn void main() 
+{ 
+    return io::printf("soo", a, sooo::  foo::bar  (    "adskjalsda", looooong, var)) + 
+    io::printf(
+        "soo", a, 
+        sooo::foo::bar("adskjalsda", looooong, var), another_var
+    );
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    return io::printf(
+        "soo",
+        a,
+        sooo::foo::bar("adskjalsda",looooong,var)
+    ) + io::printf(
+        "soo",
+        a,
+        sooo::foo::bar("adskjalsda",looooong,var),
+        another_var
+    );
+}
+
+================================================================================
+arith_and_long_call
+================================================================================
+
+fn void main() 
+{ 
+    return 2 + foo_log_long + 
+    io::printf(
+        "soo", a, 
+        sooo::foo::bar("adskjalsda", looooong, var), another_var
+    ) + bar;
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    return 2 + foo_log_long + io::printf(
+        "soo", a, sooo::foo::bar("adskjalsda", looooong, var), another_var
+    ) + bar;
+}
+
