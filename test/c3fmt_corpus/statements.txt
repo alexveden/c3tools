@@ -284,3 +284,59 @@ fn void main()
     );
 }
 
+================================================================================
+designated_initializers_struct
+================================================================================
+
+fn void main() 
+{ 
+    MyStruct foo = {.hello=1,.world =2};
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    MyStruct foo = {.hello = 1, .world = 2};
+}
+
+================================================================================
+designated_initializers_struct_wrap
+================================================================================
+
+fn void main() 
+{ 
+    MyStruct foo = {.hello=1,.world =2, .anothe_call = io::prinf("hi there it's c3fmt")   };
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    MyStruct foo = {
+        .hello = 1, .world = 2, .anothe_call = io::prinf("hi there it's c3fmt")
+    };
+}
+
+================================================================================
+designated_initializers_struct_wrap_multiline
+================================================================================
+
+fn void main() 
+{ 
+    MyStruct foo = {.question = "how long it could be", .hello=1,.world =2, .anothe_call = io::prinf("hi there it's c3fmt")  , this_is_a_lloong_field = (x & 12) };
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    MyStruct foo = {
+        .question = "how long it could be",
+        .hello = 1,
+        .world = 2,
+        .anothe_call = io::prinf("hi there it's c3fmt"),
+        this_is_a_lloong_field = (x & 12)
+    };
+}
+

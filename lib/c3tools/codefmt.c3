@@ -162,6 +162,9 @@ macro void CodeFmt.statement_add(&self, Token t) {
 		case SHR_ASSIGN:
 		case AND:
 		case OR:
+		case AMP:
+		case BIT_OR:
+		case BIT_XOR:
             post_space = true;
             pre_space = true;
         case COMMA:
@@ -215,9 +218,13 @@ macro void! CodeFmt.statement_dump(&self) {
 		    case SHR_ASSIGN:
 		    case EQ:
 		        // if it's an assignment use only RHS part for splitting
-		        is_assignment = true;
-		        break_pos = -1;
-		        break_len = 0;
+		        if (tmpstate.scope_depth == 0) {
+		            // NOTE: use only first assignment (struct designated initializers case)
+		            is_assignment = true;
+		            break_pos = -1;
+		            break_len = 0;
+		        }
+		    case LBRACE:
 		    case LPAREN:
                 if (break_pos != -1 ) nextcase default;
                 if (tmpstate.scope_depth != 1) nextcase default;
@@ -233,6 +240,7 @@ macro void! CodeFmt.statement_dump(&self) {
                 //     default:
                 //         nextcase TOP: default;
                 // }
+		    case RBRACE:
 		    case RPAREN:
                 if (break_pos == -1 ) nextcase default;
                 if (tmpstate.scope_depth != 0) nextcase default;
@@ -271,6 +279,14 @@ macro void! CodeFmt.statement_dump(&self) {
             tmpstate.check(&t); // this is used only for current scope_depth
 
             switch TOP: (t.type){
+                case LBRACE:
+                    self.write("%s", t.value);
+                    self.indent();
+                    self.newline();
+                case RBRACE:
+                    self.dedent()!;
+                    self.newline();
+                    self.write("%s", t.value);
                 case LPAREN:
                     if (tmpstate.scope_depth == 1 && brake_type == INVALID_TOKEN) {
                         self.write("%s", t.value);
