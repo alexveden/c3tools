@@ -1,3 +1,32 @@
+<*
+Code generation tool for C3, mimics original code structure
+
+Example: ```c3
+
+CodeGen* c = CodeGen{}.new_init(); 
+defer c.free();
+
+c.@module("myfoo @if(%d)", c.indent);
+c.@import("std::io");
+
+c.@struct("MyType @local") {
+    c.wn("float a");
+    c.wn("int b");
+    c.@struct("substruct") {
+        c.wn("float c");
+    };
+};
+
+c.@fn("void my_foo() @test"){
+    c.@if("x == 1") {
+        c.wn("int b = %s", c.indent);
+    };
+    c.@return("0");
+};
+
+io::printfn("%s", c.buf.str_view());
+```
+*>
 module c3tools::codegen;
 
 struct CodeGen {
@@ -5,23 +34,34 @@ struct CodeGen {
     DString buf;
 }
 
-fn void CodeGen.free(&self) {
-    self.buf.free();
-}
-
+<*
+CodeGen constructor 
+*>
 fn CodeGen* CodeGen.new_init(&self) {
     self.buf.new_init();
     return self;
 }
 
+<*
+CodeGen destructor 
+*>
+fn void CodeGen.free(&self) {
+    self.buf.free();
+}
+
+
+<* Reset CodeGen buffer and state *>
 fn void CodeGen.reset(&self) {
     self.buf.clear();
 }
 
+<* Writes new code statement indent + code + ;\n *> 
 macro CodeGen.wn(&self, String format, args...) {
     self.ws(format, ...args);
     self.buf.appendf(";\n");
 }
+
+<* Writes new code (with indentation) *> 
 macro CodeGen.ws(&self, String format, args...) {
     for(int i = 0; i < self.indent; i++) {
         self.buf.append(" ");
@@ -54,7 +94,6 @@ macro CodeGen.@if(&self, #format, args...; @body())
     self.ws("}\n");
 }
 
-
 <* Gen c3 function body and scope *>
 macro CodeGen.@fn(&self, #format, args...; @body())
 {
@@ -67,6 +106,7 @@ macro CodeGen.@fn(&self, #format, args...; @body())
     self.ws("}\n");
 }
 
+<* Gen c3 struct (support sub-structs as well) *>
 macro CodeGen.@struct(&self, #format, args...; @body())
 {
     if (self.indent == 0) self.ws("\n");

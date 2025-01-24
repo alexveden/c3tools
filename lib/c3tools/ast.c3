@@ -162,6 +162,7 @@ macro Ast.@node_join(self, node, DString out_str, String sep = ",")
     }
     return out_str.str_view();
 }
+
 macro uint Ast.@node_len(self, node)
 {
     uint len = 0;
@@ -172,6 +173,7 @@ macro uint Ast.@node_len(self, node)
     }
     return len;
 }
+
 macro Ast.@node_at(self, node, uint index)
 {
     uint len = 0;
@@ -306,6 +308,7 @@ fn Ast parse(String contents, String file_path, bool print_lex = false, DynamicA
 	return self;
 }
 
+
 fn AstProject AstProject.new_init(String proj_path, String stdlib_path) @operator(construct) {
     AstProject self = {
         .proj_path = proj_path,
@@ -324,6 +327,7 @@ fn AstProject AstProject.new_init(String proj_path, String stdlib_path) @operato
 
     return self;
 }
+
 fn void! AstProject.load_path(&self, String path) @local {
     assert(path);
 
@@ -375,12 +379,6 @@ fn int cmp_module(AstModule* a, AstModule* b) @private
 
 }
 
-// fn int cmp_decl(AstNode* a, AstNode* b) @private
-// {
-//     if (a.type == b.type) return cmp_str(a.value, b.value);
-//
-//     return a.type - b.type;
-// }
 
 fn void! AstProject.load(&self) {
     assert(self.modules.len() == 0, "double load?");
