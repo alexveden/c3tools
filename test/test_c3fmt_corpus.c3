@@ -357,6 +357,78 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `double format mismatch`);
 }
 
+fn void test_corpus__statements__assignment_with_call() 
+{
+    CodeFmt fmt = CodeFmt.new_init();
+    defer fmt.free();
+    String input = `
+fn void main() 
+{ 
+    foo[call(some,1,4, very_long_parametesr, anothe_one)] =
+    io::printf(
+        "soo", a, 
+        sooo::foo::bar("adskjalsda", looooong, var), another_var
+    );
+}
+
+`;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
+    io::printfn("formatted code\n```");
+    io::print(formatted);
+    io::printfn("```");
+    String expected = `
+fn void main()
+{
+    foo[call(some, 1, 4, very_long_parametesr, anothe_one)] = io::printf(
+        "soo", a, sooo::foo::bar("adskjalsda", looooong, var), another_var
+    );
+}
+
+`;
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
+    String fmt_out = formatted.copy();
+    defer fmt_out.free();
+    formatted = fmt.format(fmt_out, print_lex: false)!!;
+    assert(fmt_out.ptr != formatted.ptr);
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `double format mismatch`);
+}
+
+fn void test_corpus__statements__assignment_left_too_long() 
+{
+    CodeFmt fmt = CodeFmt.new_init();
+    defer fmt.free();
+    String input = `
+fn void main() 
+{ 
+    foo[call(some,1,4, very_long_parametesr, anothe_one, "some stuff is going on it's too wide")] =
+    io::printf(
+        "soo", a, 
+        sooo::foo::bar("adskjalsda", looooong, var), another_var
+    );
+}
+
+`;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
+    io::printfn("formatted code\n```");
+    io::print(formatted);
+    io::printfn("```");
+    String expected = `
+fn void main()
+{
+    foo[call(some, 1, 4, very_long_parametesr, anothe_one, "some stuff is going on it's too wide")] = io::printf(
+        "soo", a, sooo::foo::bar("adskjalsda", looooong, var), another_var
+    );
+}
+
+`;
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
+    String fmt_out = formatted.copy();
+    defer fmt_out.free();
+    formatted = fmt.format(fmt_out, print_lex: false)!!;
+    assert(fmt_out.ptr != formatted.ptr);
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `double format mismatch`);
+}
+
 fn void test_corpus__functions__simple_main() 
 {
     CodeFmt fmt = CodeFmt.new_init();

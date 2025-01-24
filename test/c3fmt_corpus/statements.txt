@@ -240,3 +240,47 @@ fn void main()
     );
 }
 
+================================================================================
+assignment_with_call
+================================================================================
+
+fn void main() 
+{ 
+    foo[call(some,1,4, very_long_parametesr, anothe_one)] =
+    io::printf(
+        "soo", a, 
+        sooo::foo::bar("adskjalsda", looooong, var), another_var
+    );
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    foo[call(some, 1, 4, very_long_parametesr, anothe_one)] = io::printf(
+        "soo", a, sooo::foo::bar("adskjalsda", looooong, var), another_var
+    );
+}
+
+================================================================================
+assignment_left_too_long
+================================================================================
+
+fn void main() 
+{ 
+    foo[call(some,1,4, very_long_parametesr, anothe_one, "some stuff is going on it's too wide")] =
+    io::printf(
+        "soo", a, 
+        sooo::foo::bar("adskjalsda", looooong, var), another_var
+    );
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    foo[call(some, 1, 4, very_long_parametesr, anothe_one, "some stuff is going on it's too wide")] = io::printf(
+        "soo", a, sooo::foo::bar("adskjalsda", looooong, var), another_var
+    );
+}
+
