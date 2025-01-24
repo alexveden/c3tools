@@ -176,11 +176,62 @@ macro void CodeFmt.statement_add(&self, Token t) {
 
 macro void CodeFmt.statement_dump(&self) {
     usz token_len = 0;
-    foreach(t: self._token_cache) {
+    usz break_len = 0;
+    int break_pos = -1;
+    bool is_assignment = false;
+    bool has_magic_comma = false;
+    TokenType last_non_space_tok = INVALID_TOKEN;
+    NodeParserState tmpstate;
+
+    foreach(i, t: self._token_cache) {
+        tmpstate.check(&t);
+
         token_len += t.value.len;
+        switch TOP: (t.type) {
+		    case BIT_AND_ASSIGN:
+		    case BIT_OR_ASSIGN:
+		    case BIT_XOR_ASSIGN:
+		    case DIV_ASSIGN:
+		    case MINUS_ASSIGN:
+		    case MULT_ASSIGN:
+		    case MOD_ASSIGN:
+		    case PLUS_ASSIGN:
+		    case SHL_ASSIGN:
+		    case SHR_ASSIGN:
+		    case EQ:
+		        // if it's an assignment use only RHS part for splitting
+		        is_assignment = true;
+		        break_pos = -1;
+		        break_len = 0;
+		    case LPAREN:
+                if (break_pos != -1 ) nextcase default;
+                if (tmpstate.scope_depth != 1) nextcase default;
+                // if (i == 0) nextcase default;
+                break_pos = (int)i;
+                break_len = 0;
+
+                // // NOTE: check if it's look like a call
+                // switch(tmpstate.last_token) {
+                //     case IDENT:
+                //     case CT_IDENT:
+                //     case AT_IDENT:
+                //     default:
+                //         nextcase TOP: default;
+                // }
+		    case RPAREN:
+                if (break_pos == -1 ) nextcase default;
+                if (tmpstate.scope_depth != 0) nextcase default;
+                if (last_non_space_tok == COMMA) has_magic_comma = true;
+            default:
+                if(break_pos != -1) break_len += t.value.len;
+                if(t.type != SPACE) last_non_space_tok = t.type;
+        }
     }
-    self.trace("statement_dump: _line_used: %d, cache_len: %d", self._line_used, token_len);
-    if (self._line_used + token_len <= self.max_line_width) {
+
+    self.trace("statement_dump: _line_used: %d, cache_len: %d, break_pos: %d break_len: %d last_non_space_tok: %s",
+        self._line_used, token_len, break_pos, break_len, last_non_space_tok
+    );
+    if (!has_magic_comma && self._line_used + token_len <= self.max_line_width) {
         // Fits in line no wrapping needed
         foreach(i, t: self._token_cache) {
             if (i < self._token_cache.len()-1){
@@ -191,25 +242,30 @@ macro void CodeFmt.statement_dump(&self) {
             }
         }
     } else {
-        NodeParserState state;
-        bool is_multiline = token_len + (self._indent_level + 1) * 4 > self.max_line_width;
+        tmpstate = NodeParserState{};
+        bool is_multiline = (has_magic_comma ||
+                             break_len + (self._indent_level + 1) * 4 > self.max_line_width);
+        TokenType brake_type = INVALID_TOKEN;
 
+        bool should_break = false;
         foreach(t: self._token_cache) {
             // NOTE: using this only for checking internal scope_depth
-            state.check(&t);
+            tmpstate.check(&t);
             switch(t.type){
                 case LPAREN:
-                    if (state.scope_depth == 1) {
+                    if (tmpstate.scope_depth == 1 && brake_type == INVALID_TOKEN) {
                         self.write("%s", t.value);
                         self.indent();
-                        self.newline();
+                        brake_type = RPAREN;
+                        should_break = true;
                     } else {
                         self.write("%s", t.value);
                     }
-                case RPAREN:
-                    if (state.scope_depth == 0) {
+                case brake_type:
+                    if (tmpstate.scope_depth == 0) {
                         self.dedent();
                         self.newline();
+                        should_break = false;
                         self.write("%s", t.value);
                     } else {
                         self.write("%s", t.value);
@@ -217,17 +273,21 @@ macro void CodeFmt.statement_dump(&self) {
                 case COMMA:
                     if (!is_multiline) nextcase default;
 
-                    if (state.scope_depth == 1) {
+                    if (tmpstate.scope_depth == 1) {
                         self.write("%s", t.value);
-                        self.newline();
+                        should_break = true;
                     } else {
                         self.write("%s", t.value);
                     }
                 case SPACE:
                     if (!is_multiline) nextcase default;
-                    if (state.last_token == COMMA) break;
+                    if (tmpstate.last_token == COMMA) break;
                     nextcase default;
                 default:
+                    if (should_break) {
+                        self.newline();
+                        should_break = false;
+                    }
                     self.write("%s", t.value);
             }
         }

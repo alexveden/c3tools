@@ -19,7 +19,7 @@ return;
 }
 
 `;
-    String formatted = fmt.format(input[1..], print_lex: false)!!;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
     io::printfn("formatted code\n```");
     io::print(formatted);
     io::printfn("```");
@@ -75,7 +75,7 @@ return;
 }
 
 `;
-    String formatted = fmt.format(input[1..], print_lex: false)!!;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
     io::printfn("formatted code\n```");
     io::print(formatted);
     io::printfn("```");
@@ -116,6 +116,45 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `double format mismatch`);
 }
 
+fn void test_corpus__statements__call_statement_single_line() 
+{
+    CodeFmt fmt = CodeFmt.new_init();
+    defer fmt.free();
+    String input = `
+fn void main() 
+{ 
+    io::printf("soo", a, sooo::  foo::bar  (    "adskjalsda", looooong, var));
+    io::printf(
+        "soo", a, 
+        sooo::foo::bar("adskjalsda", looooong, var), another_var
+    );
+return;
+}
+
+`;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
+    io::printfn("formatted code\n```");
+    io::print(formatted);
+    io::printfn("```");
+    String expected = `
+fn void main()
+{
+    io::printf("soo", a, sooo::foo::bar("adskjalsda", looooong, var));
+    io::printf(
+        "soo", a, sooo::foo::bar("adskjalsda", looooong, var), another_var
+    );
+    return;
+}
+
+`;
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
+    String fmt_out = formatted.copy();
+    defer fmt_out.free();
+    formatted = fmt.format(fmt_out, print_lex: false)!!;
+    assert(fmt_out.ptr != formatted.ptr);
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `double format mismatch`);
+}
+
 fn void test_corpus__functions__simple_main() 
 {
     CodeFmt fmt = CodeFmt.new_init();
@@ -125,7 +164,7 @@ fn void
 main() { return;}
 
 `;
-    String formatted = fmt.format(input[1..], print_lex: false)!!;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
     io::printfn("formatted code\n```");
     io::print(formatted);
     io::printfn("```");
@@ -155,7 +194,7 @@ String[] args
 ) { return   0   ;}
 
 `;
-    String formatted = fmt.format(input[1..], print_lex: false)!!;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
     io::printfn("formatted code\n```");
     io::print(formatted);
     io::printfn("```");
@@ -185,7 +224,7 @@ String[] args
 ) { return   0   ;}
 
 `;
-    String formatted = fmt.format(input[1..], print_lex: false)!!;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
     io::printfn("formatted code\n```");
     io::print(formatted);
     io::printfn("```");
@@ -215,7 +254,7 @@ String[] args
 ) { return   0   ;}
 
 `;
-    String formatted = fmt.format(input[1..], print_lex: false)!!;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
     io::printfn("formatted code\n```");
     io::print(formatted);
     io::printfn("```");
@@ -245,7 +284,7 @@ String[] args
 ) { return   0   ;}
 
 `;
-    String formatted = fmt.format(input[1..], print_lex: false)!!;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
     io::printfn("formatted code\n```");
     io::print(formatted);
     io::printfn("```");
@@ -275,7 +314,7 @@ String[] args
 ) @test @if("dio" || too) { return   0   ;}
 
 `;
-    String formatted = fmt.format(input[1..], print_lex: false)!!;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
     io::printfn("formatted code\n```");
     io::print(formatted);
     io::printfn("```");
@@ -305,7 +344,7 @@ String[] args
 ) { return   0   ;}
 
 `;
-    String formatted = fmt.format(input[1..], print_lex: false)!!;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
     io::printfn("formatted code\n```");
     io::print(formatted);
     io::printfn("```");
@@ -336,7 +375,7 @@ bar, na   ,    varg...
 ) { return   0   ;}
 
 `;
-    String formatted = fmt.format(input[1..], print_lex: false)!!;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
     io::printfn("formatted code\n```");
     io::print(formatted);
     io::printfn("```");
@@ -364,7 +403,7 @@ fn String[]! Foo.main(String[] args, int* foo, List(<float>) bar, MySuperClass[]
 ) { return   0   ;}
 
 `;
-    String formatted = fmt.format(input[1..], print_lex: false)!!;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
     io::printfn("formatted code\n```");
     io::print(formatted);
     io::printfn("```");
@@ -394,7 +433,7 @@ fn String[]! Foo.main(SoTypeIsHuuuuuuge ok, String[] args, int* foo, List(<float
 ) { return   0   ;}
 
 `;
-    String formatted = fmt.format(input[1..], print_lex: false)!!;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
     io::printfn("formatted code\n```");
     io::print(formatted);
     io::printfn("```");
@@ -406,6 +445,42 @@ fn String[]! Foo.main(
     List(<float>) bar,
     MySuperClass[] last,
     List(<ThisIsTooBig>) too_be_true
+)
+{
+    return 0;
+}
+
+`;
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
+    String fmt_out = formatted.copy();
+    defer fmt_out.free();
+    formatted = fmt.format(fmt_out, print_lex: false)!!;
+    assert(fmt_out.ptr != formatted.ptr);
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `double format mismatch`);
+}
+
+fn void test_corpus__functions__arguments_magic_comma() 
+{
+    CodeFmt fmt = CodeFmt.new_init();
+    defer fmt.free();
+    String input = `
+fn String[]! 
+Foo.main(
+String[] args, int* foo, List(<float>)     
+bar, na   ,
+) { return   0   ;}
+
+`;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
+    io::printfn("formatted code\n```");
+    io::print(formatted);
+    io::printfn("```");
+    String expected = `
+fn String[]! Foo.main(
+    String[] args,
+    int* foo,
+    List(<float>) bar,
+    na,
 )
 {
     return 0;

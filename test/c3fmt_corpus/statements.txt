@@ -83,3 +83,28 @@ fn void main()
     return;
 }
 
+================================================================================
+call_statement_single_line
+================================================================================
+
+fn void main() 
+{ 
+    io::printf("soo", a, sooo::  foo::bar  (    "adskjalsda", looooong, var));
+    io::printf(
+        "soo", a, 
+        sooo::foo::bar("adskjalsda", looooong, var), another_var
+    );
+return;
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    io::printf("soo", a, sooo::foo::bar("adskjalsda", looooong, var));
+    io::printf(
+        "soo", a, sooo::foo::bar("adskjalsda", looooong, var), another_var
+    );
+    return;
+}
+
