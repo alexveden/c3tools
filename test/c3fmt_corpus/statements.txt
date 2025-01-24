@@ -340,3 +340,32 @@ fn void main()
     };
 }
 
+================================================================================
+designated_initializers_with_sub_structs
+================================================================================
+
+fn void main() 
+{ 
+    MyStruct foo = {.question = "how long it could be",
+        .sub = {.hello=1,.world =2, .sub_sub = {.foo = bar, .zoo= bas}, .anothe_call = io::prinf(Foo{.nowrap=true}, "hi there it's c3fmt")  , this_is_a_lloong_field = (x & 12) } };
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    MyStruct foo = {
+        .question = "how long it could be",
+        .sub = {
+            .hello = 1,
+            .world = 2,
+            .sub_sub = {
+                .foo = bar,
+                .zoo = bas
+            },
+            .anothe_call = io::prinf(Foo{.nowrap = true}, "hi there it's c3fmt"),
+            this_is_a_lloong_field = (x & 12)
+        }
+    };
+}
+

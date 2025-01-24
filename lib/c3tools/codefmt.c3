@@ -281,11 +281,15 @@ macro void! CodeFmt.statement_dump(&self) {
             switch TOP: (t.type){
                 case LBRACE:
                     self.write("%s", t.value);
-                    self.indent();
-                    self.newline();
+                    if (tmpstate.scope_depth <= 1 || tmpstate.prev_scope(2) == LBRACE) {
+                        self.indent();
+                        self.newline();
+                    }
                 case RBRACE:
-                    self.dedent()!;
-                    self.newline();
+                    if (tmpstate.scope_depth == 0 || tmpstate.prev_scope(1) == LBRACE) {
+                        self.dedent()!;
+                        self.newline();
+                    }
                     self.write("%s", t.value);
                 case LPAREN:
                     if (tmpstate.scope_depth == 1 && brake_type == INVALID_TOKEN) {
@@ -310,7 +314,10 @@ macro void! CodeFmt.statement_dump(&self) {
                 case AND:
                 case COMMA:
                     if (is_multiline)  {
-                        if (tmpstate.scope_depth == 1) {
+                        if (
+                            tmpstate.scope_depth == 1 ||
+                            (tmpstate.scope_depth > 0 && tmpstate.scope_stack[tmpstate.scope_depth-1] == LBRACE)
+                        ) {
                             self.write("%s", t.value);
                             should_break = true;
                             break;
@@ -318,7 +325,11 @@ macro void! CodeFmt.statement_dump(&self) {
                     }
                     nextcase default;
                 case SPACE:
-                    if (is_multiline && tmpstate.scope_depth == 1) {
+                    if (is_multiline) {
+                        if (
+                            tmpstate.scope_depth == 1 ||
+                            (tmpstate.scope_depth > 0 && tmpstate.scope_stack[tmpstate.scope_depth-1] == LBRACE)
+                        ) {
                         switch(tmpstate.last_token) {
                             case OR:
                             case AND:
@@ -326,6 +337,7 @@ macro void! CodeFmt.statement_dump(&self) {
                                 break TOP;
                             default:
                                 break;
+                        }
                         }
                     }
                     nextcase default;
@@ -379,6 +391,9 @@ fn bool! CodeFmt.format_statement(CodeFmt* self, Token* t, NodeParserState* stat
             switch(t.type) {
                 case EOS:
                     self.statement_dump()!;
+                    if (state.scope_depth != 0) {
+                        self.@fail(t, "unclosed scope")!;
+                    }
                     return true;
                 default:
                     self.statement_add(*t);

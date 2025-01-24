@@ -527,6 +527,49 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `double format mismatch`);
 }
 
+fn void test_corpus__statements__designated_initializers_with_sub_structs() 
+{
+    CodeFmt fmt = CodeFmt.new_init();
+    defer fmt.free();
+    String input = `
+fn void main() 
+{ 
+    MyStruct foo = {.question = "how long it could be",
+        .sub = {.hello=1,.world =2, .sub_sub = {.foo = bar, .zoo= bas}, .anothe_call = io::prinf(Foo{.nowrap=true}, "hi there it's c3fmt")  , this_is_a_lloong_field = (x & 12) } };
+}
+
+`;
+    String formatted = fmt.format(input[1..], print_lex: true)!!;
+    io::printfn("formatted code\n```");
+    io::print(formatted);
+    io::printfn("```");
+    String expected = `
+fn void main()
+{
+    MyStruct foo = {
+        .question = "how long it could be",
+        .sub = {
+            .hello = 1,
+            .world = 2,
+            .sub_sub = {
+                .foo = bar,
+                .zoo = bas
+            },
+            .anothe_call = io::prinf(Foo{.nowrap = true}, "hi there it's c3fmt"),
+            this_is_a_lloong_field = (x & 12)
+        }
+    };
+}
+
+`;
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
+    String fmt_out = formatted.copy();
+    defer fmt_out.free();
+    formatted = fmt.format(fmt_out, print_lex: false)!!;
+    assert(fmt_out.ptr != formatted.ptr);
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `double format mismatch`);
+}
+
 fn void test_corpus__functions__simple_main() 
 {
     CodeFmt fmt = CodeFmt.new_init();

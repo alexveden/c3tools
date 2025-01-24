@@ -2,6 +2,17 @@ module c3tools::ast;
 import std::io;
 import c3tools::lexer @public;
 
+<* 
+Returns TokenType of current scope 
+
+@param offset "1 - last, 2 - last-2, etc.."
+@return "current scope, or INVALID_TOKEN if offset if too high or no scope at all"
+@require offset > 0
+*>
+macro TokenType NodeParserState.prev_scope(&self, usz offset) {
+    if (self.scope_depth < offset) return INVALID_TOKEN;
+    return self.scope_stack[self.scope_depth-offset];
+}
 
 macro NodeParserState.check_scope(&self, TokenType t) {
 
