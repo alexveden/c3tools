@@ -209,3 +209,34 @@ fn void main()
     ) || bar;
 }
 
+================================================================================
+chained_call
+================================================================================
+
+fn void main() 
+{ 
+    return 
+    io::printf(
+        "soo", a, 
+        sooo::foo::bar("adskjalsda", looooong, var), another_var
+    ).foo(a).bar(b).baz(c);
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    return io::printf(
+        "soo",
+        a,
+        sooo::foo::bar("adskjalsda", looooong, var),
+        another_var
+    ).foo(
+        a
+    ).bar(
+        b
+    ).baz(
+        c
+    );
+}
+
