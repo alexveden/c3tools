@@ -6,6 +6,9 @@ import std::io;
 import std::collections::list;
 
 
+<*
+Code Formatter Object
+*>
 struct CodeFmt {
     usz max_line_width;
     DString buf;
@@ -18,8 +21,30 @@ struct CodeFmt {
 }
 
 
+<*
+CodeFmt processing function signature
+*>
+def CodeFmtFn = fn bool! (CodeFmt* self, Token* t, NodeParserState* state);
+
 
 <*
+Item for code formatting state stack
+*>
+struct CodeFmtState {
+    CodeFmtFn state_fn;
+    NodeParserState state;
+}
+
+<* Simple white space synthetic token *>
+const Token TOKEN_SPACE = Token{.type = SPACE, .value = " "};
+
+/*
+*                  CODE FORMATTER OBJECT
+*/
+
+<*
+Code formatter constructor
+
 @require max_line_width >= 80 : "too short"
 @require max_line_width <= 120 : "too long"
 *>
@@ -33,12 +58,22 @@ fn CodeFmt CodeFmt.new_init(int max_line_width=80) @operator(construct) {
     return self;
 }
 
+
+<* 
+Code formatter destructor
+*>
 fn void CodeFmt.free(&self) {
     self.buf.free();
     self.state_stack.free();
     self._token_cache.free();
 }
 
+
+<*
+Formats code chunk and return str view of internal buffer. 
+
+NOTE: result will live until next CodeFmt.format() or CodeFmt.free() call 
+*>
 fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
     self._print_lex = print_lex;
     self.buf.clear();
@@ -80,12 +115,20 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
     return self.buf.str_view();
 }
 
+
+<*
+Pushes new state handler function to stack. Allows parsing sub-structs, etc...
+*>
 fn bool! CodeFmt.enter_state(&self, CodeFmtFn new_state, Token* t) {
     CodeFmtState state = {.state_fn = new_state };
     self.state_stack.push(state);
     return self.state_stack[^1].state_fn(self, t, &self.state_stack[^1].state)!;
 }
 
+
+<*
+Emits formatting procedure error with debug message
+*>
 macro bool! CodeFmt.@fail(&self, Token* t, String msg) {
     io::eprintfn(
         "Patially formatted code:\n```\n%s```", 
@@ -98,6 +141,10 @@ macro bool! CodeFmt.@fail(&self, Token* t, String msg) {
     return IoError.GENERAL_ERROR?;
 }
 
+
+<* 
+Debug logging (only when self._print_lex = true)
+*>
 macro CodeFmt.trace(&self, $msg, args...) {
     if (!self._print_lex) return;
 
@@ -105,11 +152,19 @@ macro CodeFmt.trace(&self, $msg, args...) {
     io::eprintfn($msg, ...args);
 }
 
+
+<*
+Writes code chunk into internal buffer
+*>
 macro void CodeFmt.write(&self, String format, args...) {
     usz len = self.buf.appendf(format, ...args)!!;
     self._line_used += (int)len;
 }
 
+
+<*
+Writes a new line into internal buffer with proper indentation
+*>
 macro void CodeFmt.newline(&self) {
     self.buf.append("\n");
     self._line_used = 0;
@@ -119,6 +174,7 @@ macro void CodeFmt.newline(&self) {
         self._line_used += 4;
     }
 }
+
 
 <* 
 Adds a token to composite statement cache for further formatting.
@@ -185,6 +241,7 @@ macro void CodeFmt.statement_add(&self, Token t) {
     self._token_cache.push(t);
     if (post_space) self._token_cache.push(TOKEN_SPACE);
 }
+
 
 <*
 Format and dump composite statement into code. 
@@ -355,11 +412,19 @@ macro void! CodeFmt.statement_dump(&self) {
     self._token_cache.clear();
 }
 
+
+<*
+Increase code indent
+*>
 macro void CodeFmt.indent(&self) {
     self.trace("indent");
     self._indent_level++;
 }
 
+
+<*
+Decreases code indent
+*>
 macro void! CodeFmt.dedent(&self) {
     self.trace("dedent");
     if(self._indent_level == 0) {
@@ -368,74 +433,103 @@ macro void! CodeFmt.dedent(&self) {
     self._indent_level--;
 }
 
-def CodeFmtFn = fn bool! (CodeFmt* self, Token* t, NodeParserState* state);
+/*
+*                  PROCESSING FUNCTIONS
+*/
 
+<*
+Callable code formatter (fn/macros)
 
-struct CodeFmtState {
-    CodeFmtFn state_fn;
-    NodeParserState state;
-}
-
-const Token TOKEN_SPACE = Token{.type = SPACE, .value = " "};
-
-fn bool! CodeFmt.format_statement(CodeFmt* self, Token* t, NodeParserState* state) {
+Format steps: format_fn_args -> format_fn_scope -> foreach(format_statement: statements)
+*>
+fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) {
 
     switch STATE: (state.check(t)){
-        case INVALID_TOKEN:
-            assert(self._token_cache.len() == 0, "forgot statement_dump?");
+        case INVALID_TOKEN:         // initial state
+            assert(t.type == FN);
             self.trace("ENTRY");
-            self.newline();
-            nextcase state.transition(SCOPE);
-        case SCOPE:
-            self.trace("SCOPE");
+            self.write("fn");
+            state.transition(RETURN);
+        case RETURN:                // return type 
+            self.trace("RETURN");
             switch(t.type) {
-                case EOS:
-                    self.statement_dump()!;
-                    if (state.scope_depth != 0) {
-                        self.@fail(t, "unclosed scope")!;
-                    }
-                    return true;
+                case AT_IDENT:
+                case IDENT:
+                    if (state.scope_depth == 0 && state.last_token != DOT) self.write(" ");
+                    nextcase default;
+                case TYPE_IDENT:
+                    if (state.scope_depth == 0) self.write(" ");
+                    nextcase default;
+                case LPAREN:
+                    nextcase STATE: state.transition(VAR);
                 default:
-                    self.statement_add(*t);
+                    self.write("%s", t.value);
             }
-        default:
-            unreachable();
-    }
-
-    return false;
-}
-fn bool! CodeFmt.format_fn_scope(CodeFmt* self, Token* t, NodeParserState* state) {
-
-    switch STATE: (state.check(t)){
-        case INVALID_TOKEN:
-            assert(t.type == LBRACE);
-            self.trace("ENTRY");
-            self.newline();
-            self.write("{");
-            self.indent();
-            state.transition(SCOPE);
-        case SCOPE:
+        case VAR:    // arguments
+            self.trace("VAR");
+            switch(t.type) {
+                case LPAREN:
+                    state.transition(VAR);
+                    return self.enter_state(&CodeFmt.format_fn_args, t);
+                case AT_IDENT:
+                    nextcase STATE: state.transition(AT_IDENT);
+                case LBRACE:
+                    state.transition(SCOPE);
+                    return self.enter_state(&CodeFmt.format_fn_scope, t);
+                default:
+                    break;
+            }
+        case AT_IDENT: // function attributes
+            self.trace("AT_IDENT");
+            switch(t.type) {
+                case AT_IDENT:
+                    self._lexer.extend_current_attribute();
+                    self.write(" ");
+                    self.write("%s", t.value);
+                    break;
+                case IMPLIES:           // => 
+                    nextcase STATE: state.transition(IMPLIES);
+                case LBRACE:           // {
+                    if (state.scope_depth == 1) nextcase STATE: state.transition(SCOPE);
+                default:
+                    break;
+            }
+        case SCOPE: // function scope { ... }
             self.trace("SCOPE");
             switch(t.type) {
-                case EOS:
-                    self.write(";");
-                case RBRACE:
+                case LBRACE:           // {
+                    if (state.scope_depth == 1) {
+                        return self.enter_state(&CodeFmt.format_fn_scope, t);
+                    }
+                case RBRACE:           
                     if (state.scope_depth == 0) {
-                        self.dedent()!;
-                        self.newline();
-                        self.write("}");
-                        return true;
+                        nextcase STATE: state.transition(EOF);
                     }
                 default:
-                    // self.@fail(t, "unexpected token")!;
-                    return self.enter_state(&CodeFmt.format_statement, t);
+                    break;
             }
+        // case IMPLIES:  // lambda function fn () => ... @attr;
+        //     switch(t.type) {
+        //         case IMPLIES:           // => 
+        //             node_func.iscope_start = t.offset;
+        //         case EOS:           // ending semicolon
+        //             if (state.scope_depth == 0) nextcase STATE: state.transition(EOF);
+        //         default:
+        //             break;
+        //     }
+        case EOF:   // finalization
+            self.newline();
+            return true;
         default:
             unreachable();
-            
     }
     return false;
 }
+
+
+<*
+Formatting fn/macro arguments 
+*>
 fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state) {
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
@@ -474,86 +568,70 @@ fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state)
 }
 
 
-fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) {
+<*
+Formatting fn/macro { ...scope... } 
+*>
+fn bool! CodeFmt.format_fn_scope(CodeFmt* self, Token* t, NodeParserState* state) {
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
-            assert(t.type == FN);
+            assert(t.type == LBRACE);
             self.trace("ENTRY");
-            self.write("fn");
-            state.transition(RETURN);
-        case RETURN:
-            self.trace("RETURN");
-            switch(t.type) {
-                case AT_IDENT:
-                case IDENT:
-                    if (state.scope_depth == 0 && state.last_token != DOT) self.write(" ");
-                    nextcase default;
-                case TYPE_IDENT:
-                    if (state.scope_depth == 0) self.write(" ");
-                    nextcase default;
-                case LPAREN:
-                    nextcase STATE: state.transition(VAR);
-                default:
-                    self.write("%s", t.value);
-            }
-        case VAR:
-            self.trace("VAR");
-            switch(t.type) {
-                case LPAREN:
-                    state.transition(VAR);
-                    return self.enter_state(&CodeFmt.format_fn_args, t);
-                case AT_IDENT:
-                    nextcase STATE: state.transition(AT_IDENT);
-                case LBRACE:
-                    state.transition(SCOPE);
-                    return self.enter_state(&CodeFmt.format_fn_scope, t);
-                default:
-                    break;
-            }
-        case AT_IDENT: // regular function attributes
-            self.trace("AT_IDENT");
-            switch(t.type) {
-                case AT_IDENT:
-                    self._lexer.extend_current_attribute();
-                    self.write(" ");
-                    self.write("%s", t.value);
-                    break;
-                case IMPLIES:           // => 
-                    nextcase STATE: state.transition(IMPLIES);
-                case LBRACE:           // {
-                    if (state.scope_depth == 1) nextcase STATE: state.transition(SCOPE);
-                default:
-                    break;
-            }
-        case SCOPE: // regular function scope { ... }
+            self.newline();
+            self.write("{");
+            self.indent();
+            state.transition(SCOPE);
+        case SCOPE:
             self.trace("SCOPE");
             switch(t.type) {
-                case LBRACE:           // {
-                    if (state.scope_depth == 1) {
-                        return self.enter_state(&CodeFmt.format_fn_scope, t);
-                    }
-                case RBRACE:           
+                case EOS:
+                    self.write(";");
+                case RBRACE:
                     if (state.scope_depth == 0) {
-                        nextcase STATE: state.transition(EOF);
+                        self.dedent()!;
+                        self.newline();
+                        self.write("}");
+                        return true;
                     }
                 default:
-                    break;
+                    // self.@fail(t, "unexpected token")!;
+                    return self.enter_state(&CodeFmt.format_statement, t);
             }
-        // case IMPLIES:  // lambda function fn () => ... @attr;
-        //     switch(t.type) {
-        //         case IMPLIES:           // => 
-        //             node_func.iscope_start = t.offset;
-        //         case EOS:           // ending semicolon
-        //             if (state.scope_depth == 0) nextcase STATE: state.transition(EOF);
-        //         default:
-        //             break;
-        //     }
-        case EOF:
-            self.newline();
-            return true;
         default:
             unreachable();
+            
     }
     return false;
 }
+
+
+<*
+Formatting individual (generic statements) ending with ;
+*>
+fn bool! CodeFmt.format_statement(CodeFmt* self, Token* t, NodeParserState* state) {
+
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN:
+            assert(self._token_cache.len() == 0, "forgot statement_dump?");
+            self.trace("ENTRY");
+            self.newline();
+            nextcase state.transition(SCOPE);
+        case SCOPE:
+            self.trace("SCOPE");
+            switch(t.type) {
+                case EOS:
+                    self.statement_dump()!;
+                    if (state.scope_depth != 0) {
+                        self.@fail(t, "unclosed scope")!;
+                    }
+                    return true;
+                default:
+                    self.statement_add(*t);
+            }
+        default:
+            unreachable();
+    }
+
+    return false;
+}
+
