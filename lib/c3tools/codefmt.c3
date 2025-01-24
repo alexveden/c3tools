@@ -120,6 +120,9 @@ macro void CodeFmt.newline(&self) {
     }
 }
 
+<* 
+Adds a token to composite statement cache for further formatting.
+*>
 macro void CodeFmt.statement_add(&self, Token t) {
     assert(t.type != EOS, "EOS should not be there");
     TokenType prev_t = self._token_cache.len() > 0 ? self._token_cache[^1].type : TokenType.INVALID_TOKEN; 
@@ -157,6 +160,8 @@ macro void CodeFmt.statement_add(&self, Token t) {
 		case SHR:
 		case SHL_ASSIGN:
 		case SHR_ASSIGN:
+		case AND:
+		case OR:
             post_space = true;
             pre_space = true;
         case COMMA:
@@ -178,6 +183,9 @@ macro void CodeFmt.statement_add(&self, Token t) {
     if (post_space) self._token_cache.push(TOKEN_SPACE);
 }
 
+<*
+Format and dump composite statement into code. 
+*>
 macro void! CodeFmt.statement_dump(&self) {
     usz token_len = 0;
     usz break_len = 0;
@@ -187,6 +195,9 @@ macro void! CodeFmt.statement_dump(&self) {
     TokenType last_non_space_tok = INVALID_TOKEN;
     NodeParserState tmpstate;
 
+    // NOTE:
+    // Decide when we should start wrapping and if it's necessary
+    // Ignore LHS of assignment expression
     foreach(i, t: self._token_cache) {
         tmpstate.check(&t);
 
@@ -235,8 +246,9 @@ macro void! CodeFmt.statement_dump(&self) {
     self.trace("statement_dump: _line_used: %d, cache_len: %d, break_pos: %d break_len: %d last_non_space_tok: %s",
         self._line_used, token_len, break_pos, break_len, last_non_space_tok
     );
+
     if (!has_magic_comma && self._line_used + token_len <= self.max_line_width) {
-        // Fits in line no wrapping needed
+        // NOTE: Fits in line no wrapping needed write as is with standard formatting.
         foreach(i, t: self._token_cache) {
             if (i < self._token_cache.len()-1){
                 self.write("%s", t.value);
@@ -246,6 +258,8 @@ macro void! CodeFmt.statement_dump(&self) {
             }
         }
     } else {
+        // NOTE: Wrapping is needed!
+
         tmpstate = NodeParserState{};
         bool is_multiline = (has_magic_comma ||
                              break_len + (self._indent_level + 1) * 4 > self.max_line_width);
@@ -253,9 +267,10 @@ macro void! CodeFmt.statement_dump(&self) {
 
         bool should_break = false;
         foreach(t: self._token_cache) {
-            // NOTE: using this only for checking internal scope_depth
-            tmpstate.check(&t);
-            switch(t.type){
+            if (self._print_lex) io::eprintf("%s ", t.type);
+            tmpstate.check(&t); // this is used only for current scope_depth
+
+            switch TOP: (t.type){
                 case LPAREN:
                     if (tmpstate.scope_depth == 1 && brake_type == INVALID_TOKEN) {
                         self.write("%s", t.value);
@@ -275,18 +290,28 @@ macro void! CodeFmt.statement_dump(&self) {
                     } else {
                         self.write("%s", t.value);
                     }
+                case OR:
+                case AND:
                 case COMMA:
-                    if (!is_multiline) nextcase default;
-
-                    if (tmpstate.scope_depth == 1) {
-                        self.write("%s", t.value);
-                        should_break = true;
-                    } else {
-                        self.write("%s", t.value);
+                    if (is_multiline)  {
+                        if (tmpstate.scope_depth == 1) {
+                            self.write("%s", t.value);
+                            should_break = true;
+                            break;
+                        } 
                     }
+                    nextcase default;
                 case SPACE:
-                    if (!is_multiline) nextcase default;
-                    if (tmpstate.last_token == COMMA) break;
+                    if (is_multiline && tmpstate.scope_depth == 1) {
+                        switch(tmpstate.last_token) {
+                            case OR:
+                            case AND:
+                            case COMMA:
+                                break TOP;
+                            default:
+                                break;
+                        }
+                    }
                     nextcase default;
                 default:
                     if (should_break) {
@@ -297,6 +322,8 @@ macro void! CodeFmt.statement_dump(&self) {
             }
         }
     }
+
+    if (self._print_lex) io::eprintf("\n");
     self._token_cache.clear();
 }
 

@@ -128,11 +128,11 @@ fn void main()
     return io::printf(
         "soo",
         a,
-        sooo::foo::bar("adskjalsda",looooong,var)
+        sooo::foo::bar("adskjalsda", looooong, var)
     ) + io::printf(
         "soo",
         a,
-        sooo::foo::bar("adskjalsda",looooong,var),
+        sooo::foo::bar("adskjalsda", looooong, var),
         another_var
     );
 }
@@ -157,5 +157,55 @@ fn void main()
     return 2 + foo_log_long + io::printf(
         "soo", a, sooo::foo::bar("adskjalsda", looooong, var), another_var
     ) + bar;
+}
+
+================================================================================
+logical_with_calls_in_parens
+================================================================================
+
+fn void main() 
+{ 
+    return (foo_log_long || bar && 
+    io::printf(
+        "soo", a, 
+        sooo::foo::bar("adskjalsda", looooong, var), another_var
+    ) || bar);
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    return (
+        foo_log_long ||
+        bar &&
+        io::printf("soo", a, sooo::foo::bar("adskjalsda", looooong, var), another_var) ||
+        bar
+    );
+}
+
+================================================================================
+logical_with_calls_no_parens
+================================================================================
+
+fn void main() 
+{ 
+    return foo_log_long || bar && 
+    io::printf(
+        "soo", a, 
+        sooo::foo::bar("adskjalsda", looooong, var), another_var
+    ) || bar;
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    return foo_log_long || bar && io::printf(
+        "soo",
+        a,
+        sooo::foo::bar("adskjalsda", looooong, var),
+        another_var
+    ) || bar;
 }
 
