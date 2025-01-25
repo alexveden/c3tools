@@ -202,6 +202,11 @@ macro void CodeFmt.newline(&self) @private {
     }
 }
 
+
+/*
+*                  CODE WRAP FUNCTIONS
+*/
+
 <* 
 Adds a token to composite statement cache for further formatting.
 *>
@@ -251,7 +256,6 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
             post_space = true;
             pre_space = true;
         case COMMA:
-        case EOS:
         case COLON:
         case RETURN:
             post_space = true;
@@ -260,6 +264,15 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
                 case TYPE_IDENT:
                     pre_space = true;
                 default:
+                    break;
+            }
+        case EOS:
+            switch(prev_t){
+                case LPAREN:
+                case EOS:
+                    break;
+                default:
+                    post_space = true;
                     break;
             }
         default:
