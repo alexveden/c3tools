@@ -755,15 +755,23 @@ fn bool! CodeFmt.format_statement_if(CodeFmt* self, Token* t, NodeParserState* s
             state.transition(VAR);
         case VAR:
             self.trace("VAR");
-            self.cache_statement_add(t);
             switch(t.type) {
+                case COLON:
+                    if (state.scope_depth > 0) nextcase default;
+                    // if LABEL: ()
+                    self.write("%s ", t.value);
                 case RPAREN:
+                    self.cache_statement_add(t);
                     if (state.scope_depth == 0){
                         self.cache_statement_dump()!;
                         state.transition(SCOPE);
                     }
                 default:
-                    break;
+                    if (state.scope_depth > 0){
+                        self.cache_statement_add(t);
+                    } else {
+                        self.write("%s", t.value);
+                    }
             }
         case SCOPE:
             self.trace("SCOPE");

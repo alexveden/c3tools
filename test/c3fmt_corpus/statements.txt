@@ -457,3 +457,38 @@ fn void main()
     return 200;
 }
 
+================================================================================
+if_statement_with_label
+================================================================================
+
+fn void main() 
+{ 
+if LABEL : (   
+    doo)
+    {
+        if ANOTHER: (foo_bar(soo, okr) || fffff || zzz.another.foo(1, 2, 3) && a_little_bit ){ return 1;}
+    return
+    0;}
+return 200;
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    if LABEL: (doo)
+    {
+        if ANOTHER: (
+            foo_bar(soo, okr) ||
+            fffff ||
+            zzz.another.foo(1, 2, 3) &&
+            a_little_bit
+        )
+        {
+            return 1;
+        }
+        return 0;
+    }
+    return 200;
+}
+
