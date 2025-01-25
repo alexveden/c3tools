@@ -491,6 +491,7 @@ Returns special formatter function for in-scope token.
 fn CodeFmtFn! CodeFmt.local_formatter_dispatch(CodeFmt* self, Token *t) @private {
     switch(t.type) {
         case IF:
+        case ELSE:
             return &CodeFmt.format_statement_if;
         default:
             return null;
@@ -749,18 +750,27 @@ fn bool! CodeFmt.format_statement_if(CodeFmt* self, Token* t, NodeParserState* s
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
             self.trace("ENTRY");
-            self.newline();
-            self.write("if ");
+            if (t.type == IF) {
+                self.newline();
+                self.write("if ");
+            } else if (t.type == ELSE) {
+                self.write(" else");
+            }
             state.transition(CONST_IDENT);
         case CONST_IDENT:
             self.trace("CONST_IDENT");
             switch(t.type) {
                 case CONST_IDENT:
                     self.write("%s", t.value);
+                case IF:
+                    self.write(" %s ", t.value);
+                case ELSE:
                 case COLON:
                     self.write("%s ", t.value);
                 case LPAREN:
                     nextcase STATE: state.transition(VAR);
+                case LBRACE:
+                    nextcase STATE: state.transition(SCOPE);
                 default:
                     self.@fail(t, "unexpected token")!;
             }
