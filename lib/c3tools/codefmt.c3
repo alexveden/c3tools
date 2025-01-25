@@ -13,7 +13,7 @@ struct CodeFmt {
     usz max_line_width;
     DString buf;
     List(<CodeFmtState>) state_stack;
-    List(<Token>) _token_cache;
+    List(<Token>) __token_cache;
     usz _indent_level;
     usz _line_used;
     bool _print_lex;
@@ -33,6 +33,7 @@ Item for code formatting state stack
 struct CodeFmtState {
     CodeFmtFn state_fn;
     NodeParserState state;
+    usz token_cache_start;
 }
 
 <* Simple white space synthetic token *>
@@ -54,7 +55,7 @@ fn CodeFmt CodeFmt.new_init(int max_line_width=80) @operator(construct) {
     };
     self.buf.new_init(); 
     self.state_stack.new_init();
-    self._token_cache.new_init();
+    self.__token_cache.new_init();
     return self;
 }
 
@@ -65,7 +66,7 @@ Code formatter destructor
 fn void CodeFmt.free(&self) {
     self.buf.free();
     self.state_stack.free();
-    self._token_cache.free();
+    self.__token_cache.free();
 }
 
 
@@ -82,18 +83,13 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
 	lexer::init(&self._lexer, contents);
 
     // Default scope formatter
-	self.enter_state(&CodeFmt.format_global_file_scope, null)!;
+	self.push_run_state(&CodeFmt.format_global_file_scope, null)!;
 
 	while LOOP: (self._lexer.next_token()) {
 	    if (print_lex) self._lexer.token.print(new_line: true);
-	    assert(self.state_stack.len() != 0);
 
-
-        while (
-            self.state_stack.len() > 0 
-            && self.state_stack[^1].state_fn(self, &self._lexer.token, &self.state_stack[^1].state)!
-        ) {
-            self.state_stack.remove_last();
+        while (self.run_state(&self._lexer.token)!) {
+            self.pop_state()!;
         }
     }
 
@@ -108,9 +104,24 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
 <*
 Pushes new state handler function to stack. Allows parsing sub-structs, etc...
 *>
-fn bool! CodeFmt.enter_state(&self, CodeFmtFn new_state, Token* t) {
-    CodeFmtState state = {.state_fn = new_state };
+fn bool! CodeFmt.push_run_state(&self, CodeFmtFn new_state, Token* t) @private {
+    if (self.state_stack.len() > 0) {
+        assert(self.cache_statement_len() == 0, "you must cache_statement_dump, before next state");
+    }
+    CodeFmtState state = {.state_fn = new_state, .token_cache_start = self.__token_cache.len() };
     self.state_stack.push(state);
+    return self.run_state(t);
+}
+
+fn void! CodeFmt.pop_state(&self) @private {
+    assert(self.cache_statement_len() == 0, "cache_statement is not empty, forgot dump?");
+
+    self.state_stack.remove_last();
+}
+
+fn bool! CodeFmt.run_state(&self, Token* t) @private {
+	if(self.state_stack.len() == 0) return false;
+
     return self.state_stack[^1].state_fn(self, t, &self.state_stack[^1].state)!;
 }
 
@@ -118,7 +129,7 @@ fn bool! CodeFmt.enter_state(&self, CodeFmtFn new_state, Token* t) {
 <*
 Emits formatting procedure error with debug message
 *>
-macro bool! CodeFmt.@fail(&self, Token* t, String msg) {
+macro bool! CodeFmt.@fail(&self, Token* t, String msg) @private {
     io::eprintfn(
         "Patially formatted code:\n```\n%s```", 
         self.buf.str_view()
@@ -134,7 +145,7 @@ macro bool! CodeFmt.@fail(&self, Token* t, String msg) {
 <* 
 Debug logging (only when self._print_lex = true)
 *>
-macro CodeFmt.trace(&self, $msg, args...) {
+macro CodeFmt.trace(&self, $msg, args...) @private {
     if (!self._print_lex) return;
 
     io::eprintf("\t\t%s (%s:%d): ", $$FUNC, $$FILE, $$LINE);
@@ -145,7 +156,7 @@ macro CodeFmt.trace(&self, $msg, args...) {
 <*
 Writes code chunk into internal buffer
 *>
-macro void CodeFmt.write(&self, String format, args...) {
+macro void CodeFmt.write(&self, String format, args...) @private {
     usz len = self.buf.appendf(format, ...args)!!;
     self._line_used += (int)len;
 }
@@ -154,7 +165,7 @@ macro void CodeFmt.write(&self, String format, args...) {
 <*
 Writes a new line into internal buffer with proper indentation
 *>
-macro void CodeFmt.newline(&self) {
+macro void CodeFmt.newline(&self) @private {
     self.buf.append("\n");
     self._line_used = 0;
     for(int i = 0; i < self._indent_level; i++) {
@@ -168,9 +179,10 @@ macro void CodeFmt.newline(&self) {
 <* 
 Adds a token to composite statement cache for further formatting.
 *>
-macro void CodeFmt.statement_add(&self, Token t) {
+macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) @private {
     assert(t.type != EOS, "EOS should not be there");
-    TokenType prev_t = self._token_cache.len() > 0 ? self._token_cache[^1].type : TokenType.INVALID_TOKEN; 
+    usz cache_len = self.cache_statement_len();
+    TokenType prev_t = cache_len > 0 ? self.__token_cache[^1].type : TokenType.INVALID_TOKEN; 
     bool pre_space = false;
     bool post_space = false;
 
@@ -226,16 +238,16 @@ macro void CodeFmt.statement_add(&self, Token t) {
             break;
     }
 
-    if (pre_space) self._token_cache.push(TOKEN_SPACE);
-    self._token_cache.push(t);
-    if (post_space) self._token_cache.push(TOKEN_SPACE);
+    if (auto_space && pre_space) self.__token_cache.push(TOKEN_SPACE);
+    self.__token_cache.push(*t);
+    if (auto_space && post_space) self.__token_cache.push(TOKEN_SPACE);
 }
 
 
 <*
 Format and dump composite statement into code. 
 *>
-macro void! CodeFmt.statement_dump(&self) {
+macro void! CodeFmt.cache_statement_dump(&self) @private {
     usz token_len = 0;
     usz break_len = 0;
     int break_pos = -1;
@@ -247,8 +259,8 @@ macro void! CodeFmt.statement_dump(&self) {
     // NOTE:
     // Decide when we should start wrapping and if it's necessary
     // Ignore LHS of assignment expression
-    foreach(i, t: self._token_cache) {
-        tmpstate.check(&t);
+    self.@cache_statement_iter(; usz i, Token* t) {
+        tmpstate.check(t);
 
         token_len += t.value.len;
         switch TOP: (t.type) {
@@ -295,22 +307,22 @@ macro void! CodeFmt.statement_dump(&self) {
                 if(break_pos != -1) break_len += t.value.len;
                 if(t.type != SPACE) last_non_space_tok = t.type;
         }
-    }
+    };
 
-    self.trace("statement_dump: _line_used: %d, cache_len: %d, break_pos: %d break_len: %d last_non_space_tok: %s",
+    self.trace("cache_statement_dump: _line_used: %d, cache_len: %d, break_pos: %d break_len: %d last_non_space_tok: %s",
         self._line_used, token_len, break_pos, break_len, last_non_space_tok
     );
 
     if (!has_magic_comma && self._line_used + token_len <= self.max_line_width) {
         // NOTE: Fits in line no wrapping needed write as is with standard formatting.
-        foreach(i, t: self._token_cache) {
-            if (i < self._token_cache.len()-1){
+        self.@cache_statement_iter(; usz i, Token* t) {
+            if (i < self.cache_statement_len()-1){
                 self.write("%s", t.value);
             } else {
                 // skip spaces before semicolon
                 if(t.type != SPACE) self.write("%s", t.value);
             }
-        }
+        };
     } else {
         // NOTE: Wrapping is needed!
 
@@ -320,9 +332,9 @@ macro void! CodeFmt.statement_dump(&self) {
         TokenType brake_type = INVALID_TOKEN;
 
         bool should_break = false;
-        foreach(t: self._token_cache) {
+        self.@cache_statement_iter(; usz i, Token* t) {
             if (self._print_lex) io::eprintf("%s ", t.type);
-            tmpstate.check(&t); // this is used only for current scope_depth
+            tmpstate.check(t); // this is used only for current scope_depth
 
             switch TOP: (t.type){
                 case LBRACE:
@@ -394,18 +406,47 @@ macro void! CodeFmt.statement_dump(&self) {
                     }
                     self.write("%s", t.value);
             }
-        }
+        };
     }
 
     if (self._print_lex) io::eprintf("\n");
-    self._token_cache.clear();
+    self.cache_statement_clear();
 }
 
+<*
+Cache size for current formatter state
+*>
+macro usz CodeFmt.cache_statement_len(&self) @private {
+    assert(self.state_stack.len() > 0);
+
+    usz start_len = self.state_stack[^1].token_cache_start;
+    assert(self.__token_cache.len() >= start_len);
+
+    return self.__token_cache.len() - start_len;
+}
+
+macro CodeFmt.@cache_statement_iter(&self; @body(idx, token)) @private {
+    assert(self.state_stack.len() > 0);
+
+    usz start_len = self.state_stack[^1].token_cache_start;
+    for(usz i = start_len; i < self.__token_cache.len(); i++){
+        @body(i, &self.__token_cache[i]);
+    }
+}
+
+macro void CodeFmt.cache_statement_clear(&self) @private {
+    assert(self.state_stack.len() > 0);
+
+    usz start_len = self.state_stack[^1].token_cache_start;
+    while(self.__token_cache.len() > start_len){
+        self.__token_cache.remove_last()!!;
+    }
+}
 
 <*
 Increase code indent
 *>
-macro void CodeFmt.indent(&self) {
+macro void CodeFmt.indent(&self) @private {
     self.trace("indent");
     self._indent_level++;
 }
@@ -414,7 +455,7 @@ macro void CodeFmt.indent(&self) {
 <*
 Decreases code indent
 *>
-macro void! CodeFmt.dedent(&self) {
+macro void! CodeFmt.dedent(&self) @private {
     self.trace("dedent");
     if(self._indent_level == 0) {
         self.@fail(&self._lexer.token, "indentation error")!;
@@ -429,7 +470,7 @@ macro void! CodeFmt.dedent(&self) {
 <*
 Returns appropriate formatter function/state for global level statements
 *>
-fn CodeFmtFn! CodeFmt.global_formatter_dispatch(CodeFmt* self, Token *t) {
+fn CodeFmtFn! CodeFmt.global_formatter_dispatch(CodeFmt* self, Token *t) @private {
     switch(t.type) {
         case FN:
             return &CodeFmt.format_fn;
@@ -442,7 +483,7 @@ fn CodeFmtFn! CodeFmt.global_formatter_dispatch(CodeFmt* self, Token *t) {
 <*
 Returns special formatter function for in-scope token.
 *>
-fn CodeFmtFn! CodeFmt.local_formatter_dispatch(CodeFmt* self, Token *t) {
+fn CodeFmtFn! CodeFmt.local_formatter_dispatch(CodeFmt* self, Token *t) @private {
     switch(t.type) {
         case FN:
             return &CodeFmt.format_fn;
@@ -454,10 +495,11 @@ fn CodeFmtFn! CodeFmt.local_formatter_dispatch(CodeFmt* self, Token *t) {
 <*
 Formatter for generic file contents
 *>
-fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserState* state) {
+fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserState* state) @private {
     // initialization with null token
     if (state.current_state == INVALID_TOKEN){
         assert(t == null);
+        assert(state != null);
         self.trace("ENTRY");
         state.transition(SCOPE);
         return false;
@@ -480,7 +522,7 @@ fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserSta
                 default:
                     CodeFmtFn fmt_fn = self.global_formatter_dispatch(t)!;
                     assert(fmt_fn != null);
-                    self.enter_state(fmt_fn, t)!;
+                    self.push_run_state(fmt_fn, t)!;
             }
         default:
             unreachable();
@@ -493,7 +535,7 @@ Callable code formatter (fn/macros)
 
 Format steps: format_fn_args -> format_fn_scope -> foreach(format_statement: statements)
 *>
-fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) {
+fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @private {
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:         // initial state
@@ -521,12 +563,12 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) {
             switch(t.type) {
                 case LPAREN:
                     state.transition(VAR);
-                    return self.enter_state(&CodeFmt.format_fn_args, t);
+                    return self.push_run_state(&CodeFmt.format_fn_args, t);
                 case AT_IDENT:
                     nextcase STATE: state.transition(AT_IDENT);
                 case LBRACE:
                     state.transition(SCOPE);
-                    return self.enter_state(&CodeFmt.format_fn_scope, t);
+                    return self.push_run_state(&CodeFmt.format_fn_scope, t);
                 default:
                     break;
             }
@@ -550,7 +592,7 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) {
             switch(t.type) {
                 case LBRACE:           // {
                     if (state.scope_depth == 1) {
-                        return self.enter_state(&CodeFmt.format_fn_scope, t);
+                        return self.push_run_state(&CodeFmt.format_fn_scope, t);
                     }
                 case RBRACE:           
                     if (state.scope_depth == 0) {
@@ -581,33 +623,32 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) {
 <*
 Formatting fn/macro arguments 
 *>
-fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state) {
+fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state) @private {
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
             assert(t.type == LPAREN);
-            assert(self._token_cache.len() == 0, "forgot statement_dump?");
             self.trace("ENTRY");
             nextcase STATE: state.transition(VAR);
         case VAR:
             self.trace("VAR");
             switch(t.type) {
                 case RPAREN:
-                    self._token_cache.push(*t);
+                    self.cache_statement_add(t, false);
 
-                    self.statement_dump()!;
+                    self.cache_statement_dump()!;
                     return true;
                 case COMMA:
-                    self._token_cache.push(*t);
+                    self.cache_statement_add(t, false);
                     if (state.scope_depth == 1) {
-                        self._token_cache.push(TOKEN_SPACE);
+                        self.cache_statement_add(&TOKEN_SPACE, false);
                     }
                 case IDENT:
                     if (state.scope_depth == 1 && state.last_token != COMMA) {
-                        self._token_cache.push(TOKEN_SPACE);
+                        self.cache_statement_add(&TOKEN_SPACE, false);
                     }
                     nextcase default;
                 default:
-                    self._token_cache.push(*t);
+                    self.cache_statement_add(t, false);
                     break;
             }
         default:
@@ -622,7 +663,7 @@ fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state)
 <*
 Formatting fn/macro { ...scope... } 
 *>
-fn bool! CodeFmt.format_fn_scope(CodeFmt* self, Token* t, NodeParserState* state) {
+fn bool! CodeFmt.format_fn_scope(CodeFmt* self, Token* t, NodeParserState* state) @private {
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
@@ -646,7 +687,7 @@ fn bool! CodeFmt.format_fn_scope(CodeFmt* self, Token* t, NodeParserState* state
                     }
                 default:
                     // self.@fail(t, "unexpected token")!;
-                    return self.enter_state(&CodeFmt.format_statement, t);
+                    return self.push_run_state(&CodeFmt.format_statement, t);
             }
         default:
             unreachable();
@@ -659,11 +700,10 @@ fn bool! CodeFmt.format_fn_scope(CodeFmt* self, Token* t, NodeParserState* state
 <*
 Formatting individual (generic statements) ending with ;
 *>
-fn bool! CodeFmt.format_statement(CodeFmt* self, Token* t, NodeParserState* state) {
+fn bool! CodeFmt.format_statement(CodeFmt* self, Token* t, NodeParserState* state) @private {
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
-            assert(self._token_cache.len() == 0, "forgot statement_dump?");
             self.trace("ENTRY");
             self.newline();
             nextcase state.transition(SCOPE);
@@ -671,13 +711,13 @@ fn bool! CodeFmt.format_statement(CodeFmt* self, Token* t, NodeParserState* stat
             self.trace("SCOPE");
             switch(t.type) {
                 case EOS:
-                    self.statement_dump()!;
+                    self.cache_statement_dump()!;
                     if (state.scope_depth != 0) {
                         self.@fail(t, "unclosed scope")!;
                     }
                     return true;
                 default:
-                    self.statement_add(*t);
+                    self.cache_statement_add(t);
             }
         default:
             unreachable();
