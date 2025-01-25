@@ -88,8 +88,13 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
 	while LOOP: (self._lexer.next_token()) {
 	    if (print_lex) self._lexer.token.print(new_line: true);
 
-        while (self.run_state(&self._lexer.token)!) {
+        if(self.run_state(&self._lexer.token)!) {
             self.pop_state()!;
+
+            // Ending one state, may trigger cascade parent exit
+            if(self.run_state(&self._lexer.token)!) {
+                self.pop_state()!;
+            }
         }
     }
 
@@ -511,6 +516,7 @@ fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserSta
             switch(t.type) {
                 case EOF:
 	                self.newline();
+                    self.trace("EXIT");
 	                return true;
                 case EMPTY_LINE:
                     // TODO: implement blank lines handling in global scope
@@ -570,7 +576,7 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                     state.transition(SCOPE);
                     return self.push_run_state(&CodeFmt.format_code_scope, t);
                 case RPAREN:
-                    assert(state.scope_depth == 0);
+                    if (state.scope_depth != 0) self.@fail(t, "unfinished scope")!;
                     break;
                 default:
                     self.@fail(t, "unexpected token in funcion args")!;
@@ -594,13 +600,13 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
             self.trace("SCOPE");
             switch(t.type) {
                 case LBRACE:           // {
-                    if (state.scope_depth == 1) {
-                        return self.push_run_state(&CodeFmt.format_code_scope, t);
-                    }
-                case RBRACE:           
-                    if (state.scope_depth == 0) {
-                        nextcase STATE: state.transition(EOF);
-                    }
+                    if (state.scope_depth != 1) self.@fail(t, "bad scope")!;
+                    return self.push_run_state(&CodeFmt.format_code_scope, t);
+                case RBRACE:
+                    if (state.scope_depth != 0) self.@fail(t, "unfinished scope")!;
+                    self.newline();
+                    self.trace("EXIT");
+                    return true;
                 default:
                     self.@fail(t, "unexpected token in funcion scope")!;
             }
@@ -613,9 +619,6 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
         //         default:
         //             break;
         //     }
-        case EOF:   // finalization
-            self.newline();
-            return true;
         default:
             unreachable();
     }
@@ -639,6 +642,7 @@ fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state)
                     self.cache_statement_add(t, false);
 
                     self.cache_statement_dump()!;
+                    self.trace("EXIT");
                     return true;
                 case COMMA:
                     self.cache_statement_add(t, false);
@@ -687,6 +691,7 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
                         self.dedent()!;
                         self.newline();
                         self.write("}");
+                        self.trace("EXIT");
                         return true;
                     } else {
                         self.@fail(t, "unexpected brace order")!;
@@ -728,6 +733,7 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                         self.@fail(t, "unclosed scope")!;
                     }
                     self.write(";");
+                    self.trace("EXIT");
                     return true;
                 default:
                     self.cache_statement_add(t);
@@ -768,6 +774,7 @@ fn bool! CodeFmt.format_statement_if(CodeFmt* self, Token* t, NodeParserState* s
                     return self.push_run_state(&CodeFmt.format_code_scope, t);
                 case RBRACE:
                     if (state.scope_depth != 0) self.@fail(t, "invalid scope")!;
+                    self.trace("EXIT");
                     return true;
                 default:
                     // TODO: if (some)  statement....;
