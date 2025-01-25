@@ -757,12 +757,11 @@ fn bool! CodeFmt.format_statement_if(CodeFmt* self, Token* t, NodeParserState* s
             self.trace("VAR");
             self.cache_statement_add(t);
             switch(t.type) {
-                case LPAREN:
-                    break;
                 case RPAREN:
-                    self.cache_statement_dump()!;
-                    if (state.scope_depth != 0) self.@fail(t, "unclosed scope")!;
-                    state.transition(SCOPE);
+                    if (state.scope_depth == 0){
+                        self.cache_statement_dump()!;
+                        state.transition(SCOPE);
+                    }
                 default:
                     break;
             }
