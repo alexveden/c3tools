@@ -81,28 +81,13 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
 
 	lexer::init(&self._lexer, contents);
 
+    // Default scope formatter
+	self.enter_state(&CodeFmt.format_global_file_scope, null)!;
+
 	while LOOP: (self._lexer.next_token()) {
 	    if (print_lex) self._lexer.token.print(new_line: true);
+	    assert(self.state_stack.len() != 0);
 
-	    if (self._lexer.token.type == EOF) {
-	        if (self.state_stack.len() != 0) {
-	            self.@fail(&self._lexer.token, "Not all code structures resolved, or bad file format")!;
-	        }
-	        self.newline();
-	        break LOOP;
-	    }
-
-		if (self.state_stack.len() == 0) {
-		    switch(self._lexer.token.type) {
-                case FN:
-                    self.enter_state(&CodeFmt.format_fn, &self._lexer.token)!;
-                case EMPTY_LINE:
-                    break;
-                default: 
-	                self.@fail(&self._lexer.token, "Unexpected global token type")!;
-            } 
-            continue LOOP;
-        } 
 
         while (
             self.state_stack.len() > 0 
@@ -111,6 +96,10 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
             self.state_stack.remove_last();
         }
     }
+
+	if (self.state_stack.len() != 0) {
+	    self.@fail(&self._lexer.token, "Not all code structures resolved, or bad file format")!;
+	}
 
     return self.buf.str_view();
 }
@@ -436,6 +425,68 @@ macro void! CodeFmt.dedent(&self) {
 /*
 *                  PROCESSING FUNCTIONS
 */
+
+<*
+Returns appropriate formatter function/state for global level statements
+*>
+fn CodeFmtFn! CodeFmt.global_formatter_dispatch(CodeFmt* self, Token *t) {
+    switch(t.type) {
+        case FN:
+            return &CodeFmt.format_fn;
+        default:
+            self.@fail(t, "unsupported global token")!;
+    }
+    return null;
+}
+
+<*
+Returns special formatter function for in-scope token.
+*>
+fn CodeFmtFn! CodeFmt.local_formatter_dispatch(CodeFmt* self, Token *t) {
+    switch(t.type) {
+        case FN:
+            return &CodeFmt.format_fn;
+        default:
+            return null;
+    }
+}
+
+<*
+Formatter for generic file contents
+*>
+fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserState* state) {
+    // initialization with null token
+    if (state.current_state == INVALID_TOKEN){
+        assert(t == null);
+        self.trace("ENTRY");
+        state.transition(SCOPE);
+        return false;
+    }
+
+    switch STATE: (state.check(t)){
+        case SCOPE:                // generic file content
+            self.trace("SCOPE");
+            switch(t.type) {
+                case EOF:
+	                self.newline();
+	                return true;
+                case EMPTY_LINE:
+                    // TODO: implement blank lines handling in global scope
+                    break;
+                case RBRACE:
+                    // TODO: possible end of scope
+                    assert(state.scope_depth == 0);
+                    break;
+                default:
+                    CodeFmtFn fmt_fn = self.global_formatter_dispatch(t)!;
+                    assert(fmt_fn != null);
+                    self.enter_state(fmt_fn, t)!;
+            }
+        default:
+            unreachable();
+    }
+    return false;
+}
 
 <*
 Callable code formatter (fn/macros)
