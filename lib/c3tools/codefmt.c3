@@ -533,7 +533,7 @@ fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserSta
 <*
 Callable code formatter (fn/macros)
 
-Format steps: format_fn_args -> format_fn_scope -> foreach(format_statement: statements)
+Format steps: format_fn_args -> format_code_scope -> foreach(format_statement: statements)
 *>
 fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @private {
 
@@ -568,9 +568,12 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                     nextcase STATE: state.transition(AT_IDENT);
                 case LBRACE:
                     state.transition(SCOPE);
-                    return self.push_run_state(&CodeFmt.format_fn_scope, t);
-                default:
+                    return self.push_run_state(&CodeFmt.format_code_scope, t);
+                case RPAREN:
+                    assert(state.scope_depth == 0);
                     break;
+                default:
+                    self.@fail(t, "unexpected token in funcion args")!;
             }
         case AT_IDENT: // function attributes
             self.trace("AT_IDENT");
@@ -585,21 +588,21 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                 case LBRACE:           // {
                     if (state.scope_depth == 1) nextcase STATE: state.transition(SCOPE);
                 default:
-                    break;
+                    self.@fail(t, "unexpected token in funcion attributes")!;
             }
         case SCOPE: // function scope { ... }
             self.trace("SCOPE");
             switch(t.type) {
                 case LBRACE:           // {
                     if (state.scope_depth == 1) {
-                        return self.push_run_state(&CodeFmt.format_fn_scope, t);
+                        return self.push_run_state(&CodeFmt.format_code_scope, t);
                     }
                 case RBRACE:           
                     if (state.scope_depth == 0) {
                         nextcase STATE: state.transition(EOF);
                     }
                 default:
-                    break;
+                    self.@fail(t, "unexpected token in funcion scope")!;
             }
         // case IMPLIES:  // lambda function fn () => ... @attr;
         //     switch(t.type) {
@@ -661,9 +664,9 @@ fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state)
 
 
 <*
-Formatting fn/macro { ...scope... } 
+Formatting generic code scope (e.g. inside a function)
 *>
-fn bool! CodeFmt.format_fn_scope(CodeFmt* self, Token* t, NodeParserState* state) @private {
+fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* state) @private {
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
