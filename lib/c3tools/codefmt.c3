@@ -680,17 +680,26 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
             self.trace("SCOPE");
             switch(t.type) {
                 case EOS:
-                    self.write(";");
+                    // returned back by format_statement()
+                    break;
                 case RBRACE:
                     if (state.scope_depth == 0) {
                         self.dedent()!;
                         self.newline();
                         self.write("}");
                         return true;
+                    } else {
+                        self.@fail(t, "unexpected brace order")!;
                     }
                 default:
-                    // self.@fail(t, "unexpected token")!;
-                    return self.push_run_state(&CodeFmt.format_statement, t);
+                    CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;
+                    if (new_local_state == null){
+                        // Not a keyword or anything special, just a statement
+                        return self.push_run_state(&CodeFmt.format_statement, t);
+                    } else {                    
+                        // Special keyword or statement
+                        return self.push_run_state(new_local_state, t);
+                    }
             }
         default:
             unreachable();
@@ -718,6 +727,7 @@ fn bool! CodeFmt.format_statement(CodeFmt* self, Token* t, NodeParserState* stat
                     if (state.scope_depth != 0) {
                         self.@fail(t, "unclosed scope")!;
                     }
+                    self.write(";");
                     return true;
                 default:
                     self.cache_statement_add(t);
