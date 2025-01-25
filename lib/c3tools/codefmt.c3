@@ -113,7 +113,11 @@ fn bool! CodeFmt.push_run_state(&self, CodeFmtFn new_state, Token* t) @private {
     if (self.state_stack.len() > 0) {
         assert(self.cache_statement_len() == 0, "you must cache_statement_dump, before next state");
     }
-    CodeFmtState state = {.state_fn = new_state, .token_cache_start = self.__token_cache.len() };
+    CodeFmtState state = {
+        .state_fn = new_state,
+        .token_cache_start = self.__token_cache.len(),
+        .state.initial_token = (t != null) ? t.type : TokenType.INVALID_TOKEN,
+    };
     self.state_stack.push(state);
     return self.run_state(t);
 }
@@ -168,6 +172,27 @@ macro void CodeFmt.write(&self, String format, args...) @private {
 
 
 <*
+Increase code indent
+*>
+macro void CodeFmt.indent(&self) @private {
+    self.trace("indent");
+    self._indent_level++;
+}
+
+
+<*
+Decreases code indent
+*>
+macro void! CodeFmt.dedent(&self) @private {
+    self.trace("dedent");
+    if(self._indent_level == 0) {
+        self.@fail(&self._lexer.token, "indentation error")!;
+    }
+    self._indent_level--;
+}
+
+
+<*
 Writes a new line into internal buffer with proper indentation
 *>
 macro void CodeFmt.newline(&self) @private {
@@ -185,7 +210,7 @@ macro void CodeFmt.newline(&self) @private {
 Adds a token to composite statement cache for further formatting.
 *>
 macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) @private {
-    assert(t.type != EOS, "EOS should not be there");
+    // assert(t.type != EOS, "EOS should not be there");
     usz cache_len = self.cache_statement_len();
     TokenType prev_t = cache_len > 0 ? self.__token_cache[^1].type : TokenType.INVALID_TOKEN; 
     bool pre_space = false;
@@ -230,6 +255,7 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
             post_space = true;
             pre_space = true;
         case COMMA:
+        case EOS:
         case RETURN:
             post_space = true;
         case IDENT:
@@ -448,25 +474,6 @@ macro void CodeFmt.cache_statement_clear(&self) @private {
     }
 }
 
-<*
-Increase code indent
-*>
-macro void CodeFmt.indent(&self) @private {
-    self.trace("indent");
-    self._indent_level++;
-}
-
-
-<*
-Decreases code indent
-*>
-macro void! CodeFmt.dedent(&self) @private {
-    self.trace("dedent");
-    if(self._indent_level == 0) {
-        self.@fail(&self._lexer.token, "indentation error")!;
-    }
-    self._indent_level--;
-}
 
 /*
 *                  PROCESSING FUNCTIONS
@@ -492,7 +499,14 @@ fn CodeFmtFn! CodeFmt.local_formatter_dispatch(CodeFmt* self, Token *t) @private
     switch(t.type) {
         case IF:
         case ELSE:
-            return &CodeFmt.format_statement_if;
+        case FOR:
+        case FOREACH:
+        case FOREACH_R:
+        case WHILE:
+        case DO:
+        case DEFER:
+        case SWITCH:
+            return &CodeFmt.format_statement_code_flow;
         default:
             return null;
     }
@@ -745,27 +759,39 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
     return false;
 }
 
-fn bool! CodeFmt.format_statement_if(CodeFmt* self, Token* t, NodeParserState* state) @private {
+fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserState* state) @private {
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
             self.trace("ENTRY");
-            if (t.type == IF) {
-                self.newline();
-                self.write("if ");
-            } else if (t.type == ELSE) {
-                self.write(" else");
+            switch(t.type) {
+                case FOR:
+                case FOREACH:
+                case FOREACH_R:
+                case IF:
+                case WHILE:
+                case DO:
+                case DEFER:
+                case SWITCH:
+                    self.newline();
+                    self.write("%s ", t.value);
+                case ELSE:
+                    // else goes into single line
+                    self.write(" else");
+                default: 
+                    unreachable();
             }
+
             state.transition(CONST_IDENT);
         case CONST_IDENT:
             self.trace("CONST_IDENT");
             switch(t.type) {
-                case CONST_IDENT:
+                case CONST_IDENT:  // LABEL
                     self.write("%s", t.value);
-                case IF:
+                case IF: // else if
                     self.write(" %s ", t.value);
-                case ELSE:
-                case COLON:
+                case ELSE: // single else
+                case COLON: // LABEL: colon
                     self.write("%s ", t.value);
                 case LPAREN:
                     nextcase STATE: state.transition(VAR);
@@ -777,10 +803,6 @@ fn bool! CodeFmt.format_statement_if(CodeFmt* self, Token* t, NodeParserState* s
         case VAR:
             self.trace("VAR");
             switch(t.type) {
-                case COLON:
-                    if (state.scope_depth > 0) nextcase default;
-                    // if LABEL: ()
-                    self.write("%s ", t.value);
                 case RPAREN:
                     self.cache_statement_add(t);
                     if (state.scope_depth == 0){

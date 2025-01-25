@@ -27,6 +27,7 @@ struct NodeParserState {
     TokenType current_state;
     TokenType last_token;
     TokenType current_token;
+    TokenType initial_token;
     AstNode* sub_node;
     uint scope_depth;
     TokenType[32] scope_stack;
