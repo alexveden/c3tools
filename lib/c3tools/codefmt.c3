@@ -752,7 +752,19 @@ fn bool! CodeFmt.format_statement_if(CodeFmt* self, Token* t, NodeParserState* s
             self.trace("ENTRY");
             self.newline();
             self.write("if ");
-            state.transition(VAR);
+            state.transition(CONST_IDENT);
+        case CONST_IDENT:
+            self.trace("CONST_IDENT");
+            switch(t.type) {
+                case CONST_IDENT:
+                    self.write("%s", t.value);
+                case COLON:
+                    self.write("%s ", t.value);
+                case LPAREN:
+                        nextcase STATE: state.transition(VAR);
+                default:
+                    self.@fail(t, "unexpected token")!;
+            }
         case VAR:
             self.trace("VAR");
             switch(t.type) {
