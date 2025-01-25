@@ -386,8 +386,7 @@ if(
 
 fn void main()
 {
-    if (doo)
-    {
+    if (doo) {
         return 0;
     }
 }
@@ -411,10 +410,8 @@ return 200;
 
 fn void main()
 {
-    if (doo)
-    {
-        if (foo)
-        {
+    if (doo) {
+        if (foo) {
             return 1;
         }
         return 0;
@@ -441,15 +438,13 @@ return 200;
 
 fn void main()
 {
-    if (doo)
-    {
+    if (doo) {
         if (
             foo_bar(soo, okr) ||
             fffff ||
             zzz.another.foo(1, 2, 3) &&
             a_little_bit
-        )
-        {
+        ) {
             return 1;
         }
         return 0;
@@ -476,19 +471,59 @@ return 200;
 
 fn void main()
 {
-    if LABEL: (doo)
-    {
+    if LABEL: (doo) {
         if ANOTHER: (
             foo_bar(soo, okr) ||
             fffff ||
             zzz.another.foo(1, 2, 3) &&
             a_little_bit
-        )
-        {
+        ) {
             return 1;
         }
         return 0;
     }
+    return 200;
+}
+
+================================================================================
+if_single_line
+================================================================================
+
+fn void main() 
+{ 
+if LABEL : (   
+    doo)
+        zzz.another.foo(1, 2, 3);
+return 200;
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    if LABEL: (doo) zzz.another.foo(1, 2, 3);
+    return 200;
+}
+
+================================================================================
+if_single_line_with_wrap
+================================================================================
+
+fn void main() 
+{ 
+if LABEL : (   
+    doo)
+        zzz.another.foo(whit_is_too_long, and_maybe(another, call, ther), 3);
+return 200;
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    if LABEL: (doo) zzz.another.foo(
+        whit_is_too_long, and_maybe(another, call, ther), 3
+    );
     return 200;
 }
 

@@ -573,8 +573,7 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                 case AT_IDENT:
                     nextcase STATE: state.transition(AT_IDENT);
                 case LBRACE:
-                    state.transition(SCOPE);
-                    return self.push_run_state(&CodeFmt.format_code_scope, t);
+                    nextcase STATE: state.transition(SCOPE);
                 case RPAREN:
                     if (state.scope_depth != 0) self.@fail(t, "unfinished scope")!;
                     break;
@@ -601,9 +600,13 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
             switch(t.type) {
                 case LBRACE:           // {
                     if (state.scope_depth != 1) self.@fail(t, "bad scope")!;
+                    self.newline();
+                    self.write("{");
                     return self.push_run_state(&CodeFmt.format_code_scope, t);
                 case RBRACE:
                     if (state.scope_depth != 0) self.@fail(t, "unfinished scope")!;
+                    self.newline();
+                    self.write("}");
                     self.newline();
                     self.trace("EXIT");
                     return true;
@@ -676,8 +679,6 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
         case INVALID_TOKEN:
             assert(t.type == LBRACE);
             self.trace("ENTRY");
-            self.newline();
-            self.write("{");
             self.indent();
             state.transition(SCOPE);
         case SCOPE:
@@ -689,8 +690,6 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
                 case RBRACE:
                     if (state.scope_depth == 0) {
                         self.dedent()!;
-                        self.newline();
-                        self.write("}");
                         self.trace("EXIT");
                         return true;
                     } else {
@@ -700,6 +699,7 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
                     CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;
                     if (new_local_state == null){
                         // Not a keyword or anything special, just a statement
+                        self.newline();
                         return self.push_run_state(&CodeFmt.format_generic_statement, t);
                     } else {                    
                         // Special keyword or statement
@@ -722,7 +722,6 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
             self.trace("ENTRY");
-            self.newline();
             nextcase state.transition(SCOPE);
         case SCOPE:
             self.trace("SCOPE");
@@ -761,7 +760,7 @@ fn bool! CodeFmt.format_statement_if(CodeFmt* self, Token* t, NodeParserState* s
                 case COLON:
                     self.write("%s ", t.value);
                 case LPAREN:
-                        nextcase STATE: state.transition(VAR);
+                    nextcase STATE: state.transition(VAR);
                 default:
                     self.@fail(t, "unexpected token")!;
             }
@@ -790,22 +789,35 @@ fn bool! CodeFmt.format_statement_if(CodeFmt* self, Token* t, NodeParserState* s
             switch(t.type) {
                 case LBRACE:
                     if (state.scope_depth != 1) self.@fail(t, "invalid scope")!;
+                    self.write(" {");
                     return self.push_run_state(&CodeFmt.format_code_scope, t);
                 case RBRACE:
+                    if (state.scope_depth != 0) self.@fail(t, "invalid scope")!;
+                    self.newline();
+                    self.write("}");
+                    self.trace("EXIT");
+                    return true;
+                default:
+                    // if (foo) no_brace_expr;
+                    nextcase STATE: IMPLIES;
+            }
+        case IMPLIES:
+            self.trace("IMPLIES");
+            switch(t.type) {
+                case EOS:
                     if (state.scope_depth != 0) self.@fail(t, "invalid scope")!;
                     self.trace("EXIT");
                     return true;
                 default:
-                    // TODO: if (some)  statement....;
-                    unreachable();
-                    // CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;
-                    // if (new_local_state == null){
-                    //     // Not a keyword or anything special, just a statement
-                    //     return self.push_run_state(&CodeFmt.format_generic_statement, t);
-                    // } else {                    
-                    //     // Special keyword or statement
-                    //     return self.push_run_state(new_local_state, t);
-                    // }
+                    self.write(" ");
+                    CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;
+                    if (new_local_state == null){
+                        // Not a keyword or anything special, just a statement
+                        return self.push_run_state(&CodeFmt.format_generic_statement, t);
+                    } else {                    
+                        // Special keyword or statement
+                        return self.push_run_state(new_local_state, t);
+                    }
             }
         default:
             unreachable();
