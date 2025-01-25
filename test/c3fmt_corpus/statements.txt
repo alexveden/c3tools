@@ -611,7 +611,7 @@ for_loop_long_wrap_axis_semicol
 fn void main() 
 { 
 for(   
-    int i=foo.launch(some, stuff, in_loong);i< foo(call, some) && another_long_condition;i++)
+    int i=foo.launch(some, stuff, kwarg: in_loong);i< foo(call, some) && another_long_condition;i++)
     {
     return
     0;}} 
@@ -620,7 +620,11 @@ for(
 
 fn void main()
 {
-    for (int i = 0; i < foo(call, some); i++) {
+    for (
+        int i = foo.launch(some, stuff, kwarg: in_loong);
+        i < foo(call, some) && another_long_condition;
+        i++
+    ) {
         return 0;
     }
 }
