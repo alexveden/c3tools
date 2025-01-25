@@ -650,3 +650,117 @@ fn void main()
     }
 }
 
+================================================================================
+while_loop
+================================================================================
+
+fn void main() 
+{ 
+while(   
+    foo.launch(some, stuff, kwarg: in_loong) || i< foo(call, some) && another_long_condition)
+    {
+    return
+    0;}} 
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    while (
+        foo.launch(some, stuff, kwarg: in_loong) ||
+        i < foo(call, some) &&
+        another_long_condition
+    ) {
+        return 0;
+    }
+}
+
+================================================================================
+foreach_loop
+================================================================================
+
+fn void main() 
+{ 
+foreach(i   ,    z :   
+    foo.launch(some, stuff, kwarg: in_loong) || i< foo(call, some) && another_long_condition)
+    {
+    return
+    0;}} 
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    foreach (
+        i, z:
+        foo.launch(some, stuff, kwarg: in_loong) || i < foo(call, some) && another_long_condition
+    ) {
+        return 0;
+    }
+}
+
+================================================================================
+foreach_r_loop
+================================================================================
+
+fn void main() 
+{ 
+  foreach_r   (i   ,    z :   
+    foo.launch(some, stuff, kwarg: in_loong) || i< foo(call, some) && another_long_condition)
+    {
+    return
+    0;}} 
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    foreach_r (
+        i, z:
+        foo.launch(some, stuff, kwarg: in_loong) || i < foo(call, some) && another_long_condition
+    ) {
+        return 0;
+    }
+}
+
+================================================================================
+defer_inline
+================================================================================
+
+fn void main() 
+{ 
+    defer foo.launch(some, stuff, kwarg: in_loong);
+    return
+    0;} 
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    defer  foo.launch(some, stuff, kwarg: in_loong);
+    return 0;
+}
+
+================================================================================
+defer_braces
+================================================================================
+
+fn void main() 
+{ 
+    defer { foo.launch(some, stuff, kwarg: in_loong);  if(too) {return 0;}}
+    return
+    0;} 
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    defer  {
+        foo.launch(some, stuff, kwarg: in_loong);
+        if (too) {
+            return 0;
+        }
+    }
+    return 0;
+}
+

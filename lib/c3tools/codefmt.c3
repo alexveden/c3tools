@@ -836,7 +836,10 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
                 case LBRACE:
                     nextcase STATE: state.transition(SCOPE);
                 default:
-                    self.@fail(t, "unexpected token")!;
+                    // maybe `defer io::print()`?
+                    if (state.scope_depth != 0) self.@fail(t, "invalid scope")!;
+                    if (state.initial_token != DEFER) self.@fail(t, "invalid token")!;
+                    nextcase STATE: state.transition(IMPLIES);
             }
         case VAR:
             self.trace("VAR");
