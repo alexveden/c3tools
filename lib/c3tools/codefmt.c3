@@ -485,8 +485,8 @@ Returns special formatter function for in-scope token.
 *>
 fn CodeFmtFn! CodeFmt.local_formatter_dispatch(CodeFmt* self, Token *t) @private {
     switch(t.type) {
-        case FN:
-            return &CodeFmt.format_fn;
+        case IF:
+            return &CodeFmt.format_statement_if;
         default:
             return null;
     }
@@ -533,7 +533,7 @@ fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserSta
 <*
 Callable code formatter (fn/macros)
 
-Format steps: format_fn_args -> format_code_scope -> foreach(format_statement: statements)
+Format steps: format_fn_args -> format_code_scope -> foreach(format_generic_statement: statements)
 *>
 fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @private {
 
@@ -680,7 +680,7 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
             self.trace("SCOPE");
             switch(t.type) {
                 case EOS:
-                    // returned back by format_statement()
+                    // returned back by format_generic_statement()
                     break;
                 case RBRACE:
                     if (state.scope_depth == 0) {
@@ -695,7 +695,7 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
                     CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;
                     if (new_local_state == null){
                         // Not a keyword or anything special, just a statement
-                        return self.push_run_state(&CodeFmt.format_statement, t);
+                        return self.push_run_state(&CodeFmt.format_generic_statement, t);
                     } else {                    
                         // Special keyword or statement
                         return self.push_run_state(new_local_state, t);
@@ -712,7 +712,7 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
 <*
 Formatting individual (generic statements) ending with ;
 *>
-fn bool! CodeFmt.format_statement(CodeFmt* self, Token* t, NodeParserState* state) @private {
+fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserState* state) @private {
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
@@ -738,4 +738,55 @@ fn bool! CodeFmt.format_statement(CodeFmt* self, Token* t, NodeParserState* stat
 
     return false;
 }
+
+fn bool! CodeFmt.format_statement_if(CodeFmt* self, Token* t, NodeParserState* state) @private {
+
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN:
+            self.trace("ENTRY");
+            self.newline();
+            self.write("if ");
+            state.transition(VAR);
+        case VAR:
+            self.trace("VAR");
+            self.cache_statement_add(t);
+            switch(t.type) {
+                case LPAREN:
+                    break;
+                case RPAREN:
+                    self.cache_statement_dump()!;
+                    if (state.scope_depth != 0) self.@fail(t, "unclosed scope")!;
+                    state.transition(SCOPE);
+                default:
+                    break;
+            }
+        case SCOPE:
+            self.trace("SCOPE");
+            switch(t.type) {
+                case LBRACE:
+                    if (state.scope_depth != 1) self.@fail(t, "invalid scope")!;
+                    return self.push_run_state(&CodeFmt.format_code_scope, t);
+                case RBRACE:
+                    if (state.scope_depth != 0) self.@fail(t, "invalid scope")!;
+                    return true;
+                default:
+                    // TODO: if (some)  statement....;
+                    unreachable();
+                    // CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;
+                    // if (new_local_state == null){
+                    //     // Not a keyword or anything special, just a statement
+                    //     return self.push_run_state(&CodeFmt.format_generic_statement, t);
+                    // } else {                    
+                    //     // Special keyword or statement
+                    //     return self.push_run_state(new_local_state, t);
+                    // }
+            }
+        default:
+            unreachable();
+    }
+
+    return false;
+}
+
+
 
