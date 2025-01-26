@@ -77,12 +77,81 @@ return/* inline comment before ; */;
 a comment */
 fn void main()
 {
-    return /* inline comment before ; */;
+    return  /* inline comment before ; */;
     /* multi
     line comment {
     */
     if (fgoo) {
         return bar;  /* another inline comment */
     }
+}
+
+================================================================================
+comments_inside_func_args
+================================================================================
+
+fn String[]! 
+Foo.main(
+String[] args, int* foo, List(<float>) /* some */     
+bar, na   ,    varg...
+) { return   0   ;}
+
+--------------------------------------------------------------------------------
+
+fn String[]! Foo.main(
+    String[] args, int* foo, List(<float>) /* some */  bar, na, varg...
+)
+{
+    return 0;
+}
+
+================================================================================
+comments_single_line_forces_multiline
+================================================================================
+
+fn String[]! 
+Foo.main(
+// coment
+List(<float>)
+bar, int a
+) { return   0   ;}
+
+--------------------------------------------------------------------------------
+
+fn String[]! Foo.main(
+    
+    // coment
+    List(<float>) bar,
+    int a
+)
+{
+    return 0;
+}
+
+================================================================================
+comments_in_statements_inline
+================================================================================
+
+fn void main() {
+if(this_a_condition && // do we have to comment next?
+another_condition && /* maybe the followed by another */
+foo
+) { return 1;}
+return   0   
+;}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    if (
+        this_a_condition &&
+         // do we have to comment next?
+        another_condition &&
+         /* maybe the followed by another */ foo
+    ) {
+        return 1;
+    }
+    return 0;
 }
 

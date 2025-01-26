@@ -54,7 +54,12 @@ fn void! load_corpus(CodeGen* code, String path) @local {
 				code.wn("defer fmt_out.free()");
 				code.wn("formatted = fmt.format(fmt_out, print_lex: false)!!");
 				code.wn("assert(fmt_out.ptr != formatted.ptr)");
-				code.wn("test::@check(codecorpus::compare_output(expected[1..], formatted), `double format mismatch`)");
+				code.@if("expected[1..] != formatted"){
+					code.wn("io::printfn(\"DOUBLE formatted code\\n```\")");
+					code.wn("io::print(formatted)");
+					code.wn("io::printfn(\"```\")");
+				}; 
+				code.wn("test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`)");
 			};
 		}
 
