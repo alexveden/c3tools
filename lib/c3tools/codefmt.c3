@@ -130,7 +130,7 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
 <* Generic comment processor if there is not cache_statement pending + fmt: off handler *>
 fn bool! CodeFmt.format_comment(&self, Token* t) {
     if (t.type == COMMENT_SINGLE) {
-        if (t.value.starts_with("// fmt: off")) {
+        if (t.value.starts_with("// fmt: off") && !self._is_paused) {
             self.cache_statement_dump()!;
             self.newline();
             self.write("%s", t.value);
@@ -139,10 +139,11 @@ fn bool! CodeFmt.format_comment(&self, Token* t) {
             self._is_paused = true;
             return true;
         }
-        if (t.value.starts_with("// fmt: on")) {
+        if (t.value.starts_with("// fmt: on") && self._is_paused) {
             self._lexer.set_whitespace_mode(false);
             self._is_paused = false;
             self.write("%s", t.value);
+            self.newline();
             return true;
         } 
     }
@@ -523,7 +524,7 @@ macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TO
                 case RBRACE:
                     if (tmpstate.scope_depth == 0 || tmpstate.prev_scope(1) == LBRACE) {
                         self.dedent()!;
-                        self.newline();
+                        if (!has_magic_comma) self.newline();
                     }
                     nextcase default;
                 case LPAREN:
@@ -673,11 +674,15 @@ fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserSta
             self.trace("SCOPE");
             switch(t.type) {
                 case EOF:
-	                self.newline();
+                    if (state.scope_depth == 0 && state.last_token != EMPTY_LINE) {
+                        self.newline();
+                    }
                     self.trace("EXIT");
 	                return true;
                 case EMPTY_LINE:
-                    // TODO: implement blank lines handling in global scope
+                    if (state.scope_depth == 0 && state.last_token != EMPTY_LINE) {
+                        self.newline();
+                    }
                     break;
                 case RBRACE:
                     // TODO: possible end of scope
@@ -895,6 +900,10 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
                         return true;
                     } else {
                         self.@fail(t, "unexpected brace order")!;
+                    }
+                case EMPTY_LINE:
+                    if (state.scope_depth == 0 && state.last_token != EMPTY_LINE) {
+                        self.newline();
                     }
                 default:
                     CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;

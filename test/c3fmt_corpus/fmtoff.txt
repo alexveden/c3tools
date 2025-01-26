@@ -64,6 +64,47 @@ fn void main()
     if(   foo (far)) {
           s = {.abs = 2, .zozo = 3,};
     // fmt: on
+        
+        if (abs(mode.to)) {
+            return 0;
+        }
+    }
+    return;
+}
+
+================================================================================
+off_inside_cache_statement_ugly
+================================================================================
+fn void 
+main() {
+              //this simple comment
+    if(   foo (far) &&
+            // fmt: off
+            abs(saldj) || (soze) && afk
+        // fmt: on
+    ) {
+          s = {.abs = 2, .zozo = 3,};
+    // fmt: on
+                if (   abs(mode.to)) {
+    return 0; }
+    }
+return;}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    //this simple comment
+    if (foo(far) &&
+    // fmt: off
+            abs(saldj) || (soze) && afk
+        // fmt: on
+    ) {
+        s = {
+            .abs = 2,
+            .zozo = 3,
+        };
+        // fmt: on
         if (abs(mode.to)) {
             return 0;
         }
