@@ -26,6 +26,7 @@ return;}
 
 --------------------------------------------------------------------------------
 
+/// single one
 fn void main()
 {  //this is a comment
     return;
@@ -63,20 +64,25 @@ a comment */
 fn void 
 main() {  
 return/* inline comment before ; */;
-/* multi
-line comment
-*/
-
+    /* multi
+    line comment {
+    */
         if(fgoo) { return bar; /* another inline comment */  } 
 }
 
 --------------------------------------------------------------------------------
 
+/***
+** Hi this is
+a comment */
 fn void main()
 {
-    return;  //this is inline comment
-    // single line comment
+    return /* inline comment before ; */;
+    /* multi
+    line comment {
+    */
     if (fgoo) {
-        return bar;  // another inline coment
+        return bar;  /* another inline comment */
     }
 }
+
