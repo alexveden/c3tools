@@ -385,6 +385,7 @@ fn bool parse_line_comment(Lexer *lexer) @inline @local
 {
 	backtrack(lexer);
 	backtrack(lexer);
+	bool has_new_line = (lexer.current == lexer.file_begin);
 	begin_new_token(lexer);
 
 	while (!reached_end(lexer) && peek(lexer) != '\n')
@@ -397,7 +398,6 @@ fn bool parse_line_comment(Lexer *lexer) @inline @local
 		next(lexer);
 	}
 
-	bool has_new_line = false;
 	char* cur = lexer.lexing_start - 1;
 	while LOOP: (cur >= lexer.file_begin) {
 		switch(*cur) {
@@ -406,13 +406,14 @@ fn bool parse_line_comment(Lexer *lexer) @inline @local
 				break;
 			case '\n':
 				has_new_line = true;
+				break LOOP;
 			default:
 				break LOOP;
 		}
 		cur--;
 	}
 	uint len = (uint)(lexer.current - lexer.lexing_start);
-	if (has_new_line) len--;
+	if (lexer.lexing_start[len-1] == '\n') len--;
 
 	return new_token(lexer, has_new_line ? COMMENT_SINGLE : COMMENT_SINGLE_INLINE, (String)lexer.lexing_start[..len-1]);
 }
@@ -424,6 +425,7 @@ fn bool parse_multiline_comment(Lexer *lexer) @inline @local
 {
 	backtrack(lexer);
 	backtrack(lexer);
+	bool has_new_line = (lexer.current == lexer.file_begin);
 	begin_new_token(lexer);
 
 	int nesting = 0;
@@ -454,7 +456,6 @@ fn bool parse_multiline_comment(Lexer *lexer) @inline @local
 		next(lexer);
 	}
 
-	bool has_new_line = false;
 	char* cur = lexer.lexing_start - 1;
 	while LOOP: (cur >= lexer.file_begin) {
 		switch(*cur) {
@@ -469,7 +470,7 @@ fn bool parse_multiline_comment(Lexer *lexer) @inline @local
 		cur--;
 	}
 	uint len = (uint)(lexer.current - lexer.lexing_start);
-	if (lexer.current[len-1] == '\n') len--;
+	if (lexer.lexing_start[len-1] == '\n') len--;
 
 	return new_token(lexer, has_new_line ? COMMENT_MULTI : COMMENT_MULTI_INLINE, (String)lexer.lexing_start[..len-1]);
 }
