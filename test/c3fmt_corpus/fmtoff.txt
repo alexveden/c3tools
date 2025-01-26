@@ -40,3 +40,34 @@ fn void main()
     }
 return;}
 
+================================================================================
+full_off_inside_code_scope_restoring_formatting
+================================================================================
+fn void 
+main() {
+              //this simple comment
+    // fmt: off
+    if(   foo (far)) {
+          s = {.abs = 2, .zozo = 3,};
+    // fmt: on
+                if (   abs(mode.to)) {
+    return 0; }
+    }
+return;}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    //this simple comment
+    // fmt: off
+    if(   foo (far)) {
+          s = {.abs = 2, .zozo = 3,};
+    // fmt: on
+        if (abs(mode.to)) {
+            return 0;
+        }
+    }
+    return;
+}
+

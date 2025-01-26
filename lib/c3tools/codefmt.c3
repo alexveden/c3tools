@@ -142,6 +142,8 @@ fn bool! CodeFmt.format_comment(&self, Token* t) {
         if (t.value.starts_with("// fmt: on")) {
             self._lexer.set_whitespace_mode(false);
             self._is_paused = false;
+            self.write("%s", t.value);
+            return true;
         } 
     }
 
