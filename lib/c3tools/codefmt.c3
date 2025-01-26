@@ -451,12 +451,10 @@ macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TO
                 if (break_pos == -1 ) nextcase default;
                 if (tmpstate.scope_depth != 0) nextcase default;
                 if (last_non_space_tok == COMMA) has_magic_comma = true;
+            // NOTE: single line comments in statements forcing multi-line print 
             case COMMENT_SINGLE:
             case COMMENT_MULTI:
                 has_magic_comma = true;
-            // case COMMENT_SINGLE_INLINE:
-            // case COMMENT_MULTI_INLINE:
-                // single line comments in statements forcing multi-line print 
             default:
                 if(break_pos != -1) break_len += t.value.len;
                 if(t.type != SPACE) last_non_space_tok = t.type;
