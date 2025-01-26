@@ -392,11 +392,6 @@ fn bool parse_line_comment(Lexer *lexer) @inline @local
 	{
 		next(lexer);
 	}
-	// If we found EOL, then walk past '\n'
-	if (peek(lexer) == '\n')
-	{
-		next(lexer);
-	}
 
 	char* cur = lexer.lexing_start - 1;
 	while LOOP: (cur >= lexer.file_begin) {

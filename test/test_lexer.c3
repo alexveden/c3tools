@@ -269,7 +269,7 @@ fn void test_simple_comments_with_new_line_prefix() {
 
 
 fn void test_simple_comments_with_new_line_prefix_inline() {
-    String contents = "  \t  // foo;\n  ";
+    String contents = "  \t  // foo;\n";
 	Lexer lexer;
 	lexer::init(&lexer,contents);
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
@@ -1015,4 +1015,48 @@ fn void test_whitespace_mode() {
 
 	test::equal(toks[8].type, TokenType.EOS);
 	test::equal(toks[9].type, TokenType.EOF);
+}
+
+fn void test_comments_with_whitespace_mode(){
+    String contents = "\n // foo;\nreturn;";
+	Lexer lexer;
+	lexer::init(&lexer,contents);
+	lexer.set_whitespace_mode(true);
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+    // foreach(t: toks) t.print(new_line: false);
+    foreach(i, t: toks) io::printf("%d: %s", i, t);
+
+	test::equal(7, toks.len());
+	test::equal(toks[0].type, TokenType.SPACE);
+	test::equal(toks[1].type, TokenType.SPACE);
+	test::equal(toks[2].type, TokenType.COMMENT_SINGLE);
+	test::equal(toks[3].type, TokenType.SPACE);
+	test::equal(toks[4].type, TokenType.RETURN);
+	test::equal(toks[5].type, TokenType.EOS);
+	test::equal(toks[6].type, TokenType.EOF);
+}
+
+fn void test_comments_multiline_with_whitespace_mode(){
+    String contents = " /* foo;*/\n;";
+	Lexer lexer;
+	lexer::init(&lexer,contents);
+	lexer.set_whitespace_mode(true);
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+    // foreach(t: toks) t.print(new_line: false);
+    foreach(i, t: toks) io::printf("%d: %s", i, t);
+
+	test::equal(5, toks.len());
+	test::equal(toks[0].type, TokenType.SPACE);
+	test::equal(toks[0].value, " ");
+
+	test::equal(toks[1].type, TokenType.COMMENT_MULTI_INLINE);
+	test::equal(toks[1].value, "/* foo;*/");
+
+	test::equal(toks[2].type, TokenType.SPACE);
+	test::equal(toks[2].value, "\n");
+
+	test::equal(toks[3].type, TokenType.EOS);
+	test::equal(toks[4].type, TokenType.EOF);
 }
