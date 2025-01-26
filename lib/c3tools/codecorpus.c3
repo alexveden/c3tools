@@ -165,9 +165,13 @@ fn List(<CodeCorpus>)! new_parse(String file_name) {
             current.phase++;
         } else if(current.phase == 3) {
             if (!current.case_input) {
-                // skip empty lines until first text
-                if (!l) continue;
-                current.case_input = l;
+                if (!l){
+                    assert(l.ptr != null);
+                    current.case_input = (String)(l.ptr)[..0];
+                    assert(current.case_input == "\n");
+                } else {
+                    current.case_input = l;
+                }
             } else {
                 assert(l.ptr != null);
                 if (l.ptr >= contents.ptr + contents.len) continue;
@@ -181,9 +185,13 @@ fn List(<CodeCorpus>)! new_parse(String file_name) {
         }
         else if(current.phase == 4) {
             if (!current.case_output) {
-                // skip empty lines until first text
-                if (!l) continue;
-                current.case_output = l;
+                if (!l){
+                    assert(l.ptr != null);
+                    current.case_output = (String)(l.ptr)[..0];
+                    assert(current.case_output == "\n");
+                } else {
+                    current.case_output = l;
+                }
             } else {
                 assert(l.ptr != null);
                 if (l.ptr >= contents.ptr + contents.len) continue;

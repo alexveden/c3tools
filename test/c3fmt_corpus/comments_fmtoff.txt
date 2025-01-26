@@ -4,14 +4,79 @@ simple_one_line_comment
 
 fn void 
 main() {
-              //this is a comment
+              //this simple comment
 return;}
 
 --------------------------------------------------------------------------------
 
 fn void main()
 {
-    //this is a comment
+    //this simple comment
     return;
 }
 
+================================================================================
+simple_inline_comment
+================================================================================
+
+/// single one
+fn void 
+main() {  //this is a comment
+return;}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{  //this is a comment
+    return;
+}
+
+================================================================================
+simple_inline_after_eos_comment
+================================================================================
+
+fn void 
+main() {  
+return;//this is inline comment
+// single line comment
+        if(fgoo) { return bar; // another inline coment
+    } 
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    return;  //this is inline comment
+    // single line comment
+    if (fgoo) {
+        return bar;  // another inline coment
+    }
+}
+
+================================================================================
+multiline_comments
+================================================================================
+/***
+** Hi this is
+a comment */
+fn void 
+main() {  
+return/* inline comment before ; */;
+/* multi
+line comment
+*/
+
+        if(fgoo) { return bar; /* another inline comment */  } 
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    return;  //this is inline comment
+    // single line comment
+    if (fgoo) {
+        return bar;  // another inline coment
+    }
+}

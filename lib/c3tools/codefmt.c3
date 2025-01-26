@@ -91,6 +91,8 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
 	    switch(self._lexer.token.type) {
 	        case COMMENT_SINGLE:
 	        case COMMENT_MULTI:
+	        case COMMENT_SINGLE_INLINE:
+	        case COMMENT_MULTI_INLINE:
 	            if (self.format_comment(&self._lexer.token)) continue LOOP;
 	        default:
 	            break;
@@ -135,15 +137,27 @@ fn bool CodeFmt.format_comment(&self, Token* t) {
 	    case COMMENT_MULTI:
 	        if (self._is_paused) {
 	            // Do a direct write
-	            self.buf.append(t.value);
 	            self.buf.append("\n");
+	            self.buf.append(t.value);
 	        } else {
 	            self.newline();
 	            self.write("%s", t.value);
 	        }
+	    case COMMENT_SINGLE_INLINE:
+	    case COMMENT_MULTI_INLINE:
+	        if (self._is_paused) {
+	            // Do a direct write
+	            self.buf.appendf("  %s", t.value);
+	            // self.buf.append("\n");
+	        } else {
+	            self.write("  %s", t.value);
+	            // self.newline();
+	        }
 	    default:
-	        unreachable("%s: %s", t.type, t.value);
+	        unreachable("%s: `%s`", t.type, t.value);
 	}
+
+	self.trace("COMMENT");
 
     return true;
 }
@@ -650,7 +664,7 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
         case INVALID_TOKEN:         // initial state
             assert(t.type == FN);
             self.trace("ENTRY");
-            self.write("fn");
+            self.write("\nfn");
             state.transition(RETURN);
         case RETURN:                // return type 
             self.trace("RETURN");
