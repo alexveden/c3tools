@@ -319,12 +319,12 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
 		case BIT_XOR:
             post_space = true;
             pre_space = true;
-		case COMMENT_SINGLE:
-		case COMMENT_SINGLE_INLINE:
-		case COMMENT_MULTI:
-		case COMMENT_MULTI_INLINE:
+		// case COMMENT_SINGLE:
+		// case COMMENT_SINGLE_INLINE:
+		// case COMMENT_MULTI:
+		// case COMMENT_MULTI_INLINE:
             // pre_space = true;
-            self.__token_cache.push(TOKEN_SPACE);
+            // self.__token_cache.push(TOKEN_SPACE);
         case COMMA:
         case COLON:
         case RETURN:
@@ -383,7 +383,7 @@ Asses if current token can be used for multi-line split
 *>
 macro bool CodeFmt.can_split_multiline(&self, Token* t, TokenType wrap_rule) {
     TokenType tt = t.type;
-    if (tt == COMMENT_SINGLE || tt == COMMENT_MULTI) return true;
+    // if (tt == COMMENT_SINGLE || tt == COMMENT_MULTI) return true;
 
     switch(wrap_rule) {
         case INVALID_TOKEN:
@@ -453,8 +453,10 @@ macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TO
                 if (last_non_space_tok == COMMA) has_magic_comma = true;
             case COMMENT_SINGLE:
             case COMMENT_MULTI:
-                // single line comments in statements forcing multi-line print 
                 has_magic_comma = true;
+            // case COMMENT_SINGLE_INLINE:
+            // case COMMENT_MULTI_INLINE:
+                // single line comments in statements forcing multi-line print 
             default:
                 if(break_pos != -1) break_len += t.value.len;
                 if(t.type != SPACE) last_non_space_tok = t.type;
@@ -534,13 +536,10 @@ macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TO
                 case COMMENT_SINGLE:
                 case COMMENT_MULTI:
                     self.newline();
-                    nextcase;
-                case COMMENT_SINGLE_INLINE:
                     self.write("%s", t.value);
-                    self.newline();
+                case COMMENT_SINGLE_INLINE:
                 case COMMENT_MULTI_INLINE:
-                    self.write("%s ", t.value);
-                    skip_next_space = true;
+                    self.write(" %s", t.value);
                 default:
                     if (is_multiline && self.can_split_multiline(t, wrap_rule))  {
                         if (tmpstate.scope_depth == 1 || tmpstate.prev_scope(1) == LBRACE) {
