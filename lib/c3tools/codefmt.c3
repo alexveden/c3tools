@@ -86,30 +86,39 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
 	self.push_run_state(&CodeFmt.format_global_file_scope, null)!;
 
 	while LOOP: (self._lexer.next_token()) {
-	    if (print_lex) self._lexer.token.print(new_line: true);
+	    Token * t = &self._lexer.token;
+	    if (print_lex) t.print(new_line: true);
 
-	    switch(self._lexer.token.type) {
+	    switch(t.type) {
 	        case COMMENT_SINGLE:
 	        case COMMENT_MULTI:
 	        case COMMENT_SINGLE_INLINE:
 	        case COMMENT_MULTI_INLINE:
-	            if (self.format_comment(&self._lexer.token)) continue LOOP;
+	            if (self.format_comment(t)) continue LOOP;
+	        case SPACE:
 	        default:
 	            break;
 	    }
 
-        if(self.run_state(&self._lexer.token)!) {
+        if(t.type != SPACE && self.run_state(t)!) {
             self.pop_state()!;
 
             // Ending one state, may trigger cascade parent exit
-            if(self.run_state(&self._lexer.token)!) {
+            if(self.run_state(t)!) {
                 self.pop_state()!;
             }
         }
+
+	    if (self._is_paused && t.type != EOF ) {
+	        // NOTE: Printing raw when // fmt: off
+	        assert(self.cache_statement_len() == 0, "cache_statement_dump must be called befor fmt: off");
+	        assert(t.value.len > 0);
+	        self.buf.append(t.value);
+	    }
     }
 
 	if (self.state_stack.len() != 0) {
-	    self.@fail(&self._lexer.token, "Not all code structures resolved, or bad file format")!;
+	    self.@fail(&self._lexer.token, "Not all code structures resolved, or bad file syntax")!;
 	}
 
     return self.buf.str_view();
@@ -138,7 +147,6 @@ fn bool CodeFmt.format_comment(&self, Token* t) {
 	    case COMMENT_MULTI:
 	        if (self._is_paused) {
 	            // Do a direct write
-	            self.buf.append("\n");
 	            self.buf.append(t.value);
 	        } else {
 	            self.newline();
@@ -147,9 +155,7 @@ fn bool CodeFmt.format_comment(&self, Token* t) {
 	    case COMMENT_SINGLE_INLINE:
 	    case COMMENT_MULTI_INLINE:
 	        if (self._is_paused) {
-	            // Do a direct write
-	            self.buf.appendf("  %s", t.value);
-	            // self.buf.append("\n");
+	            self.buf.append(t.value);
 	        } else {
 	            self.write("  %s", t.value);
 	            // self.newline();
@@ -275,8 +281,14 @@ macro void! CodeFmt.dedent(&self) @private {
 Adds a token to composite statement cache for further formatting.
 *>
 macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) @private {
-    // assert(t.type != EOS, "EOS should not be there");
     usz cache_len = self.cache_statement_len();
+    if (self._is_paused) {
+        if (cache_len > 0) {
+            self.cache_statement_dump()!!;
+        }
+        return;
+    }
+    // assert(t.type != EOS, "EOS should not be there");
     TokenType prev_t = cache_len > 0 ? self.__token_cache[^1].type : TokenType.INVALID_TOKEN; 
     bool pre_space = false;
     bool post_space = false;
@@ -405,6 +417,8 @@ macro bool CodeFmt.can_split_multiline(&self, Token* t, TokenType wrap_rule) {
 Format and dump composite statement into aligned code. 
 *>
 macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TOKEN) @private {
+    if (self.cache_statement_len() == 0) return;
+
     usz token_len = 0;
     usz break_len = 0;
     int break_pos = -1;
@@ -566,7 +580,7 @@ macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TO
 Cache size for current formatter state
 *>
 macro usz CodeFmt.cache_statement_len(&self) @private {
-    assert(self.state_stack.len() > 0);
+    if(self.state_stack.len() == 0) return 0;
 
     usz start_len = self.state_stack[^1].token_cache_start;
     assert(self.__token_cache.len() >= start_len);
