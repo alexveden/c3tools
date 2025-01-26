@@ -261,7 +261,7 @@ fn void test_simple_comments_with_new_line_prefix() {
 	test::equal(toks[0].type, TokenType.MODULE);
 
 	test::equal(toks[1].type, TokenType.COMMENT_SINGLE);
-	test::equal(toks[1].value, "// foo;\n");
+	test::equal(toks[1].value, "// foo;");
 
 	test::equal(toks[2].type, TokenType.EOF);
 }
@@ -916,7 +916,7 @@ fn void test_multiline_comment_with_many_stars_multi_line() {
     * asda 
     */;`;
 	Lexer lexer;
-	lexer::init(&lexer,contents);
+	lexer::init(&lexer, contents);
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
     // foreach(t: toks) t.print(new_line: true);
@@ -932,4 +932,70 @@ fn void test_multiline_comment_with_many_stars_multi_line() {
 
 	test::equal(toks[2].type, TokenType.EOS);
 	test::equal(toks[3].type, TokenType.EOF);
+}
+
+fn void test_multiline_comment_with_many_stars_multi_line_endof_line() {
+    String contents = `module 
+    /**
+    * asda 
+    */
+    ;
+    `;
+	Lexer lexer;
+	lexer::init(&lexer, contents);
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+    // foreach(t: toks) t.print(new_line: true);
+    // foreach(i, t: toks) io::printf("%d: %s", i, t);
+
+	test::equal(4, toks.len());
+	test::equal(toks[0].type, TokenType.MODULE);
+
+	test::equal(toks[1].type, TokenType.COMMENT_MULTI);
+	test::equal(toks[1].value, `/**
+    * asda 
+    */`);
+
+	test::equal(toks[2].type, TokenType.EOS);
+	test::equal(toks[3].type, TokenType.EOF);
+}
+
+fn void test_whitespace_mode() {
+    String contents = " \t\fmodule\r\n\t  ;";
+	Lexer lexer;
+	lexer::init(&lexer, contents);
+	lexer.set_whitespace_mode(true);
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+    // foreach(t: toks) t.print(new_line: true);
+    foreach(i, t: toks) io::printf("%d: %s", i, t);
+
+	test::equal(10, toks.len());
+	test::equal(toks[0].type, TokenType.SPACE);
+	test::equal(toks[0].value, " ");
+
+	test::equal(toks[1].type, TokenType.SPACE);
+	test::equal(toks[1].value, "\t");
+
+	test::equal(toks[2].type, TokenType.SPACE);
+	test::equal(toks[2].value, "\f");
+
+	test::equal(toks[3].type, TokenType.MODULE);
+	test::equal(toks[3].value, "module");
+
+	test::equal(toks[4].type, TokenType.SPACE);
+	test::equal(toks[4].value, "\n");
+
+	test::equal(toks[5].type, TokenType.SPACE);
+	test::equal(toks[5].value, "\t");
+
+	test::equal(toks[6].type, TokenType.SPACE);
+	test::equal(toks[6].value, " ");
+
+	test::equal(toks[7].type, TokenType.SPACE);
+	test::equal(toks[7].value, " ");
+
+
+	test::equal(toks[8].type, TokenType.EOS);
+	test::equal(toks[9].type, TokenType.EOF);
 }

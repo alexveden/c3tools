@@ -10,14 +10,15 @@ import std::collections::list;
 Code Formatter Object
 *>
 struct CodeFmt {
-    usz max_line_width;
+    Lexer _lexer;
     DString buf;
     List(<CodeFmtState>) state_stack;
     List(<Token>) __token_cache;
+    usz max_line_width;
     usz _indent_level;
     usz _line_used;
     bool _print_lex;
-    Lexer _lexer;
+    bool _is_paused;
 }
 
 
@@ -79,12 +80,21 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
     self.state_stack.clear();
 
 	lexer::init(&self._lexer, contents);
+	self._lexer.set_whitespace_mode(false);
 
     // Default scope formatter
 	self.push_run_state(&CodeFmt.format_global_file_scope, null)!;
 
 	while LOOP: (self._lexer.next_token()) {
 	    if (print_lex) self._lexer.token.print(new_line: true);
+
+	    switch(self._lexer.token.type) {
+	        case COMMENT_SINGLE:
+	        case COMMENT_MULTI:
+	            if (self.format_comment(&self._lexer.token)) continue LOOP;
+	        default:
+	            break;
+	    }
 
         if(self.run_state(&self._lexer.token)!) {
             self.pop_state()!;
@@ -102,6 +112,42 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
 
     return self.buf.str_view();
 }
+
+fn bool CodeFmt.format_comment(&self, Token* t) {
+    if (t.type == COMMENT_SINGLE) {
+        if (t.value.starts_with("// fmt: off")) {
+            self._lexer.set_whitespace_mode(true);
+            self._is_paused = true;
+        }
+        if (t.value.starts_with("// fmt: on")) {
+            self._lexer.set_whitespace_mode(false);
+            self._is_paused = false;
+        } 
+    }
+
+    // We have existing caches statements, let cache_statement_dump() handle this 
+	if (!self._is_paused && 
+	    self.state_stack.len() > 0 && 
+	    self.cache_statement_len() > 0) return false;
+
+	switch(t.type) {
+	    case COMMENT_SINGLE:
+	    case COMMENT_MULTI:
+	        if (self._is_paused) {
+	            // Do a direct write
+	            self.buf.append(t.value);
+	            self.buf.append("\n");
+	        } else {
+	            self.newline();
+	            self.write("%s", t.value);
+	        }
+	    default:
+	        unreachable("%s: %s", t.type, t.value);
+	}
+
+    return true;
+}
+
 
 <*
 Pushes new state handler function to stack. Allows parsing sub-structs, etc...
@@ -166,8 +212,25 @@ macro CodeFmt.trace(&self, $msg, args...) @private {
 Writes code chunk into internal buffer
 *>
 macro void CodeFmt.write(&self, String format, args...) @private {
+    if (self._is_paused) return;
+
     usz len = self.buf.appendf(format, ...args)!!;
     self._line_used += (int)len;
+}
+
+<*
+Writes a new line into internal buffer with proper indentation
+*>
+macro void CodeFmt.newline(&self) @private {
+    if (self._is_paused) return;
+
+    self.buf.append("\n");
+    self._line_used = 0;
+    for(int i = 0; i < self._indent_level; i++) {
+        // TODO: add tabs too
+        self.buf.append("    ");
+        self._line_used += 4;
+    }
 }
 
 <*
@@ -187,19 +250,6 @@ macro void! CodeFmt.dedent(&self) @private {
         self.@fail(&self._lexer.token, "indentation error")!;
     }
     self._indent_level--;
-}
-
-<*
-Writes a new line into internal buffer with proper indentation
-*>
-macro void CodeFmt.newline(&self) @private {
-    self.buf.append("\n");
-    self._line_used = 0;
-    for(int i = 0; i < self._indent_level; i++) {
-        // TODO: add tabs too
-        self.buf.append("    ");
-        self._line_used += 4;
-    }
 }
 
 
@@ -392,6 +442,8 @@ macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TO
     if (!has_magic_comma && self._line_used + token_len <= self.max_line_width) {
         // NOTE: Fits in line no wrapping needed write as is with standard formatting.
         self.@cache_statement_iter(; usz i, Token* t) {
+            if (self._print_lex) io::eprintf("%s ", t.type);
+
             if (i < self.cache_statement_len()-1){
                 self.write("%s", t.value);
             } else {
@@ -720,7 +772,52 @@ fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state)
 }
 
 <*
-Formatting generic code scope (e.g. inside a function)
+Formatting switch statement scope
+*>
+fn bool! CodeFmt.format_switch_scope(CodeFmt* self, Token* t, NodeParserState* state) @private {
+
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN:
+            assert(t.type == LBRACE);
+            self.trace("ENTRY");
+            self.indent();
+            state.transition(SCOPE);
+        case SCOPE: // full switch scope
+            self.trace("SCOPE");
+            switch(t.type) {
+                case EOS:
+                    // returned back by format_generic_statement()
+                    break;
+                case RBRACE:
+                    if (state.scope_depth == 0) {
+                        self.dedent()!;
+                        self.trace("EXIT");
+                        return true;
+                    } else {
+                        self.@fail(t, "unexpected brace order")!;
+                    }
+                default:
+                    self.@fail(t, "unexpected token")!;
+
+                    // CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;
+                    // if (new_local_state == null){
+                    //     // Not a keyword or anything special, just a statement
+                    //     self.newline();
+                    //     return self.push_run_state(&CodeFmt.format_generic_statement, t);
+                    // } else {                    
+                    //     // Special keyword or statement
+                    //     return self.push_run_state(new_local_state, t);
+                    // }
+            }
+        default:
+            unreachable();
+            
+    }
+    return false;
+}
+
+<*
+Formatting generic code scope ({ ... } inside a function)
 *>
 fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* state) @private {
 
@@ -864,7 +961,11 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
                 case LBRACE:
                     if (state.scope_depth != 1) self.@fail(t, "invalid scope")!;
                     self.write(" {");
-                    return self.push_run_state(&CodeFmt.format_code_scope, t);
+                    if (state.initial_token == SWITCH){
+                        return self.push_run_state(&CodeFmt.format_switch_scope, t);
+                    } else {
+                        return self.push_run_state(&CodeFmt.format_code_scope, t);
+                    }
                 case RBRACE:
                     if (state.scope_depth != 0) self.@fail(t, "invalid scope")!;
                     self.newline();

@@ -24,6 +24,7 @@ struct LexerImp
 	char *start_row_start;
 	LexMode mode; 
 	Token token;
+	bool is_whitespace_mode;
 }
 
 struct Token(Printable) {
@@ -136,6 +137,11 @@ fn void init(Lexer* lexer, String contents)
 	begin_new_token(lexer);
 }
 
+fn void Lexer.set_whitespace_mode(&self, bool is_enabled)
+{
+	self.is_whitespace_mode = is_enabled;
+}
+
 <*
 Parses next token in a code
 @return `true if token found, false - EOF reached or error`
@@ -226,23 +232,16 @@ fn uint check_row(usz line) @inline @local
 
 // --- Lexing general methods.
 
-fn void begin_new_token(Lexer *lexer) @inline @local
-{
-	lexer.lexing_start = lexer.current;
-	lexer.start_row = lexer.current_row;
-	lexer.start_row_start = lexer.line_start;
-}
-
-// // Peek at the current character in the buffer.
+// Peek at the current character in the buffer.
 macro char peek(lexer_) @local {
   return (*(lexer_).current);
 } 
-//
-// // Look at the prev character in the buffer.
+
+// Look at the prev character in the buffer.
 macro char prev(lexer_) @local {
     return ((lexer_).current[-1]);
 }
-//
+
 // // Peek one character ahead.
 macro char peek_next(lexer_) @local {
     return ((lexer_).current[1]);
@@ -298,6 +297,19 @@ fn bool match(Lexer *lexer, char expected) @inline @local
 
 // --- Token creation
 
+fn void begin_new_token(Lexer *lexer) @inline @local
+{
+	lexer.lexing_start = lexer.current;
+	lexer.start_row = lexer.current_row;
+	lexer.start_row_start = lexer.line_start;
+}
+
+// Add a new regular token.
+fn bool new_token(Lexer *lexer, TokenType type, String string) @inline @local
+{
+	set_generic_token(lexer, type, string);
+	return true;
+}
 /**
  * Allocate data for a token, including source location.
  * This call is doing the basic allocation, with other functions
@@ -363,14 +375,6 @@ macro bool add_error_token_at_current(Lexer *lexer, String message) @local
 	return false;
 }
 
-// Add a new regular token.
-fn bool new_token(Lexer *lexer, TokenType type, String string) @inline @local
-{
-	set_generic_token(lexer, type, string);
-	return true;
-}
-
-
 
 // --- Comment parsing
 
@@ -408,6 +412,8 @@ fn bool parse_line_comment(Lexer *lexer) @inline @local
 		cur--;
 	}
 	uint len = (uint)(lexer.current - lexer.lexing_start);
+	if (has_new_line) len--;
+
 	return new_token(lexer, has_new_line ? COMMENT_SINGLE : COMMENT_SINGLE_INLINE, (String)lexer.lexing_start[..len-1]);
 }
 
@@ -463,6 +469,8 @@ fn bool parse_multiline_comment(Lexer *lexer) @inline @local
 		cur--;
 	}
 	uint len = (uint)(lexer.current - lexer.lexing_start);
+	if (lexer.current[len-1] == '\n') len--;
+
 	return new_token(lexer, has_new_line ? COMMENT_MULTI : COMMENT_MULTI_INLINE, (String)lexer.lexing_start[..len-1]);
 }
 
@@ -475,7 +483,8 @@ fn bool skip_whitespace(Lexer *lexer) @local
 	bool has_empty_line = false;
 	while LOOP: (!reached_end(lexer))
 	{
-		switch (peek(lexer))
+		char c = peek(lexer);
+		switch (c)
 		{
 			case '/':
 				has_empty_line = false;
@@ -507,11 +516,19 @@ fn bool skip_whitespace(Lexer *lexer) @local
 					return new_token(lexer, TokenType.EMPTY_LINE, "\n");
 				}
 				has_empty_line = true;
+
 				nextcase;
 			case ' ':
 			case '\t':
 			case '\f':
-			case '\r':
+				if (lexer.is_whitespace_mode) {
+					begin_new_token(lexer);
+					next(lexer);
+					uint len = (uint)(lexer.current - lexer.lexing_start);
+					return new_token(lexer, SPACE, (String)lexer.lexing_start[..len-1]);
+				}
+				nextcase;
+			case '\r': // This is forbidden by c3 grammar, and should be skipped silently
 				next(lexer);
 				break;
 			default:

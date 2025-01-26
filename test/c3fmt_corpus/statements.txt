@@ -764,3 +764,47 @@ fn void main()
     return 0;
 }
 
+================================================================================
+switch_empty
+================================================================================
+
+fn void main() 
+{ 
+    switch LABEL: (    foo.launch(
+        some, stuff, 
+        kwarg: in_loong) ) {  }  
+    return
+    0;} 
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    switch LABEL: (foo.launch(some, stuff, kwarg: in_loong)) {
+    }
+    return 0;
+}
+
+================================================================================
+switch_empty_condition_wrap
+================================================================================
+
+fn void main() 
+{ 
+    switch LABEL: (    foo.launch(
+        some, stuff, 
+        kwarg: in_loong, this_is_another_looong_looong_field) ) {  }  
+    return
+    0;} 
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    switch LABEL: (
+        foo.launch(some, stuff, kwarg: in_loong, this_is_another_looong_looong_field)
+    ) {
+    }
+    return 0;
+}
+
