@@ -67,6 +67,7 @@ fn void CodeFmt.free(&self) {
     self.buf.free();
     self.state_stack.free();
     self.__token_cache.free();
+    *self = {};
 }
 
 <*
@@ -94,7 +95,7 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
 	        case COMMENT_MULTI:
 	        case COMMENT_SINGLE_INLINE:
 	        case COMMENT_MULTI_INLINE:
-	            if (self.format_comment(t)) continue LOOP;
+	            if (self.format_comment(t)!) continue LOOP;
 	        case SPACE:
 	        default:
 	            break;
@@ -121,15 +122,22 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
 	    self.@fail(&self._lexer.token, "Not all code structures resolved, or bad file syntax")!;
 	}
 
+    self._is_paused = false;
+    self._lexer.set_whitespace_mode(false);
     return self.buf.str_view();
 }
 
 <* Generic comment processor if there is not cache_statement pending + fmt: off handler *>
-fn bool CodeFmt.format_comment(&self, Token* t) {
+fn bool! CodeFmt.format_comment(&self, Token* t) {
     if (t.type == COMMENT_SINGLE) {
         if (t.value.starts_with("// fmt: off")) {
+            self.cache_statement_dump()!;
+            self.newline();
+            self.write("%s", t.value);
+
             self._lexer.set_whitespace_mode(true);
             self._is_paused = true;
+            return true;
         }
         if (t.value.starts_with("// fmt: on")) {
             self._lexer.set_whitespace_mode(false);
@@ -281,14 +289,10 @@ macro void! CodeFmt.dedent(&self) @private {
 Adds a token to composite statement cache for further formatting.
 *>
 macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) @private {
-    usz cache_len = self.cache_statement_len();
-    if (self._is_paused) {
-        if (cache_len > 0) {
-            self.cache_statement_dump()!!;
-        }
-        return;
-    }
+    if (self._is_paused) return;
+
     // assert(t.type != EOS, "EOS should not be there");
+    usz cache_len = self.cache_statement_len();
     TokenType prev_t = cache_len > 0 ? self.__token_cache[^1].type : TokenType.INVALID_TOKEN; 
     bool pre_space = false;
     bool post_space = false;

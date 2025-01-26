@@ -1,20 +1,42 @@
 ================================================================================
-full_off
+full_off_full
 ================================================================================
 // fmt: off
-fn void 
+fn void
 main() {
               //this simple comment
-    if(   foo (far)) { zooo;        
+    if(   foo (far)) { zooo;        ;
     }
 return;}
 
 --------------------------------------------------------------------------------
+
 // fmt: off
+fn void
+main() {
+              //this simple comment
+    if(   foo (far)) { zooo;        ;
+    }
+return;}
+
+================================================================================
+full_off_inside_code_scope
+================================================================================
 fn void 
 main() {
               //this simple comment
-    if(   foo (far)) { zooo;        
+          // fmt: off
+    if(   foo (far)) { zooo;
+    }
+return;}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    //this simple comment
+    // fmt: off
+    if(   foo (far)) { zooo;
     }
 return;}
 
