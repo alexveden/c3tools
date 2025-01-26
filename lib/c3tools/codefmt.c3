@@ -454,6 +454,8 @@ macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TO
             // NOTE: single line comments in statements forcing multi-line print 
             case COMMENT_SINGLE:
             case COMMENT_MULTI:
+            case COMMENT_SINGLE_INLINE:
+            case COMMENT_MULTI_INLINE:
                 has_magic_comma = true;
             default:
                 if(break_pos != -1) break_len += t.value.len;
