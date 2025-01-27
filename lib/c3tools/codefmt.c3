@@ -183,14 +183,18 @@ fn bool! CodeFmt.format_comment(&self, Token* t) {
 <*
 Pushes new state handler function to stack. Allows parsing sub-structs, etc...
 *>
-fn bool! CodeFmt.push_run_state(&self, CodeFmtFn new_state, Token* t) @private {
+fn bool! CodeFmt.push_run_state(&self, CodeFmtFn new_state, Token* t, TokenType initial_token = INVALID_TOKEN) @private {
     if (self.state_stack.len() > 0) {
         assert(self.cache_statement_len() == 0, "you must cache_statement_dump, before next state");
+    }
+
+    if (initial_token == INVALID_TOKEN) {
+        initial_token = (t != null) ? t.type : TokenType.INVALID_TOKEN;
     }
     CodeFmtState state = {
         .state_fn = new_state,
         .token_cache_start = self.__token_cache.len(),
-        .state.initial_token = (t != null) ? t.type : TokenType.INVALID_TOKEN,
+        .state.initial_token = initial_token,
     };
     self.state_stack.push(state);
     return self.run_state(t);
@@ -347,6 +351,7 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
         case COMMA:
         case COLON:
         case RETURN:
+        case NEXTCASE:
             post_space = true;
         case IDENT:
             switch(prev_t){
@@ -884,6 +889,7 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
             assert(t.type == LBRACE);
+            assert(state.scope_depth == 1);
             self.trace("ENTRY");
             self.indent();
             state.transition(SCOPE);
@@ -898,8 +904,23 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
                         self.dedent()!;
                         self.trace("EXIT");
                         return true;
+                    }
+                // case LBRACE:
+                //     if (state.initial_token == SWITCH && state.last_token == COLON){
+                //          self.dedent()!;
+                //     }
+                //     self.write(" ");
+                //     return self.push_run_state(&CodeFmt.format_code_scope, t);
+                case CASE:
+                case DEFAULT:
+                    if (state.scope_depth == 1) {
+                        state.initial_token = SWITCH;
+                        if (state.last_token == LBRACE){
+                            self.indent(); // extra indent, at first case
+                        }
+                        nextcase STATE: state.transition(CASE);
                     } else {
-                        self.@fail(t, "unexpected brace order")!;
+                        self.@fail(t, "unexpected case/default statement")!;
                     }
                 case EMPTY_LINE:
                     if (state.scope_depth == 0 && state.last_token != EMPTY_LINE) {
@@ -915,6 +936,23 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
                         // Special keyword or statement
                         return self.push_run_state(new_local_state, t);
                     }
+            }
+        case CASE:
+            self.trace("CASE");
+            switch(t.type) {
+                case CASE:
+                case DEFAULT:
+                    self.dedent()!;
+                    self.newline();
+                    self.write("%s ", t.value);
+                case COLON:
+                    self.cache_statement_dump()!;
+                    self.write(":", t.value);
+                    self.indent();
+                    state.transition(SCOPE);
+                default:
+                    self.cache_statement_add(t);
+                    break;
             }
         default:
             unreachable();
@@ -1025,11 +1063,7 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
                 case LBRACE:
                     if (state.scope_depth != 1) self.@fail(t, "invalid scope")!;
                     self.write(" {");
-                    if (state.initial_token == SWITCH){
-                        return self.push_run_state(&CodeFmt.format_switch_scope, t);
-                    } else {
-                        return self.push_run_state(&CodeFmt.format_code_scope, t);
-                    }
+                    return self.push_run_state(&CodeFmt.format_code_scope, t);
                 case RBRACE:
                     if (state.scope_depth != 0) self.@fail(t, "invalid scope")!;
                     self.newline();

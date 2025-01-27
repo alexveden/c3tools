@@ -827,3 +827,118 @@ fn void main()
     };
 }
 
+================================================================================
+switch_with_cases_and_default
+================================================================================
+
+fn void main() 
+{ 
+    switch LABEL: (    foo.launch(
+        some, stuff, 
+        kwarg: in_loong) ) {  
+            case FOO:
+            bar();
+            case BAR:
+            case BAZ:
+            case "another":
+            case 922:
+            case 1..0xffff:
+            foo();
+            default:  nextcase LABEL : FOO;
+                
+        }  
+    return
+    0;} 
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    switch LABEL: (foo.launch(some, stuff, kwarg: in_loong)) {
+        case FOO:
+            bar();
+        case BAR:
+        case BAZ:
+        case "another":
+        case 922:
+        case 1..0xffff:
+            foo();
+        default :
+            nextcase LABEL: FOO;
+    }
+    return 0;
+}
+
+================================================================================
+switch_with_cases_in_braces
+================================================================================
+
+fn void main() 
+{ 
+    switch LABEL: (    foo.launch(
+        some, stuff, 
+        kwarg: in_loong) ) {  
+            case FOO: {
+            bar() ; }
+            case BAR:
+            case BAZ:
+            case "another":
+            case 922:
+            case 1..0xffff:
+            foo();
+            default: {  nextcase LABEL : FOO;  }
+                
+        }  
+    return
+    0;} 
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    switch LABEL: (foo.launch(some, stuff, kwarg: in_loong)) {
+        case FOO:
+            bar();
+        case BAR:
+        case BAZ:
+        case "another":
+        case 922:
+        case 1..0xffff:
+            foo();
+        default :
+            nextcase LABEL: FOO;
+    }
+    return 0;
+}
+
+
+================================================================================
+scope_in_scope
+================================================================================
+
+fn void main() 
+{ 
+{  foo = 0;}
+
+    return
+    0;} 
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    switch LABEL: (foo.launch(some, stuff, kwarg: in_loong)) {
+        case FOO:
+            bar();
+        case BAR:
+        case BAZ:
+        case "another":
+        case 922:
+        case 1..0xffff:
+            foo();
+        default :
+            nextcase LABEL: FOO;
+    }
+    return 0;
+}
+
