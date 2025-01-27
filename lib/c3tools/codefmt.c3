@@ -863,13 +863,19 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
                         self.write("}");
                         self.trace("EXIT");
                         return true;
+                    } else {
+                        // Specially for `case FOO: { .. some .. }`
+                        if (state.initial_token == SWITCH) self.indent();
                     }
                 case LBRACE:
-                    // if (state.initial_token == SWITCH && state.last_token == COLON){
-                    //      self.dedent()!;
-                    // }
+                    if (state.initial_token == SWITCH && state.last_token == COLON){
+                        // state.check_scope(t.type);
+                        self.dedent()!;
+                        self.write(" ");
+                    } else {
+                        self.newline();
+                    }
                     // self.dedent()!;
-                    self.newline();
                     return self.push_run_state(&CodeFmt.format_code_scope, t);
                 case CASE:
                 case DEFAULT:
@@ -901,10 +907,13 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
             self.trace("CASE");
             switch(t.type) {
                 case CASE:
-                case DEFAULT:
                     self.dedent()!;
                     self.newline();
                     self.write("%s ", t.value);
+                case DEFAULT:
+                    self.dedent()!;
+                    self.newline();
+                    self.write("%s", t.value);
                 case COLON:
                     self.cache_statement_dump()!;
                     self.write(":", t.value);

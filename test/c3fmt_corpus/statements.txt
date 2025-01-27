@@ -863,7 +863,7 @@ fn void main()
         case 922:
         case 1..0xffff:
             foo();
-        default :
+        default:
             nextcase LABEL: FOO;
     }
     return 0;
@@ -882,11 +882,11 @@ fn void main()
             bar() ; }
             case BAR:
             case BAZ:
-            case "another":
+            case "another"   :
             case 922:
             case 1..0xffff:
             foo();
-            default: {  nextcase LABEL : FOO;  }
+            default   : {  nextcase LABEL : FOO;  }
                 
         }  
     return
@@ -897,20 +897,21 @@ fn void main()
 fn void main()
 {
     switch LABEL: (foo.launch(some, stuff, kwarg: in_loong)) {
-        case FOO:
+        case FOO: {
             bar();
+        }
         case BAR:
         case BAZ:
         case "another":
         case 922:
         case 1..0xffff:
             foo();
-        default :
+        default: {
             nextcase LABEL: FOO;
+        }
     }
     return 0;
 }
-
 
 ================================================================================
 scope_in_scope
