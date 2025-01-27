@@ -930,14 +930,33 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
         case SCOPE:
             self.trace("SCOPE");
             switch(t.type) {
-                case EOS:
-                    self.cache_statement_dump()!;
-                    if (state.scope_depth != 0) {
-                        self.@fail(t, "unclosed scope")!;
+                case LBRACE:
+                    if (state.initial_token == FOR) {
+                        self.cache_statement_dump()!;
+                        self.write(" ");
+                        return self.push_run_state(&CodeFmt.format_code_scope, t);
+                    } else {
+                        nextcase default;
                     }
-                    self.write(";");
-                    self.trace("EXIT");
-                    return true;
+                case RBRACE:
+                    break;
+                case EOS:
+                    if (state.scope_depth != 0) {
+                        // check if we not at @body macro
+                        if(state.scope_depth != 1 || state.prev_scope(1) != LPAREN) {
+                            self.@fail(t, "unclosed scope")!;
+                        }
+
+                        self.cache_statement_add(t);
+                        state.initial_token = FOR;
+
+                        return false;
+                    } else {
+                        self.cache_statement_dump()!;
+                        self.write(";");
+                        self.trace("EXIT");
+                        return true;
+                    }
                 default:
                     self.cache_statement_add(t);
             }
