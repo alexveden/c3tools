@@ -939,7 +939,9 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                         nextcase default;
                     }
                 case RBRACE:
-                    break;
+                    if (state.initial_token != FOR) {
+                        self.cache_statement_add(t);
+                    }
                 case EOS:
                     if (state.scope_depth != 0) {
                         // check if we not at @body macro

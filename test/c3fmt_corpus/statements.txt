@@ -1106,8 +1106,9 @@ fn  char[   ]   ! test   ()
 
 fn char[]! test()
 {
-    defer catch {
-        io::printfn("Excuse found: %s", err);
-    }
-    return IoError.FILE_NOT_FOUND?;
+    c.@foo(a, b; xyz, abcj) {
+        xyz[1] = 4;
+    };
+    return 0;
 }
+
