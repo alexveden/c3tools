@@ -828,10 +828,10 @@ Formatting generic code scope ({ ... } inside a function)
 fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* state) @private {
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
-            assert(t.type == LBRACE);
+            assert(t.type == LBRACE || t.type == LBRAPIPE);
             assert(state.scope_depth == 1);
             self.trace("ENTRY");
-            self.write("{");
+            self.write("%s", t.value);
             self.indent();
             state.transition(SCOPE);
         case SCOPE:
@@ -840,12 +840,13 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
                 case EOS:
                     // returned back by format_generic_statement()
                     break;
+                case RBRAPIPE:
                 case RBRACE:
                     if (state.scope_depth == 0) {
                         self.dedent()!;
                         if (state.initial_token == SWITCH) self.dedent()!;
                         self.newline();
-                        self.write("}");
+                        self.write("%s", t.value);
                         self.trace("EXIT");
                         return true;
                     } else {
@@ -930,6 +931,9 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
         case SCOPE:
             self.trace("SCOPE");
             switch(t.type) {
+                case LBRAPIPE:
+                    state.initial_token = FOR;
+                    nextcase LBRACE;
                 case LBRACE:
                     if (state.initial_token == FOR) {
                         self.cache_statement_dump()!;
@@ -939,12 +943,15 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                         nextcase default;
                     }
                 case RBRACE:
+                case RBRAPIPE:
                     if (state.initial_token != FOR) {
                         self.cache_statement_add(t);
+                    } else {
+                        state.transition(EOS);
                     }
                 case EOS:
                     if (state.scope_depth != 0) {
-                        // check if we not at @body macro
+                        // check if we not at @body @macro(foo; some) { }
                         if(state.scope_depth != 1 || state.prev_scope(1) != LPAREN) {
                             self.@fail(t, "unclosed scope")!;
                         }
@@ -962,6 +969,23 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                 default:
                     self.cache_statement_add(t);
             }
+        case EOS:
+            // NOTE: special state for expecting closing ; for @body macro / {| block |}
+
+            self.trace("EOS");
+            switch(t.type) {
+                case BANG:
+                    self.write("!");
+                case BANGBANG:
+                    self.write("!!");
+                case EOS:
+                    self.write(";");
+                    self.trace("EXIT");
+                    return true;
+                default:
+                    self.@fail(t, "unexpected token after @body macro or expr block")!;
+                    break;
+            };
         default:
             unreachable();
     }
