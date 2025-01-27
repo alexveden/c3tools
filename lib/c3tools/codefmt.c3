@@ -144,6 +144,9 @@ fn bool! CodeFmt.format_comment(&self, Token* t) {
             self._is_paused = false;
             self.write("%s", t.value);
             self.newline();
+	        if(self.state_stack.len() > 0) {
+	            self.state_stack[^1].state.current_token = EMPTY_LINE;
+	        } 
             return true;
         } 
     }
