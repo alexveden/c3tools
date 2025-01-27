@@ -845,7 +845,6 @@ fn void main()
             case 1..0xffff:
             foo();
             default:  nextcase LABEL : FOO;
-                
         }  
     return
     0;} 
@@ -883,6 +882,7 @@ fn void main()
             case BAR:
             case BAZ:
             case "another"   :
+
             case 922:
             case 1..0xffff:
             foo();
@@ -903,12 +903,14 @@ fn void main()
         case BAR:
         case BAZ:
         case "another":
+            
         case 922:
         case 1..0xffff:
             foo();
         default: {
             nextcase LABEL: FOO;
         }
+            
     }
     return 0;
 }
@@ -931,6 +933,161 @@ fn void main()
     {
         foo = 0;
     }
+    
     return 0;
+}
+
+================================================================================
+defer_catch
+================================================================================
+
+fn void main() 
+{ 
+defer (   catch 
+err)
+io::printfn("fault found: %s", err);
+
+    return
+    0;} 
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    defer (catch err) io::printfn("fault found: %s", err);
+    
+    return 0;
+}
+
+================================================================================
+defer_catch_full_example
+================================================================================
+
+fn  char[   ]   ! test   ()
+{
+    defer (catch 
+    err)
+    {
+        io::printfn("Excuse found: %s", 
+        err);
+        (void)   
+        free(data);
+            (t.type=
+            EMPTY_LINE);
+    }
+    // Returns Excuse, memory gets freed
+    return IoError.FILE_NOT_FOUND?;
+}
+
+--------------------------------------------------------------------------------
+
+fn char[]! test()
+{
+    defer (catch err) {
+        io::printfn("Excuse found: %s", err);
+        (void)free(data);
+        (t.type = EMPTY_LINE);
+    }
+    // Returns Excuse, memory gets freed
+    return IoError.FILE_NOT_FOUND?;
+}
+
+================================================================================
+defer_catch_no_paren
+================================================================================
+
+fn  char[   ]   ! test   ()
+{
+    defer catch
+        io::printfn("Excuse found: %s", 
+        err);
+    return IoError.FILE_NOT_FOUND?;
+}
+
+--------------------------------------------------------------------------------
+
+fn char[]! test()
+{
+    defer catch io::printfn("Excuse found: %s", err);
+    return IoError.FILE_NOT_FOUND?;
+}
+
+================================================================================
+defer_catch_braces
+================================================================================
+
+fn  char[   ]   ! test   ()
+{
+    defer catch 
+        {io::printfn("Excuse found: %s", 
+        err);}
+    return IoError.FILE_NOT_FOUND?;
+}
+
+--------------------------------------------------------------------------------
+
+fn char[]! test()
+{
+    defer catch {
+        io::printfn("Excuse found: %s", err);
+    }
+    return IoError.FILE_NOT_FOUND?;
+}
+
+================================================================================
+if_catch_return_excuse
+================================================================================
+
+fn  char[   ]   ! test   ()
+{
+if (catch excuse = foo(call, dab))
+                {
+            // Return the excuse with ? operator
+    return excuse?;
+    }
+}
+
+--------------------------------------------------------------------------------
+
+fn char[]! test()
+{
+    if (catch excuse = foo(call, dab)) {
+        // Return the excuse with ? operator
+        return excuse?;
+    }
+}
+
+================================================================================
+if_catch_switch
+================================================================================
+
+fn void! test()
+{
+if (catch excuse = optional_value)
+            {
+    case NoHomework.DOG_ATE_MY_HOMEWORK:
+                io::printn("Dog ate your file");
+case IoError.FILE_NOT_FOUND:
+            io::printn("File not found");
+            default: {
+            io::printfn("Unexpected Excuse: %s", excuse);
+            return excuse?;}
+    }
+}
+
+--------------------------------------------------------------------------------
+
+fn void! test()
+{
+    if (catch excuse = optional_value) {
+        case NoHomework.DOG_ATE_MY_HOMEWORK:
+            io::printn("Dog ate your file");
+        case IoError.FILE_NOT_FOUND:
+            io::printn("File not found");
+        default: {
+            io::printfn("Unexpected Excuse: %s", excuse);
+            return excuse?;
+        }
+    }
 }
 
