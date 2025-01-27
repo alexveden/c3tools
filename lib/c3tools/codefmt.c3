@@ -633,6 +633,10 @@ fn CodeFmtFn! CodeFmt.global_formatter_dispatch(CodeFmt* self, Token *t) @privat
     switch(t.type) {
         case FN:
             return &CodeFmt.format_fn;
+        case DOCS_START:
+            return &CodeFmt.format_docstring;
+        case DOCS_END:
+            break;
         default:
             self.@fail(t, "unsupported global token")!;
     }
@@ -690,6 +694,8 @@ fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserSta
                 case RBRACE:
                     // TODO: possible end of scope
                     assert(state.scope_depth == 0);
+                    break;
+                case DOCS_END:
                     break;
                 default:
                     CodeFmtFn fmt_fn = self.global_formatter_dispatch(t)!;
@@ -1101,3 +1107,28 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
     return false;
 }
 
+
+fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* state) @private {
+
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN:         // initial state
+            assert(t.type == DOCS_START);
+            self.trace("ENTRY");
+            self.newline();
+            self.write("%s", t.value);
+            state.transition(SCOPE);
+        case SCOPE:                // return type 
+            self.trace("SCOPE");
+            switch(t.type) {
+                case DOCS_END:
+                    self.write("%s", t.value);
+                    return true;
+                default:
+                    // self.write("%s", t.value);
+                    self.write("'?'");
+            }
+        default:
+            unreachable();
+    }
+    return false;
+}
