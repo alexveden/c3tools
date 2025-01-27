@@ -927,17 +927,8 @@ fn void main()
 
 fn void main()
 {
-    switch LABEL: (foo.launch(some, stuff, kwarg: in_loong)) {
-        case FOO:
-            bar();
-        case BAR:
-        case BAZ:
-        case "another":
-        case 922:
-        case 1..0xffff:
-            foo();
-        default :
-            nextcase LABEL: FOO;
+    {
+        foo = 0;
     }
     return 0;
 }
