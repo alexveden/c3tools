@@ -687,7 +687,7 @@ fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserSta
                     self.trace("EXIT");
 	                return true;
                 case EMPTY_LINE:
-                    if (state.scope_depth == 0 && state.last_token != EMPTY_LINE) {
+                    if (state.scope_depth == 0 && state.last_token != EMPTY_LINE && state.last_token != DOCS_END) {
                         self.newline();
                     }
                     break;
@@ -1117,16 +1117,102 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
             self.newline();
             self.write("%s", t.value);
             state.transition(SCOPE);
-        case SCOPE:                // return type 
+        case SCOPE: // contract scope
             self.trace("SCOPE");
             switch(t.type) {
                 case DOCS_END:
+                    nextcase STATE: state.transition(EOS);
+                case AT_IDENT:
                     self.write("%s", t.value);
-                    return true;
+                    switch(t.value) {
+                        case "@param":  
+                            state.transition(VAR);
+                        case "@require":  
+                            state.transition(ASSERT);
+                        case "@ensure": 
+                            state.transition(ASSERT);
+                        case "@return": 
+                            state.transition(RETURN);
+                        default: 
+                            state.transition(AT_IDENT);
+                    }
                 default:
-                    // self.write("%s", t.value);
-                    self.write("'?'");
+                    self.@fail(t, "expected doc contract, or *>")!;
             }
+        case AT_IDENT: // generic contract (any other)
+            switch(t.type) {
+                case DOCS_END:
+                    self.write(" ");
+                    nextcase STATE: state.transition(EOS);
+                case DOCS_EOL:
+                    self.write("%s", t.value);
+                    state.transition(SCOPE);
+                default:
+                    self.write(" %s", t.value);
+            }
+        case ASSERT:  // @require / @ensure
+            switch(t.type) {
+                case DOCS_END:
+                    self.write(" ");
+                    nextcase STATE: state.transition(EOS);
+                case DOCS_EOL:
+                    self.write("%s", t.value);
+                    state.transition(SCOPE);
+                case COMMA:
+                case DOT:
+                case LPAREN:
+                case RPAREN:
+                    self.write("%s", t.value);
+                default:
+                    switch(state.last_token) {
+                        case BANG:
+                        case LPAREN:
+                        case DOT:
+                        case RPAREN:
+                            self.write("%s", t.value);
+
+                        default:
+                            self.write(" %s", t.value);
+                    }
+            }
+        case RETURN:  // @return[!]
+            switch(t.type) {
+                case DOCS_END:
+                    self.write(" ");
+                    nextcase STATE: state.transition(EOS);
+                case DOCS_EOL:
+                    self.write("%s", t.value);
+                    state.transition(SCOPE);
+                case BANG:
+                    self.write("%s", t.value);
+                case TYPE_IDENT:
+                    self.write(" %s", t.value);
+                case DOT:
+                case CONST_IDENT:
+                case COMMA:
+                    self.write("%s", t.value);
+                default:
+                    self.write(" %s", t.value);
+            }
+        case VAR:  // @param
+            switch(t.type) {
+                case DOCS_END:
+                    self.write(" ");
+                    nextcase STATE: state.transition(EOS);
+                case DOCS_EOL:
+                    self.write("%s", t.value);
+                    state.transition(SCOPE);
+                case LBRACKET:
+                    self.write(" %s", t.value);
+                case RBRACKET:
+                    self.write("%s", t.value);
+                default:
+                    if (state.scope_depth == 1) self.write(" ");
+                    self.write("%s", t.value);
+            }
+        case EOS:
+            self.write("%s", t.value);
+            return true;
         default:
             unreachable();
     }

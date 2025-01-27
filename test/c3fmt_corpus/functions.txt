@@ -199,3 +199,88 @@ fn void main()
     return;
 }
 
+================================================================================
+simple_main_docstring_multiline
+================================================================================
+<*
+   My doc asdlkjad aiis is not formatted at                                all an used as is
+*>
+
+
+fn void 
+main() { return;}
+
+--------------------------------------------------------------------------------
+
+<*
+   My doc asdlkjad aiis is not formatted at                                all an used as is
+*>
+fn void main(
+)
+{
+    return;
+}
+
+================================================================================
+simple_main_docstring_only_contract
+================================================================================
+<* @require foo > 1 *>
+fn void 
+main() { return;}
+
+--------------------------------------------------------------------------------
+
+<* @require foo > 1 *>
+fn void main()
+{
+    return;
+}
+
+================================================================================
+simple_main_docstring_multi_contract
+================================================================================
+<* 
+Descr @param @ensure ignored
+
+
+@param [&in] i
+@param num_foo "The number of foos."
+@require foo==0, bar > 0 : "This is a stuff"
+@require !foo : "This is a stuff"
+@ensure foo==null, bar > 0 ``This is raw stuff``
+@require foo > 1 
+@return IoError.FOO, EioError.BAR
+@return! IoError.FOO, EioError.BAR
+@require $defined(resource.open, resource.open()),  ``Expected resource to have an "open" function``
+@require resource != nil
+@require $assignable(resource.open(), void*)
+@mycustom "aoo" , "foo"
+*>
+fn void 
+main() { return;}
+
+--------------------------------------------------------------------------------
+
+<* 
+Descr @param @ensure ignored
+
+
+@param [&in] i
+@param num_foo "The number of foos."
+@require foo == 0, bar > 0 : "This is a stuff"
+@require !foo : "This is a stuff"
+@ensure foo == null, bar > 0 ``This is raw stuff``
+@require foo > 1
+@return IoError.FOO, EioError.BAR
+@return! IoError.FOO, EioError.BAR
+@require $defined(resource.open, resource.open()), ``Expected resource to have an "open" function``
+@require resource != nil
+@require $assignable(resource.open(), void *)
+@mycustom "aoo" , "foo"
+*>
+fn void main(
+)
+{
+    return;
+}
+
