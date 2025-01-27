@@ -902,6 +902,7 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
                 case RBRACE:
                     if (state.scope_depth == 0) {
                         self.dedent()!;
+                        if (state.initial_token == SWITCH) self.dedent()!;
                         self.trace("EXIT");
                         return true;
                     }
