@@ -1438,6 +1438,14 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
         case VAR:
             self.trace("VAR");
             switch(t.type) {
+                case CT_CASE:
+                case CT_DEFAULT:
+                    if (self.cache_statement_len() != 0 || state.initial_token != CT_SWITCH) {
+                        self.@fail(t, "unexpected $case/$default")!;
+                    }
+                    self.indent();
+                    self.indent();
+                    nextcase STATE: state.transition(SCOPE);
                 case COLON:
                 case RPAREN:
                     self.cache_statement_add(t);
