@@ -186,3 +186,26 @@ macro foo($a)
     $endif
 }
 
+================================================================================
+ct_foreach
+================================================================================
+macro foo_enum($SomeEnum)
+{
+    $if $x > 3:
+    $foreach ($x : $SomeEnum.values)
+    io::printfn("%d", (int)$x);
+    $endforeach
+    $endif
+}
+
+--------------------------------------------------------------------------------
+
+macro foo_enum($SomeEnum)
+{
+    $if $x > 3:
+        $foreach ($x: $SomeEnum.values)
+            io::printfn("%d", (int)$x);
+        $endforeach
+    $endif
+}
+
