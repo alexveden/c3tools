@@ -452,7 +452,7 @@ macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TO
 		    case MULT_ASSIGN:
 		    case MOD_ASSIGN:
 		    case PLUS_ASSIGN:
-		    case SHL_ASSIGN:
+	    case SHL_ASSIGN:
 		    case SHR_ASSIGN:
 		    case EQ:
 		        // if it's an assignment use only RHS part for splitting
@@ -691,7 +691,6 @@ macro bool is_require_space(TokenType ttype) @local {
     }
 }
 
-
 <*
 Define appropriate code wrapping rule for token type
 *>
@@ -739,7 +738,6 @@ macro bool CodeFmt.can_split_multiline(&self, Token* t, TokenType wrap_rule) {
     }
 }
 
-
 <*
 Cache size for current formatter state
 *>
@@ -763,7 +761,6 @@ macro CodeFmt.@cache_statement_iter(&self; @body(idx, token)) @private {
         @body(i, &self.__token_cache[i]);
     }
 }
-
 
 <*
 Clear cache statements for current stack
@@ -814,6 +811,11 @@ fn CodeFmtFn! CodeFmt.local_formatter_dispatch(CodeFmt* self, Token *t) @private
         case DEFER:
         case SWITCH:
             return &CodeFmt.format_statement_code_flow;
+	    case CT_FOR:               // $for
+	    case CT_FOREACH:           // $foreach
+	    case CT_IF:                // $if
+	    case CT_SWITCH:            // $switch
+            return &CodeFmt.format_comptime_code_flow;
         default:
             return null;
     }
@@ -1024,6 +1026,10 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
         case SCOPE:
             self.trace("SCOPE");
             switch(t.type) {
+                case CT_ENDFOREACH:
+                case CT_ENDFOR:
+                case CT_ENDSWITCH:
+                case CT_ENDIF:
                 case EOS:
                     // returned back by format_generic_statement()
                     break;
@@ -1405,5 +1411,89 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
         default:
             unreachable();
     }
+    return false;
+}
+
+<*
+Formatting of compile time code flow statement block ($for, $if, $foreach, $switch)
+*>
+fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserState* state) @private {
+    assert(state.initial_token != INVALID_TOKEN);
+
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN:
+            self.trace("ENTRY");
+            switch(t.type) {
+	            case CT_FOR:               // $for
+	            case CT_FOREACH:           // $foreach
+	            case CT_IF:                // $if
+	            case CT_SWITCH:            // $switch
+                    self.newline();
+                    self.write("%s ", t.value);
+                default: 
+                    unreachable();
+            }
+
+            state.transition(VAR);
+        case VAR:
+            self.trace("VAR");
+            switch(t.type) {
+                case COLON:
+                case RPAREN:
+                    self.cache_statement_add(t);
+                    if (state.scope_depth == 0){
+                        TokenType wrap_rule = self.cache_statement_wrap_rule(state.initial_token);
+                        self.cache_statement_dump(wrap_rule)!;
+                        self.indent();
+                        state.transition(SCOPE);
+                    }
+                default:
+                    self.cache_statement_add(t);
+            }
+        case SCOPE:
+            self.trace("SCOPE");
+            switch(t.type) {
+                case EOS:
+                    // Fallback from format_generic_statement
+                    break;
+                case LBRACE:
+                    if (state.scope_depth != 1) self.@fail(t, "invalid scope")!;
+                    self.write(" ");
+                    return self.push_run_state(&CodeFmt.format_code_scope, t);
+                case RBRACE:
+                    if (state.scope_depth != 0) self.@fail(t, "invalid scope")!;
+                case CT_ELSE:
+                    self.dedent()!;
+                    self.newline();
+                    self.write("%s", t.value);
+                    self.indent();
+                case CT_ENDFOREACH:
+                case CT_ENDFOR:
+                case CT_ENDSWITCH:
+                case CT_ENDIF:
+                    self.dedent()!;
+                    self.newline();
+                    self.write("%s", t.value);
+                    return true;                        
+                default:
+                    CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;
+                    if (new_local_state == null){
+                        // Not a keyword or anything special, just a statement
+                        if (t.type == LPAREN) {
+                            // NOTE: casting case, e.g. (void)free(data);
+                            // prevent open LPAREN to influence current scope_depth
+                            state.check_scope(RPAREN); // remove LPAREN scope
+                        }
+                        self.newline();
+                        return self.push_run_state(&CodeFmt.format_generic_statement, t);
+                    } else {                    
+                        // Special keyword or statement
+                        return self.push_run_state(new_local_state, t);
+                    }
+            }
+        default:
+            unreachable();
+    }
+
     return false;
 }

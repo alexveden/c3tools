@@ -27,12 +27,28 @@ macro NodeParserState.check_scope(&self, TokenType t) {
         case LGENPAR:          // (<
         case LVEC:             // [<
         case DOCS_START:       // <*
+	    // case CT_FOR:               // $for
+	    // case CT_FOREACH:           // $foreach
+	    // case CT_IF:                // $if
+	    // case CT_SWITCH:            // $switch
             if (self.scope_depth >= self.scope_stack.len) return;
             self.scope_stack[self.scope_depth] = t;
             self.scope_depth++;
         //
         //  Exiting scope
         //  
+        case CT_ENDIF:
+            if (self.scope_depth == 0) nextcase default;
+            if (self.scope_stack[self.scope_depth-1] == CT_IF) nextcase EOF;
+        case CT_ENDSWITCH:
+            if (self.scope_depth == 0) nextcase default;
+            if (self.scope_stack[self.scope_depth-1] == CT_SWITCH) nextcase EOF;
+        case CT_ENDFOR:
+            if (self.scope_depth == 0) nextcase default;
+            if (self.scope_stack[self.scope_depth-1] == CT_FOR) nextcase EOF;
+        case CT_ENDFOREACH:
+            if (self.scope_depth == 0) nextcase default;
+            if (self.scope_stack[self.scope_depth-1] == CT_FOREACH) nextcase EOF;
         case RBRACE:           // }
             if (self.scope_depth == 0) nextcase default;
             if (self.scope_stack[self.scope_depth-1] == LBRACE) nextcase EOF;
