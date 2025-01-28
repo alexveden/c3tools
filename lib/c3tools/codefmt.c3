@@ -294,30 +294,16 @@ macro void! CodeFmt.dedent(&self) @private {
 *                  CODE WRAP FUNCTIONS
 */
 
-<* 
-Adds a token to composite statement cache for further formatting.
-*>
-macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) @private {
-    if (self._is_paused) return;
-
-    // assert(t.type != EOS, "EOS should not be there");
-    usz cache_len = self.cache_statement_len();
-    TokenType prev_t = cache_len > 0 ? self.__token_cache[^1].type : TokenType.INVALID_TOKEN; 
-    bool pre_space = false;
-    bool post_space = false;
-
-    switch(t.type) {
+macro bool is_require_space(TokenType ttype) @local {
+    switch(ttype) {
 		case DIV:
-		case EQ:
 		case GREATER:
 		case LESS:
 		case MINUS:
 		case MOD:
 		case PLUS:
 		case STAR:
-		case BIT_AND_ASSIGN:
-		case BIT_OR_ASSIGN:
-		case BIT_XOR_ASSIGN:
+		case AMP:
 		case CT_AND:
 		case CT_OR:
 		case CT_CONCAT:
@@ -327,36 +313,134 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
 		case GREATER_EQ:
 		case IMPLIES:
 		case LESS_EQ:
-		case MINUS_ASSIGN:
-		case MULT_ASSIGN:
-		case MOD_ASSIGN:
 		case NOT_EQUAL:
-		case PLUS_ASSIGN:
 		case QUESTQUEST:
 		case SHL:
 		case SHR:
-		case SHL_ASSIGN:
-		case SHR_ASSIGN:
 		case AND:
 		case OR:
-		case AMP:
 		case BIT_OR:
 		case BIT_XOR:
-            post_space = true;
-            pre_space = true;
+		case RETURN:
+		case EOS:
+		case IDENT:
+		case COMMA:
+		case EQ:
+		case BIT_AND_ASSIGN:
+		case BIT_OR_ASSIGN:
+		case BIT_XOR_ASSIGN:
+		case MINUS_ASSIGN:
+		case MULT_ASSIGN:
+		case MOD_ASSIGN:
+		case PLUS_ASSIGN:
+		case SHL_ASSIGN:
+		case SHR_ASSIGN:
+		case CATCH:
+		case NEXTCASE:
+		case TRY:
+		case COLON:
+		    return true;
+		default: 
+		    return false;
+    }
+}
+<* 
+Adds a token to composite statement cache for further formatting.
+*>
+macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) @private {
+    if (self._is_paused) return;
+    if (t.type == EMPTY_LINE) return;
+
+    // assert(t.type != EOS, "EOS should not be there");
+    usz cache_len = self.cache_statement_len();
+    TokenType prev_t = cache_len > 0 ? self.__token_cache[^1].type : TokenType.INVALID_TOKEN; 
+    bool pre_space = false;
+    // bool post_space = false;
+
+    switch TOP: (t.type) {
         case COMMA:
         case COLON:
-        case RETURN:
-        case NEXTCASE:
-        case CATCH:
-        case TRY:
-            post_space = true;
+        case DOT:
+        case MINUSMINUS:
+        case PLUSPLUS:
+        case SCOPE:
+        case QUESTQUEST:
+        case QUESTION:
+            // post_space = true;
+            break;
+		case EQ:
+		case DIV:
+		case GREATER:
+		case LESS:
+		case MINUS:
+		case MOD:
+		case PLUS:
+		case CT_AND:
+		case CT_OR:
+		case CT_CONCAT:
+		case DIV_ASSIGN:
+		case ELVIS:
+		case EQEQ:
+		case GREATER_EQ:
+		case IMPLIES:
+		case LESS_EQ:
+		case NOT_EQUAL:
+		case SHL:
+		case SHR:
+		case AND:
+		case OR:
+		case BIT_OR:
+		case BIT_XOR:
+		case BIT_AND_ASSIGN:
+		case BIT_OR_ASSIGN:
+		case BIT_XOR_ASSIGN:
+		case MINUS_ASSIGN:
+		case MULT_ASSIGN:
+		case MOD_ASSIGN:
+		case PLUS_ASSIGN:
+		case SHL_ASSIGN:
+		case SHR_ASSIGN:
+            pre_space = true;
         case IDENT:
             switch(prev_t){
+                case RPAREN:  // TODO: may conflict with (cast)ident 
                 case TYPE_IDENT:
+                case STAR:
                     pre_space = true;
-                default:
+                case AMP: // likely &var 
                     break;
+                default:
+                    if (is_require_space(prev_t)) pre_space = true;
+            }
+        case AMP: // *
+            switch(prev_t){
+                case RPAREN:
+                    break;
+                default:
+                    pre_space = true;
+                    // post_space = true;
+            }
+		case STAR: // *
+            switch(prev_t){
+                case LPAREN:
+                case RPAREN:
+                case TYPE_IDENT:
+                    break;
+                default:
+                    pre_space = true;
+                    // post_space = true;
+            }
+        case LPAREN:
+        case RPAREN:
+        case LBRACKET:
+        case RBRACKET:
+            switch(prev_t){
+                case STAR: // cast (int*)
+                case IDENT: // call(list)
+                case EOS: // call(list)
+                    break;
+                default:
+                    nextcase TOP: default;
             }
         case EOS:
             switch(prev_t){
@@ -364,16 +448,17 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
                 case EOS:
                     break;
                 default:
-                    post_space = true;
+                    // post_space = true;
                     break;
             }
         default:
-            break;
+            if (is_require_space(prev_t))  pre_space = true;
+            // if (is_require_space(t.type)) pre_space = true;
     }
 
     if (auto_space && pre_space) self.__token_cache.push(TOKEN_SPACE);
     self.__token_cache.push(*t);
-    if (auto_space && post_space) self.__token_cache.push(TOKEN_SPACE);
+    // if (auto_space && post_space) self.__token_cache.push(TOKEN_SPACE);
 }
 
 <*
@@ -752,6 +837,8 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                 case RPAREN:
                     if (state.scope_depth != 0) self.@fail(t, "unfinished scope")!;
                     break;
+                case EMPTY_LINE:
+                    break;
                 default:
                     self.@fail(t, "unexpected token in funcion args")!;
             }
@@ -767,6 +854,8 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                     nextcase STATE: state.transition(IMPLIES);
                 case LBRACE:           // {
                     if (state.scope_depth == 1) nextcase STATE: state.transition(SCOPE);
+                case EMPTY_LINE:
+                    break;
                 default:
                     self.@fail(t, "unexpected token in funcion attributes")!;
             }
@@ -782,6 +871,8 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                     self.newline();
                     self.trace("EXIT");
                     return true;
+                case EMPTY_LINE:
+                    break;
                 default:
                     self.@fail(t, "unexpected token in funcion scope")!;
             }
@@ -806,19 +897,36 @@ fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state)
                 case RPAREN:
                     self.cache_statement_add(t, false);
 
-                    self.cache_statement_dump(wrap_rule: COMMA)!;
-                    self.trace("EXIT");
-                    return true;
+                    if (state.scope_depth == 0) {
+                        if (state.initial_token == FOR) {
+                            // @body macro definition
+                            self.cache_statement_dump(wrap_rule: EOS)!;
+                        } else {
+                            self.cache_statement_dump(wrap_rule: COMMA)!;
+                        }
+                        self.trace("EXIT");
+                        return true;
+                    }
+                case EOS:
+                    // Typically in @body macro def
+                    state.initial_token = FOR;
+                    self.cache_statement_add(t, false);
+                    self.cache_statement_add(&TOKEN_SPACE, false);
                 case COMMA:
                     self.cache_statement_add(t, false);
                     if (state.scope_depth == 1) {
                         self.cache_statement_add(&TOKEN_SPACE, false);
                     }
                 case IDENT:
-                    if (state.scope_depth == 1 && state.last_token != COMMA) {
+                    if (state.scope_depth == 1 && 
+                        state.last_token != COMMA && 
+                        state.last_token != LPAREN
+                    ) {
                         self.cache_statement_add(&TOKEN_SPACE, false);
                     }
                     nextcase default;
+                case EMPTY_LINE:
+                    break;
                 default:
                     self.cache_statement_add(t, false);
                     break;
