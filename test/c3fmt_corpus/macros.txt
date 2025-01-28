@@ -86,7 +86,9 @@ macro usz @offset($Type, #field)
 
 --------------------------------------------------------------------------------
 
-macro main()
+macro usz @offset($Type, #field)
 {
-    return;
+    $Type * t = null;
+    return (usz)(uptr)&t.#field;
 }
+

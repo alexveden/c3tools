@@ -360,7 +360,6 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
     switch TOP: (t.type) {
         case COMMA:
         case COLON:
-        case DOT:
         case MINUSMINUS:
         case PLUSPLUS:
         case SCOPE:
@@ -401,6 +400,13 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
 		case SHL_ASSIGN:
 		case SHR_ASSIGN:
             pre_space = true;
+        case DOT:
+            switch(prev_t){
+                case COMMA:
+                    pre_space = true;
+                default:
+                    break;
+            }
         case IDENT:
             switch(prev_t){
                 case RPAREN:  // TODO: may conflict with (cast)ident 
@@ -425,6 +431,7 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
                 case LPAREN:
                 case RPAREN:
                 case TYPE_IDENT:
+                case STAR:
                     break;
                 default:
                     pre_space = true;
