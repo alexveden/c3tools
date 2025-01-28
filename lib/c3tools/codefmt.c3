@@ -409,10 +409,11 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
             }
         case IDENT:
             switch(prev_t){
-                case RPAREN:  // TODO: may conflict with (cast)ident 
                 case TYPE_IDENT:
                 case STAR:
                     pre_space = true;
+                case RPAREN:
+                    if(self.@cache_statement_prev_is_binexp()) pre_space = true;
                 case AMP: // likely &var 
                     break;
                 default:
@@ -421,6 +422,8 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
         case AMP: // *
             switch(prev_t){
                 case RPAREN:
+                    // distinguish casting and regular expression
+                    if(self.@cache_statement_prev_is_binexp()) pre_space = true;
                     break;
                 default:
                     pre_space = true;
@@ -446,6 +449,8 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
                 case IDENT: // call(list)
                 case EOS: // call(list)
                     break;
+                case AMP:
+                    if(self.@cache_statement_prev_is_binexp()) pre_space = true;
                 default:
                     nextcase TOP: default;
             }
@@ -700,6 +705,52 @@ macro CodeFmt.@cache_statement_iter(&self; @body(idx, token)) @private {
     for(usz i = start_len; i < self.__token_cache.len(); i++){
         @body(i, &self.__token_cache[i]);
     }
+}
+
+macro bool CodeFmt.@cache_statement_prev_is_binexp(&self) @private {
+    assert(self.state_stack.len() > 0);
+
+    usz start_len = self.state_stack[^1].token_cache_start;
+
+    bool has_expr = false;
+    bool has_scope = false;
+    int scope = 0;
+
+    for (usz i = self.__token_cache.len(); i-- > start_len; )
+    {
+        Token* t = &self.__token_cache[i];
+        switch(t.type) {
+            case RPAREN:
+                scope++;
+                has_scope = true;
+            case LPAREN:
+                scope--;
+                if (has_scope && scope == 0) {
+                    return has_expr;
+                }
+            case TYPE_IDENT:
+            case STAR:
+            case AMP:
+            case SPACE:
+                // distinguish casting and non meaningful ops
+                break;
+		    case BIT_AND_ASSIGN:
+		    case BIT_OR_ASSIGN:
+		    case BIT_XOR_ASSIGN:
+		    case MINUS_ASSIGN:
+		    case MULT_ASSIGN:
+		    case MOD_ASSIGN:
+		    case PLUS_ASSIGN:
+		    case SHL_ASSIGN:
+		    case SHR_ASSIGN:
+		    case EQ:
+		        // assignment operator reached
+		        return has_expr;
+            default:
+                has_expr = true;
+        }
+    }
+    return has_expr;
 }
 
 <*

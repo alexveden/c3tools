@@ -71,7 +71,7 @@ int* bin = (int*)&a;
 b = *(int*)&a;
 b = (*a = 2);
 b = { .work = 1, .work=2};
-int** ptr = &((int*)&a);
+int** ptr = &(*(int*)&a);
  (  void) free(data);
     (void * * )free(data);
     int* bin = &&1;
@@ -89,10 +89,10 @@ fn void main()
     b = *(int*)&a;
     b = (* a = 2);
     b = {.work = 1, .work = 2};
-    int** ptr = &((int*)&a);
+    int** ptr = &(*(int*)&a);
     (void)free(data);
     (void**)free(data);
-    int* bin = &&1;
+    int* bin = && 1;
     return;
 }
 
