@@ -293,60 +293,6 @@ macro void! CodeFmt.dedent(&self) @private {
 /*
 *                  CODE WRAP FUNCTIONS
 */
-
-macro bool is_require_space(TokenType ttype) @local {
-    switch(ttype) {
-		case DIV:
-		case GREATER:
-		case LESS:
-		case MINUS:
-		case MOD:
-		case PLUS:
-		case STAR:
-		case AMP:
-		case CT_AND:
-		case CT_OR:
-		case CT_CONCAT:
-		case DIV_ASSIGN:
-		case ELVIS:
-		case EQEQ:
-		case GREATER_EQ:
-		case IMPLIES:
-		case LESS_EQ:
-		case NOT_EQUAL:
-		case QUESTQUEST:
-		case SHL:
-		case SHR:
-		case AND:
-		case OR:
-		case BIT_OR:
-		case BIT_XOR:
-		case RETURN:
-		case EOS:
-		case IDENT:
-		case COMMA:
-		case EQ:
-		case BIT_AND_ASSIGN:
-		case BIT_OR_ASSIGN:
-		case BIT_XOR_ASSIGN:
-		case MINUS_ASSIGN:
-		case MULT_ASSIGN:
-		case MOD_ASSIGN:
-		case PLUS_ASSIGN:
-		case SHL_ASSIGN:
-		case SHR_ASSIGN:
-		case CATCH:
-		case VAR:
-		case NEXTCASE:
-		case BREAK:
-		case CONTINUE:
-		case TRY:
-		case COLON:
-		    return true;
-		default: 
-		    return false;
-    }
-}
 <* 
 Adds a token to composite statement cache for further formatting.
 *>
@@ -474,53 +420,6 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
     if (auto_space && pre_space) self.__token_cache.push(TOKEN_SPACE);
     self.__token_cache.push(*t);
     // if (auto_space && post_space) self.__token_cache.push(TOKEN_SPACE);
-}
-
-<*
-Define appropriate code wrapping rule for token type
-*>
-macro TokenType CodeFmt.cache_statement_wrap_rule(&self, TokenType initial_token)
-{
-    switch(initial_token) {
-        case FOR:
-            return EOS;
-        case FOREACH:
-        case FOREACH_R:
-            return COLON;
-        case IF:
-        case WHILE:
-        case DO:
-        case DEFER:
-        case SWITCH:
-        case ELSE:
-            return BOOL;
-        default: 
-            // typically it's COMMA + BOOL
-            return INVALID_TOKEN;
-    }
-}
-
-<*
-Asses if current token can be used for multi-line split
-*>
-macro bool CodeFmt.can_split_multiline(&self, Token* t, TokenType wrap_rule) {
-    TokenType tt = t.type;
-    // if (tt == COMMENT_SINGLE || tt == COMMENT_MULTI) return true;
-
-    switch(wrap_rule) {
-        case INVALID_TOKEN:
-            return (tt == COMMA || tt == OR || tt == AND);
-        case COMMA:
-            return (tt == COMMA);
-        case BOOL:
-            return (tt == OR || tt == AND);
-        case EOS:
-            return (tt == EOS);
-        case COLON:
-            return (tt == COLON);
-        default:
-            return false;
-    }
 }
 
 <*
@@ -687,30 +586,6 @@ macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TO
 }
 
 <*
-Cache size for current formatter state
-*>
-macro usz CodeFmt.cache_statement_len(&self) @private {
-    if(self.state_stack.len() == 0) return 0;
-
-    usz start_len = self.state_stack[^1].token_cache_start;
-    assert(self.__token_cache.len() >= start_len);
-
-    return self.__token_cache.len() - start_len;
-}
-
-<*
-Iterate to each cached tokens available by only CURRENT stack
-*>
-macro CodeFmt.@cache_statement_iter(&self; @body(idx, token)) @private {
-    assert(self.state_stack.len() > 0);
-
-    usz start_len = self.state_stack[^1].token_cache_start;
-    for(usz i = start_len; i < self.__token_cache.len(); i++){
-        @body(i, &self.__token_cache[i]);
-    }
-}
-
-<*
 Resolves ambiguity conflict for casting (void)&some and expression (1 | 2) & some
 *>
 macro bool CodeFmt.@cache_statement_prev_is_binexp(&self) @private {
@@ -758,6 +633,137 @@ macro bool CodeFmt.@cache_statement_prev_is_binexp(&self) @private {
     }
     return has_expr;
 }
+
+<*
+Check if previous token type requires a space after it (in general case)
+*>
+macro bool is_require_space(TokenType ttype) @local {
+    switch(ttype) {
+		case DIV:
+		case GREATER:
+		case LESS:
+		case MINUS:
+		case MOD:
+		case PLUS:
+		case STAR:
+		case AMP:
+		case CT_AND:
+		case CT_OR:
+		case CT_CONCAT:
+		case DIV_ASSIGN:
+		case ELVIS:
+		case EQEQ:
+		case GREATER_EQ:
+		case IMPLIES:
+		case LESS_EQ:
+		case NOT_EQUAL:
+		case QUESTQUEST:
+		case SHL:
+		case SHR:
+		case AND:
+		case OR:
+		case BIT_OR:
+		case BIT_XOR:
+		case RETURN:
+		case EOS:
+		case IDENT:
+		case COMMA:
+		case EQ:
+		case BIT_AND_ASSIGN:
+		case BIT_OR_ASSIGN:
+		case BIT_XOR_ASSIGN:
+		case MINUS_ASSIGN:
+		case MULT_ASSIGN:
+		case MOD_ASSIGN:
+		case PLUS_ASSIGN:
+		case SHL_ASSIGN:
+		case SHR_ASSIGN:
+		case CATCH:
+		case VAR:
+		case NEXTCASE:
+		case BREAK:
+		case CONTINUE:
+		case TRY:
+		case COLON:
+		    return true;
+		default: 
+		    return false;
+    }
+}
+
+
+<*
+Define appropriate code wrapping rule for token type
+*>
+macro TokenType CodeFmt.cache_statement_wrap_rule(&self, TokenType initial_token)
+{
+    switch(initial_token) {
+        case FOR:
+            return EOS;
+        case FOREACH:
+        case FOREACH_R:
+            return COLON;
+        case IF:
+        case WHILE:
+        case DO:
+        case DEFER:
+        case SWITCH:
+        case ELSE:
+            return BOOL;
+        default: 
+            // typically it's COMMA + BOOL
+            return INVALID_TOKEN;
+    }
+}
+
+<*
+Asses if current token can be used for multi-line split
+*>
+macro bool CodeFmt.can_split_multiline(&self, Token* t, TokenType wrap_rule) {
+    TokenType tt = t.type;
+    // if (tt == COMMENT_SINGLE || tt == COMMENT_MULTI) return true;
+
+    switch(wrap_rule) {
+        case INVALID_TOKEN:
+            return (tt == COMMA || tt == OR || tt == AND);
+        case COMMA:
+            return (tt == COMMA);
+        case BOOL:
+            return (tt == OR || tt == AND);
+        case EOS:
+            return (tt == EOS);
+        case COLON:
+            return (tt == COLON);
+        default:
+            return false;
+    }
+}
+
+
+<*
+Cache size for current formatter state
+*>
+macro usz CodeFmt.cache_statement_len(&self) @private {
+    if(self.state_stack.len() == 0) return 0;
+
+    usz start_len = self.state_stack[^1].token_cache_start;
+    assert(self.__token_cache.len() >= start_len);
+
+    return self.__token_cache.len() - start_len;
+}
+
+<*
+Iterate to each cached tokens available by only CURRENT stack
+*>
+macro CodeFmt.@cache_statement_iter(&self; @body(idx, token)) @private {
+    assert(self.state_stack.len() > 0);
+
+    usz start_len = self.state_stack[^1].token_cache_start;
+    for(usz i = start_len; i < self.__token_cache.len(); i++){
+        @body(i, &self.__token_cache[i]);
+    }
+}
+
 
 <*
 Clear cache statements for current stack
