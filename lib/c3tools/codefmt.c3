@@ -632,6 +632,7 @@ Returns appropriate formatter function/state for global level statements
 fn CodeFmtFn! CodeFmt.global_formatter_dispatch(CodeFmt* self, Token *t) @private {
     switch(t.type) {
         case FN:
+        case MACRO:
             return &CodeFmt.format_fn;
         case DOCS_START:
             return &CodeFmt.format_docstring;
@@ -717,9 +718,9 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:         // initial state
-            assert(t.type == FN);
+            assert(t.type == FN || t.type == MACRO);
             self.trace("ENTRY");
-            self.write("\nfn");
+            self.write("\n%s", t.value);
             state.transition(RETURN);
         case RETURN:                // return type 
             self.trace("RETURN");
@@ -733,6 +734,8 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                     nextcase default;
                 case LPAREN:
                     nextcase STATE: state.transition(VAR);
+                case EMPTY_LINE:
+                    break;
                 default:
                     self.write("%s", t.value);
             }
@@ -1107,7 +1110,9 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
     return false;
 }
 
-
+<*
+Formatting generic doc string with contracts
+*>
 fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* state) @private {
 
     switch STATE: (state.check(t)){
