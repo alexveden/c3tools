@@ -1125,3 +1125,37 @@ fn void main()
     return 0;
 }
 
+================================================================================
+switch_conditional
+================================================================================
+
+fn void main()
+{
+switch
+{
+    case 
+    foo() > 0:   bar();
+    case test() == 
+    1:   baz();
+    case 
+    (foo_too_long(a, tb, sz) > 0 && another_too_loong(maybe) && just_one_more_condition > 0):   bar();
+}
+}
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    switch  {
+        case foo() > 0:
+            bar();
+        case test() == 1:
+            baz();
+        case (
+            foo_too_long(a, tb, sz) > 0 &&
+            another_too_loong(maybe) &&
+            just_one_more_condition > 0
+        ):
+            bar();
+    }
+}
+
