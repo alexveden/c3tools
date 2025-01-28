@@ -336,6 +336,7 @@ macro bool is_require_space(TokenType ttype) @local {
 		case SHL_ASSIGN:
 		case SHR_ASSIGN:
 		case CATCH:
+		case VAR:
 		case NEXTCASE:
 		case TRY:
 		case COLON:
@@ -707,6 +708,9 @@ macro CodeFmt.@cache_statement_iter(&self; @body(idx, token)) @private {
     }
 }
 
+<*
+Resolves ambiguity conflict for casting (void)&some and expression (1 | 2) & some
+*>
 macro bool CodeFmt.@cache_statement_prev_is_binexp(&self) @private {
     assert(self.state_stack.len() > 0);
 
@@ -1247,6 +1251,12 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
                     if (state.scope_depth != 0) self.@fail(t, "invalid scope")!;
                     self.trace("EXIT");
                     return true;
+                case AT_IDENT:
+                    if (t.value == "@jump") {
+                        self.write(" %s", t.value);
+                    } else {
+                        nextcase default;
+                    }
                 default:
                     // if (foo) no_brace_expr;
                     nextcase STATE: IMPLIES;
