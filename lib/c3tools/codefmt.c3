@@ -110,7 +110,7 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
             }
         }
 
-	    if (self._is_paused && t.type != EOF ) {
+	    if (self._lexer.is_whitespace_mode && t.type != EOF ) {
 	        // NOTE: Printing raw when // fmt: off
 	        assert(self.cache_statement_len() == 0, "cache_statement_dump must be called befor fmt: off");
 	        assert(t.value.len > 0);
@@ -152,14 +152,14 @@ fn bool! CodeFmt.format_comment(&self, Token* t) {
     }
 
     // We have existing caches statements, let cache_statement_dump() handle this 
-	if (!self._is_paused && 
+	if (!self._lexer.is_whitespace_mode && 
 	    self.state_stack.len() > 0 && 
 	    self.cache_statement_len() > 0) return false;
 
 	switch(t.type) {
 	    case COMMENT_SINGLE:
 	    case COMMENT_MULTI:
-	        if (self._is_paused) {
+	        if (self._lexer.is_whitespace_mode) {
 	            // Do a direct write
 	            self.buf.append(t.value);
 	        } else {
@@ -168,7 +168,7 @@ fn bool! CodeFmt.format_comment(&self, Token* t) {
 	        }
 	    case COMMENT_SINGLE_INLINE:
 	    case COMMENT_MULTI_INLINE:
-	        if (self._is_paused) {
+	        if (self._lexer.is_whitespace_mode) {
 	            self.buf.append(t.value);
 	        } else {
 	            self.write("  %s", t.value);
@@ -216,8 +216,9 @@ Runs last state in the state_stack with current token
 *>
 fn bool! CodeFmt.run_state(&self, Token* t) @private {
 	if(self.state_stack.len() == 0) return false;
-
-    return self.state_stack[^1].state_fn(self, t, &self.state_stack[^1].state)!;
+	CodeFmtFn state_fn = self.state_stack[^1].state_fn;
+    bool result = state_fn(self, t, &self.state_stack[^1].state)!;
+    return result;
 }
 
 <*
@@ -249,7 +250,7 @@ macro CodeFmt.trace(&self, $msg, args...) @private {
 Writes code chunk into internal buffer
 *>
 macro void CodeFmt.write(&self, String format, args...) @private {
-    if (self._is_paused) return;
+    if (self._lexer.is_whitespace_mode) return;
 
     usz len = self.buf.appendf(format, ...args)!!;
     self._line_used += (int)len;
@@ -259,7 +260,7 @@ macro void CodeFmt.write(&self, String format, args...) @private {
 Writes a new line into internal buffer with proper indentation
 *>
 macro void CodeFmt.newline(&self) @private {
-    if (self._is_paused) return;
+    if (self._lexer.is_whitespace_mode) return;
 
     self.buf.append("\n");
     self._line_used = 0;
@@ -297,7 +298,7 @@ macro void! CodeFmt.dedent(&self) @private {
 Adds a token to composite statement cache for further formatting.
 *>
 macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) @private {
-    if (self._is_paused) return;
+    if (self._lexer.is_whitespace_mode) return;
     if (t.type == EMPTY_LINE) return;
 
     // assert(t.type != EOS, "EOS should not be there");
@@ -811,6 +812,8 @@ fn CodeFmtFn! CodeFmt.local_formatter_dispatch(CodeFmt* self, Token *t) @private
         case DEFER:
         case SWITCH:
             return &CodeFmt.format_statement_code_flow;
+        case ASM:
+            return &CodeFmt.format_asm;
 	    case CT_FOR:               // $for
 	    case CT_FOREACH:           // $foreach
 	    case CT_IF:                // $if
@@ -1530,6 +1533,79 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
                     }
                 default:
                     self.cache_statement_add(t);
+            }
+        default:
+            unreachable();
+    }
+
+    return false;
+}
+
+fn bool! CodeFmt.asm_non_fmt_block(CodeFmt* self, Token* t, NodeParserState* state) @private {
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN:
+            assert(t.type == LBRACE);
+            self.trace("ENTRY");
+            nextcase STATE: state.transition(SCOPE);
+        case SCOPE:
+            self.trace("SCOPE");
+            switch(t.type) {
+                case LBRACE:
+                    if (state.scope_depth == 1) {
+                        // { will be printed by raw printer
+                        self.write(" ");
+                        // print asm block as is without formatting
+                        self._lexer.set_whitespace_mode(true);
+                    }
+                case RBRACE:
+                    if (state.scope_depth == 0) {
+                        // enable formatting, unless there is // fmt: off 
+                        if (!self._is_paused) self._lexer.set_whitespace_mode(false);
+                        self.write("}");
+                        return true;
+                    }
+                default:
+                    break;
+            }
+        default:
+            unreachable();
+    }
+    return false;
+}
+
+fn bool! CodeFmt.format_asm(CodeFmt* self, Token* t, NodeParserState* state) @private {
+
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN:
+            self.trace("ENTRY");
+            self.newline();
+            self.write("%s", t.value);
+            state.transition(VAR);
+        case VAR:
+            self.trace("VAR");
+            switch(t.type) {
+                case LBRACE:
+                    nextcase STATE: state.transition(SCOPE);
+                case EOS:
+                    self.write("%s", t.value);
+                    self.trace("EXIT");
+                    return true;
+                default:
+                    self.write("%s", t.value);
+            }
+        case SCOPE:
+            self.trace("SCOPE");
+            switch(t.type) {
+                case LBRACE:
+                    if (state.scope_depth == 1) {
+                        return self.push_run_state(&CodeFmt.asm_non_fmt_block, t);
+                    }
+                case RBRACE:
+                    if (state.scope_depth == 0) {
+                        return true;
+                    }
+                default:
+                    break;
             }
         default:
             unreachable();

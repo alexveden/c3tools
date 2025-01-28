@@ -1159,3 +1159,51 @@ fn void main()
     }
 }
 
+================================================================================
+asm_block
+================================================================================
+
+fn void main()
+{
+int aa = 3;
+int g;
+int* gp = &g;
+int* xa = &a;
+usz asf = 1;
+asm("nop");
+asm 
+    {
+            movl x, 4;                  // Move 4 into the variable x
+            movl [gp], {x};             // Move the value of x into the address in gp
+            movl x, 1;                  // Move 1 into x
+            movl [xa + asf * 4 + 4], x; // Move x into the address at xa[asf + 1]
+            movl $eax, (23 + x);        // Move 23 + x into EAX
+            movl x, $eax;               // Move EAX into x
+            movq [&z], 33;              // Move 33 into the memory address of z
+    }
+if( foo) { return 1;}
+}
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    int aa = 3;
+    int g;
+    int* gp = &g;
+    int* xa = &a;
+    usz asf = 1;
+    asm("nop");
+    asm {
+            movl x, 4;                  // Move 4 into the variable x
+            movl [gp], {x};             // Move the value of x into the address in gp
+            movl x, 1;                  // Move 1 into x
+            movl [xa + asf * 4 + 4], x; // Move x into the address at xa[asf + 1]
+            movl $eax, (23 + x);        // Move 23 + x into EAX
+            movl x, $eax;               // Move EAX into x
+            movq [&z], 33;              // Move 33 into the memory address of z
+    }
+    if (foo) {
+        return 1;
+    }
+}
+
