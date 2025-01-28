@@ -1446,6 +1446,7 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
                         self.cache_statement_dump(wrap_rule)!;
                         self.indent();
                         state.transition(SCOPE);
+                        if (state.initial_token == CT_SWITCH) self.indent();
                     }
                 default:
                     self.cache_statement_add(t);
@@ -1462,6 +1463,10 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
                     return self.push_run_state(&CodeFmt.format_code_scope, t);
                 case RBRACE:
                     if (state.scope_depth != 0) self.@fail(t, "invalid scope")!;
+                case CT_CASE:
+                case CT_DEFAULT:
+                    self.dedent()!;
+                    nextcase STATE: state.transition(CASE);
                 case CT_ELSE:
                     self.dedent()!;
                     self.newline();
@@ -1472,7 +1477,10 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
                 case CT_ENDFOR:
                     if (state.initial_token == CT_FOR) nextcase INVALID_TOKEN;
                 case CT_ENDSWITCH:
-                    if (state.initial_token == CT_SWITCH) nextcase INVALID_TOKEN;
+                    if (state.initial_token == CT_SWITCH) {
+                        self.dedent()!;
+                        nextcase INVALID_TOKEN;
+                    }
                 case CT_ENDIF:
                     if (state.initial_token == CT_IF) nextcase INVALID_TOKEN;
                 case INVALID_TOKEN: // temp placeholder case
@@ -1495,6 +1503,25 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
                         // Special keyword or statement
                         return self.push_run_state(new_local_state, t);
                     }
+            }
+        case CASE:
+            self.trace("CASE");
+            switch(t.type) {
+                case CT_CASE:
+                    self.newline();
+                    self.write("%s ", t.value);
+                case CT_DEFAULT:
+                    self.newline();
+                    self.write("%s", t.value);
+                case COLON:
+                    self.indent();
+                    self.cache_statement_add(t);
+                    if (state.scope_depth == 0){
+                        self.cache_statement_dump()!;
+                        state.transition(SCOPE);
+                    }
+                default:
+                    self.cache_statement_add(t);
             }
         default:
             unreachable();
