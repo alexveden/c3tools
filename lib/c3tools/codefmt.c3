@@ -338,6 +338,8 @@ macro bool is_require_space(TokenType ttype) @local {
 		case CATCH:
 		case VAR:
 		case NEXTCASE:
+		case BREAK:
+		case CONTINUE:
 		case TRY:
 		case COLON:
 		    return true;

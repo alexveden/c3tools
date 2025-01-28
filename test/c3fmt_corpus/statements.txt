@@ -529,9 +529,14 @@ for_loop
 
 fn void main() 
 { 
-for(   
+for TOP  : (   
     int i=0;i< foo(call, some);i++)
     {
+        break TOP  ;
+        break;
+        continue;
+        continue TOP;
+        continue TOP  :;
     return
     0;}} 
 
@@ -539,7 +544,12 @@ for(
 
 fn void main()
 {
-    for (int i = 0; i < foo(call, some); i++) {
+    for TOP: (int i = 0; i < foo(call, some); i++) {
+        break TOP;
+        break;
+        continue;
+        continue TOP;
+        continue TOP:;
         return 0;
     }
 }
