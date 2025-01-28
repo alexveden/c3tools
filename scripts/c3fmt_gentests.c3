@@ -86,7 +86,7 @@ fn int main(String[] args)
 
 	load_corpus(code, cwd)!!;
 
-	io::printfn("Generated CODE: \n%s", code.buf.str_view());
+	io::printfn("Generated test: %s", out_file);
 
 	file::save(out_file, code.buf.str_view())!!;
 

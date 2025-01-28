@@ -122,7 +122,7 @@ macro AstNode* @node_add(AstNode** self, AstNode* new) @private
     assert(self != null);
 
     if (*self == null) {
-        ((AstNode*)*self) = new;
+        *self = new;
     } else {
         AstNode* node = @node_last(*self);
         node.next = new;
