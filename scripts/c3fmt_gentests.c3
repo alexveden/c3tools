@@ -26,12 +26,11 @@ fn void! load_corpus(CodeGen* code, String path) @local {
 
 		io::printfn("Parsing corpus: %s", p.str_view());
 	    List(<CodeCorpus>)! corpus = codecorpus::new_parse(p.str_view());
-    	defer corpus.free()!!;
+    	defer (void)corpus.free();
 
 	    if (catch err = corpus) {
 			io::printfn("Error parsing corpus (%s): %s", err, p.str_view());
-			// just skip, try next file
-			return false;
+			return err?;
 	    }
 
 	    String file_part = p.basename();
@@ -65,7 +64,7 @@ fn void! load_corpus(CodeGen* code, String path) @local {
 
         return false;
     };
-    p.walk(fnwalk, code)!!;
+    p.walk(fnwalk, code)!;
 }
 
 fn int main(String[] args)
@@ -84,7 +83,9 @@ fn int main(String[] args)
 	String cwd = "../test/c3fmt_corpus/";
 	String out_file = "../test/test_c3fmt_corpus.c3";
 
-	load_corpus(code, cwd)!!;
+	if(catch err = load_corpus(code, cwd)) {
+		return 1;
+	}
 
 	io::printfn("Generated test: %s", out_file);
 

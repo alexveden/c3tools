@@ -1468,9 +1468,14 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
                     self.write("%s", t.value);
                     self.indent();
                 case CT_ENDFOREACH:
+                    if (state.initial_token == CT_FOREACH) nextcase INVALID_TOKEN;
                 case CT_ENDFOR:
+                    if (state.initial_token == CT_FOR) nextcase INVALID_TOKEN;
                 case CT_ENDSWITCH:
+                    if (state.initial_token == CT_SWITCH) nextcase INVALID_TOKEN;
                 case CT_ENDIF:
+                    if (state.initial_token == CT_IF) nextcase INVALID_TOKEN;
+                case INVALID_TOKEN: // temp placeholder case
                     self.dedent()!;
                     self.newline();
                     self.write("%s", t.value);
