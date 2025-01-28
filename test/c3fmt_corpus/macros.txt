@@ -264,6 +264,7 @@ macro @foo($x, #y)
         $case 0:
         $case 1:
             #y += $x * $x;
+            if(#y) { return 0;}
         $case 2:
             #y += $x;
         $case 3:
@@ -286,6 +287,9 @@ macro @foo($x, #y)
             $case 0:
             $case 1:
                 #y += $x * $x;
+                if (#y) {
+                    return 0;
+                }
             $case 2:
                 #y += $x;
             $case 3:
