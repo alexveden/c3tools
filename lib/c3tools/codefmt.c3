@@ -1731,7 +1731,7 @@ fn bool! CodeFmt.format_enumerable(CodeFmt* self, Token* t, NodeParserState* sta
                 case RPAREN:
                     self.cache_statement_add(t);
                     if (state.scope_depth == 0) {
-                        self.cache_statement_dump()!;
+                        self.cache_statement_dump(wrap_rule: COMMA)!;
                         state.transition(TYPE_IDENT);
                     }
                 default:
