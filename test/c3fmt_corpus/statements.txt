@@ -730,9 +730,7 @@ switch_empty
 
 fn void main() 
 { 
-    switch LABEL: (    foo.launch(
-        some, stuff, 
-        kwarg: in_loong) ) {  }  
+    switch {}
     return
     0;} 
 
@@ -740,7 +738,7 @@ fn void main()
 
 fn void main()
 {
-    switch LABEL: (foo.launch(some, stuff, kwarg: in_loong)) {
+    switch  {
     }
     return 0;
 }
@@ -1281,6 +1279,7 @@ fn void main()
     char red = color.r;                          // red = 0x11
     test_float(1.0, &f);
     foo_test::test(<int, double>) ( 1.0, &g );
+    int[<2>] c = { a[0] * b[0], a[1] * b[1] };
 }
 
 --------------------------------------------------------------------------------
@@ -1297,6 +1296,7 @@ fn void main()
     char red = color.r;  // red = 0x11
     test_float(1.0, &f);
     foo_test::test (<int, double>) (1.0, &g);
+    int[<2>] c = {a[0] * b[0], a[1] * b[1]};
 }
 
 ================================================================================
@@ -1354,5 +1354,35 @@ fn void main()
         [77] = {.soo = looong, .another = 1},
         [888] = one_moar(call, should, be, one, line)
     };
+}
+
+================================================================================
+pointers
+================================================================================
+
+fn void main()
+{
+VoidFunc a = &test;
+int b = (int)null;
+int c = (int)a; // Invalid, not constant
+int d = (int)((int*)1); // Invalid, not constant
+byte a = 1;
+int* b = (int*)a; // Invalid, pointer type is > 8 bits.
+int* c = (int*)1; // Valid, but runtime value.
+int* d = (int*)0; // Valid and constant value.
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    VoidFunc a = &test;
+    int b = (int)null;
+    int c = (int)a;  // Invalid, not constant
+    int d = (int)((int*)1);  // Invalid, not constant
+    byte a = 1;
+    int* b = (int*)a;  // Invalid, pointer type is > 8 bits.
+    int* c = (int*)1;  // Valid, but runtime value.
+    int* d = (int*)0;  // Valid and constant value.
 }
 
