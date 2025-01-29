@@ -510,12 +510,12 @@ macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TO
 
             
             bool skip_write = false;
-            if (t.type == SPACE) {
-                // This is a place for weird edge cases with space :(
-                if (tmpstate.prev_scope(1)  == LBRACKET && tmpstate.last_token == COLON) {
+            if (t.type == SPACE && tmpstate.prev_scope(1) == LBRACKET) {
+                // // This is a place for weird edge cases with space :(
+                // if (tmpstate.prev_scope(1)  == LBRACKET && tmpstate.last_token == COLON) {
                     // slice case int_arr[a:b]
-                    skip_write = true;
-                }
+                // }
+                skip_write = true;
             }
             
             if (!skip_write) self.write("%s", t.value);
@@ -605,15 +605,15 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
                     self.newline();
                     brake_type = RBRACE;
                 } else {
-                    if (tmpstate.scope_depth == 2 
-                        && brake_type == RBRACE 
-                        && tmpstate.last_token == COMMA)
-                    {
-                        self.newline();
-                        self.write("%s", t.value);
-                    } else {
-                        nextcase default;
-                    }
+                    // if (tmpstate.scope_depth == 2 
+                    //     && brake_type == RBRACE 
+                    //     && tmpstate.last_token == COMMA)
+                    // {
+                    //     self.newline();
+                    //     self.write("%s", t.value);
+                    // } else {
+                    // }
+                    nextcase default;
                 }
             case brake_type:
                 if (tmpstate.scope_depth == 0) {
@@ -679,8 +679,15 @@ macro bool CodeFmt.split_multiline(&self, NodeParserState* state, TokenType wrap
         default:
             break;
     }
-
-    if (state.scope_depth != 1) return false;
+    if (state.scope_depth == 2) {
+        switch (state.current_token){
+            case LBRACE:   //aray initializers { [1..23] = 2}
+            case LBRACKET: // array of structs { {1, 2}, {2, 4}}
+                break;
+            default:
+                return false;
+        }
+    } else if (state.scope_depth != 1) return false;
 
     switch(wrap_rule) {
         case INVALID_TOKEN:
@@ -797,6 +804,8 @@ macro bool is_require_space(TokenType prev_t) @local {
 		case INLINE:
 		case BREAK:
 		case CONTINUE:
+		case RVEC:
+		case RGENPAR:
 		case TRY:
 		case COLON:
 		    return true;
