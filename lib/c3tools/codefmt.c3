@@ -682,6 +682,7 @@ macro bool is_require_space(TokenType ttype) @local {
 		case CATCH:
 		case VAR:
 		case NEXTCASE:
+		case INLINE:
 		case BREAK:
 		case CONTINUE:
 		case TRY:
@@ -788,6 +789,8 @@ fn CodeFmtFn! CodeFmt.global_formatter_dispatch(CodeFmt* self, Token *t) @privat
         case MACRO:
             return &CodeFmt.format_fn;
         case STRUCT:
+        case UNION:
+        case BITSTRUCT:
             return &CodeFmt.format_structural;
         case DOCS_START:
             return &CodeFmt.format_docstring;
@@ -1627,8 +1630,8 @@ fn bool! CodeFmt.format_structural(CodeFmt* self, Token* t, NodeParserState* sta
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:         // initial state
-            assert(t.type == STRUCT);
-            self.trace("ENTRY");
+            assert(t.type == STRUCT || t.type == UNION || t.type == BITSTRUCT);
+            self.trace("ENTRY"); 
             self.newline();
             self.write("%s", t.value);
             state.transition(TYPE_IDENT);
@@ -1646,7 +1649,11 @@ fn bool! CodeFmt.format_structural(CodeFmt* self, Token* t, NodeParserState* sta
                 case EMPTY_LINE:
                     break;
                 default:
-                    self.write(" %s", t.value);
+                    if (state.scope_depth == 0 && t.type != RBRACKET) {
+                        self.write(" %s", t.value);
+                    } else {
+                        self.write("%s", t.value);
+                    }
             }
         case SCOPE: // struct scope {}
             self.trace("SCOPE");
@@ -1671,6 +1678,7 @@ fn bool! CodeFmt.format_structural(CodeFmt* self, Token* t, NodeParserState* sta
                     self.cache_statement_dump()!;
                 case STRUCT:
                 case UNION:
+                case BITSTRUCT:
                     if (self.cache_statement_len() != 0) self.@fail(t, "unexpected keyword")!;
                     return self.push_run_state(&CodeFmt.format_structural, t);
 
