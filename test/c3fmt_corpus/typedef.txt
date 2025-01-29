@@ -90,3 +90,56 @@ bitstruct Test2 : char[4] @bigendian
     ushort a: 0..15;
     ushort b: 16..31;
 }
+================================================================================
+simple_enum
+================================================================================
+enum State
+{
+    WAITING,    RUNNING,    TERMINATED
+}
+--------------------------------------------------------------------------------
+
+enum State
+{
+    WAITING,
+    RUNNING,
+    TERMINATED
+}
+
+================================================================================
+simple_enum_multi_comma
+================================================================================
+enum State:
+int @test @if( asd || bar)
+{
+    WAITING,    RUNNING,    TERMINATED,
+}
+--------------------------------------------------------------------------------
+
+enum State : int @test @if( asd || bar)
+{
+    WAITING,
+    RUNNING,
+    TERMINATED,
+}
+
+================================================================================
+enum_associated
+================================================================================
+enum State : int @if("foo") (
+String desc, bool active, Position pos
+) @test
+{
+    WAITING    = { "waiting", false, { 1, 2} },
+    RUNNING    = { "running", true,  {12,22} },
+    TERMINATED = { "ended",   false, { 0, 0} },
+}
+--------------------------------------------------------------------------------
+
+enum State : int @if("foo") (String desc, bool active, Position pos) @test
+{
+    WAITING = {"waiting", false, {1, 2}},
+    RUNNING = {"running", true, {12, 22}},
+    TERMINATED = {"ended", false, {0, 0}},
+}
+

@@ -793,6 +793,9 @@ fn CodeFmtFn! CodeFmt.global_formatter_dispatch(CodeFmt* self, Token *t) @privat
         case UNION:
         case BITSTRUCT:
             return &CodeFmt.format_structural;
+        case ENUM:
+        case FAULT:
+            return &CodeFmt.format_enumerable;
         case DOCS_START:
             return &CodeFmt.format_docstring;
         case DOCS_END:
@@ -1694,3 +1697,86 @@ fn bool! CodeFmt.format_structural(CodeFmt* self, Token* t, NodeParserState* sta
     }
     return false;
 }
+
+<*
+Formatter for enums, faults
+*>
+fn bool! CodeFmt.format_enumerable(CodeFmt* self, Token* t, NodeParserState* state) @private {
+
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN:         // initial state
+            assert(t.type == ENUM);
+            self.trace("ENTRY"); 
+            self.newline();
+            self.write("%s", t.value);
+            state.transition(TYPE_IDENT);
+        case TYPE_IDENT:                // enum type name
+            self.trace("TYPE_IDENT");
+            switch(t.type) {
+                case AT_IDENT:  // attrs
+                    self._lexer.extend_current_attribute();
+                    nextcase default;
+                case LBRACE:
+                    nextcase STATE: state.transition(SCOPE);
+                case LPAREN:
+                    self.write(" ");
+                    nextcase STATE: state.transition(VAR);
+                case EMPTY_LINE:
+                    break;
+                default:
+                    self.write(" %s", t.value);
+            }
+        case VAR: // enum associated vars
+            switch(t.type) {
+                case RPAREN:
+                    self.cache_statement_add(t);
+                    if (state.scope_depth == 0) {
+                        self.cache_statement_dump()!;
+                        state.transition(TYPE_IDENT);
+                    }
+                default:
+                    self.cache_statement_add(t);
+
+            }
+        case SCOPE: // enum scope {}
+            self.trace("SCOPE");
+            switch(t.type) {
+                case LBRACE:           // {
+                    if (state.scope_depth == 1) {
+                        self.newline();
+                        self.write("{");
+                        self.indent();
+                    } else {
+                        self.cache_statement_add(t);
+                    }
+                case RBRACE:
+                    if (state.scope_depth == 0) {
+                        self.cache_statement_dump()!;
+                        self.dedent()!;
+                        self.newline();
+                        self.write("}");
+                        self.newline();
+                        self.trace("EXIT");
+                        return true;
+                    } else {
+                        self.cache_statement_add(t);
+                    }
+                case EMPTY_LINE:
+                    break;
+                case COMMA:
+                    self.cache_statement_add(t);
+                    if (state.scope_depth == 1){
+                        self.cache_statement_dump()!;
+                    }
+                default:
+                    if (self.cache_statement_len() == 0){
+                        self.newline();
+                    }
+                    self.cache_statement_add(t);
+            }
+        default:
+            unreachable();
+    }
+    return false;
+}
+
