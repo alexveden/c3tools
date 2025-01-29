@@ -1541,6 +1541,7 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
     return false;
 }
 
+<* Asm block with automatically disabled formatting *>
 fn bool! CodeFmt.asm_non_fmt_block(CodeFmt* self, Token* t, NodeParserState* state) @private {
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
@@ -1573,6 +1574,9 @@ fn bool! CodeFmt.asm_non_fmt_block(CodeFmt* self, Token* t, NodeParserState* sta
     return false;
 }
 
+<*
+Formatting asm() and asm { block }
+*>
 fn bool! CodeFmt.format_asm(CodeFmt* self, Token* t, NodeParserState* state) @private {
 
     switch STATE: (state.check(t)){
