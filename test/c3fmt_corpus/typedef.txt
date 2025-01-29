@@ -42,7 +42,7 @@ union
 Person @extern(  "foo") {
 inline    Pet    cat  ;
     struct foo // its a kinda struct
-    { int bar; union zoo @if(asd || dda) { int c;}}
+    { int bar; union zoo @if(asd || dda) { int  [34 ] c;}}
     }
 --------------------------------------------------------------------------------
 
@@ -54,7 +54,7 @@ union Person @extern(  "foo")
         int bar;
         union zoo @if(asd || dda)
         {
-            int c;
+            int[34] c;
         }
     }
 }

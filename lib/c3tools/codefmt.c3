@@ -361,6 +361,7 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
             switch(prev_t){
                 case TYPE_IDENT:
                 case STAR:
+                case RBRACKET:
                     pre_space = true;
                 case RPAREN:
                     if(self.@cache_statement_prev_is_binexp()) pre_space = true;
