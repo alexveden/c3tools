@@ -594,7 +594,6 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
                 if (tmpstate.scope_depth == 1 && brake_type == INVALID_TOKEN) {
                     self.write("%s", t.value);
                     self.indent();
-                    self.newline();
                     brake_type = RPAREN;
                 } else {
                     nextcase default;
@@ -646,7 +645,21 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
                         self.write("%s", t.value);
                     }
                 } else {
-                    self.write("%s", t.value);
+                    switch(tmpstate.last_token) {
+                        case LBRACE:
+                            if (tmpstate.scope_depth == 1 && brake_type == RBRACE) {
+                                self.newline();
+                            } 
+                            nextcase default;
+                        case LPAREN:
+                            if (tmpstate.scope_depth == 1 && brake_type == RPAREN) {
+                                self.newline();
+                            } 
+                            nextcase default;
+                        default:
+                            self.write("%s", t.value);
+                    }
+
                 }
         }
     };
@@ -661,6 +674,8 @@ macro bool CodeFmt.split_multiline(&self, NodeParserState* state, TokenType wrap
         case COMMENT_MULTI:
         case COMMENT_SINGLE:
             return true;
+        case LPAREN:
+            if (state.scope_depth == 1) return true;
         default:
             break;
     }
