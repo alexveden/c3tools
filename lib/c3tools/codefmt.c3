@@ -301,11 +301,9 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
     if (self._lexer.is_whitespace_mode) return;
     if (t.type == EMPTY_LINE) return;
 
-    // assert(t.type != EOS, "EOS should not be there");
     usz cache_len = self.cache_statement_len();
     TokenType prev_t = cache_len > 0 ? self.__token_cache[^1].type : TokenType.INVALID_TOKEN; 
     bool pre_space = false;
-    // bool post_space = false;
 
     switch TOP: (t.type) {
         case COMMA:
@@ -315,7 +313,6 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
         case SCOPE:
         case QUESTQUEST:
         case QUESTION:
-            // post_space = true;
             break;
 		case EQ:
 		case DIV:
@@ -378,7 +375,6 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
                     break;
                 default:
                     pre_space = true;
-                    // post_space = true;
             }
 		case STAR: // *
             switch(prev_t){
@@ -390,7 +386,6 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
                     break;
                 default:
                     pre_space = true;
-                    // post_space = true;
             }
         case LPAREN:
         case RPAREN:
@@ -420,17 +415,14 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
                 case EOS:
                     break;
                 default:
-                    // post_space = true;
                     break;
             }
         default:
             if (is_require_space(prev_t))  pre_space = true;
-            // if (is_require_space(t.type)) pre_space = true;
     }
 
     if (auto_space && pre_space) self.__token_cache.push(TOKEN_SPACE);
     self.__token_cache.push(*t);
-    // if (auto_space && post_space) self.__token_cache.push(TOKEN_SPACE);
 }
 
 
@@ -509,9 +501,24 @@ macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TO
 
     if (!has_magic_comma && self._line_used + token_len <= self.max_line_width) {
         // NOTE: Fits in line no wrapping needed write as is with standard formatting.
-        self.@cache_statement_iter(; usz i, Token* t) {
+
+        tmpstate = NodeParserState{};
+        self.@cache_statement_iter(; usz i, Token* t) 
+        {
+            tmpstate.check(t); // this is used only for current scope_depth
             if (self._print_lex) io::eprintf("%s ", t.type);
-            self.write("%s", t.value);
+
+            
+            bool skip_write = false;
+            if (t.type == SPACE) {
+                // This is a place for weird edge cases with space :(
+                if (tmpstate.prev_scope(1)  == LBRACKET && tmpstate.last_token == COLON) {
+                    // slice case int_arr[a:b]
+                    skip_write = true;
+                }
+            }
+            
+            if (!skip_write) self.write("%s", t.value);
         };
     } else {
         // NOTE: Wrapping is needed!
@@ -574,6 +581,7 @@ macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, T
         }
     };
 }
+
 macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, TokenType wrap_rule){
     NodeParserState tmpstate = NodeParserState{};
     TokenType brake_type = INVALID_TOKEN;
@@ -582,7 +590,7 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
         tmpstate.check(t); // this is used only for current scope_depth
 
         switch TOP: (t.type){
-            case LPAREN:
+            case LPAREN:  // Function params and conditions splitting
                 if (tmpstate.scope_depth == 1 && brake_type == INVALID_TOKEN) {
                     self.write("%s", t.value);
                     self.indent();
@@ -591,7 +599,7 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
                 } else {
                     nextcase default;
                 }
-            case LBRACE:
+            case LBRACE:  // Array initializers splitting
                 if (tmpstate.scope_depth == 1 && brake_type == INVALID_TOKEN) {
                     self.write("%s", t.value);
                     self.indent();
@@ -637,10 +645,6 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
                     } else {
                         self.write("%s", t.value);
                     }
-                    // if (tmpstate.scope_depth == 1 || tmpstate.prev_scope(1) == LBRACE) {
-                    //     self.write("%s", t.value);
-                    //     break;
-                    // } 
                 } else {
                     self.write("%s", t.value);
                 }
@@ -731,8 +735,8 @@ macro bool CodeFmt.@cache_statement_prev_is_binexp(&self) @private {
 <*
 Check if previous token type requires a space after it (in general case)
 *>
-macro bool is_require_space(TokenType ttype) @local {
-    switch(ttype) {
+macro bool is_require_space(TokenType prev_t) @local {
+    switch(prev_t) {
 		case DIV:
 		case GREATER:
 		case LESS:

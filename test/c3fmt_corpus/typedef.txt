@@ -185,8 +185,12 @@ String desc, bool active, Position pos
 
 enum State : int @if("foo") (String desc, bool active, Position pos) @test
 {
-    WAITING = {"waiting", false, {1, 2}},  // this is a comment
-    RUNNING = {"running", true, {12, 22}},
+    WAITING = {
+        "waiting",
+        false,
+        {1, 2},
+    },  // this is a comment
+    RUNNING = {"running", true, {12, 22, }},
     TERMINATED = {"ended", false, {0, 0}},
 }
 
