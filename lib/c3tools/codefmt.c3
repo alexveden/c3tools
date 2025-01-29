@@ -787,6 +787,8 @@ fn CodeFmtFn! CodeFmt.global_formatter_dispatch(CodeFmt* self, Token *t) @privat
         case FN:
         case MACRO:
             return &CodeFmt.format_fn;
+        case STRUCT:
+            return &CodeFmt.format_structural;
         case DOCS_START:
             return &CodeFmt.format_docstring;
         case DOCS_END:
@@ -1615,5 +1617,71 @@ fn bool! CodeFmt.format_asm(CodeFmt* self, Token* t, NodeParserState* state) @pr
             unreachable();
     }
 
+    return false;
+}
+
+<*
+Formatter for struct / union / bitstruct contents
+*>
+fn bool! CodeFmt.format_structural(CodeFmt* self, Token* t, NodeParserState* state) @private {
+
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN:         // initial state
+            assert(t.type == STRUCT);
+            self.trace("ENTRY");
+            self.newline();
+            self.write("%s", t.value);
+            state.transition(TYPE_IDENT);
+        case TYPE_IDENT:                // struct type name and other meta header stuff
+            self.trace("TYPE_IDENT");
+            switch(t.type) {
+                case AT_IDENT:  // struct attrs
+                    self._lexer.extend_current_attribute();
+                    nextcase default;
+                case IDENT:  // substruct name
+                case TYPE_IDENT:
+                    nextcase default;
+                case LBRACE:
+                    nextcase STATE: state.transition(SCOPE);
+                case EMPTY_LINE:
+                    break;
+                default:
+                    self.write(" %s", t.value);
+            }
+        case SCOPE: // struct scope {}
+            self.trace("SCOPE");
+            switch(t.type) {
+                case LBRACE:           // {
+                    self.newline();
+                    self.write("{");
+                    self.indent();
+                case RBRACE:
+                    self.dedent()!;
+                    self.newline();
+                    self.write("}");
+                    if (state.scope_depth == 0) {
+                        self.trace("EXIT");
+                        // self.newline();
+                        return true;
+                    } 
+                case EMPTY_LINE:
+                    break;
+                case EOS:
+                    self.cache_statement_add(t);
+                    self.cache_statement_dump()!;
+                case STRUCT:
+                case UNION:
+                    if (self.cache_statement_len() != 0) self.@fail(t, "unexpected keyword")!;
+                    return self.push_run_state(&CodeFmt.format_structural, t);
+
+                default:
+                    if (self.cache_statement_len() == 0){
+                        self.newline();
+                    }
+                    self.cache_statement_add(t);
+            }
+        default:
+            unreachable();
+    }
     return false;
 }

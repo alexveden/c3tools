@@ -58,14 +58,17 @@ struct AstTypeDef {
     AstDoc* docs;
     AstNode* ftype; // field or function return type
 }
+
 struct AstTypeDefEnumerable {
     inline AstTypeDef node;
     AstNode* values;
 }
+
 struct AstTypeDefInterface {
     inline AstTypeDef node;
     AstCallable* functions;
 }
+
 struct AstTypeDefStructural {
     inline AstTypeDef node;
     AstTypeDef* inlines;
