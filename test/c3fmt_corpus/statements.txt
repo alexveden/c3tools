@@ -264,7 +264,7 @@ designated_initializers_struct_wrap_multiline
 
 fn void main() 
 { 
-    MyStruct foo = {.question = "how long it could be", .hello=1,.world =2, .anothe_call = io::prinf("hi there it's c3fmt")  , this_is_a_lloong_field = (x & 12) };
+    MyStruct foo = {.question = "how long it could be", .hello=1,.world =2, .anothe_call = io::prinf("hi there it's c3fmt")  , .this_is_a_lloong_field = (x & 12) };
 }
 
 --------------------------------------------------------------------------------
@@ -276,7 +276,7 @@ fn void main()
         .hello = 1,
         .world = 2,
         .anothe_call = io::prinf("hi there it's c3fmt"),
-        this_is_a_lloong_field = (x & 12)
+        .this_is_a_lloong_field = (x & 12)
     };
 }
 
@@ -287,7 +287,14 @@ designated_initializers_with_sub_structs
 fn void main() 
 { 
     MyStruct foo = {.question = "how long it could be",
-        .sub = {.hello=1,.world =2, .sub_sub = {.foo = bar, .zoo= bas}, .anothe_call = io::prinf(Foo{.nowrap=true}, "hi there it's c3fmt")  , this_is_a_lloong_field = (x & 12) } };
+        .sub = {.hello=1,.world =2, .sub_sub = {.foo = bar, .zoo= bas}, 
+            .anothe_call = io::prinf(Foo{.nowrap=true}, "hi there it's c3fmt")  ,
+
+            .a_call_unwrappe = io::prinf_wrapped_if_struct(long_argument_name, "another",  "hi there it's c3fmt") ,
+
+
+            .this_is_a_lloong_field = (x & 12) },        
+            };
 }
 
 --------------------------------------------------------------------------------
@@ -303,9 +310,12 @@ fn void main()
                 .foo = bar,
                 .zoo = bas 
             },
-            .anothe_call = io::prinf(Foo{.nowrap = true}, "hi there it's c3fmt"),
-            this_is_a_lloong_field = (x & 12)
-        }
+            .anothe_call = io::prinf(Foo{
+                .nowrap = true
+            },"hi there it's c3fmt"),
+            .a_call_unwrappe = io::prinf_wrapped_if_struct(long_argument_name,"another","hi there it's c3fmt"),
+            .this_is_a_lloong_field = (x & 12)
+        },
     };
 }
 

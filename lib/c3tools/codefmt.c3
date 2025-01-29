@@ -722,7 +722,11 @@ macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, T
                 }
                 self.write("%s", t.value);
             case SPACE: 
-                self.write("%s", t.value);
+                if (is_multiline){
+                    if (tmpstate.last_token != COMMA) self.write("%s", t.value);
+                } else {
+                    self.write("%s", t.value);
+                }
                 tmpstate.current_token = tmpstate.last_token;
             default:
                 self.write("%s", t.value);
