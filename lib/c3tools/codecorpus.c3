@@ -89,7 +89,7 @@ fn List(<CodeCorpus>)! new_parse(String file_name) {
 
     foreach(i, l:  lines) {
         assert(l.ptr >= contents.ptr && l.ptr <= contents.ptr + contents.len, "doesn't belong to file contents");
-        assert(!l.contains("\r") && !l.contains("\t"));
+        assert(!l.contains("\r") && !l.contains("\t"), `contains \t or \r`);
 
         // io::printfn("%s:%s:%s", current.phase, i, l);
         if(l.starts_with("======")) {

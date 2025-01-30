@@ -923,6 +923,8 @@ fn CodeFmtFn! CodeFmt.global_formatter_dispatch(CodeFmt* self, Token *t) @privat
         case ENUM:
         case FAULT:
             return &CodeFmt.format_enumerable;
+        case INTERFACE:
+            return &CodeFmt.format_interface;
         case DOCS_START:
             return &CodeFmt.format_docstring;
         case DOCS_END:
@@ -1971,3 +1973,59 @@ fn bool! CodeFmt.format_enumerable(CodeFmt* self, Token* t, NodeParserState* sta
     return false;
 }
 
+<*
+Formatter for interfaces
+*>
+fn bool! CodeFmt.format_interface(CodeFmt* self, Token* t, NodeParserState* state) @private {
+
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN:         // initial state
+            assert(t.type == INTERFACE);
+            self.trace("ENTRY"); 
+            self.write("%s", t.value);
+            state.transition(TYPE_IDENT);
+        case TYPE_IDENT:                // enum type name
+            self.trace("TYPE_IDENT");
+            switch(t.type) {
+                case AT_IDENT:  // attrs
+                    self._lexer.extend_current_attribute();
+                    nextcase default;
+                case LBRACE:
+                    nextcase STATE: state.transition(SCOPE);
+                case EMPTY_LINE:
+                    break;
+                default:
+                    self.write(" %s", t.value);
+            }
+        case SCOPE: // interface scope {}
+            self.trace("SCOPE");
+            switch(t.type) {
+                case LBRACE:           // {
+                    if (state.scope_depth != 1) self.@fail(t, "unexpeced interface scope")!;
+                    self.newline();
+                    self.write("{");
+                    self.indent();
+                case RBRACE:
+                    if (state.scope_depth != 0) self.@fail(t, "unexpeced interface scope")!;
+                    self.dedent()!;
+                    self.newline();
+                    self.write("}");
+                    self.newline();
+                    self.trace("EXIT");
+                    return true;
+                case EMPTY_LINE:
+                    break;
+                case FN:
+                    self.newline();
+                    return self.push_run_state(&CodeFmt.format_fn, t);
+                case EOS:
+                    // returned by fn processor
+                    break;
+                default:
+                    if (state.scope_depth != 0) self.@fail(t, "unexpeced interface token")!;
+            }
+        default:
+            unreachable();
+    }
+    return false;
+}

@@ -247,3 +247,38 @@ def IntList = ElasticArray(<int, 10>);
 def BenchmarkFn = fn void!(int) @if($$OLD_TEST);
 def @Align(y) = {@Align16(y / 2)};
 def @Test = {@noinline};
+================================================================================
+def_interface
+================================================================================
+interface Printable @if("sasda")
+{
+    fn String* to_string(Allocator allocator) @optional;
+    fn String to_new_string(Allocator allocator) @optional @deprecated("Use to_string");
+    fn usz! to_format(Formatter* formatter) @optional;
+    fn usz* to_format(Formatter* formatter, Alooong Type, Maybe can, bool wrap, please) @optional;
+    fn usz* to_format(Formatter* formatter, Alooong Type, Maybe can, bool wrap, please, or_maybe multiline) @optional;
+    fn usz* to_format(Formatter* magic_comma, ) @optional;
+}
+--------------------------------------------------------------------------------
+
+interface Printable @if("sasda")
+{
+    fn String* to_string(Allocator allocator) @optional;
+    fn String to_new_string(Allocator allocator) @optional @deprecated("Use to_string");
+    fn usz! to_format(Formatter* formatter) @optional;
+    fn usz* to_format(
+        Formatter* formatter, AlooongType, Maybe can, bool wrap, please
+    ) @optional;
+    fn usz* to_format(
+        Formatter* formatter,
+        AlooongType,
+        Maybe can,
+        bool wrap,
+        please,
+        or_maybe multiline
+    ) @optional;
+    fn usz* to_format(
+        Formatter* magic_comma,
+    ) @optional;
+}
+
