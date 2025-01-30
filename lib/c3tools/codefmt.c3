@@ -346,6 +346,7 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
 		case PLUS_ASSIGN:
 		case SHL_ASSIGN:
 		case SHR_ASSIGN:
+		case WHILE: // as part of do{} while();
             pre_space = true;
         case DOT:
             switch(prev_t){
@@ -495,6 +496,7 @@ macro bool is_require_space(TokenType prev_t) @local {
 		case EXTERN:
 		case COLON:
 		case MODULE:
+		case DO:
 		case IMPORT:
 		    return true;
 		default: 
@@ -954,7 +956,6 @@ fn CodeFmtFn! CodeFmt.local_formatter_dispatch(CodeFmt* self, Token *t) @private
         case FOREACH:
         case FOREACH_R:
         case WHILE:
-        case DO:
         case DEFER:
         case SWITCH:
             return &CodeFmt.format_statement_code_flow;
@@ -1322,10 +1323,11 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                     state.initial_token = FOR;
                     nextcase LBRACE;
                 case FN:
-                    state.initial_token = FN;
+                case DO:
+                    state.initial_token = t.type;
                     nextcase default;
                 case LBRACE:
-                    if (state.initial_token == FOR || state.initial_token == FN) {
+                    if (state.initial_token == FOR || state.initial_token == FN || state.initial_token == DO) {
                         self.cache_statement_dump()!;
                         if (state.initial_token == FN){
                             self.newline();
@@ -1338,7 +1340,7 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                     }
                 case RBRACE:
                 case RBRAPIPE:
-                    if(state.initial_token == FN) {
+                    if(state.initial_token == FN || state.initial_token == DO) {
                         break;
                     } else if (state.initial_token != FOR) {
                         self.cache_statement_add(t);

@@ -1480,3 +1480,28 @@ extern fn int! maybe();
 extern fn Win32_BOOL win32_QueryPerformanceFrequency(
     Win32_LARGE_INTEGER* lpFrequency
 ) @extern("QueryPerformanceFrequency");
+================================================================================
+do_while
+================================================================================
+fn void main()
+{
+do
+{   io::printn("FOO");
+} while (0);
+do
+{
+    io::printn("FOO");
+};
+}
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    do {
+        io::printn("FOO");
+    } while(0);
+    do {
+        io::printn("FOO");
+    };
+}
+
