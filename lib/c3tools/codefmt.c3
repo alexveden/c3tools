@@ -387,6 +387,9 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
                 default:
                     pre_space = true;
             }
+        case LVEC:
+        case LGENPAR:
+            break;
         case LPAREN:
         case RPAREN:
         case LBRACKET:
@@ -396,6 +399,8 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
                 case IDENT: // call(list)
                 case EOS: // call(list)
                 case COLON: // slice [:]
+                case RGENPAR: // >)
+                case RVEC: // >]
                     break;
                 case AMP:
                     if(self.@cache_statement_prev_is_binexp()) pre_space = true;
@@ -425,6 +430,119 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
     self.__token_cache.push(*t);
 }
 
+<*
+Check if previous token type requires a space after it (in general case)
+*>
+macro bool is_require_space(TokenType prev_t) @local {
+    switch(prev_t) {
+		case DIV:
+		case GREATER:
+		case LESS:
+		case MINUS:
+		case MOD:
+		case PLUS:
+		case STAR:
+		case AMP:
+		case CT_AND:
+		case CT_OR:
+		case CT_CONCAT:
+		case DIV_ASSIGN:
+		case ELVIS:
+		case EQEQ:
+		case GREATER_EQ:
+		case IMPLIES:
+		case LESS_EQ:
+		case NOT_EQUAL:
+		case QUESTQUEST:
+		case SHL:
+		case SHR:
+		case AND:
+		case OR:
+		case BIT_OR:
+		case BIT_XOR:
+		case RETURN:
+		case EOS:
+		case IDENT:
+		case COMMA:
+		case EQ:
+		case BIT_AND_ASSIGN:
+		case BIT_OR_ASSIGN:
+		case BIT_XOR_ASSIGN:
+		case MINUS_ASSIGN:
+		case MULT_ASSIGN:
+		case MOD_ASSIGN:
+		case PLUS_ASSIGN:
+		case SHL_ASSIGN:
+		case SHR_ASSIGN:
+		case CATCH:
+		case VAR:
+		case NEXTCASE:
+		case INLINE:
+		case BREAK:
+		case CONTINUE:
+		case RVEC:
+		case RGENPAR:
+		case TRY:
+		case FN:
+		case COLON:
+		    return true;
+		default: 
+		    return false;
+    }
+}
+
+<*
+Resolves ambiguity conflict for casting (void)&some and expression (1 | 2) & some
+*>
+macro bool CodeFmt.@cache_statement_prev_is_binexp(&self) @private {
+    assert(self.state_stack.len() > 0);
+
+    usz start_len = self.state_stack[^1].token_cache_start;
+
+    bool has_expr = false;
+    bool has_scope = false;
+    int scope = 0;
+
+    for (usz i = self.__token_cache.len(); i-- > start_len; )
+    {
+        Token* t = &self.__token_cache[i];
+        switch(t.type) {
+            case RPAREN:
+                scope++;
+                has_scope = true;
+            case LPAREN:
+                scope--;
+                if (has_scope && scope == 0) {
+                    return has_expr;
+                }
+            case TYPE_IDENT:
+            case STAR:
+            case AMP:
+            case SPACE:
+            case LVEC:
+            case RVEC:
+            case LGENPAR:
+            case RGENPAR:
+                // distinguish casting and non meaningful ops
+                break;
+		    case BIT_AND_ASSIGN:
+		    case BIT_OR_ASSIGN:
+		    case BIT_XOR_ASSIGN:
+		    case MINUS_ASSIGN:
+		    case MULT_ASSIGN:
+		    case MOD_ASSIGN:
+		    case PLUS_ASSIGN:
+		    case SHL_ASSIGN:
+		    case SHR_ASSIGN:
+		    case EQ:
+		        // assignment operator reached
+		        return has_expr;
+            default:
+                has_expr = true;
+        }
+    }
+    return has_expr;
+}
 
 macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TOKEN) @private {
     if (self.cache_statement_len() == 0) return;
@@ -664,6 +782,7 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
         }
     };
 }
+
 <*
 Check if previous token triggers multi-line split
 *>
@@ -702,115 +821,6 @@ macro bool CodeFmt.split_multiline(&self, NodeParserState* state, TokenType wrap
             return (state.last_token == COLON);
         default:
             return false;
-    }
-}
-
-<*
-Resolves ambiguity conflict for casting (void)&some and expression (1 | 2) & some
-*>
-macro bool CodeFmt.@cache_statement_prev_is_binexp(&self) @private {
-    assert(self.state_stack.len() > 0);
-
-    usz start_len = self.state_stack[^1].token_cache_start;
-
-    bool has_expr = false;
-    bool has_scope = false;
-    int scope = 0;
-
-    for (usz i = self.__token_cache.len(); i-- > start_len; )
-    {
-        Token* t = &self.__token_cache[i];
-        switch(t.type) {
-            case RPAREN:
-                scope++;
-                has_scope = true;
-            case LPAREN:
-                scope--;
-                if (has_scope && scope == 0) {
-                    return has_expr;
-                }
-            case TYPE_IDENT:
-            case STAR:
-            case AMP:
-            case SPACE:
-                // distinguish casting and non meaningful ops
-                break;
-		    case BIT_AND_ASSIGN:
-		    case BIT_OR_ASSIGN:
-		    case BIT_XOR_ASSIGN:
-		    case MINUS_ASSIGN:
-		    case MULT_ASSIGN:
-		    case MOD_ASSIGN:
-		    case PLUS_ASSIGN:
-		    case SHL_ASSIGN:
-		    case SHR_ASSIGN:
-		    case EQ:
-		        // assignment operator reached
-		        return has_expr;
-            default:
-                has_expr = true;
-        }
-    }
-    return has_expr;
-}
-
-<*
-Check if previous token type requires a space after it (in general case)
-*>
-macro bool is_require_space(TokenType prev_t) @local {
-    switch(prev_t) {
-		case DIV:
-		case GREATER:
-		case LESS:
-		case MINUS:
-		case MOD:
-		case PLUS:
-		case STAR:
-		case AMP:
-		case CT_AND:
-		case CT_OR:
-		case CT_CONCAT:
-		case DIV_ASSIGN:
-		case ELVIS:
-		case EQEQ:
-		case GREATER_EQ:
-		case IMPLIES:
-		case LESS_EQ:
-		case NOT_EQUAL:
-		case QUESTQUEST:
-		case SHL:
-		case SHR:
-		case AND:
-		case OR:
-		case BIT_OR:
-		case BIT_XOR:
-		case RETURN:
-		case EOS:
-		case IDENT:
-		case COMMA:
-		case EQ:
-		case BIT_AND_ASSIGN:
-		case BIT_OR_ASSIGN:
-		case BIT_XOR_ASSIGN:
-		case MINUS_ASSIGN:
-		case MULT_ASSIGN:
-		case MOD_ASSIGN:
-		case PLUS_ASSIGN:
-		case SHL_ASSIGN:
-		case SHR_ASSIGN:
-		case CATCH:
-		case VAR:
-		case NEXTCASE:
-		case INLINE:
-		case BREAK:
-		case CONTINUE:
-		case RVEC:
-		case RGENPAR:
-		case TRY:
-		case COLON:
-		    return true;
-		default: 
-		    return false;
     }
 }
 
@@ -1270,17 +1280,26 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                 case LBRAPIPE:
                     state.initial_token = FOR;
                     nextcase LBRACE;
+                case FN:
+                    state.initial_token = FN;
+                    nextcase default;
                 case LBRACE:
-                    if (state.initial_token == FOR) {
+                    if (state.initial_token == FOR || state.initial_token == FN) {
                         self.cache_statement_dump()!;
-                        self.write(" ");
+                        if (state.initial_token == FN){
+                            self.newline();
+                        } else {
+                            self.write(" ");
+                        }
                         return self.push_run_state(&CodeFmt.format_code_scope, t);
                     } else {
                         nextcase default;
                     }
                 case RBRACE:
                 case RBRAPIPE:
-                    if (state.initial_token != FOR) {
+                    if(state.initial_token == FN) {
+                        break;
+                    } else if (state.initial_token != FOR) {
                         self.cache_statement_add(t);
                     } else {
                         state.transition(EOS);
@@ -1289,6 +1308,7 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                     if (state.scope_depth != 0) {
                         // check if we not at @body @macro(foo; some) { }
                         if(state.scope_depth != 1 || state.prev_scope(1) != LPAREN) {
+                            self.cache_statement_dump()!;
                             self.@fail(t, "unclosed scope")!;
                         }
 

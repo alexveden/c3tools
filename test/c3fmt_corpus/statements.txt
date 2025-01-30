@@ -1295,7 +1295,7 @@ fn void main()
     char[<4>] color = {0x11, 0x22, 0x33, 0xFF};
     char red = color.r;  // red = 0x11
     test_float(1.0, &f);
-    foo_test::test (<int, double>) (1.0, &g);
+    foo_test::test(<int, double>)(1.0, &g);
     int[<2>] c = {a[0] * b[0], a[1] * b[1]};
 }
 

@@ -337,3 +337,50 @@ fn bool in_range(char c, char start, char len) => with_magic_comma(
     magic_comma,
 );
 
+================================================================================
+fn_with_lambda_arg
+================================================================================
+fn void remove_using_test()
+{
+        IntList test;
+        usz removed;
+
+        test.add_array({ 1, 11, 2, 10, 20 });
+        removed = test.remove_using_test(fn bool(i, ctx) => *i >= *(int*)ctx, &&10);
+        assert(removed == 3);
+        assert(test.array_view() == int[]{1, 2});
+    thread.create(fn int(void* arg)
+    {
+        UnbufferedChannel(<int>) c = (UnbufferedChannel(<int>))arg;
+        c.push(123)!!;
+        if (foo) {
+        c.push(321)!!; }
+        return 0;
+    }, (void*)c)!!;
+
+}
+--------------------------------------------------------------------------------
+
+fn void remove_using_test()
+{
+    IntList test;
+    usz removed;
+    
+    test.add_array({1, 11, 2, 10, 20});
+    removed = test.remove_using_test(
+        fn bool(i, ctx) => * i >= *(int*)ctx, && 10
+    );
+    assert(removed == 3);
+    assert(test.array_view() == int[]{1, 2});
+    thread.create(fn int(void* arg)
+    {
+        UnbufferedChannel(<int>) c = (UnbufferedChannel(<int>))arg;
+        c.push(123)!!;
+        if (foo) {
+            c.push(321)!!;
+        }
+        return 0;
+    }, (void*)c)!!;
+    
+}
+
