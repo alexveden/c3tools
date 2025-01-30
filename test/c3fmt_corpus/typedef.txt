@@ -207,3 +207,20 @@ enum State : int @if("foo") (String desc, bool active, Position pos) @test
     TERMINATED = {"ended", false, {0, 0}},
 }
 
+================================================================================
+fault_simple
+================================================================================
+fault Err
+{
+    OOPS, OOPS_WITH_COMMENT,   // this is an oops
+    LOTS_OF_OOPS
+}
+--------------------------------------------------------------------------------
+
+fault Err
+{
+    OOPS,
+    OOPS_WITH_COMMENT,  // this is an oops
+    LOTS_OF_OOPS
+}
+

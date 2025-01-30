@@ -1858,7 +1858,7 @@ fn bool! CodeFmt.format_enumerable(CodeFmt* self, Token* t, NodeParserState* sta
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:         // initial state
-            assert(t.type == ENUM);
+            assert(t.type == ENUM || t.type == FAULT);
             self.trace("ENTRY"); 
             self.write("%s", t.value);
             state.transition(TYPE_IDENT);
