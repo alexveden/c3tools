@@ -19,6 +19,10 @@
       "type": "executable",
       "sources":  [ "src/c3ast.c3" ]
     },
+    "c3fmt": {
+      "type": "executable",
+      "sources":  [ "src/c3fmt.c3" ]
+    },
     "c3fzf": {
       "type": "executable",
       "sources":  [ "src/c3fzf.c3" ]
