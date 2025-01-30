@@ -307,12 +307,9 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
 
     switch TOP: (t.type) {
         case COMMA:
-        case COLON:
         case MINUSMINUS:
         case PLUSPLUS:
         case SCOPE:
-        case QUESTQUEST:
-        case QUESTION:
             break;
 		case EQ:
 		case DIV:
@@ -326,6 +323,7 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
 		case CT_CONCAT:
 		case DIV_ASSIGN:
 		case ELVIS:
+        case QUESTQUEST:
 		case EQEQ:
 		case GREATER_EQ:
 		case IMPLIES:
@@ -407,6 +405,7 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
                 case COLON: // slice [:]
                 case RGENPAR: // >)
                 case RVEC: // >]
+                case QUESTION: // [?]
                     break;
                 case AMP:
                     if(self.cache_statement_prev_is_binexp()) pre_space = true;
@@ -427,6 +426,15 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
                     break;
                 default:
                     break;
+            }
+        case COLON:
+        case QUESTION:
+            switch(prev_t){
+                case CONST_IDENT:
+                case LBRACKET:
+                    break;
+                default:
+                    pre_space = true;;
             }
         default:
             if (is_require_space(prev_t))  pre_space = true;
@@ -460,6 +468,7 @@ macro bool is_require_space(TokenType prev_t) @local {
 		case LESS_EQ:
 		case NOT_EQUAL:
 		case QUESTQUEST:
+		case QUESTION:
 		case SHL:
 		case SHR:
 		case AND:
@@ -1653,13 +1662,15 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
                     nextcase STATE: state.transition(SCOPE);
                 case COLON:
                 case RPAREN:
-                    self.cache_statement_add(t);
                     if (state.scope_depth == 0){
                         TokenType wrap_rule = self.cache_statement_wrap_rule(state.initial_token);
                         self.cache_statement_dump(wrap_rule)!;
+                        self.write("%s", t.value);
                         self.indent();
                         state.transition(SCOPE);
                         if (state.initial_token == CT_SWITCH) self.indent();
+                    } else {
+                        self.cache_statement_add(t);
                     }
                 default:
                     self.cache_statement_add(t);
@@ -1728,10 +1739,12 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
                     self.write("%s", t.value);
                 case COLON:
                     self.indent();
-                    self.cache_statement_add(t);
                     if (state.scope_depth == 0){
                         self.cache_statement_dump()!;
+                        self.write(":");
                         state.transition(SCOPE);
+                    } else {
+                        self.cache_statement_add(t);
                     }
                 default:
                     self.cache_statement_add(t);

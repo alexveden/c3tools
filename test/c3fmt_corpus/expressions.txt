@@ -96,3 +96,21 @@ fn void main()
     return;
 }
 
+================================================================================
+ternary
+================================================================================
+
+fn void 
+main() { 
+bool a = foo    ? bar   : 1;
+return file ?: file_open_errno()?;
+
+return i ?: Foo.X?;
+return x ?: (y ?: x);
+assert((root.get_int("yyy") ?? -1) == -1);
+double x = ((double)testError() + testError()) ?? 100;
+io::printfn("6:%s", @catch((3 > 2 ? Foo.ABC? : 4) ?? Foo.DEF?));
+}
+
+--------------------------------------------------------------------------------
+TODO

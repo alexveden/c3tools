@@ -203,7 +203,7 @@ macro foo_enum($SomeEnum)
 macro foo_enum($SomeEnum)
 {
     $if $x > 3:
-        $foreach ($x: $SomeEnum.values)
+        $foreach ($x : $SomeEnum.values)
             io::printfn("%d", (int)$x);
         $endforeach
     $endif

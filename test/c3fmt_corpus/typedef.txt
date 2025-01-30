@@ -82,9 +82,9 @@ char
 
 bitstruct Foo : char @bigendian
 {
-    int a: 0..2;
-    int b: 4..6;
-    bool c: 7;
+    int a : 0..2;
+    int b : 4..6;
+    bool c : 7;
 }
 
 ================================================================================
@@ -99,8 +99,8 @@ bitstruct Test2 : char[4] @bigendian
 
 bitstruct Test2 : char[4] @bigendian
 {
-    ushort a: 0..15;
-    ushort b: 16..31;
+    ushort a : 0..15;
+    ushort b : 16..31;
 }
 
 ================================================================================
