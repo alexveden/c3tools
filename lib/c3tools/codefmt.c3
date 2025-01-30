@@ -977,6 +977,12 @@ fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserSta
                 default:
                     CodeFmtFn fmt_fn = self.global_formatter_dispatch(t)!;
                     if(fmt_fn == null) self.@fail(t, "unknown global scope statement")!;
+                    switch(state.last_token){
+                        case EMPTY_LINE:
+                            break;
+                        default:
+                            self.newline();
+                    }
                     self.push_run_state(fmt_fn, t)!;
             }
         default:
@@ -996,7 +1002,7 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
         case INVALID_TOKEN:         // initial state
             assert(t.type == FN || t.type == MACRO);
             self.trace("ENTRY");
-            self.write("\n%s", t.value);
+            self.write("%s", t.value);
             state.transition(RETURN);
         case RETURN:                // return type 
             self.trace("RETURN");
@@ -1446,7 +1452,6 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
         case INVALID_TOKEN:         // initial state
             assert(t.type == DOCS_START);
             self.trace("ENTRY");
-            self.newline();
             self.write("%s", t.value);
             state.transition(SCOPE);
         case SCOPE: // contract scope
@@ -1761,7 +1766,6 @@ fn bool! CodeFmt.format_structural(CodeFmt* self, Token* t, NodeParserState* sta
         case INVALID_TOKEN:         // initial state
             assert(t.type == STRUCT || t.type == UNION || t.type == BITSTRUCT);
             self.trace("ENTRY"); 
-            self.newline();
             self.write("%s", t.value);
             state.transition(TYPE_IDENT);
         case TYPE_IDENT:                // struct type name and other meta header stuff
@@ -1812,6 +1816,7 @@ fn bool! CodeFmt.format_structural(CodeFmt* self, Token* t, NodeParserState* sta
                 case UNION:
                 case BITSTRUCT:
                     if (self.cache_statement_len() != 0) self.@fail(t, "unexpected keyword")!;
+                    self.newline();
                     return self.push_run_state(&CodeFmt.format_structural, t);
 
                 default:
@@ -1835,7 +1840,6 @@ fn bool! CodeFmt.format_enumerable(CodeFmt* self, Token* t, NodeParserState* sta
         case INVALID_TOKEN:         // initial state
             assert(t.type == ENUM);
             self.trace("ENTRY"); 
-            self.newline();
             self.write("%s", t.value);
             state.transition(TYPE_IDENT);
         case TYPE_IDENT:                // enum type name
