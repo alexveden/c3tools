@@ -1413,6 +1413,11 @@ const Base64Alphabet URL = {
 .encoding = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_",
 .reverse = 2
 };
+const bool KEY_BY_VALUE @private = NO_KEY_FN ||| $assignable(Type{}[0], $typefrom(KeyFn.paramsof[0].type));
+const bool KEY_BY_VALUE @private = $assignable(Type{}[0], $typefrom(KeyFn.paramsof[0].type)) ||| $assignable(Type{}[0], $typefrom(KeyFn.paramsof[0].type));
+const Foo F4 = (F1 | ~F2) ^ F3;
+const Foo F5 = Foo { true, false } | Foo { false, true };
+const char[?] TEST_QOI_DATA = b64"cW9pZgAAAVQAAACpBABV/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39";
 --------------------------------------------------------------------------------
 
 const Time FAR_FUTURE = long.max;
@@ -1423,3 +1428,16 @@ const Base64Alphabet URL = {
     .encoding = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_",
     .reverse = 2
 };
+const bool KEY_BY_VALUE @private = NO_KEY_FN ||| $assignable(
+    Type{}[0], $typefrom(KeyFn.paramsof[0].type)
+);
+const bool KEY_BY_VALUE @private = $assignable(
+    Type{}[0],
+    $typefrom(KeyFn.paramsof[0].type)
+) ||| $assignable(
+    Type{}[0],
+    $typefrom(KeyFn.paramsof[0].type)
+);
+const Foo F4 = (F1 | ~F2) ^ F3;
+const Foo F5 = Foo{true, false} | Foo{false, true};
+const char[?] TEST_QOI_DATA = b64"cW9pZgAAAVQAAACpBABV/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39";

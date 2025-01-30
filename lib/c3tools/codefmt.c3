@@ -821,7 +821,16 @@ macro bool CodeFmt.split_multiline(&self, NodeParserState* state, TokenType wrap
 
     switch(wrap_rule) {
         case INVALID_TOKEN:
-            return (state.last_token == COMMA || state.last_token == OR || state.last_token == AND);
+            switch(state.last_token) {
+                case COMMA:
+                case OR:
+                case AND:
+                case CT_OR:
+                case CT_AND:
+                    return true;
+                default:
+                    return false;
+            }
         case COMMA:
             return (state.last_token == COMMA);
         case BOOL:
