@@ -933,6 +933,8 @@ fn CodeFmtFn! CodeFmt.global_formatter_dispatch(CodeFmt* self, Token *t) @privat
         case CONST:
         case IMPORT:
             return &CodeFmt.format_generic_statement;
+        case EXTERN:
+            return &CodeFmt.format_fn;
         default:
             self.@fail(t, "unsupported global token")!;
     }
@@ -1035,10 +1037,16 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:         // initial state
-            assert(t.type == FN || t.type == MACRO);
+            assert(t.type == FN || t.type == MACRO || t.type == EXTERN);
             self.trace("ENTRY");
             self.write("%s", t.value);
-            state.transition(RETURN);
+            // usually `extern fn`
+            if (t.type != EXTERN) {
+                state.transition(RETURN);
+            } else {
+                // 'extern '
+                self.write(" ", t.value);
+            }
         case RETURN:                // return type 
             self.trace("RETURN");
             switch(t.type) {
@@ -1073,6 +1081,9 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                     break;
                 case IMPLIES:           // => 
                     nextcase STATE: state.transition(IMPLIES);
+                case EOS:
+                    self.write(";");
+                    return true;
                 default:
                     self.@fail(t, "unexpected token in funcion args")!;
             }
@@ -1090,6 +1101,9 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                     if (state.scope_depth == 1) nextcase STATE: state.transition(SCOPE);
                 case EMPTY_LINE:
                     break;
+                case EOS:
+                    self.write(";");
+                    return true;
                 default:
                     self.@fail(t, "unexpected token in funcion attributes")!;
             }
