@@ -6,14 +6,13 @@ import std::os::argparse;
 
 fn void! format_file(String file_name, int max_line_width, bool force_mode) {
     path::Path p = path::temp_new(file_name)!;
-    defer p.free();
 
 	io::printfn("Path: %s", p);
     if (!path::exists(p)) {
         io::printfn("File not exists: %s", file_name);
         return IoError.FILE_NOT_FOUND?;
     }
-    if (!path::is_dir(p)) {
+    if (path::is_dir(p)) {
         io::printfn("Expected file, got directory: %s", file_name);
         return IoError.FILE_IS_DIR?;
     }
@@ -24,6 +23,13 @@ fn void! format_file(String file_name, int max_line_width, bool force_mode) {
 
 	String contents = (String)file::load_new(p.str_view())!;
 	defer contents.free();
+
+    CodeFmt fmt = CodeFmt.new_init();
+    defer fmt.free();
+
+    String formatted = fmt.format(contents, print_lex: false)!!;
+    // io::print(formatted);
+    file::save(file_name, formatted)!;
 }
 
 fn int main(String[] args)
