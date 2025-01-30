@@ -384,3 +384,28 @@ fn void remove_using_test()
     
 }
 
+================================================================================
+simple_lambda_with_docs
+================================================================================
+
+<* A doc *>
+
+macro CFile stderr() => __acrt_iob_func(STDERR_FD);
+<* Another doc
+@param c "with contracts" 
+*>
+
+fn bool in_range(char c, 
+char start, char len) => in_range_m(c, 
+start, len);
+
+--------------------------------------------------------------------------------
+
+<* A doc *>
+macro CFile stderr() => __acrt_iob_func(STDERR_FD);
+
+<* Another doc
+@param c "with contracts"
+*>
+fn bool in_range(char c, char start, char len) => in_range_m(c, start, len);
+
