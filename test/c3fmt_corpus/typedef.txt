@@ -233,6 +233,8 @@ def TestFailFn = fn void! (bool to_fail);
 def FormatTzTestSpec = Triple(<TzDateTime, DateTimeFormat, String>);
 def IntList = ElasticArray(<int, 10>);
 def BenchmarkFn = fn void!(int) @if($$OLD_TEST);
+def @Align(y) = { @Align16(y / 2) };
+def @Test = { @noinline };
 --------------------------------------------------------------------------------
 
 def EnumSetType = $typefrom(
@@ -243,3 +245,5 @@ def TestFailFn = fn void!(bool to_fail);
 def FormatTzTestSpec = Triple(<TzDateTime, DateTimeFormat, String>);
 def IntList = ElasticArray(<int, 10>);
 def BenchmarkFn = fn void!(int) @if($$OLD_TEST);
+def @Align(y) = {@Align16(y / 2)};
+def @Test = {@noinline};
