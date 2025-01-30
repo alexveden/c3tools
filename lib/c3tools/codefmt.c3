@@ -354,6 +354,8 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
                 default:
                     break;
             }
+        case AT_IDENT:
+        case CT_IDENT:
         case IDENT:
             switch(prev_t){
                 case TYPE_IDENT:
@@ -361,7 +363,8 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
                 case RBRACKET:
                     pre_space = true;
                 case RPAREN:
-                    if(self.@cache_statement_prev_is_binexp()) pre_space = true;
+                    if (t.type == AT_IDENT) pre_space = true;
+                    if(self.cache_statement_prev_is_binexp()) pre_space = true;
                 case AMP: // likely &var 
                     break;
                 default:
@@ -371,7 +374,7 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
             switch(prev_t){
                 case RPAREN:
                     // distinguish casting and regular expression
-                    if(self.@cache_statement_prev_is_binexp()) pre_space = true;
+                    if(self.cache_statement_prev_is_binexp()) pre_space = true;
                     break;
                 default:
                     pre_space = true;
@@ -403,7 +406,7 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
                 case RVEC: // >]
                     break;
                 case AMP:
-                    if(self.@cache_statement_prev_is_binexp()) pre_space = true;
+                    if(self.cache_statement_prev_is_binexp()) pre_space = true;
                 default:
                     nextcase TOP: default;
             }
@@ -484,6 +487,10 @@ macro bool is_require_space(TokenType prev_t) @local {
 		case RGENPAR:
 		case TRY:
 		case FN:
+		case DEF:
+		case CONST:
+		case STATIC:
+		case EXTERN:
 		case COLON:
 		    return true;
 		default: 
@@ -494,7 +501,7 @@ macro bool is_require_space(TokenType prev_t) @local {
 <*
 Resolves ambiguity conflict for casting (void)&some and expression (1 | 2) & some
 *>
-macro bool CodeFmt.@cache_statement_prev_is_binexp(&self) @private {
+fn bool CodeFmt.cache_statement_prev_is_binexp(&self) @private {
     assert(self.state_stack.len() > 0);
 
     usz start_len = self.state_stack[^1].token_cache_start;
@@ -908,6 +915,8 @@ fn CodeFmtFn! CodeFmt.global_formatter_dispatch(CodeFmt* self, Token *t) @privat
         case DOCS_END:
         case EOS:
             break;
+        case DEF:
+            return &CodeFmt.format_generic_statement;
         default:
             self.@fail(t, "unsupported global token")!;
     }
