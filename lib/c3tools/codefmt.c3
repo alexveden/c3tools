@@ -492,6 +492,8 @@ macro bool is_require_space(TokenType prev_t) @local {
 		case STATIC:
 		case EXTERN:
 		case COLON:
+		case MODULE:
+		case IMPORT:
 		    return true;
 		default: 
 		    return false;
@@ -916,6 +918,8 @@ fn CodeFmtFn! CodeFmt.global_formatter_dispatch(CodeFmt* self, Token *t) @privat
         case EOS:
             break;
         case DEF:
+        case MODULE:
+        case IMPORT:
             return &CodeFmt.format_generic_statement;
         default:
             self.@fail(t, "unsupported global token")!;
