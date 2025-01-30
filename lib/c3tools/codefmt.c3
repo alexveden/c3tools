@@ -896,6 +896,7 @@ fn CodeFmtFn! CodeFmt.global_formatter_dispatch(CodeFmt* self, Token *t) @privat
         case DOCS_START:
             return &CodeFmt.format_docstring;
         case DOCS_END:
+        case EOS:
             break;
         default:
             self.@fail(t, "unsupported global token")!;
@@ -954,19 +955,28 @@ fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserSta
                     self.trace("EXIT");
 	                return true;
                 case EMPTY_LINE:
-                    if (state.scope_depth == 0 && state.last_token != EMPTY_LINE && state.last_token != DOCS_END) {
-                        self.newline();
+                    if (state.scope_depth == 0) {
+                        switch(state.last_token){
+                            case EMPTY_LINE:
+                                break;
+                            case DOCS_END:
+                            case EOS:
+                                state.current_token = state.last_token;
+                                break;
+                            default:
+                                self.newline();
+                        }
                     }
-                    break;
-                case RBRACE:
-                    // TODO: possible end of scope
-                    assert(state.scope_depth == 0);
                     break;
                 case DOCS_END:
                     break;
+                case EOS:
+                case RBRACE:
+                    if(state.scope_depth != 0) self.@fail(t, "scope was not properly closed?")!;
+                    break;
                 default:
                     CodeFmtFn fmt_fn = self.global_formatter_dispatch(t)!;
-                    assert(fmt_fn != null);
+                    if(fmt_fn == null) self.@fail(t, "unknown global scope statement")!;
                     self.push_run_state(fmt_fn, t)!;
             }
         default:
@@ -1020,6 +1030,8 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                     break;
                 case EMPTY_LINE:
                     break;
+                case IMPLIES:           // => 
+                    nextcase STATE: state.transition(IMPLIES);
                 default:
                     self.@fail(t, "unexpected token in funcion args")!;
             }
@@ -1056,6 +1068,22 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                     break;
                 default:
                     self.@fail(t, "unexpected token in funcion scope")!;
+            }
+        case IMPLIES: // lambda func
+            self.trace("IMPLIES");
+            switch(t.type) {
+                case IMPLIES:
+                    self.write(" %s ", t.value);
+                    break;
+                case EMPTY_LINE:
+                    break;
+                case EOS:
+                    self.cache_statement_add(t);
+                    self.cache_statement_dump()!;
+                    self.newline();
+                    return true;
+                default:
+                    self.cache_statement_add(t);
             }
         default:
             unreachable();
@@ -1769,7 +1797,10 @@ fn bool! CodeFmt.format_structural(CodeFmt* self, Token* t, NodeParserState* sta
                     self.write("}");
                     if (state.scope_depth == 0) {
                         self.trace("EXIT");
-                        // self.newline();
+                        if (self.state_stack.len() == 2){
+                            // NOTE: printing new line only at exit from top struct
+                            self.newline();
+                        }
                         return true;
                     } 
                 case EMPTY_LINE:
