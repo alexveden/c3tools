@@ -428,13 +428,20 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
                     break;
             }
         case COLON:
+            switch(prev_t){
+                case CONST_IDENT:
+                case LBRACKET:
+                    break;
+                default:
+                    pre_space = true;
+            }
         case QUESTION:
             switch(prev_t){
                 case CONST_IDENT:
                 case LBRACKET:
                     break;
                 default:
-                    pre_space = true;;
+                    pre_space = true;
             }
         default:
             if (is_require_space(prev_t))  pre_space = true;
@@ -442,6 +449,11 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
 
     if (auto_space && pre_space) self.__token_cache.push(TOKEN_SPACE);
     self.__token_cache.push(*t);
+}
+
+fn bool CodeFmt.is_keyword_call_colon(&self, NodeParserState* state) {
+    assert(state.current_token == COLON);
+    return state.scope_depth > 0 && state.last_token == IDENT && state.prev_scope(1) == LPAREN;
 }
 
 <*
@@ -1337,6 +1349,9 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                     nextcase default;
                 case LBRACE:
                     if (state.initial_token == FOR || state.initial_token == FN || state.initial_token == DO) {
+                        // @custom_macro(a, b; @body)
+                        // anonymous fn: in_call(fn bool(a, b) {})
+                        // do {} [while()]; 
                         self.cache_statement_dump()!;
                         if (state.initial_token == FN){
                             self.newline();
@@ -1374,6 +1389,9 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                         self.trace("EXIT");
                         return true;
                     }
+                case COLON:
+                    bool is_fn_call = self.is_keyword_call_colon(state);
+                    self.cache_statement_add(t, auto_space: !is_fn_call);
                 default:
                     self.cache_statement_add(t);
             }
@@ -1452,7 +1470,7 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
                     if (state.initial_token != DEFER) self.@fail(t, "invalid token")!;
                     nextcase STATE: state.transition(IMPLIES);
             }
-        case VAR:
+        case VAR: // if/switch/for parens (...)
             self.trace("VAR");
             switch(t.type) {
                 case RPAREN:
@@ -1462,6 +1480,9 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
                         self.cache_statement_dump(wrap_rule)!;
                         state.transition(SCOPE);
                     }
+                case COLON:
+                    bool is_fn_call = self.is_keyword_call_colon(state);
+                    self.cache_statement_add(t, auto_space: !is_fn_call);
                 default:
                     if (state.scope_depth > 0){
                         self.cache_statement_add(t);
