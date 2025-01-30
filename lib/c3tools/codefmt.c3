@@ -356,11 +356,13 @@ macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) 
             }
         case AT_IDENT:
         case CT_IDENT:
+        case CONST_IDENT:
         case IDENT:
             switch(prev_t){
                 case TYPE_IDENT:
                 case STAR:
                 case RBRACKET:
+                case CONST_IDENT:
                     pre_space = true;
                 case RPAREN:
                     if (t.type == AT_IDENT) pre_space = true;
@@ -919,6 +921,7 @@ fn CodeFmtFn! CodeFmt.global_formatter_dispatch(CodeFmt* self, Token *t) @privat
             break;
         case DEF:
         case MODULE:
+        case CONST:
         case IMPORT:
             return &CodeFmt.format_generic_statement;
         default:

@@ -1402,3 +1402,24 @@ import std::core::test @public;
 import std::core::builtin;
 import std::io;
 module math_tests::complex(<ElementType>) @test;
+================================================================================
+const
+================================================================================
+const Time FAR_FUTURE = long.max;
+const ulong WIN_TO_UNIX_EPOCH_US @local = 116444736000000000u64 / WINDOWS_TICK_US;
+const CONTEXT_AMD64_ALL = CONTEXT_AMD64_CONTROL | CONTEXT_AMD64_INTEGER | CONTEXT_AMD64_SEGMENTS | CONTEXT_AMD64_FLOATING_POINT | CONTEXT_AMD64_DEBUG_REGISTERS;
+const char[?] HEXALPHABET @private = "0123456789abcdef";
+const Base64Alphabet URL = {
+.encoding = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_",
+.reverse = 2
+};
+--------------------------------------------------------------------------------
+
+const Time FAR_FUTURE = long.max;
+const ulong WIN_TO_UNIX_EPOCH_US @local = 116444736000000000u64 / WINDOWS_TICK_US;
+const CONTEXT_AMD64_ALL = CONTEXT_AMD64_CONTROL | CONTEXT_AMD64_INTEGER | CONTEXT_AMD64_SEGMENTS | CONTEXT_AMD64_FLOATING_POINT | CONTEXT_AMD64_DEBUG_REGISTERS;
+const char[?] HEXALPHABET @private = "0123456789abcdef";
+const Base64Alphabet URL = {
+    .encoding = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_",
+    .reverse = 2
+};
