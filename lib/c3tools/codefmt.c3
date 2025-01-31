@@ -604,6 +604,8 @@ macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state) @local 
 		case VAR:
 		case NEXTCASE:
 		case INLINE:
+		case TYPEID:
+		case DISTINCT:
 		case BREAK:
 		case CONTINUE:
 		case RVEC:
@@ -1138,6 +1140,7 @@ fn CodeFmtFn! CodeFmt.global_formatter_dispatch(CodeFmt* self, Token *t) @privat
         case EOS:
             break;
         case DEF:
+        case DISTINCT:
         case MODULE:
         case CONST:
         case IMPORT:
@@ -1265,6 +1268,7 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                     if (state.scope_depth == 0 && state.last_token != DOT) self.write(" ");
                     nextcase default;
                 case TYPE_IDENT:
+                case TYPEID:
                     if (state.scope_depth == 0) self.write(" ");
                     nextcase default;
                 case LPAREN:
@@ -1732,6 +1736,8 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
         case SCOPE: // contract scope
             self.trace("SCOPE");
             switch(t.type) {
+                case DOCS_EOL:
+                    self.newline(is_empty: true);
                 case DOCS_END:
                     nextcase STATE: state.transition(EOS);
                 case AT_IDENT:
