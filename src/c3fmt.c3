@@ -4,7 +4,7 @@ import std::io;
 import std::os::argparse;
 
 
-fn void! format_file(String file_name, int max_line_width, bool force_mode) {
+fn void! format_file(String file_name, int max_line_width, bool force_mode, bool dry_mode) {
     path::Path p = path::temp_new(file_name)!;
 
 	io::printfn("Path: %s", p);
@@ -28,13 +28,17 @@ fn void! format_file(String file_name, int max_line_width, bool force_mode) {
     defer fmt.free();
 
     String formatted = fmt.format(contents, print_lex: false)!!;
-    // io::print(formatted);
-    file::save(file_name, formatted)!;
+    if (dry_mode){
+    	io::print(formatted);
+    } else {
+    	file::save(file_name, formatted)!;
+    }
 }
 
 fn int main(String[] args)
 {
 	bool force_mode = false;
+	bool dry_mode = false;
 	int max_line_width = 88;
 	argparse::ArgParse agp = {
 		.description = "c3 code formatting tool",
@@ -43,6 +47,7 @@ fn int main(String[] args)
 			argparse::help_opt(),
 			argparse::group_opt("Basic options"),
 			{ .short_name = 'f', .long_name = "force",  .value = &force_mode, .help = "force formatting non .c3 files"},
+			{ .short_name = 'n', .long_name = "dry",  .value = &dry_mode, .help = "dry mode (only print)"},
 			argparse::group_opt("Code format options"),
 			{ .short_name = 'w', .long_name = "line-width",  .value = &max_line_width, .help = "max line width"},
 		}, 
@@ -58,7 +63,7 @@ fn int main(String[] args)
 	}
 
 	foreach(String file_name : agp.arguments) {
-	    if(catch err = format_file(file_name, max_line_width, force_mode))
+	    if(catch err = format_file(file_name, max_line_width, force_mode, dry_mode))
 	    {
 	        return 1;
 	    }
