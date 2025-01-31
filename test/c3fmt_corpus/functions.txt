@@ -477,3 +477,28 @@ macro parse_callable_params()
     }
 }
 
+================================================================================
+fn_with_long_call_wrap_no_args_assert
+================================================================================
+
+macro parse_callable_params()
+{
+    if(foo) { if(bar){
+        assert(self.cache_statement_len() == 0, "cache_statement_dump must be called befor fmt: off");
+    }}
+}
+
+--------------------------------------------------------------------------------
+
+macro parse_callable_params()
+{
+    if (foo) {
+        if (bar) {
+            assert(
+                self.cache_statement_len() == 0,
+                "cache_statement_dump must be called befor fmt: off"
+            );
+        }
+    }
+}
+

@@ -958,7 +958,7 @@ macro bool CodeFmt.split_multiline(&self, NodeParserState* state, TokenType wrap
         case COMMENT_SINGLE:
             return true;
         case LPAREN:
-            if (state.scope_depth == 1) return true;
+            if (state.scope_depth == 1 && state.current_token != RPAREN) return true;
         default:
             break;
     }
