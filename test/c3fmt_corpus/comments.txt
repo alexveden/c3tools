@@ -213,3 +213,29 @@ fn bool bar()
 {
 }
 
+================================================================================
+in_code_scope_mixed_with_empty_lines
+================================================================================
+
+fn void 
+main() {  
+return;//this is inline comment
+
+// single line comment
+
+        if(fgoo) { return bar; // another inline coment
+    } 
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    return;  //this is inline comment
+
+    // single line comment
+
+    if (fgoo) {
+        return bar;  // another inline coment
+    }
+}

@@ -19,6 +19,7 @@ struct CodeFmt {
     usz _line_used;
     bool _print_lex;
     bool _is_paused;
+    bool _is_empty_line;
 }
 
 
@@ -86,8 +87,10 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
     // Default scope formatter
 	self.push_run_state(&CodeFmt.format_global_file_scope, null)!;
 
+    NodeParserState globalstate;
 	while LOOP: (self._lexer.next_token()) {
 	    Token * t = &self._lexer.token;
+	    globalstate.check(t);
 	    if (print_lex) t.print(new_line: true);
 
 	    switch(t.type) {
@@ -95,9 +98,12 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
 	        case COMMENT_MULTI:
 	        case COMMENT_SINGLE_INLINE:
 	        case COMMENT_MULTI_INLINE:
-	            if (self.format_comment(t)!) continue LOOP;
 	        case EMPTY_LINE: // disallow EMPTY_LINE inside existing statements! 
-	            if (self.cache_statement_len() > 0) continue LOOP;
+	        case EOF:
+	            // if (self.format_comment(&globalstate, t)!) continue LOOP;
+	            self.format_comment(&globalstate, t)!;
+	            if (t.type != EOF) continue LOOP;
+	            // if (self.cache_statement_len() > 0) continue LOOP;
 	        case SPACE:
 	        default:
 	            break;
@@ -130,7 +136,7 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
 }
 
 <* Generic comment processor if there is not cache_statement pending + fmt: off handler *>
-fn bool! CodeFmt.format_comment(&self, Token* t) {
+fn bool! CodeFmt.format_comment(&self, NodeParserState* state, Token* t) {
     if (t.type == COMMENT_SINGLE) {
         if (t.value.starts_with("// fmt: off") && !self._is_paused) {
             self.cache_statement_dump()!;
@@ -149,6 +155,7 @@ fn bool! CodeFmt.format_comment(&self, Token* t) {
 	        if(self.state_stack.len() > 0) {
 	            self.state_stack[^1].state.current_token = EMPTY_LINE;
 	        } 
+	        state.current_token = EMPTY_LINE;
             return true;
         } 
     }
@@ -158,12 +165,19 @@ fn bool! CodeFmt.format_comment(&self, Token* t) {
 	    self.state_stack.len() > 0 && 
 	    self.cache_statement_len() > 0) return false;
 
-    // Store current token in state stack (prevent weird collisions of EMPTY_LINE and comment)
-    if(self.state_stack.len() > 0) {
-	    self.state_stack[^1].state.current_token = t.type;
-    } 
-
 	switch(t.type) {
+	    case EMPTY_LINE:
+	    case EOF:
+	        if (state.last_token == EMPTY_LINE) return true;
+	        if (self._is_empty_line) return true;
+	        // if (state.scope_depth == 0 && state.last_token == RBRACE && t.type != EOF) return true;
+
+	        if (self._lexer.is_whitespace_mode) {
+	            // Do a direct write
+	            self.buf.append("\n");
+	        } else {
+	            self.newline(is_empty: true);
+	        }
 	    case COMMENT_SINGLE:
 	    case COMMENT_MULTI:
 	        if (self._lexer.is_whitespace_mode) {
@@ -257,6 +271,8 @@ macro CodeFmt.trace(&self, $msg, args...) @private {
 Writes code chunk into internal buffer
 *>
 macro void CodeFmt.write(&self, String format, args...) @private {
+    self._is_empty_line = false;
+
     if (self._lexer.is_whitespace_mode) return;
 
     usz len = self.buf.appendf(format, ...args)!!;
@@ -267,8 +283,11 @@ macro void CodeFmt.write(&self, String format, args...) @private {
 Writes a new line into internal buffer with proper indentation
 *>
 macro void CodeFmt.newline(&self, bool is_empty = false) @private {
+    self._is_empty_line = true;
+
     if (self._lexer.is_whitespace_mode) return;
 
+    self._is_empty_line = true;
     self.buf.append("\n");
     if (!is_empty){
         self._line_used = 0;
@@ -1150,7 +1169,7 @@ fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserSta
             switch(t.type) {
                 case EOF:
                     if (state.scope_depth == 0 && state.last_token != EMPTY_LINE) {
-                        self.newline(is_empty: true);
+                        // self.newline(is_empty: true);
                     }
                     self.trace("EXIT");
 	                return true;
@@ -1410,7 +1429,7 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
                     }
                 case EMPTY_LINE:
                     if (state.last_token != EMPTY_LINE) {
-                        self.newline(is_empty: true);
+                        // self.newline(is_empty: true);
                     }
                 default:
                     CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;
