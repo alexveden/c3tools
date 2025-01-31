@@ -440,6 +440,8 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t, 
                 case CONST_IDENT:
                 case LBRACKET:
                     break;
+                case IDENT:
+                    if (!self.is_keyword_call_colon(state)) pre_space = true;
                 default:
                     pre_space = true;
             }
@@ -1384,9 +1386,6 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                         self.trace("EXIT");
                         return true;
                     }
-                case COLON:
-                    bool is_fn_call = self.is_keyword_call_colon(state);
-                    self.cache_statement_add(state, t, auto_space: !is_fn_call);
                 default:
                     self.cache_statement_add(state, t);
             }
@@ -1475,9 +1474,6 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
                         self.cache_statement_dump(wrap_rule)!;
                         state.transition(SCOPE);
                     }
-                case COLON:
-                    bool is_fn_call = self.is_keyword_call_colon(state);
-                    self.cache_statement_add(state, t, auto_space: !is_fn_call);
                 default:
                     if (state.scope_depth > 0){
                         self.cache_statement_add(state, t);
