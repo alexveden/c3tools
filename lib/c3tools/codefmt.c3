@@ -100,9 +100,9 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
 	        case COMMENT_MULTI_INLINE:
 	        case EMPTY_LINE: // disallow EMPTY_LINE inside existing statements! 
 	        case EOF:
-	            // if (self.format_comment(&globalstate, t)!) continue LOOP;
-	            self.format_comment(&globalstate, t)!;
-	            if (t.type != EOF) continue LOOP;
+	            if (self.format_comment(&globalstate, t)!) continue LOOP;
+	            // self.format_comment(&globalstate, t)!;
+	            // if (t.type != EOF) continue LOOP;
 	            // if (self.cache_statement_len() > 0) continue LOOP;
 	        case SPACE:
 	        default:
@@ -161,23 +161,48 @@ fn bool! CodeFmt.format_comment(&self, NodeParserState* state, Token* t) {
     }
 
     // We have existing caches statements, let cache_statement_dump() handle this 
-	if (!self._lexer.is_whitespace_mode && 
+	if (!self._lexer.is_whitespace_mode &&
 	    self.state_stack.len() > 0 && 
-	    self.cache_statement_len() > 0) return false;
+	    self.cache_statement_len() > 0) 
+	{
+	    return t.type == EMPTY_LINE;
+	}
 
 	switch(t.type) {
 	    case EMPTY_LINE:
-	    case EOF:
 	        if (state.last_token == EMPTY_LINE) return true;
-	        if (self._is_empty_line) return true;
-	        // if (state.scope_depth == 0 && state.last_token == RBRACE && t.type != EOF) return true;
-
+	        if (state.scope_depth == 0) {
+	            switch(state.last_token) {
+	                case COMMENT_MULTI:
+	                case COMMENT_SINGLE:
+	                case COMMENT_SINGLE_INLINE:
+	                case COMMENT_MULTI_INLINE:
+	                    break;
+	                case RBRACE:
+	                case EOS:
+	                case DOCS_END:
+	                default:
+	                    return true; 
+	            }
+	        }
 	        if (self._lexer.is_whitespace_mode) {
 	            // Do a direct write
 	            self.buf.append("\n");
 	        } else {
 	            self.newline(is_empty: true);
 	        }
+	        return true;
+	    case EOF:
+	        // if (self._is_empty_line) return true;
+	        // if (state.scope_depth == 0 && state.last_token == RBRACE && t.type != EOF) return true;
+	        if (self._lexer.is_whitespace_mode) {
+	            // Do a direct write
+	            self.buf.append("\n");
+	        } else {
+	            self.newline(is_empty: true);
+	        }
+	        return false;
+
 	    case COMMENT_SINGLE:
 	    case COMMENT_MULTI:
 	        if (self._lexer.is_whitespace_mode) {

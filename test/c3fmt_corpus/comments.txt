@@ -239,3 +239,4 @@ fn void main()
         return bar;  // another inline coment
     }
 }
+
