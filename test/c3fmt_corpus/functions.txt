@@ -464,18 +464,14 @@ macro parse_callable_params()
 
 --------------------------------------------------------------------------------
 
-TODO;
-
-
-================================================================================
-fn_with_previous_comment
-================================================================================
-// fn bool osldfkjslf(int self, int b @used) {
-//     return true;
-// }
-fn bool Ast.parse_function( &ast, AstNode* node, Token* t, NodeParserState* state)
+macro parse_callable_params()
 {
+    if (foo) {
+        if (bar) {
+            current_param = (AstCallableParam*)ast.@allc_add(
+                AstCallableParam, &node_func.params, &ast.lexer.token
+            );
+        }
+    }
 }
---------------------------------------------------------------------------------
 
-TODO;
