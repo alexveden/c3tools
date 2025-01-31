@@ -793,17 +793,32 @@ macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, T
 macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, TokenType wrap_rule){
     NodeParserState tmpstate = NodeParserState{};
     TokenType brake_type = INVALID_TOKEN;
+
+    // This filter is used for forcing raw writing (e.g. cast vs call ambiguity)
+    usz skip_i_until = 0;
+
     self.@cache_statement_iter(; usz i, Token* t) {
         if (self._print_lex) io::eprintf("%s ", t.type);
         tmpstate.check(t); // this is used only for current scope_depth
 
+        // WTF: c3 doesn't support continue in macro @body!
+        if (i >= skip_i_until) {
+
         switch TOP: (t.type){
             case LPAREN:  // Function params and conditions splitting
-                if (tmpstate.scope_depth == 1 && brake_type == INVALID_TOKEN) {
-                    self.write("%s", t.value);
-                    self.indent();
-                    brake_type = RPAREN;
+                if (
+                    tmpstate.scope_depth == 1 &&
+                    brake_type == INVALID_TOKEN
+                ) {
+                    skip_i_until = self._resolve__dump__is_cast(i);
+                    if (skip_i_until == i){
+                        self.write("%s", t.value);
+                        self.indent();
+                        brake_type = RPAREN;
+                    }
+                    break;
                 } else {
+                    // self.write("%s", t.value);
                     nextcase default;
                 }
             case LBRACE:  // Array initializers splitting
@@ -869,8 +884,67 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
                     }
 
                 }
+            }
         }
     };
+}
+
+<*
+Distinguish if next (.code.) block is a function call with more than 1 argument
+*>
+fn usz CodeFmt._resolve__dump__is_cast(&self, usz current_idx) {
+    NodeParserState tmpstate = NodeParserState{};
+
+    bool is_cast = true;
+    bool has_type = false;
+    usz cast_end = current_idx;
+    for(usz i = current_idx; i < self.__token_cache.len(); i++) {
+        Token* t = &self.__token_cache[i];
+        tmpstate.check(t); 
+        if (i == current_idx) {
+            assert(t.type == LPAREN);
+            assert(tmpstate.scope_depth == 1);
+        }
+
+        switch(t.type) {
+            // These are allowed in casts
+            case TYPE_IDENT:
+            case CT_TYPE_IDENT:
+            case CT_TYPEOF:
+                has_type = true;
+            case IDENT:
+            case STAR:
+            case AMP:
+            case LPAREN:
+            case RPAREN:
+            case LVEC:
+            case RVEC:
+            case LGENPAR:
+            case RGENPAR:
+                break;
+            default:
+                is_cast = false;
+        }
+
+        // Looping until next closing paren
+        if(tmpstate.scope_depth == 0) {
+            cast_end = i;
+            break;
+        }
+
+    }
+    if (is_cast && has_type) {
+        // cast must have at least one type
+        for(usz i = current_idx; i <= cast_end; i++) {
+            Token* t = &self.__token_cache[i];
+            self.write("%s", t.value);
+        }
+        return cast_end + 1;
+    } 
+    else {
+        // Not a cast, wrap as usual
+        return current_idx;
+    }
 }
 
 <*

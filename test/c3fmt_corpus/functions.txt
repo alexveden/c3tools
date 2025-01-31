@@ -469,7 +469,9 @@ macro parse_callable_params()
     if (foo) {
         if (bar) {
             current_param = (AstCallableParam*)ast.@allc_add(
-                AstCallableParam, &node_func.params, &ast.lexer.token
+                AstCallableParam,
+                &node_func.params,
+                &ast.lexer.token
             );
         }
     }
