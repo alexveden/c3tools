@@ -96,6 +96,8 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
 	        case COMMENT_SINGLE_INLINE:
 	        case COMMENT_MULTI_INLINE:
 	            if (self.format_comment(t)!) continue LOOP;
+	        case EMPTY_LINE: // disallow EMPTY_LINE inside existing statements! 
+	            if (self.cache_statement_len() > 0) continue LOOP;
 	        case SPACE:
 	        default:
 	            break;
