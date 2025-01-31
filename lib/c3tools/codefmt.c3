@@ -261,15 +261,17 @@ macro void CodeFmt.write(&self, String format, args...) @private {
 <*
 Writes a new line into internal buffer with proper indentation
 *>
-macro void CodeFmt.newline(&self) @private {
+macro void CodeFmt.newline(&self, bool is_empty = false) @private {
     if (self._lexer.is_whitespace_mode) return;
 
     self.buf.append("\n");
-    self._line_used = 0;
-    for(int i = 0; i < self._indent_level; i++) {
-        // TODO: add tabs too
-        self.buf.append("    ");
-        self._line_used += 4;
+    if (!is_empty){
+        self._line_used = 0;
+        for(int i = 0; i < self._indent_level; i++) {
+            // TODO: add tabs too
+            self.buf.append("    ");
+            self._line_used += 4;
+        }
     }
 }
 
@@ -301,7 +303,8 @@ Adds a token to composite statement cache for further formatting.
 *>
 macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) @private {
     if (self._lexer.is_whitespace_mode) return;
-    if (t.type == EMPTY_LINE) return;
+    assert(t.type != EMPTY_LINE);
+    assert(t.type != SPACE);
 
     usz cache_len = self.cache_statement_len();
     TokenType prev_t = cache_len > 0 ? self.__token_cache[^1].type : TokenType.INVALID_TOKEN; 
@@ -1063,7 +1066,7 @@ fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserSta
             switch(t.type) {
                 case EOF:
                     if (state.scope_depth == 0 && state.last_token != EMPTY_LINE) {
-                        self.newline();
+                        self.newline(is_empty: true);
                     }
                     self.trace("EXIT");
 	                return true;
@@ -1077,7 +1080,7 @@ fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserSta
                                 state.current_token = state.last_token;
                                 break;
                             default:
-                                self.newline();
+                                self.newline(is_empty: true);
                         }
                     }
                     break;
@@ -1321,7 +1324,7 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
                     }
                 case EMPTY_LINE:
                     if (state.last_token != EMPTY_LINE) {
-                        self.newline();
+                        self.newline(is_empty: true);
                     }
                 default:
                     CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;

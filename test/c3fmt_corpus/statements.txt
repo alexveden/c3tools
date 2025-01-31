@@ -877,14 +877,14 @@ fn void main()
         case BAR:
         case BAZ:
         case "another":
-            
+
         case 922:
         case 1..0xffff:
             foo();
         default: {
             nextcase LABEL: FOO;
         }
-            
+
     }
     return 0;
 }
@@ -907,7 +907,7 @@ fn void main()
     {
         foo = 0;
     }
-    
+
     return 0;
 }
 
@@ -929,7 +929,7 @@ io::printfn("fault found: %s", err);
 fn void main()
 {
     defer (catch err) io::printfn("fault found: %s", err);
-    
+
     return 0;
 }
 

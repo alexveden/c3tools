@@ -155,7 +155,7 @@ macro @foo($x, #y)
     $if $x > 3:
         #y += $x * $x;
     $endif
-    
+
     $if $x > 3:
         #y += $x * $x;
     $else

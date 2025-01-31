@@ -365,7 +365,7 @@ fn void remove_using_test()
 {
     IntList test;
     usz removed;
-    
+
     test.add_array({1, 11, 2, 10, 20});
     removed = test.remove_using_test(
         fn bool_long(i, ctx) => *i >= *(int*)ctx, &&10
@@ -381,7 +381,7 @@ fn void remove_using_test()
         }
         return 0;
     }, (void*)c)!!;
-    
+
 }
 
 ================================================================================
