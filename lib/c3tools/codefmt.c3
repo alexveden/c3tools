@@ -1467,6 +1467,9 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
         case VAR: // if/switch/for parens (...)
             self.trace("VAR");
             switch(t.type) {
+                case LPAREN:
+                    // entry condition state
+                    nextcase default;
                 case RPAREN:
                     self.cache_statement_add(state, t);
                     if (state.scope_depth == 0){
