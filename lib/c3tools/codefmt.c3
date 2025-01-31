@@ -630,6 +630,7 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
 		    case SHR_ASSIGN:
 		    case IMPLIES:
 		    case EQ:
+		    case RETURN:
 		        // assignment operator reached
 		        break LOOP;
 		    case COMMA:
