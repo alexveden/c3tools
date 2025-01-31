@@ -196,6 +196,7 @@ fn void foo()
 }
 
 // comment TODO: maybe fix it?
+
 fn bool bar()
 {
 }
@@ -207,8 +208,8 @@ fn void foo()
 
 }
 
-
 // comment TODO: maybe fix it?
+
 fn bool bar()
 {
 }

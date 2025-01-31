@@ -165,6 +165,7 @@ fn bool! CodeFmt.format_comment(&self, NodeParserState* state, Token* t) {
 	    self.state_stack.len() > 0 && 
 	    self.cache_statement_len() > 0) 
 	{
+	    // doesn't allow empty lines, just skip them
 	    return t.type == EMPTY_LINE;
 	}
 
@@ -193,7 +194,7 @@ fn bool! CodeFmt.format_comment(&self, NodeParserState* state, Token* t) {
 	        }
 	        return true;
 	    case EOF:
-	        // if (self._is_empty_line) return true;
+	        if (self._is_paused) return false;
 	        // if (state.scope_depth == 0 && state.last_token == RBRACE && t.type != EOF) return true;
 	        if (self._lexer.is_whitespace_mode) {
 	            // Do a direct write
