@@ -368,7 +368,7 @@ fn void remove_using_test()
     
     test.add_array({1, 11, 2, 10, 20});
     removed = test.remove_using_test(
-        fn bool(i, ctx) => * i >= *(int*)ctx, && 10
+        fn bool(i, ctx) => *i >= *(int*)ctx, && 10
     );
     assert(removed == 3);
     assert(test.array_view() == int[]{1, 2});
@@ -409,3 +409,73 @@ macro CFile stderr() => __acrt_iob_func(STDERR_FD);
 *>
 fn bool in_range(char c, char start, char len) => in_range_m(c, start, len);
 
+================================================================================
+fn_with_amp_self
+================================================================================
+
+macro NodeParserState.check_scope( &self, TokenType t)
+{
+}
+
+--------------------------------------------------------------------------------
+
+macro NodeParserState.check_scope(&self, TokenType t)
+{
+}
+
+================================================================================
+fn_with_long_cast_in_ternary
+================================================================================
+
+macro parse_callable_params(
+    Ast* ast, Token* t, AstCallable* node_func, NodeParserState* state
+) @local
+{
+    AstCallableParam* current_param = state.sub_node ?(
+        AstCallableParam*
+    )state.sub_node : null;
+}
+
+--------------------------------------------------------------------------------
+
+macro parse_callable_params(
+    Ast* ast, Token* t, AstCallable* node_func, NodeParserState* state
+) @local
+{
+    AstCallableParam* current_param = state.sub_node ? (AstCallableParam*)state.sub_node : null;
+}
+
+================================================================================
+fn_with_long_call_wrap_when_cast
+================================================================================
+
+macro parse_callable_params()
+{
+    if(foo) { if(bar){
+    current_param = (
+        AstCallableParam*
+    )ast.@allc_add(
+        AstCallableParam,
+        &node_func.params,
+        &ast.lexer.token
+    );
+    }}
+}
+
+--------------------------------------------------------------------------------
+
+TODO;
+
+
+================================================================================
+fn_with_previous_comment
+================================================================================
+// fn bool osldfkjslf(int self, int b @used) {
+//     return true;
+// }
+fn bool Ast.parse_function( &ast, AstNode* node, Token* t, NodeParserState* state)
+{
+}
+--------------------------------------------------------------------------------
+
+TODO;

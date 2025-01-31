@@ -1,0 +1,58 @@
+================================================================================
+fn_with_lambda_arg
+================================================================================
+fn void remove_using_test()
+{
+    removed = test.remove_using_test(fn bool(i, ctx) => *i >= *(int*)ctx, &&10);
+}
+--------------------------------------------------------------------------------
+
+fn void remove_using_test()
+{
+    removed = test.remove_using_test(fn bool(i, ctx) => *i >= *(int*)ctx, &&10);
+}
+
+================================================================================
+casting_pointers
+================================================================================
+
+fn void * 
+main(int* arg) { 
+bool a =(a||b)&&c; 
+int bin = (1&2)&3;
+int bin = &a + (1&2)|&a;
+int* bin = (int*)&a;
+*bin = 1;
+*bin = *foo;
+b = *(int*)&a;
+*(int*)&a = 2;
+b = (*a = 2);
+b = { .work = 1, .work=2};
+int** ptr = &(*(int*)&a);
+ (  void) free(data);
+    (void * * )free(data);
+    int* bin = &&1;
+return;
+}
+
+--------------------------------------------------------------------------------
+
+fn void* main(int* arg)
+{
+    bool a = (a || b) && c;
+    int bin = (1 & 2) & 3;
+    int bin = &a + (1 & 2) | &a;
+    int* bin = (int*)&a;
+    *bin = 1;
+    *bin = *foo;
+    b = *(int*)&a;
+    *(int*)&a = 2;
+    b = (*a = 2);
+    b = {.work = 1, .work = 2};
+    int** ptr = &(*(int*)&a);
+    (void)free(data);
+    (void**)free(data);
+    int* bin = &&1;
+    return;
+}
+

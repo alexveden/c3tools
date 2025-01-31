@@ -87,7 +87,7 @@ fn void main()
     int bin = &a + (1 & 2) | &a;
     int* bin = (int*)&a;
     b = *(int*)&a;
-    b = (* a = 2);
+    b = (*a = 2);
     b = {.work = 1, .work = 2};
     int** ptr = &(*(int*)&a);
     (void)free(data);

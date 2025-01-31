@@ -359,18 +359,19 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
         case IDENT:
             switch(prev_t){
                 case TYPE_IDENT:
-                case STAR:
                 case RBRACKET:
                 case CONST_IDENT:
 		        case CT_TYPE_IDENT:
                     pre_space = true;
+                case STAR:
                 case RPAREN:
                     if (t.type == AT_IDENT) pre_space = true;
-                    if(self.cache_statement_prev_is_binexp()) pre_space = true;
+                    // resolve casting to type ()
+                    if(self._resolve__prev_is_binexp()) pre_space = true;
                 case AMP: // likely &var 
                     break;
                 default:
-                    if (is_require_space(prev_t)) pre_space = true;
+                    nextcase TOP: default;
             }
         case ELLIPSIS:
             switch(prev_t){
@@ -386,7 +387,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                     break;
                 case RPAREN:
                     // distinguish casting and regular expression
-                    if(self.cache_statement_prev_is_binexp()) pre_space = true;
+                    if(self._resolve__prev_is_binexp()) pre_space = true;
                     break;
                 default:
                     pre_space = true;
@@ -400,29 +401,31 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                 case LBRACKET:
                     break;
                 default:
-                    pre_space = true;
+                    pre_space = cache_len > 0;
             }
         case LVEC:
         case LGENPAR:
             break;
-        case LPAREN:
-        case RPAREN:
         case LBRACKET:
-        case RBRACKET:
             switch(prev_t){
-                case STAR: // cast (int*)
-                case IDENT: // call(list)
-                case EOS: // call(list)
-                case COLON: // slice [:]
-                case RGENPAR: // >)
-                case RVEC: // >]
-                case QUESTION: // [?]
+                case COMMA:
+                    pre_space = true;
+                default:
                     break;
+            }
+        case LPAREN:
+            switch(prev_t){
+                case STAR:
                 case AMP:
-                    if(self.cache_statement_prev_is_binexp()) pre_space = true;
+                    if(self._resolve__prev_is_binexp()) pre_space = true;
+                case IDENT:
+                case RPAREN:
+                    break;
                 default:
                     nextcase TOP: default;
             }
+        case RPAREN:
+            break;
         case LBRACE:
             switch(prev_t){
                 case COMMA:
@@ -444,7 +447,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                 case LBRACKET:
                     break;
                 case IDENT:
-                    if (!self.is_keyword_call_colon(state)) pre_space = true;
+                    if (!self._resolve__keyword_call_colon(state)) pre_space = true;
                 default:
                     pre_space = true;
             }
@@ -457,11 +460,14 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                     pre_space = true;
             }
         default:
-            if (is_require_space(prev_t))  pre_space = true;
+            if (self._resolve_default_space(state))  pre_space = true;
     }
 
     bool never_space = {|
-        if (state.prev_scope(1) == LBRACKET) return true;
+        // Contents of [] are always without space
+        // starting [ and end ] - are managed separately above
+        if (state.prev_scope(1) == LBRACKET && t.type != LBRACKET) return true;
+        if (t.type == RBRACKET) return true;
 
         return false;
     |};
@@ -472,7 +478,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
     self.__token_cache.push(*t);
 }
 
-fn bool CodeFmt.is_keyword_call_colon(&self, NodeParserState* state) {
+fn bool CodeFmt._resolve__keyword_call_colon(&self, NodeParserState* state) {
     assert(state.current_token == COLON);
     return state.scope_depth > 0 && state.last_token == IDENT && state.prev_scope(1) == LPAREN;
 }
@@ -480,8 +486,10 @@ fn bool CodeFmt.is_keyword_call_colon(&self, NodeParserState* state) {
 <*
 Check if previous token type requires a space after it (in general case)
 *>
-macro bool is_require_space(TokenType prev_t) @local {
-    switch(prev_t) {
+macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state) @local {
+    switch(state.last_token) {
+		case AND:
+		case AMP:
 		case DIV:
 		case GREATER:
 		case LESS:
@@ -489,7 +497,6 @@ macro bool is_require_space(TokenType prev_t) @local {
 		case MOD:
 		case PLUS:
 		case STAR:
-		case AMP:
 		case CT_AND:
 		case CT_OR:
 		case CT_CONCAT:
@@ -504,7 +511,6 @@ macro bool is_require_space(TokenType prev_t) @local {
 		case QUESTION:
 		case SHL:
 		case SHR:
-		case AND:
 		case OR:
 		case BIT_OR:
 		case BIT_XOR:
@@ -543,43 +549,50 @@ macro bool is_require_space(TokenType prev_t) @local {
 		case COMMENT_MULTI_INLINE:
 		    return true;
 		default: 
-		    return false;
+		    break;
     }
+	return false;
 }
 
 <*
 Resolves ambiguity conflict for casting (void)&some and expression (1 | 2) & some
 *>
-fn bool CodeFmt.cache_statement_prev_is_binexp(&self) @private {
+fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
     assert(self.state_stack.len() > 0);
 
     usz start_len = self.state_stack[^1].token_cache_start;
+    // only 1 token, it's not a binary exp 
+    if (self.__token_cache.len() - start_len == 1) return false;
 
-    bool has_expr = false;
-    bool has_scope = false;
     int scope = 0;
+    int exp_count = 0;
 
-    for (usz i = self.__token_cache.len(); i-- > start_len; )
+    for LOOP: (usz i = self.__token_cache.len(); i-- > start_len; )
     {
         Token* t = &self.__token_cache[i];
         switch(t.type) {
             case RPAREN:
                 scope++;
-                has_scope = true;
             case LPAREN:
                 scope--;
-                if (has_scope && scope == 0) {
-                    return has_expr;
+                if (scope == 0){
+                    return exp_count == 0;
+                } else if (scope <= 0) {
+                    break LOOP;
+                    // return true;
                 }
-            case TYPE_IDENT:
-            case STAR:
             case AMP:
             case SPACE:
+            case AND: // logical && or &&1 
+            case STAR:
+                break;
+            case TYPE_IDENT:
+            case CT_TYPE_IDENT:
             case LVEC:
             case RVEC:
             case LGENPAR:
             case RGENPAR:
-                // distinguish casting and non meaningful ops
+                exp_count++;
                 break;
 		    case BIT_AND_ASSIGN:
 		    case BIT_OR_ASSIGN:
@@ -590,14 +603,23 @@ fn bool CodeFmt.cache_statement_prev_is_binexp(&self) @private {
 		    case PLUS_ASSIGN:
 		    case SHL_ASSIGN:
 		    case SHR_ASSIGN:
+		    case IMPLIES:
 		    case EQ:
 		        // assignment operator reached
-		        return has_expr;
+		        break LOOP;
+		    case COMMA:
+		    case EQEQ:
+		    case GREATER_EQ:
+		    case LESS_EQ:
+		    case NOT_EQUAL:
+		    case GREATER:
+		    case LESS: 
+		        break LOOP;
             default:
-                has_expr = true;
+                return true;
         }
     }
-    return has_expr;
+    return exp_count > 0;
 }
 
 macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TOKEN) @private {
