@@ -362,6 +362,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t, 
                 case STAR:
                 case RBRACKET:
                 case CONST_IDENT:
+		        case CT_TYPE_IDENT:
                     pre_space = true;
                 case RPAREN:
                     if (t.type == AT_IDENT) pre_space = true;
@@ -370,6 +371,13 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t, 
                     break;
                 default:
                     if (is_require_space(prev_t)) pre_space = true;
+            }
+        case ELLIPSIS:
+            switch(prev_t){
+                case COMMA:
+                    pre_space = true;
+                default:
+                    break;
             }
         case AMP: // *
             switch(prev_t){
@@ -519,6 +527,7 @@ macro bool is_require_space(TokenType prev_t) @local {
 		case MODULE:
 		case DO:
 		case IMPORT:
+		case COMMENT_MULTI_INLINE:
 		    return true;
 		default: 
 		    return false;
@@ -1183,7 +1192,7 @@ fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state)
             self.trace("VAR");
             switch(t.type) {
                 case RPAREN:
-                    self.cache_statement_add(state, t, false);
+                    self.cache_statement_add(state, t);
 
                     if (state.scope_depth == 0) {
                         if (state.initial_token == FOR) {
@@ -1198,25 +1207,11 @@ fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state)
                 case EOS:
                     // Typically in @body macro def
                     state.initial_token = FOR;
-                    self.cache_statement_add(state, t, false);
-                    self.cache_statement_add(state, &TOKEN_SPACE, false);
-                case COMMA:
-                    self.cache_statement_add(state, t, false);
-                    if (state.scope_depth == 1) {
-                        self.cache_statement_add(state, &TOKEN_SPACE, false);
-                    }
-                case IDENT:
-                    if (state.scope_depth == 1 && 
-                        state.last_token != COMMA && 
-                        state.last_token != LPAREN
-                    ) {
-                        self.cache_statement_add(state, &TOKEN_SPACE, false);
-                    }
                     nextcase default;
                 case EMPTY_LINE:
                     break;
                 default:
-                    self.cache_statement_add(state, t, false);
+                    self.cache_statement_add(state, t);
                     break;
             }
         default:

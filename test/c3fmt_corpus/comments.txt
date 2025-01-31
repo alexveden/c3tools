@@ -101,7 +101,7 @@ bar, na   ,    varg...
 fn String[]! Foo.main(
     String[] args,
     int* foo,
-    List(<float>) /* some */ bar,
+    List(<float>)  /* some */ bar,
     na,
     varg...
 )
@@ -150,7 +150,7 @@ fn void main()
 {
     if (
         this_a_condition && // do we have to comment next?
-        another_condition && /* maybe the followed by another */
+        another_condition && /* maybe the followed by another */ 
         /* this another multiline */
         foo
     ) {
