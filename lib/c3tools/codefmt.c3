@@ -297,7 +297,7 @@ macro void! CodeFmt.dedent(&self) @private {
 <* 
 Adds a token to composite statement cache for further formatting.
 *>
-macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t, bool auto_space = true) @private {
+macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) @private {
     if (self._lexer.is_whitespace_mode) return;
     if (t.type == EMPTY_LINE) return;
 
@@ -379,8 +379,11 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t, 
                 default:
                     break;
             }
-        case AMP: // *
+        case AMP: // &
             switch(prev_t){
+                case LPAREN:
+                case LBRACKET:
+                    break;
                 case RPAREN:
                     // distinguish casting and regular expression
                     if(self.cache_statement_prev_is_binexp()) pre_space = true;
@@ -457,7 +460,15 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t, 
             if (is_require_space(prev_t))  pre_space = true;
     }
 
-    if (auto_space && pre_space) self.__token_cache.push(TOKEN_SPACE);
+    bool never_space = {|
+        if (state.prev_scope(1) == LBRACKET) return true;
+
+        return false;
+    |};
+
+    if (pre_space && !never_space) {
+        self.__token_cache.push(TOKEN_SPACE);
+    }
     self.__token_cache.push(*t);
 }
 
@@ -664,24 +675,10 @@ macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TO
 
     if (!has_magic_comma && self._line_used + token_len <= self.max_line_width) {
         // NOTE: Fits in line no wrapping needed write as is with standard formatting.
-
-        tmpstate = NodeParserState{};
         self.@cache_statement_iter(; usz i, Token* t) 
         {
-            tmpstate.check(t); // this is used only for current scope_depth
             if (self._print_lex) io::eprintf("%s ", t.type);
-
-            
-            bool skip_write = false;
-            if (t.type == SPACE && tmpstate.prev_scope(1) == LBRACKET) {
-                // // This is a place for weird edge cases with space :(
-                // if (tmpstate.prev_scope(1)  == LBRACKET && tmpstate.last_token == COLON) {
-                    // slice case int_arr[a:b]
-                // }
-                skip_write = true;
-            }
-            
-            if (!skip_write) self.write("%s", t.value);
+            self.write("%s", t.value);
         };
     } else {
         // NOTE: Wrapping is needed!
