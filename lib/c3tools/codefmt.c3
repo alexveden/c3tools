@@ -409,6 +409,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                 case LPAREN:
                 case RPAREN:
                 case TYPE_IDENT:
+                case CT_TYPE_IDENT:
                 case STAR:
                 case LBRACKET:
                     break;
