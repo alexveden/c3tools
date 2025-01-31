@@ -420,6 +420,8 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                     if(self._resolve__prev_is_binexp()) pre_space = true;
                 case IDENT:
                 case RPAREN:
+                case RGENPAR:
+                case RVEC:
                     break;
                 default:
                     nextcase TOP: default;

@@ -346,7 +346,7 @@ fn void remove_using_test()
         usz removed;
 
         test.add_array({ 1, 11, 2, 10, 20 });
-        removed = test.remove_using_test(fn bool(i, ctx) => *i >= *(int*)ctx, &&10);
+        removed = test.remove_using_test(fn bool_long(i, ctx) => *i >= *(int*)ctx, &&10);
         assert(removed == 3);
         assert(test.array_view() == int[]{1, 2});
     thread.create(fn int(void* arg)
@@ -368,7 +368,7 @@ fn void remove_using_test()
     
     test.add_array({1, 11, 2, 10, 20});
     removed = test.remove_using_test(
-        fn bool(i, ctx) => *i >= *(int*)ctx, && 10
+        fn bool_long(i, ctx) => *i >= *(int*)ctx, &&10
     );
     assert(removed == 3);
     assert(test.array_view() == int[]{1, 2});
