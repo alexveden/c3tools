@@ -92,7 +92,7 @@ fn void main()
     int** ptr = &(*(int*)&a);
     (void)free(data);
     (void**)free(data);
-    int* bin = && 1;
+    int* bin = &&1;
     return;
 }
 

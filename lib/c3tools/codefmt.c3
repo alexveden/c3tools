@@ -466,6 +466,8 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
     bool never_space = {|
         // Contents of [] are always without space
         // starting [ and end ] - are managed separately above
+        // starting statement always without space 
+        if (cache_len == 0) return true;
         if (state.prev_scope(1) == LBRACKET && t.type != LBRACKET) return true;
         if (t.type == RBRACKET) return true;
 
