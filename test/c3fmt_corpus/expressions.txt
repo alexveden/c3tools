@@ -119,8 +119,42 @@ fn void main()
     return file ?: file_open_errno() ?;
     return i ?: Foo.X?;
     return x ?: (y ?: x);
-    assert((root.get_int("yyy") ?? - 1) == - 1);
+    assert((root.get_int("yyy") ?? - 1) == -1);
     double x = ((double)testError() + testError()) ?? 100;
     io::printfn("6:%s", @catch((3 > 2 ? Foo.ABC? : 4) ?? Foo.DEF?));
+}
+
+================================================================================
+numbers
+================================================================================
+
+fn void 
+main() { 
+int a = -1;
+int a = -float.inf;
+int a = 3 -float.inf;
+int a = 3+1;
+return +1;
+return 1;
+int a = (usz)-1;
+int a = -add(-2, -3);
+return (usz)+1.234f;
+return a == -1;
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    int a = -1;
+    int a = -float.inf;
+    int a = 3 - float.inf;
+    int a = 3 + 1;
+    return +1;
+    return 1;
+    int a = (usz)-1;
+    int a = -add(-2, -3);
+    return (usz)+1.234f;
+    return a == -1;
 }
 

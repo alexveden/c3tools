@@ -320,9 +320,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
 		case DIV:
 		case GREATER:
 		case LESS:
-		case MINUS:
 		case MOD:
-		case PLUS:
 		case CT_AND:
 		case CT_OR:
 		case CT_CONCAT:
@@ -393,6 +391,8 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                     break;
             }
         case AMP: // &
+		case MINUS:
+		case PLUS:
             switch(prev_t){
                 case LPAREN:
                 case LBRACKET:
@@ -511,12 +511,13 @@ macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state) @local 
 		case AND:
 		    return self._resolve__prev_is_binexp();
 		case AMP:
+		case MINUS:
+		case PLUS:
+		    return self._resolve__prev_is_binexp();
 		case DIV:
 		case GREATER:
 		case LESS:
-		case MINUS:
 		case MOD:
-		case PLUS:
 		case STAR:
 		case CT_AND:
 		case CT_OR:
@@ -609,6 +610,8 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
             case AMP:
             case SPACE:
             case AND: // logical && or &&1 
+            case PLUS:
+            case MINUS:
             case STAR:
                 break;
             case TYPE_IDENT:
@@ -1547,6 +1550,7 @@ Formatting of generic code flow statement block (for, while, if, foreach, switch
 *>
 fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserState* state) @private {
     assert(state.initial_token != INVALID_TOKEN);
+    if(t == null) return (bool)+1;
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
