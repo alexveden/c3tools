@@ -421,6 +421,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                 case AMP:
                     if(self._resolve__prev_is_binexp()) pre_space = true;
                 case IDENT:
+                case AT_IDENT:
                 case RPAREN:
                 case RGENPAR:
                 case RVEC:
@@ -547,6 +548,10 @@ macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state) @local 
 		case RGENPAR:
 		case TRY:
 		case FN:
+		case IF:
+		case FOR:
+		case FOREACH:
+		case DEFER:
 		case DEF:
 		case CONST:
 		case STATIC:
@@ -1470,7 +1475,7 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
                 case DEFER:
                 case SWITCH:
                     self.newline();
-                    self.write("%s ", t.value);
+                    self.write("%s", t.value);
                 case ELSE:
                     // else goes into single line
                     self.write(" else");
@@ -1483,15 +1488,16 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
             self.trace("CONST_IDENT");
             switch(t.type) {
                 case CONST_IDENT:  // LABEL
-                    self.write("%s", t.value);
+                    self.write(" %s", t.value);
                 case IF: // else if
-                    self.write(" %s ", t.value);
+                    self.write(" %s", t.value);
                 case ELSE: // single else
                 case COLON: // LABEL: colon
-                    self.write("%s ", t.value);
+                    self.write("%s", t.value);
                 case CATCH:
                 case TRY:
-                    self.write("%s", t.value);
+                    // defer try / defer catch
+                    self.write(" %s", t.value);
                 case LPAREN:
                     nextcase STATE: state.transition(VAR);
                 case LBRACE:
@@ -1507,6 +1513,7 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
             switch(t.type) {
                 case LPAREN:
                     // entry condition state
+                    if (state.scope_depth == 1) self.write(" ");
                     nextcase default;
                 case RPAREN:
                     self.cache_statement_add(state, t);

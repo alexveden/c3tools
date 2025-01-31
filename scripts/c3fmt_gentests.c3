@@ -43,7 +43,7 @@ fn void! load_corpus(CodeGen* code, String path) @local {
 				code.wn("defer fmt.free()");
 				// NOTE: adding \n to input + input[1..] when check for visual formatting reasons
 				code.wn("String input = `\n%s`", c.case_input);
-				code.wn("String formatted = fmt.format(input[1..], print_lex: true)!!");
+				code.wn("String formatted = fmt.format(input[1..], print_lex: false)!!");
 				code.wn("io::printfn(\"\\n__%s__%s formatted code\\n```\")", file_part, c.case_name);
 				code.wn("io::print(formatted)");
 				code.wn("io::printfn(\"```\")");
