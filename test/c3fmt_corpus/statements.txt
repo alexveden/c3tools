@@ -472,7 +472,7 @@ fn void main()
 }
 
 ================================================================================
-if_single_line_with_wrap
+if_single_line_never_wraps
 ================================================================================
 
 fn void main() 
@@ -487,9 +487,7 @@ return 200;
 
 fn void main()
 {
-    if LABEL: (doo) zzz.another.foo(
-        whit_is_too_long, and_maybe(another, call, ther), 3
-    );
+    if LABEL: (doo) zzz.another.foo(whit_is_too_long, and_maybe(another, call, ther), 3);
     return 200;
 }
 

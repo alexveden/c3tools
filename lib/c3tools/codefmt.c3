@@ -649,7 +649,7 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
 }
 
 
-macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TOKEN) @private {
+macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TOKEN, bool no_split = false) @private {
     if (self.cache_statement_len() == 0) return;
 
     usz token_len = 0;
@@ -722,7 +722,7 @@ macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TO
         self._line_used, token_len, break_pos, break_len, last_non_space_tok
     );
 
-    if (!has_magic_comma && self._line_used + token_len <= self.max_line_width) {
+    if (no_split || (!has_magic_comma && self._line_used + token_len <= self.max_line_width)) {
         // NOTE: Fits in line no wrapping needed write as is with standard formatting.
         self.@cache_statement_iter(; usz i, Token* t) 
         {
@@ -1592,6 +1592,7 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
                     // maybe `defer io::print()`?
                     if (state.scope_depth != 0) self.@fail(t, "invalid scope")!;
                     if (state.initial_token != DEFER) self.@fail(t, "invalid token")!;
+                    self.write(" ");
                     nextcase STATE: state.transition(IMPLIES);
             }
         case VAR: // if/switch/for parens (...)
@@ -1629,26 +1630,30 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
                         nextcase default;
                     }
                 default:
-                    // if (foo) no_brace_expr;
-                    nextcase STATE: IMPLIES;
+                    self.write(" ");
+                    nextcase STATE: state.transition(IMPLIES);
             }
         case IMPLIES:
             self.trace("IMPLIES");
             switch(t.type) {
                 case EOS:
                     if (state.scope_depth != 0) self.@fail(t, "invalid scope")!;
+                    self.cache_statement_add(state, t);
+                    self.cache_statement_dump(no_split: true)!;
                     self.trace("EXIT");
                     return true;
                 default:
-                    self.write(" ");
-                    CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;
-                    if (new_local_state == null){
-                        // Not a keyword or anything special, just a statement
-                        return self.push_run_state(&CodeFmt.format_generic_statement, t);
-                    } else {                    
-                        // Special keyword or statement
-                        return self.push_run_state(new_local_state, t);
-                    }
+                    // self.write("%s", t.value);
+                    self.cache_statement_add(state, t);
+                    // self.write(" ");
+                    // CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;
+                    // if (new_local_state == null){
+                    //     // Not a keyword or anything special, just a statement
+                    //     return self.push_run_state(&CodeFmt.format_generic_statement, t);
+                    // } else {                    
+                    //     // Special keyword or statement
+                    //     return self.push_run_state(new_local_state, t);
+                    // }
             }
         default:
             unreachable();
