@@ -1475,11 +1475,7 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
                         state.transition(SCOPE);
                     }
                 default:
-                    if (state.scope_depth > 0){
-                        self.cache_statement_add(state, t);
-                    } else {
-                        self.write("%s", t.value);
-                    }
+                    self.cache_statement_add(state, t);
             }
         case SCOPE:
             self.trace("SCOPE");
