@@ -158,6 +158,11 @@ fn bool! CodeFmt.format_comment(&self, Token* t) {
 	    self.state_stack.len() > 0 && 
 	    self.cache_statement_len() > 0) return false;
 
+    // Store current token in state stack (prevent weird collisions of EMPTY_LINE and comment)
+    if(self.state_stack.len() > 0) {
+	    self.state_stack[^1].state.current_token = t.type;
+    } 
+
 	switch(t.type) {
 	    case COMMENT_SINGLE:
 	    case COMMENT_MULTI:
@@ -179,7 +184,7 @@ fn bool! CodeFmt.format_comment(&self, Token* t) {
 	        unreachable("%s: `%s`", t.type, t.value);
 	}
 
-	self.trace("COMMENT");
+	self.trace("COMMENT DUMP");
 
     return true;
 }
@@ -1159,6 +1164,8 @@ fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserSta
                                 state.current_token = state.last_token;
                                 break;
                             default:
+                                self.trace("EMPTY_LINE");
+                                // self.write("last: %s!", state.last_token);
                                 self.newline(is_empty: true);
                         }
                     }
