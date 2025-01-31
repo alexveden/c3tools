@@ -489,6 +489,7 @@ Check if previous token type requires a space after it (in general case)
 macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state) @local {
     switch(state.last_token) {
 		case AND:
+		    return self._resolve__prev_is_binexp();
 		case AMP:
 		case DIV:
 		case GREATER:
@@ -621,6 +622,7 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
     }
     return exp_count > 0;
 }
+
 
 macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TOKEN) @private {
     if (self.cache_statement_len() == 0) return;
