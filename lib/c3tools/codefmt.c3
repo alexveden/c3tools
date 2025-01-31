@@ -297,7 +297,7 @@ macro void! CodeFmt.dedent(&self) @private {
 <* 
 Adds a token to composite statement cache for further formatting.
 *>
-macro void CodeFmt.cache_statement_add(&self, Token *t, bool auto_space = true) @private {
+macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t, bool auto_space = true) @private {
     if (self._lexer.is_whitespace_mode) return;
     if (t.type == EMPTY_LINE) return;
 
@@ -1157,12 +1157,12 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                 case EMPTY_LINE:
                     break;
                 case EOS:
-                    self.cache_statement_add(t);
+                    self.cache_statement_add(state, t);
                     self.cache_statement_dump()!;
                     self.newline();
                     return true;
                 default:
-                    self.cache_statement_add(t);
+                    self.cache_statement_add(state, t);
             }
         default:
             unreachable();
@@ -1183,7 +1183,7 @@ fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state)
             self.trace("VAR");
             switch(t.type) {
                 case RPAREN:
-                    self.cache_statement_add(t, false);
+                    self.cache_statement_add(state, t, false);
 
                     if (state.scope_depth == 0) {
                         if (state.initial_token == FOR) {
@@ -1198,25 +1198,25 @@ fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state)
                 case EOS:
                     // Typically in @body macro def
                     state.initial_token = FOR;
-                    self.cache_statement_add(t, false);
-                    self.cache_statement_add(&TOKEN_SPACE, false);
+                    self.cache_statement_add(state, t, false);
+                    self.cache_statement_add(state, &TOKEN_SPACE, false);
                 case COMMA:
-                    self.cache_statement_add(t, false);
+                    self.cache_statement_add(state, t, false);
                     if (state.scope_depth == 1) {
-                        self.cache_statement_add(&TOKEN_SPACE, false);
+                        self.cache_statement_add(state, &TOKEN_SPACE, false);
                     }
                 case IDENT:
                     if (state.scope_depth == 1 && 
                         state.last_token != COMMA && 
                         state.last_token != LPAREN
                     ) {
-                        self.cache_statement_add(&TOKEN_SPACE, false);
+                        self.cache_statement_add(state, &TOKEN_SPACE, false);
                     }
                     nextcase default;
                 case EMPTY_LINE:
                     break;
                 default:
-                    self.cache_statement_add(t, false);
+                    self.cache_statement_add(state, t, false);
                     break;
             }
         default:
@@ -1318,7 +1318,7 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
                     self.indent();
                     state.transition(SCOPE);
                 default:
-                    self.cache_statement_add(t);
+                    self.cache_statement_add(state, t);
                     break;
             }
         default:
@@ -1367,7 +1367,7 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                     if(state.initial_token == FN || state.initial_token == DO) {
                         break;
                     } else if (state.initial_token != FOR) {
-                        self.cache_statement_add(t);
+                        self.cache_statement_add(state, t);
                     } else {
                         state.transition(EOS);
                     }
@@ -1379,7 +1379,7 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                             self.@fail(t, "unclosed scope")!;
                         }
 
-                        self.cache_statement_add(t);
+                        self.cache_statement_add(state, t);
                         state.initial_token = FOR;
 
                         return false;
@@ -1391,9 +1391,9 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                     }
                 case COLON:
                     bool is_fn_call = self.is_keyword_call_colon(state);
-                    self.cache_statement_add(t, auto_space: !is_fn_call);
+                    self.cache_statement_add(state, t, auto_space: !is_fn_call);
                 default:
-                    self.cache_statement_add(t);
+                    self.cache_statement_add(state, t);
             }
         case EOS:
             // NOTE: special state for expecting closing ; for @body macro / {| block |}
@@ -1474,7 +1474,7 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
             self.trace("VAR");
             switch(t.type) {
                 case RPAREN:
-                    self.cache_statement_add(t);
+                    self.cache_statement_add(state, t);
                     if (state.scope_depth == 0){
                         TokenType wrap_rule = self.cache_statement_wrap_rule(state.initial_token);
                         self.cache_statement_dump(wrap_rule)!;
@@ -1482,10 +1482,10 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
                     }
                 case COLON:
                     bool is_fn_call = self.is_keyword_call_colon(state);
-                    self.cache_statement_add(t, auto_space: !is_fn_call);
+                    self.cache_statement_add(state, t, auto_space: !is_fn_call);
                 default:
                     if (state.scope_depth > 0){
-                        self.cache_statement_add(t);
+                        self.cache_statement_add(state, t);
                     } else {
                         self.write("%s", t.value);
                     }
@@ -1691,10 +1691,10 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
                         state.transition(SCOPE);
                         if (state.initial_token == CT_SWITCH) self.indent();
                     } else {
-                        self.cache_statement_add(t);
+                        self.cache_statement_add(state, t);
                     }
                 default:
-                    self.cache_statement_add(t);
+                    self.cache_statement_add(state, t);
             }
         case SCOPE:
             self.trace("SCOPE");
@@ -1765,10 +1765,10 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
                         self.write(":");
                         state.transition(SCOPE);
                     } else {
-                        self.cache_statement_add(t);
+                        self.cache_statement_add(state, t);
                     }
                 default:
-                    self.cache_statement_add(t);
+                    self.cache_statement_add(state, t);
             }
         default:
             unreachable();
@@ -1907,7 +1907,7 @@ fn bool! CodeFmt.format_structural(CodeFmt* self, Token* t, NodeParserState* sta
                 case EMPTY_LINE:
                     break;
                 case EOS:
-                    self.cache_statement_add(t);
+                    self.cache_statement_add(state, t);
                     self.cache_statement_dump()!;
                 case STRUCT:
                 case UNION:
@@ -1920,7 +1920,7 @@ fn bool! CodeFmt.format_structural(CodeFmt* self, Token* t, NodeParserState* sta
                     if (self.cache_statement_len() == 0){
                         self.newline();
                     }
-                    self.cache_statement_add(t);
+                    self.cache_statement_add(state, t);
             }
         default:
             unreachable();
@@ -1958,13 +1958,13 @@ fn bool! CodeFmt.format_enumerable(CodeFmt* self, Token* t, NodeParserState* sta
         case VAR: // enum associated vars
             switch(t.type) {
                 case RPAREN:
-                    self.cache_statement_add(t);
+                    self.cache_statement_add(state, t);
                     if (state.scope_depth == 0) {
                         self.cache_statement_dump(wrap_rule: COMMA)!;
                         state.transition(TYPE_IDENT);
                     }
                 default:
-                    self.cache_statement_add(t);
+                    self.cache_statement_add(state, t);
 
             }
         case SCOPE: // enum scope {}
@@ -1976,7 +1976,7 @@ fn bool! CodeFmt.format_enumerable(CodeFmt* self, Token* t, NodeParserState* sta
                         self.write("{");
                         self.indent();
                     } else {
-                        self.cache_statement_add(t);
+                        self.cache_statement_add(state, t);
                     }
                 case RBRACE:
                     if (state.scope_depth == 0) {
@@ -1988,12 +1988,12 @@ fn bool! CodeFmt.format_enumerable(CodeFmt* self, Token* t, NodeParserState* sta
                         self.trace("EXIT");
                         return true;
                     } else {
-                        self.cache_statement_add(t);
+                        self.cache_statement_add(state, t);
                     }
                 case EMPTY_LINE:
                     break;
                 case COMMA:
-                    self.cache_statement_add(t);
+                    self.cache_statement_add(state, t);
                     if (state.scope_depth == 1){
                         self.cache_statement_dump()!;
                     }
@@ -2001,7 +2001,7 @@ fn bool! CodeFmt.format_enumerable(CodeFmt* self, Token* t, NodeParserState* sta
                     if (self.cache_statement_len() == 0){
                         self.newline();
                     }
-                    self.cache_statement_add(t);
+                    self.cache_statement_add(state, t);
             }
         default:
             unreachable();
