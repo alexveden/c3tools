@@ -9,3 +9,7 @@ test-all:
 
 test:
 	c3c --trust=full test -- --no-sort -c -f $(t) 
+
+test-debug:
+	c3c --trust=full test -- --no-sort -c -f $(t) || echo "Test failed"
+	../gf/gf2 --args ./build/testrun --no-sort -c -b -f $(t)

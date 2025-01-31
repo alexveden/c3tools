@@ -477,8 +477,10 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
     |};
 
     if (pre_space && !never_space) {
+        self.trace("ADD SPACE");
         self.__token_cache.push(TOKEN_SPACE);
     }
+    self.trace("ADD");
     self.__token_cache.push(*t);
 }
 
@@ -1384,14 +1386,23 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                     } else {
                         nextcase default;
                     }
+                case WHILE:
+                    if (self.cache_statement_len() == 0) {
+                        self.write(" %s", t.value);
+                    }
+                    else {
+                        nextcase default;
+                    }
                 case RBRACE:
                 case RBRAPIPE:
-                    if(state.initial_token == FN || state.initial_token == DO) {
-                        break;
-                    } else if (state.initial_token != FOR) {
-                        self.cache_statement_add(state, t);
-                    } else {
-                        state.transition(EOS);
+                    switch(state.initial_token){
+                        case FN:
+                        case DO:
+                            break;
+                        case FOR:
+                            state.transition(EOS);
+                        default:
+                            self.cache_statement_add(state, t);
                     }
                 case EOS:
                     if (state.scope_depth != 0) {
