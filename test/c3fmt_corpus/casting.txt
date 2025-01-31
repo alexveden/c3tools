@@ -32,6 +32,7 @@ int** ptr = &(*(int*)&a);
  (  void) free(data);
     (void * * )free(data);
     int* bin = &&1;
+call(&StrucType.fn_ptr);
 return;
 }
 
@@ -53,6 +54,7 @@ fn void* main(int* arg)
     (void)free(data);
     (void**)free(data);
     int* bin = &&1;
+    call(&StrucType.fn_ptr);
     return;
 }
 

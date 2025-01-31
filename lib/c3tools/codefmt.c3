@@ -375,6 +375,13 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                 default:
                     nextcase TOP: default;
             }
+        case TYPE_IDENT:
+            switch(prev_t){
+                case AMP: // likely &Type.foo 
+                    if(self._resolve__prev_is_binexp()) pre_space = true;
+                default:
+                    nextcase TOP: default;
+            }
         case ELLIPSIS:
             switch(prev_t){
                 case COMMA:
