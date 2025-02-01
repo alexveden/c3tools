@@ -946,7 +946,10 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
                 } else {
                     switch(tmpstate.last_token) {
                         case LBRACE:
-                            if (
+                            if (tmpstate.current_token == SPACE) {
+                                tmpstate.current_token = tmpstate.last_token;
+                                break;
+                            } else if (
                                 brake_type == RBRACE &&
                                 t.type != RBRACE
                             ) {
@@ -969,6 +972,11 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
                             } 
                             nextcase default;
                         default:
+
+                            if (tmpstate.current_token == SPACE) {
+                                tmpstate.current_token = tmpstate.last_token;
+                                if (self._resolve__next_token(i) == RBRACE) break;
+                            } 
                             self.write("%s", t.value);
                     }
 
@@ -1035,6 +1043,14 @@ fn usz CodeFmt._resolve__dump__is_cast(&self, usz current_idx) {
         return current_idx;
     }
 }
+fn TokenType CodeFmt._resolve__next_token(&self, usz current_idx) {
+    TokenType result = INVALID_TOKEN;
+    if (current_idx + 1 < self.__token_cache.len()) {
+        result = self.__token_cache[current_idx+1].type;
+    }
+    return result;
+}
+    
 
 <*
 Check if previous token triggers multi-line split
@@ -1050,6 +1066,7 @@ macro bool CodeFmt.split_multiline(&self, NodeParserState* state, TokenType wrap
             if (state.scope_depth == 1 && state.current_token != RPAREN) return true;
         case LBRACE:
             if (state.scope_depth == 1 && state.current_token != RBRACE) return true;
+            if (state.scope_depth == 1 && state.current_token == SPACE) return true;
             if (state.scope_depth == 2 && state.current_token == LBRACKET) return true;
             if (state.scope_depth == 2 && state.current_token == LBRACE) return true;
         default:
