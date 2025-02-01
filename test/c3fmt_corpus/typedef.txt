@@ -282,3 +282,20 @@ interface Printable @if("sasda")
     ) @optional;
 }
 
+================================================================================
+distinct
+================================================================================
+distinct Color = float[<4>];
+distinct TypeA = char[];
+distinct Bob = inline Abc;
+distinct Foo = fn void(Foo** x); // #error: cannot define a new function type
+distinct Foo = inline PrivateFoo(<int>); // #error: could not be found
+distinct PriorityQueue = inline PrivatePriorityQueue <[Type,false] >;
+--------------------------------------------------------------------------------
+
+distinct Color = float[<4>];
+distinct TypeA = char[];
+distinct Bob = inline Abc;
+distinct Foo = fn void(Foo** x);  // #error: cannot define a new function type
+distinct Foo = inline PrivateFoo(<int>);  // #error: could not be found
+distinct PriorityQueue = inline PrivatePriorityQueue <[Type,false] >;
