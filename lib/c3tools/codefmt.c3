@@ -882,7 +882,7 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
                 if (tmpstate.scope_depth == 1 && brake_type == INVALID_TOKEN) {
                     self.write("%s", t.value);
                     self.indent();
-                    self.newline();
+                    // self.newline();
                     brake_type = RBRACE;
                 } else {
                     // if (tmpstate.scope_depth == 2 
@@ -927,11 +927,18 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
                 } else {
                     switch(tmpstate.last_token) {
                         case LBRACE:
-                            if (tmpstate.scope_depth == 1 && 
+                            if (
                                 brake_type == RBRACE &&
                                 t.type != RBRACE
                             ) {
-                                self.newline();
+                                if (tmpstate.scope_depth == 1) {
+                                    self.newline();
+                                } else if (
+                                    tmpstate.scope_depth == 2 &&
+                                    (t.type == LBRACE || t.type == LBRACKET)
+                                ){
+                                    self.newline();
+                                }
                             } 
                             nextcase default;
                         case LPAREN:
@@ -1022,6 +1029,10 @@ macro bool CodeFmt.split_multiline(&self, NodeParserState* state, TokenType wrap
             return true;
         case LPAREN:
             if (state.scope_depth == 1 && state.current_token != RPAREN) return true;
+        case LBRACE:
+            if (state.scope_depth == 1 && state.current_token != RBRACE) return true;
+            if (state.scope_depth == 2 && state.current_token == LBRACKET) return true;
+            if (state.scope_depth == 2 && state.current_token == LBRACE) return true;
         default:
             break;
     }
