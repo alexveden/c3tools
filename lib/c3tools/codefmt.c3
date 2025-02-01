@@ -1417,7 +1417,7 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                     break;
                 case EOS:
                     self.cache_statement_add(state, t);
-                    self.cache_statement_dump()!;
+                    self.cache_statement_dump(no_split: true)!;
                     self.newline();
                     return true;
                 default:
