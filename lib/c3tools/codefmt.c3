@@ -530,7 +530,11 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                 case LBRACKET:
                     break;
                 case IDENT:
-                    if (!self._resolve__keyword_call_colon(state)) pre_space = true;
+                    if (state.initial_token == FOREACH && state.scope_depth == 1) {
+                        pre_space = true;
+                    } else if (!self._resolve__keyword_call_colon(state)) {
+                        pre_space = true;
+                    } 
                 default:
                     pre_space = true;
             }
@@ -1717,9 +1721,11 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
         case INVALID_TOKEN:
             self.trace("ENTRY");
             switch(t.type) {
+                case FOREACH_R:
+                    state.initial_token = FOREACH;
+                    nextcase FOREACH;
                 case FOR:
                 case FOREACH:
-                case FOREACH_R:
                 case IF:
                 case WHILE:
                 case DO:
@@ -1774,6 +1780,8 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
                         self.cache_statement_dump(wrap_rule)!;
                         state.transition(SCOPE);
                     }
+                case COLON:
+                    nextcase default;
                 default:
                     self.cache_statement_add(state, t);
             }
