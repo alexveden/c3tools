@@ -814,6 +814,9 @@ macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, T
 
         switch TOP: (t.type){
             case LBRACE:
+                if (is_multiline){
+                    if (tmpstate.last_token == COMMA) self.newline();
+                }
                 self.write("%s", t.value);
                 self.indent();
             case RBRACE:
@@ -827,13 +830,6 @@ macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, T
             case COMMENT_SINGLE_INLINE:
             case COMMENT_MULTI_INLINE:
                 self.write(" %s", t.value);
-            case DOT:
-                if (tmpstate.last_token == LBRACE) self.newline();
-
-                if (is_multiline){
-                    if (tmpstate.last_token == COMMA) self.newline();
-                }
-                self.write("%s", t.value);
             case SPACE: 
                 if (is_multiline){
                     if (tmpstate.last_token != COMMA) self.write("%s", t.value);
@@ -842,7 +838,21 @@ macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, T
                 }
                 tmpstate.current_token = tmpstate.last_token;
             default:
-                self.write("%s", t.value);
+                switch(tmpstate.last_token) {
+                    case DOT:
+                    case COMMA:
+                    case LBRACE:
+                        if (tmpstate.last_token == LBRACE) self.newline();
+
+                        if (is_multiline){
+                            if (tmpstate.last_token == COMMA && tmpstate.prev_scope(1) == LBRACE){
+                                self.newline();
+                            } 
+                        }
+                        self.write("%s", t.value);
+                    default:
+                        self.write("%s", t.value);
+                }
         }
     };
 }

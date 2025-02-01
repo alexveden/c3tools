@@ -1550,3 +1550,56 @@ fn void main()
     };
 }
 
+================================================================================
+designated_initializers_with_arrays
+================================================================================
+
+fn void main()
+{
+    argparse::ArgParse agp = {
+        .description = "c3 code formatting tool",
+        .usage = "[options] file1 .. fileN",
+        .options = { 
+            argparse::help_opt(),
+            argparse::group_opt("Basic options"),
+            { .short_name = 'f', .long_name = "force",  .value = &force_mode, .help = "force formatting non .c3 files"},
+            { .short_name = 'n', .long_name = "dry",  .value = &dry_mode, .help = "dry mode (only print)"},
+            argparse::group_opt("Code format options"),
+            { .short_name = 'w', .long_name = "line-width",  .value = &max_line_width, .help = "max line width"},
+        }, 
+    };
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    argparse::ArgParse agp = {
+        .description = "c3 code formatting tool",
+        .usage = "[options] file1 .. fileN",
+        .options = {
+            argparse::help_opt(),
+            argparse::group_opt("Basic options"),
+            {
+                .short_name = 'f',
+                .long_name = "force",
+                .value = &force_mode,
+                .help = "force formatting non .c3 files"
+            },
+            {
+                .short_name = 'n',
+                .long_name = "dry",
+                .value = &dry_mode,
+                .help = "dry mode (only print)"
+            },
+            argparse::group_opt("Code format options"),
+            {
+                .short_name = 'w',
+                .long_name = "line-width",
+                .value = &max_line_width,
+                .help = "max line width"
+            },
+        },
+    };
+}
+
