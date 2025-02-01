@@ -403,8 +403,9 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
         case DOT:
             switch(prev_t){
                 case COMMA:
-                case LBRACE:
                     pre_space = true;
+                case LBRACE:
+		            pre_space = state.scope_depth == 1;
                 default:
                     break;
             }
@@ -497,7 +498,8 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
             break;
         case RBRACE:
             // array related brace
-            pre_space = true;
+		    pre_space = state.scope_depth == 0;
+		    break;
         case LBRACE:
             switch(prev_t){
                 case COMMA:
@@ -532,7 +534,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                     pre_space = true;
             }
         default:
-            if (self._resolve_default_space(state))  pre_space = true;
+            if (self._resolve_default_space(state, t))  pre_space = true;
     }
 
     bool never_space = {|
@@ -562,7 +564,7 @@ fn bool CodeFmt._resolve__keyword_call_colon(&self, NodeParserState* state) {
 <*
 Check if previous token type requires a space after it (in general case)
 *>
-macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state) @local {
+macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state, Token* t) @local {
     switch(state.last_token) {
 		case AND:
 		    return self._resolve__prev_is_binexp();
@@ -571,6 +573,7 @@ macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state) @local 
 		case PLUS:
 		    return self._resolve__prev_is_binexp();
 		case LBRACE:
+		    return state.scope_depth <= 1 || t.type == LBRACE;
 		case DIV:
 		case GREATER:
 		case LESS:

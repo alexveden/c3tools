@@ -1257,8 +1257,8 @@ int[][4] wrapped_1line_array = { {1},{2, 3},{4, 5, 6},{7, 8, 9, 10},{7, 8, 9, 10
 
 fn void main()
 {
-    int[3] a = {1, 2, 3};
-    int[*] b = {4, 5, 6};  // Type inferred to be int[3]
+    int[3] a = { 1, 2, 3 };
+    int[*] b = { 4, 5, 6 };  // Type inferred to be int[3]
     int[] b2 = a[0:5];  // { 1, 20, 50, 100, 200 } start-index 0, slice-length 5
     int[] c2 = a[2:];
     int[] c2 = a[2..];
@@ -1267,13 +1267,13 @@ fn void main()
     int[] c2 = a[:];
     int[] c2 = a[:^77];
     int[] c2 = a[^77];
-    int[][4] unwrapped_array = { { 1 }, { 2, 3 }, { 7, 8, 9, 10 } };
+    int[][4] unwrapped_array = { {1}, {2, 3}, {7, 8, 9, 10} };
     int[][4] array_magic_comma = {
-        { 1 },
-        { 2, 3 },
+        {1},
+        {2, 3},
     };
     int[][4] wrapped_1line_array = {
-        { 1 }, { 2, 3 }, { 4, 5, 6 }, { 7, 8, 9, 10 }, { 7, 8, 9, 10 }
+        {1}, {2, 3}, {4, 5, 6}, {7, 8, 9, 10}, {7, 8, 9, 10}
     };
 }
 
@@ -1544,9 +1544,9 @@ fn void main()
 {
     int[][4] wrapped_array = {
         run_stuff_of_someth(),
-        { .foo = 2, .bar = 3 },
-        { .sub = 1 },
-        { 1, 2, 3 },
+        {.foo = 2, .bar = 3},
+        {.sub = 1},
+        {1, 2, 3},
     };
 }
 
