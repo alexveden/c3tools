@@ -2260,6 +2260,9 @@ fn bool! CodeFmt.format_enumerable(CodeFmt* self, Token* t, NodeParserState* sta
                         self.indent();
                     } else {
                         self.cache_statement_add(state, t);
+                        if (state.scope_depth == 2) {
+                            self.__token_cache.push(TOKEN_SPACE);
+                        }
                     }
                 case RBRACE:
                     if (state.scope_depth == 0) {
@@ -2271,6 +2274,9 @@ fn bool! CodeFmt.format_enumerable(CodeFmt* self, Token* t, NodeParserState* sta
                         self.trace("EXIT");
                         return true;
                     } else {
+                        if (state.scope_depth == 1) {
+                            self.__token_cache.push(TOKEN_SPACE);
+                        }
                         self.cache_statement_add(state, t);
                     }
                 case EMPTY_LINE:

@@ -1213,7 +1213,7 @@ interface NodeI @local {
     test::equal(ast.@node_join(func.ftype, contents), "bool");
     test::equal(ast.@node_join(func.name, contents), "foo");
     test::equal(ast.@node_join(func.attributes, contents), "@local");
-    test::equal(ast.@node_join(func.docs, contents), "<* Doc string\n    ");
+    test::equal(ast.@node_join(func.docs, contents), "<* Doc string\n");
 
     test::equal(ast.@node_len(func.params), 3);
     AstCallableParam* param;

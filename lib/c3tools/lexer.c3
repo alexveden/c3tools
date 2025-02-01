@@ -1141,6 +1141,7 @@ fn bool scan_base64(Lexer *lexer) @inline @local
 fn bool parse_doc_start(Lexer *lexer) @local
 {
 	bool may_have_contract = true;
+	bool has_new_line = false;
 	// Let's loop until we find the end or the contract.
 	while LOOP: (!reached_end(lexer))
 	{
@@ -1149,6 +1150,7 @@ fn bool parse_doc_start(Lexer *lexer) @local
 		{
 			case '\n':
 				may_have_contract = true;
+				has_new_line = true;
 				next(lexer);
 				continue;
 			case ' ':
@@ -1183,6 +1185,19 @@ fn bool parse_doc_start(Lexer *lexer) @local
 	// 3. "<* foo <eof>"
 	//
 	// In any case we can consider this having reached "the contracts"
+	if(has_new_line) {
+		while LOOP: (lexer.current-1 > lexer.lexing_start) {
+			switch(*(lexer.current-1)) {
+				case ' ':
+				case '\t':
+					lexer.current--;
+				case '\n':
+				default: 
+					break LOOP;
+			}
+
+		}
+	}
 	lexer.mode = LEX_CONTRACTS;
 	uint len = (uint)(lexer.current - lexer.lexing_start);
 	return new_token(lexer, DOCS_START, (String)lexer.lexing_start[..len-1]);

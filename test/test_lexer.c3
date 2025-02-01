@@ -1060,3 +1060,86 @@ fn void test_comments_multiline_with_whitespace_mode(){
 	test::equal(toks[3].type, TokenType.EOS);
 	test::equal(toks[4].type, TokenType.EOF);
 }
+
+fn void test_simple_docstring_space_at_contr() {
+    String contents = `
+<*
+Some text
+     @param foo "asdlkj"
+@pure
+@require foo > 0
+*>
+    `;
+	Lexer lexer;
+	lexer::init(&lexer,contents);
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+
+    // foreach(t: toks) t.print(new_line: true);
+    // foreach(i, t: toks) io::printf("%d: %s", i, t);
+
+    // module IDENT[foo] ; EOF
+	test::equal(14, toks.len());
+	test::equal(toks[0].type, TokenType.DOCS_START);
+	test::equal(toks[0].value, "<*\nSome text\n");
+
+	test::equal(toks[1].type, TokenType.AT_IDENT);
+	test::equal(toks[1].value, "@param");
+
+	test::equal(toks[2].type, TokenType.IDENT);
+	test::equal(toks[2].value, "foo");
+
+	test::equal(toks[3].type, TokenType.STRING);
+	test::equal(toks[3].value, `"asdlkj"`);
+
+	test::equal(toks[4].type, TokenType.DOCS_EOL);
+	test::equal(toks[4].value, "\n");
+
+	test::equal(toks[5].type, TokenType.AT_IDENT);
+	test::equal(toks[5].value, "@pure");
+
+	test::equal(toks[6].type, TokenType.DOCS_EOL);
+	test::equal(toks[6].value, "\n");
+
+	test::equal(toks[7].type, TokenType.AT_IDENT);
+	test::equal(toks[7].value, "@require");
+
+	test::equal(toks[8].type, TokenType.IDENT);
+	test::equal(toks[8].value, "foo");
+
+	test::equal(toks[9].type, TokenType.GREATER);
+	test::equal(toks[9].value, ">");
+
+	test::equal(toks[10].type, TokenType.INTEGER);
+	test::equal(toks[10].value, "0");
+
+	test::equal(toks[11].type, TokenType.DOCS_EOL);
+
+	test::equal(toks[12].type, TokenType.DOCS_END);
+	test::equal(toks[12].value, "*>");
+
+	test::equal(toks[13].type, TokenType.EOF);
+}
+
+fn void test_simple_docstring_empty() {
+    String contents = `
+<**>
+    `;
+	Lexer lexer;
+	lexer::init(&lexer,contents);
+	List(<lexer::Token>) toks = lexer.new_parse_tokens();
+	defer toks.free();
+
+    // foreach(t: toks) t.print(new_line: true);
+    // foreach(i, t: toks) io::printf("%d: %s", i, t);
+
+    // module IDENT[foo] ; EOF
+	test::equal(3, toks.len());
+	test::equal(toks[0].type, TokenType.DOCS_START);
+	test::equal(toks[0].value, "<*");
+
+	test::equal(toks[1].type, TokenType.DOCS_END);
+	test::equal(toks[1].value, "*>");
+
+	test::equal(toks[2].type, TokenType.EOF);
+}
