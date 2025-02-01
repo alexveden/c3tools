@@ -676,7 +676,7 @@ foreach_r_loop_single
 
 fn void main() 
 { 
-foreach_r(i   ,    z :   
+foreach_r(i:
     foo)
     {
     return
@@ -686,7 +686,7 @@ foreach_r(i   ,    z :
 
 fn void main()
 {
-    foreach_r (i, z : foo) {
+    foreach_r (i : foo) {
         return 0;
     }
 }
