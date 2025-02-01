@@ -501,7 +501,13 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
             break;
         case RBRACE:
             // array related brace
-		    pre_space = state.scope_depth == 0;
+            switch(prev_t){
+                case LBRACE:
+                    // empty {}
+                    break;
+                default:
+		            pre_space = state.scope_depth == 0;
+            }
 		    break;
         case LBRACE:
             switch(prev_t){

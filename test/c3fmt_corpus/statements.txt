@@ -1613,3 +1613,35 @@ fn void main()
     };
 }
 
+================================================================================
+struct_designated_init_in_different_ctx
+================================================================================
+
+fn void main() 
+{ 
+    MyStruct foo = {};
+    MyStruct foo = {1, 2,3};
+    MyStruct foo = {.bax = 2};
+    MyStruct foo_magic = {.bax = 2,};
+    call(MyStruct{}, Bar   {.soo = 1, });
+    call(MyStruct{1, 2, 3});
+    MyStruct foo = (MyStruct)call(MyStruct{1, 2, 3});
+    MyStruct foo = (MyStruct)call(MyStruct{1, 2, 3, });
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    MyStruct foo = {};
+    MyStruct foo = { 1, 2, 3 };
+    MyStruct foo = { .bax = 2 };
+    MyStruct foo_magic = {
+        .bax = 2,
+    };
+    call(MyStruct{}, Bar{.soo = 1,});
+    call(MyStruct{1, 2, 3});
+    MyStruct foo = (MyStruct)call(MyStruct{1, 2, 3});
+    MyStruct foo = (MyStruct)call(MyStruct{1, 2, 3,});
+}
+
