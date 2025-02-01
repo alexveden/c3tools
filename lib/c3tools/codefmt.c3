@@ -1607,20 +1607,27 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                     state.initial_token = t.type;
                     nextcase default;
                 case LBRACE:
-                    if (state.initial_token == FOR || state.initial_token == FN || state.initial_token == DO) {
-                        // @custom_macro(a, b; @body)
-                        // anonymous fn: in_call(fn bool(a, b) {})
-                        // do {} [while()]; 
-                        self.cache_statement_dump()!;
-                        if (state.initial_token == FN){
-                            self.newline();
-                        } else {
-                            self.write(" ");
-                        }
-                        return self.push_run_state(&CodeFmt.format_code_scope, t);
-                    } else {
-                        nextcase default;
+                    switch(state.initial_token) {
+                        case FOR:
+                        case DO:
+                        case FN:
+                        case AT_IDENT:
+                            // @custom_macro(a, b; @body)
+                            // anonymous fn: in_call(fn bool(a, b) {})
+                            // do {} [while()]; 
+                            // @custom_macro(@body) {}
+                            // @custom_macro { }
+                            self.cache_statement_dump()!;
+                            if (state.initial_token == FN){
+                                self.newline();
+                            } else {
+                                self.write(" ");
+                            }
+                            return self.push_run_state(&CodeFmt.format_code_scope, t);
+                        default:
+                            break;
                     }
+                    nextcase default;
                 case WHILE:
                     if (self.cache_statement_len() == 0) {
                         self.write(" %s", t.value);
@@ -1633,6 +1640,7 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                     switch(state.initial_token){
                         case FN:
                         case DO:
+                        case AT_IDENT:
                             break;
                         case FOR:
                             state.transition(EOS);

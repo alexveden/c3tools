@@ -1687,3 +1687,57 @@ fn void main()
     MyStruct foo = (MyStruct)call(MyStruct{1, 2, 3,});
 }
 
+================================================================================
+body_macro_with_arg
+================================================================================
+
+fn String Token.to_string(&self, Allocator allocator) @dynamic {
+    @pool(allocator)
+    {
+        DString builder = dstring::temp_new();
+        if (foo) {return 0;
+        }
+        return builder.copy_str(allocator);
+    };
+}
+
+--------------------------------------------------------------------------------
+
+fn String Token.to_string(&self, Allocator allocator) @dynamic
+{
+    @pool(allocator) {
+        DString builder = dstring::temp_new();
+        if (foo) {
+            return 0;
+        }
+        return builder.copy_str(allocator);
+    };
+}
+
+================================================================================
+body_macro_no_arg
+================================================================================
+
+fn String Token.to_string(&self, Allocator allocator) @dynamic {
+    @pool
+    {
+        DString builder = dstring::temp_new();
+        if (foo) {return 0;
+        }
+        return builder.copy_str(allocator);
+    };
+}
+
+--------------------------------------------------------------------------------
+
+fn String Token.to_string(&self, Allocator allocator) @dynamic
+{
+    @pool {
+        DString builder = dstring::temp_new();
+        if (foo) {
+            return 0;
+        }
+        return builder.copy_str(allocator);
+    };
+}
+
