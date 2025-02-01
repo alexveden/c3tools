@@ -1153,7 +1153,7 @@ fn CodeFmtFn! CodeFmt.global_formatter_dispatch(CodeFmt* self, Token *t) @privat
         case IMPORT:
             return &CodeFmt.format_generic_statement;
         case EXTERN:
-            return &CodeFmt.format_fn;
+            return &CodeFmt.format_generic_extern;
         default:
             self.@fail(t, "unsupported global token")!;
     }
@@ -1601,6 +1601,32 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                     self.@fail(t, "unexpected token after @body macro or expr block")!;
                     break;
             };
+        default:
+            unreachable();
+    }
+
+    return false;
+}
+
+fn bool! CodeFmt.format_generic_extern(CodeFmt* self, Token* t, NodeParserState* state) @private {
+
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN:
+            assert(t.type == EXTERN);
+            self.trace("ENTRY");
+            self.write("%s ", t.value);
+            state.transition(SCOPE);
+        case SCOPE:
+            self.trace("SCOPE");
+            switch(t.type) {
+                case FN:
+                    return self.push_run_state(&CodeFmt.format_fn, t);
+                case EOS:
+                    return true;
+                default:
+                    return self.push_run_state(&CodeFmt.format_generic_statement, t);
+                         
+            }
         default:
             unreachable();
     }

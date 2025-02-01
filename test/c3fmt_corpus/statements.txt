@@ -1465,6 +1465,10 @@ extern fn void __sanitizer_weak_hook_strcmp(void* called_pc, ZString s1, ZString
 extern fn Char16** _win_command_line_to_argv_w(ushort* cmd_line, int* argc_ptr) @extern("CommandLineToArgvW");
 extern fn int! maybe();
 extern fn Win32_BOOL win32_QueryPerformanceFrequency(Win32_LARGE_INTEGER* lpFrequency) @extern("QueryPerformanceFrequency");
+extern Char16* _win_command_line_to_argv_w;
+extern const int FOO @extern("foo1");
+extern void *__stdoutp;
+extern const char *manifest_default_keys[][2];
 --------------------------------------------------------------------------------
 
 extern fn Test func_returning_struct();
@@ -1478,6 +1482,10 @@ extern fn int! maybe();
 extern fn Win32_BOOL win32_QueryPerformanceFrequency(
     Win32_LARGE_INTEGER* lpFrequency
 ) @extern("QueryPerformanceFrequency");
+extern Char16* _win_command_line_to_argv_w;
+extern const int FOO @extern("foo1");
+extern void* __stdoutp;
+extern const char* manifest_default_keys[][2];
 ================================================================================
 do_while
 ================================================================================
