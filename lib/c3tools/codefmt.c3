@@ -1965,8 +1965,16 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
                     self.indent();
                     nextcase STATE: state.transition(SCOPE);
                 case COLON:
+                    if (state.scope_depth == 0 && state.initial_token == CT_IF){
+                        self.cache_statement_dump(wrap_rule: BOOL)!;
+                        self.write("%s", t.value);
+                        self.indent();
+                        state.transition(SCOPE);
+                    } else {
+                        nextcase default;
+                    }
                 case RPAREN:
-                    if (state.scope_depth == 0){
+                    if (state.scope_depth == 0 && state.initial_token != CT_IF){
                         TokenType wrap_rule = self.cache_statement_wrap_rule(state.initial_token);
                         self.cache_statement_dump(wrap_rule)!;
                         self.write("%s", t.value);
