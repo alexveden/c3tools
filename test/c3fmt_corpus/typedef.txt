@@ -151,9 +151,9 @@ String desc, bool active, Position pos
 
 enum State : int @if("foo") (String desc, bool active, Position pos) @test
 {
-    WAITING = {"waiting", false, {1, 2}},  // this is a comment
-    RUNNING = {"running", true, {12, 22}},
-    TERMINATED = {"ended", false, {0, 0}},
+    WAITING = { "waiting", false, { 1, 2 } },  // this is a comment
+    RUNNING = { "running", true, { 12, 22 } },
+    TERMINATED = { "ended", false, { 0, 0 } },
 }
 
 ================================================================================
@@ -178,9 +178,9 @@ enum State : int @if("foo") (
     maybe_one_more
 ) @test
 {
-    WAITING = {"waiting", false, {1, 2}},  // this is a comment
-    RUNNING = {"running", true, {12, 22}},
-    TERMINATED = {"ended", false, {0, 0}},
+    WAITING = { "waiting", false, { 1, 2 } },  // this is a comment
+    RUNNING = { "running", true, { 12, 22 } },
+    TERMINATED = { "ended", false, { 0, 0 } },
 }
 
 ================================================================================
@@ -201,10 +201,10 @@ enum State : int @if("foo") (String desc, bool active, Position pos) @test
     WAITING = {
         "waiting",
         false,
-        {1, 2},
+        { 1, 2 },
     },  // this is a comment
-    RUNNING = {"running", true, {12, 22, }},
-    TERMINATED = {"ended", false, {0, 0}},
+    RUNNING = { "running", true, { 12, 22, } },
+    TERMINATED = { "ended", false, { 0, 0 } },
 }
 
 ================================================================================
@@ -245,8 +245,8 @@ def TestFailFn = fn void!(bool to_fail);
 def FormatTzTestSpec = Triple(<TzDateTime, DateTimeFormat, String>);
 def IntList = ElasticArray(<int, 10>);
 def BenchmarkFn = fn void!(int) @if($$OLD_TEST);
-def @Align(y) = {@Align16(y / 2)};
-def @Test = {@noinline};
+def @Align(y) = { @Align16(y / 2) };
+def @Test = { @noinline };
 ================================================================================
 def_interface
 ================================================================================

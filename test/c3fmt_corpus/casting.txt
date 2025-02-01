@@ -52,7 +52,7 @@ fn void* main(int* arg)
     b = *(int*)&a;
     *(int*)&a = 2;
     b = (*a = 2);
-    b = {.work = 1, .work = 2};
+    b = { .work = 1, .work = 2 };
     int** ptr = &(*(int*)&a);
     (void)free(data);
     (void**)free(data);

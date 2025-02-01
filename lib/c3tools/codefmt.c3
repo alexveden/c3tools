@@ -403,6 +403,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
         case DOT:
             switch(prev_t){
                 case COMMA:
+                case LBRACE:
                     pre_space = true;
                 default:
                     break;
@@ -472,6 +473,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
             break;
         case LBRACKET:
             switch(prev_t){
+                case LBRACE:
                 case COMMA:
                     pre_space = true;
                 default:
@@ -493,6 +495,9 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
             }
         case RPAREN:
             break;
+        case RBRACE:
+            // array related brace
+            pre_space = true;
         case LBRACE:
             switch(prev_t){
                 case COMMA:
@@ -565,6 +570,7 @@ macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state) @local 
 		case MINUS:
 		case PLUS:
 		    return self._resolve__prev_is_binexp();
+		case LBRACE:
 		case DIV:
 		case GREATER:
 		case LESS:
