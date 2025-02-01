@@ -465,6 +465,8 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                 case CT_TYPE_IDENT:
                 case STAR:
                 case LBRACKET:
+                case RGENPAR:
+                case RVEC:
                     break;
                 default:
                     pre_space = cache_len > 0;
@@ -511,6 +513,10 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
 		    break;
         case LBRACE:
             switch(prev_t){
+                case RGENPAR:
+                case RVEC:
+                    // List(<Foo>){}.init(...)
+                    break;
                 case COMMA:
                     pre_space = true;
                 default:
