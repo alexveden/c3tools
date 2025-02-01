@@ -324,7 +324,7 @@ fn void main()
             .world = 2,
             .sub_sub = {
                 .foo = bar,
-                .zoo = bas 
+                .zoo = bas
             },
             .anothe_call = io::prinf(Foo{
                 .nowrap = true

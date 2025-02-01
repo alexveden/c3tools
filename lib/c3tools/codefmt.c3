@@ -770,6 +770,9 @@ macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TO
             case COMMENT_SINGLE_INLINE:
             case COMMENT_MULTI_INLINE:
                 has_magic_comma = true;
+            case SPACE:
+                tmpstate.current_token = tmpstate.last_token;
+                nextcase default;
             case DOT:
                 if (tmpstate.scope_depth == 1){
                     if (tmpstate.last_token == LBRACE || tmpstate.last_token == COMMA) {
@@ -840,10 +843,18 @@ macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, T
             case COMMENT_MULTI_INLINE:
                 self.write(" %s", t.value);
             case SPACE: 
-                if (is_multiline){
-                    if (tmpstate.last_token != COMMA) self.write("%s", t.value);
-                } else {
-                    self.write("%s", t.value);
+                if (is_multiline) {
+                    if (
+                        tmpstate.last_token != COMMA && 
+                        tmpstate.last_token != LBRACE &&
+                        self._resolve__next_token(i) != RBRACE
+                    ) {
+                         self.write("%s", t.value);
+                    }
+                } else  {
+                    if (tmpstate.last_token != LBRACE && self._resolve__next_token(i) != RBRACE) {
+                        self.write("%s", t.value);
+                    }
                 }
                 tmpstate.current_token = tmpstate.last_token;
             default:
@@ -941,6 +952,10 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
                             self.write("%s", t.value);
                         }
                     } else {
+                        if (tmpstate.current_token == SPACE) {
+                            tmpstate.current_token = tmpstate.last_token;
+                            if (self._resolve__next_token(i) == RBRACE) break;
+                        } 
                         self.write("%s", t.value);
                     }
                 } else {
