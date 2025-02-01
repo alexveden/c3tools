@@ -247,6 +247,7 @@ Descr @param @ensure ignored
 @require foo==0, bar > 0 : "This is a stuff"
 @require !foo : "This is a stuff"
 @ensure foo==null, bar > 0 ``This is raw stuff``
+
 @require foo > 1 
 @return IoError.FOO, EioError.BAR
 @return! IoError.FOO, EioError.BAR
@@ -269,6 +270,7 @@ Descr @param @ensure ignored
 @require foo == 0, bar > 0 : "This is a stuff"
 @require !foo : "This is a stuff"
 @ensure foo == null, bar > 0 ``This is raw stuff``
+
 @require foo > 1
 @return IoError.FOO, EioError.BAR
 @return! IoError.FOO, EioError.BAR
@@ -497,6 +499,34 @@ macro parse_callable_params()
             assert(
                 self.cache_statement_len() == 0,
                 "cache_statement_dump must be called befor fmt: off"
+            );
+        }
+    }
+}
+
+================================================================================
+fn_with_long_call_with_last_params_no_wrap
+================================================================================
+
+macro parse_callable_params()
+{
+    if(foo) { if(bar){
+    current_param = ast.@allc_add(
+        AstCallableParam,
+        &node_func.params,
+        &ast.lexer.token()
+    );
+    }}
+}
+
+--------------------------------------------------------------------------------
+
+macro parse_callable_params()
+{
+    if (foo) {
+        if (bar) {
+            current_param = ast.@allc_add(
+                AstCallableParam, &node_func.params, &ast.lexer.token()
             );
         }
     }

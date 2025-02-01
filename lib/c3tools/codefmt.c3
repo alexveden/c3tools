@@ -348,6 +348,7 @@ macro void! CodeFmt.dedent(&self) @private {
 /*
 *                  CODE WRAP FUNCTIONS
 */
+
 <* 
 Adds a token to composite statement cache for further formatting.
 *>
@@ -926,12 +927,18 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
                 } else {
                     switch(tmpstate.last_token) {
                         case LBRACE:
-                            if (tmpstate.scope_depth == 1 && brake_type == RBRACE) {
+                            if (tmpstate.scope_depth == 1 && 
+                                brake_type == RBRACE &&
+                                t.type != RBRACE
+                            ) {
                                 self.newline();
                             } 
                             nextcase default;
                         case LPAREN:
-                            if (tmpstate.scope_depth == 1 && brake_type == RPAREN) {
+                            if (tmpstate.scope_depth == 1 && 
+                                brake_type == RPAREN &&
+                                t.type != RPAREN
+                            ) {
                                 self.newline();
                             } 
                             nextcase default;
