@@ -470,7 +470,10 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                     pre_space = cache_len > 0;
             }
         case LVEC:
+        case RVEC:
         case LGENPAR:
+        case RGENPAR:
+            // No space for vectors and generic type 
             break;
         case LBRACKET:
             switch(prev_t){
@@ -529,6 +532,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
             switch(prev_t){
                 case CONST_IDENT:
                 case LBRACKET:
+                case LVEC:
                     break;
                 default:
                     pre_space = true;
