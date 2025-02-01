@@ -299,3 +299,29 @@ distinct Bob = inline Abc;
 distinct Foo = fn void(Foo** x);  // #error: cannot define a new function type
 distinct Foo = inline PrivateFoo(<int>);  // #error: could not be found
 distinct PriorityQueue = inline PrivatePriorityQueue <[Type,false] >;
+================================================================================
+union_with_struct
+================================================================================
+union SourceSpan
+{
+    struct
+    {
+        char length;
+        uint col;
+        uint row;
+    }
+    ulong a;
+}
+--------------------------------------------------------------------------------
+
+union SourceSpan
+{
+    struct
+    {
+        char length;
+        uint col;
+        uint row;
+    }
+    ulong a;
+}
+

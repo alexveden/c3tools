@@ -2212,19 +2212,48 @@ fn bool! CodeFmt.format_structural(CodeFmt* self, Token* t, NodeParserState* sta
             self.trace("SCOPE");
             switch(t.type) {
                 case LBRACE:           // {
-                    self.newline();
-                    self.write("{");
-                    self.indent();
+                    return self.push_run_state(&CodeFmt.format_structural_scope, t);
                 case RBRACE:
-                    self.dedent()!;
-                    self.newline();
-                    self.write("}");
                     if (state.scope_depth == 0) {
                         self.trace("EXIT");
                         if (self.state_stack.len() == 2){
                             // NOTE: printing new line only at exit from top struct
                             self.newline();
                         }
+                        return true;
+                    }
+                    nextcase default;
+                default:
+                    self.@fail(t, "unexpected struct scope keyword")!;
+            }
+        default:
+            unreachable();
+    }
+    return false;
+}
+
+<*
+Formatter for struct / union / bitstruct contents
+*>
+fn bool! CodeFmt.format_structural_scope(CodeFmt* self, Token* t, NodeParserState* state) @private {
+
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN:         // initial state
+            assert(t.type == LBRACE);
+            self.trace("ENTRY"); 
+            self.newline();
+            self.write("{");
+            self.indent();
+            state.transition(SCOPE);
+        case SCOPE: // struct scope {}
+            self.trace("SCOPE");
+            switch(t.type) {
+                case RBRACE:
+                    self.dedent()!;
+                    self.newline();
+                    self.write("}");
+                    if (state.scope_depth == 0) {
+                        self.trace("EXIT");
                         return true;
                     } 
                 case EMPTY_LINE:
