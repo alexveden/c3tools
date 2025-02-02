@@ -584,7 +584,30 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
 
 fn bool CodeFmt._resolve__keyword_call_colon(&self, NodeParserState* state) {
     assert(state.current_token == COLON);
-    return state.scope_depth > 0 && state.last_token == IDENT && state.prev_scope(1) == LPAREN;
+    assert(self.state_stack.len() > 0);
+
+    usz start_len = self.state_stack[^1].token_cache_start;
+    // only 1 token, it's not a binary exp 
+    if (self.__token_cache.len() - start_len == 1) return false;
+
+    bool is_call_kwarg = true;
+
+    for LOOP: (usz i = self.__token_cache.len(); i-- > start_len; )
+    {
+        Token* t = &self.__token_cache[i];
+        switch(t.type) {
+            case IDENT:
+            case SPACE:
+                break;
+            case COMMA:
+            case LPAREN:
+                break LOOP;
+            default:
+                is_call_kwarg = false;
+                break LOOP;
+        }
+    }
+    return is_call_kwarg;
 }
 
 <*
@@ -1010,7 +1033,12 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
                                 t.type != RPAREN
                             ) {
                                 self.newline();
-                            } 
+                            }else if (
+                                tmpstate.scope_depth == 2 &&
+                                t.type == LPAREN
+                            ) {
+                                self.newline();
+                            }
                             nextcase default;
                         default:
 
@@ -1105,6 +1133,7 @@ macro bool CodeFmt.split_multiline(&self, NodeParserState* state, TokenType wrap
             return true;
         case LPAREN:
             if (state.scope_depth == 1 && state.current_token != RPAREN) return true;
+            if (state.scope_depth == 2 && state.current_token == LPAREN) return true;
         case LBRACE:
             if (state.scope_depth == 1 && state.current_token != RBRACE) return true;
             if (state.scope_depth == 1 && state.current_token == SPACE) return true;
@@ -1117,6 +1146,7 @@ macro bool CodeFmt.split_multiline(&self, NodeParserState* state, TokenType wrap
         switch (state.current_token){
             case LBRACE:   //aray initializers { [1..23] = 2}
             case LBRACKET: // array of structs { {1, 2}, {2, 4}}
+            case LPAREN:  // ( (some && cond) || (another || cond))
                 break;
             default:
                 return false;

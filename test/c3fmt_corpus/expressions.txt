@@ -177,3 +177,81 @@ fn void main()
     int[<2>]* lfoo = int[<2>]{}.init(bar: 1);
 }
 
+================================================================================
+conditional_expr_multi_parens_multiline
+================================================================================
+macro bool char_is_base64(char c)
+{
+    return ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
+                || c == '+' || c == '/');
+}
+--------------------------------------------------------------------------------
+
+macro bool char_is_base64(char c)
+{
+    return (
+        (c >= 'A' && c <= 'Z') ||
+        (c >= 'a' && c <= 'z') ||
+        (c >= '0' && c <= '9') ||
+        c == '+' ||
+        c == '/'
+    );
+}
+
+================================================================================
+conditional_expr_multi_parens_single_line
+================================================================================
+macro bool char_is_base64(char c)
+{
+    return ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9'));
+}
+--------------------------------------------------------------------------------
+
+macro bool char_is_base64(char c)
+{
+    return (
+        (c >= 'A' && c <= 'Z') ||
+        (c >= 'a' && c <= 'z') ||
+        (c >= '0' && c <= '9')
+    );
+}
+
+================================================================================
+call_with_parens_single_line_wrap
+================================================================================
+macro bool char_is_base64(char c)
+{
+    return its_along_call((arg_long_ags+1), (foo ?(bar) : baz), (a && b && coooooooooool) );
+    return its_along_call((arg_long_ags+1), (foo ?bar : baz), (a && b && coooooooooool) );
+}
+--------------------------------------------------------------------------------
+
+macro bool char_is_base64(char c)
+{
+    return its_along_call(
+        (arg_long_ags + 1), (foo ? (bar) : baz), (a && b && coooooooooool)
+    );
+    return its_along_call(
+        (arg_long_ags + 1), (foo ? bar : baz), (a && b && coooooooooool)
+    );
+}
+
+================================================================================
+call_with_parens_multi_line_wrap
+================================================================================
+macro bool char_is_base64(char c)
+{
+    return its_along_call((arg_long_ags+1), (foo ?(bar) : baz), (a && b && coooooooooool), (a | super + too_long ) );
+}
+--------------------------------------------------------------------------------
+
+macro bool char_is_base64(char c)
+{
+    return its_along_call(
+        (arg_long_ags + 1),
+        (foo ? (bar) : baz),
+        (a && b && coooooooooool),
+        (a | super + too_long)
+    );
+}
+
