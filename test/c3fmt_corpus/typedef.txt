@@ -368,7 +368,6 @@ macro bool @typeis(#value, $Type) @const @builtin => $typeof(#value).typeid == $
 
 fn typeid main(typeid t)
 {
-
     $switch
         $case @is_vector(y) &&& $typeof(y).inner == float.typeid:
             return (float)x;

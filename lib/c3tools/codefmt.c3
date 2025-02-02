@@ -176,15 +176,15 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
 	        }
 	        if (state.scope_depth == 0) {
 	            switch(state.last_token) {
+	                case EOS:
 	                case COMMENT_SINGLE_INLINE:
 	                case COMMENT_MULTI_INLINE:
-	                case EOS:
 	                case COMMENT_MULTI:
-	                    self._is_empty_line = true;
-	                    break;
 	                case COMMENT_SINGLE:
+	                    // self._is_empty_line = false;
+	                    break;
 	                case DOCS_END:
-	                    self._is_empty_line = false;
+	                    // self._is_empty_line = false;
 	                    nextcase default;
 	                case RBRACE:
 	                default:
@@ -200,7 +200,7 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
 	        return true;
 	    case EOF:
 	        if (self._is_paused) return false;
-	        if (self._is_empty_line) return false;
+	        // if (self._is_empty_line) return false;
 	        // if (state.scope_depth == 0 && state.last_token == RBRACE && t.type != EOF) return true;
 	        if (self._lexer.is_whitespace_mode) {
 	            // Do a direct write
@@ -1410,7 +1410,6 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                 case EOS:
                     self.cache_statement_add(state, t);
                     self.cache_statement_dump(no_split: true)!;
-                    self.newline();
                     return true;
                 default:
                     self.cache_statement_add(state, t);
