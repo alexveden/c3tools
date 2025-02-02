@@ -109,6 +109,8 @@ return x ?: (y ?: x);
 assert((root.get_int("yyy") ?? -1) == -1);
 double x = ((double)testError() + testError()) ?? 100;
 io::printfn("6:%s", @catch((3 > 2 ? Foo.ABC? : 4) ?? Foo.DEF?));
+bool a = foo    ? * other   : * self;
+return * i ?: *self;
 }
 
 --------------------------------------------------------------------------------
@@ -122,6 +124,8 @@ fn void main()
     assert((root.get_int("yyy") ?? - 1) == -1);
     double x = ((double)testError() + testError()) ?? 100;
     io::printfn("6:%s", @catch((3 > 2 ? Foo.ABC? : 4) ?? Foo.DEF?));
+    bool a = foo ? *other : *self;
+    return *i ?: *self;
 }
 
 ================================================================================

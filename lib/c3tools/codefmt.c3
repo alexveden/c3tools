@@ -745,6 +745,9 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
 		    case IMPLIES:
 		    case EQ:
 		    case RETURN:
+		    case COLON:  // for ternary and foreach
+		    case QUESTION: // for ternary
+		    case ELVIS: // for ternary
 		        // assignment operator reached
 		        break LOOP;
 		    case COMMA:
