@@ -19,6 +19,7 @@ struct CodeFmt {
     usz _line_used;
     bool _print_lex;
     bool _is_paused;
+    bool _is_empty_line;
 }
 
 
@@ -85,6 +86,7 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
 
     // Default scope formatter
 	self.push_run_state(&CodeFmt.format_global_file_scope, null)!;
+	// self._is_empty_line = true;
 
     NodeParserState globalstate;
 	while LOOP: (self._lexer.next_token()) {
@@ -113,6 +115,7 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
                 self.pop_state()!;
             }
         }
+	    self._is_empty_line = false;
 
 	    if (self._lexer.is_whitespace_mode && t.type != EOF ) {
 	        // NOTE: Printing raw when // fmt: off
@@ -167,17 +170,23 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
 
 	switch(t.type) {
 	    case EMPTY_LINE:
-	        if (state.last_token == EMPTY_LINE) return true;
+	        if (state.last_token == EMPTY_LINE) {
+	            self._is_empty_line = true;
+                return true;
+	        }
 	        if (state.scope_depth == 0) {
 	            switch(state.last_token) {
-	                case COMMENT_MULTI:
-	                case COMMENT_SINGLE:
 	                case COMMENT_SINGLE_INLINE:
 	                case COMMENT_MULTI_INLINE:
-	                    break;
-	                case RBRACE:
 	                case EOS:
+	                case COMMENT_MULTI:
+	                    self._is_empty_line = true;
+	                    break;
+	                case COMMENT_SINGLE:
 	                case DOCS_END:
+	                    self._is_empty_line = false;
+	                    nextcase default;
+	                case RBRACE:
 	                default:
 	                    return true; 
 	            }
@@ -191,6 +200,7 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
 	        return true;
 	    case EOF:
 	        if (self._is_paused) return false;
+	        if (self._is_empty_line) return false;
 	        // if (state.scope_depth == 0 && state.last_token == RBRACE && t.type != EOF) return true;
 	        if (self._lexer.is_whitespace_mode) {
 	            // Do a direct write
@@ -1292,7 +1302,7 @@ fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserSta
                 default:
                     CodeFmtFn fmt_fn = self.global_formatter_dispatch(t)!;
                     if(fmt_fn == null) self.@fail(t, "unknown global scope statement")!;
-                    self.newline();
+                    if(!self._is_empty_line) self.newline();
                     self.push_run_state(fmt_fn, t)!;
             }
         default:

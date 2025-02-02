@@ -356,7 +356,7 @@ return;}
 
 extern typeid foo;
 
-struct ReflectedParam(Printable ) @if(!$defined(ReflectedParam))
+struct ReflectedParam(Printable) @if(!$defined(ReflectedParam))
 {
     String name;
     typeid type;
