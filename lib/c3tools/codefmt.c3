@@ -689,6 +689,7 @@ macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state, Token* 
 		case DEFER:
 		case DEF:
 		case CONST:
+		case TLOCAL:
 		case STATIC:
 		case EXTERN:
 		case COLON:
@@ -2014,6 +2015,90 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
     return false;
 }
 
+fn bool! CodeFmt.format_comptime_switch_body(CodeFmt* self, Token* t, NodeParserState* state) @private {
+    assert(t.type != EMPTY_LINE);
+    assert(state.initial_token != INVALID_TOKEN);
+
+    switch STATE: (state.check(t)){
+        case INVALID_TOKEN:
+            self.trace("ENTRY");
+            // self.newline();
+            switch(t.type) {
+	            case CT_CASE:
+	            case CT_DEFAULT:
+                    nextcase STATE: state.transition(CASE);
+                default: 
+                    unreachable();
+            }
+        case SCOPE:
+            self.trace("SCOPE");
+            switch(t.type) {
+                case EOS:
+                    // Fallback from format_generic_statement
+                    break;
+                case LBRACE:
+                    if (state.scope_depth != 1) self.@fail(t, "invalid scope")!;
+                    self.write(" ");
+                    return self.push_run_state(&CodeFmt.format_code_scope, t);
+                case RBRACE:
+                    if (state.scope_depth != 0) self.@fail(t, "invalid scope")!;
+                case CT_CASE:
+                case CT_DEFAULT:
+                    self.dedent()!;
+                    nextcase STATE: state.transition(CASE);
+                case CT_ENDFOREACH:
+                case CT_ENDFOR:
+                case CT_ENDIF:
+                    break;
+                case CT_ENDSWITCH:
+                    self.dedent()!;
+                    self.dedent()!;
+                    self.newline();
+                    self.write("%s", t.value);
+                    return true;                        
+                default:
+                    CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;
+                    if (new_local_state == null){
+                        // Not a keyword or anything special, just a statement
+                        if (t.type == LPAREN) {
+                            // NOTE: casting case, e.g. (void)free(data);
+                            // prevent open LPAREN to influence current scope_depth
+                            state.check_scope(RPAREN); // remove LPAREN scope
+                        }
+                        self.newline();
+                        return self.push_run_state(&CodeFmt.format_generic_statement, t);
+                    } else {                    
+                        // Special keyword or statement
+                        return self.push_run_state(new_local_state, t);
+                    }
+            }
+        case CASE:
+            self.trace("CASE");
+            switch(t.type) {
+                case CT_CASE:
+                    self.newline();
+                    self.write("%s ", t.value);
+                case CT_DEFAULT:
+                    self.newline();
+                    self.write("%s", t.value);
+                case COLON:
+                    self.indent();
+                    if (state.scope_depth == 0){
+                        self.cache_statement_dump()!;
+                        self.write(":");
+                        state.transition(SCOPE);
+                    } else {
+                        self.cache_statement_add(state, t);
+                    }
+                default:
+                    self.cache_statement_add(state, t);
+            }
+        default:
+            unreachable();
+    }
+
+    return false;
+}
 <*
 Formatting of compile time code flow statement block ($for, $if, $foreach, $switch)
 *>
@@ -2042,9 +2127,6 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
             switch(t.type) {
                 case CT_CASE:
                 case CT_DEFAULT:
-                    if (self.cache_statement_len() != 0 || state.initial_token != CT_SWITCH) {
-                        self.@fail(t, "unexpected $case/$default")!;
-                    }
                     self.indent();
                     self.indent();
                     nextcase STATE: state.transition(SCOPE);
@@ -2091,7 +2173,7 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
                 case CT_CASE:
                 case CT_DEFAULT:
                     self.dedent()!;
-                    nextcase STATE: state.transition(CASE);
+                    return self.push_run_state(&CodeFmt.format_comptime_switch_body, t);
                 case CT_ELSE:
                     self.dedent()!;
                     self.newline();
@@ -2103,8 +2185,7 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
                     if (state.initial_token == CT_FOR) nextcase INVALID_TOKEN;
                 case CT_ENDSWITCH:
                     if (state.initial_token == CT_SWITCH) {
-                        self.dedent()!;
-                        nextcase INVALID_TOKEN;
+                        return true;
                     }
                 case CT_ENDIF:
                     if (state.initial_token == CT_IF) nextcase INVALID_TOKEN;
@@ -2128,27 +2209,6 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
                         // Special keyword or statement
                         return self.push_run_state(new_local_state, t);
                     }
-            }
-        case CASE:
-            self.trace("CASE");
-            switch(t.type) {
-                case CT_CASE:
-                    self.newline();
-                    self.write("%s ", t.value);
-                case CT_DEFAULT:
-                    self.newline();
-                    self.write("%s", t.value);
-                case COLON:
-                    self.indent();
-                    if (state.scope_depth == 0){
-                        self.cache_statement_dump()!;
-                        self.write(":");
-                        state.transition(SCOPE);
-                    } else {
-                        self.cache_statement_add(state, t);
-                    }
-                default:
-                    self.cache_statement_add(state, t);
             }
         default:
             unreachable();

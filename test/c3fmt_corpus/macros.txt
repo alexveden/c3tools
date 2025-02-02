@@ -362,3 +362,98 @@ macro void @stack_pool(usz $size; @body) @builtin
     };
 }
 
+================================================================================
+ct_if_else_inside_other
+================================================================================
+macro @foo($x, #y)
+{
+    $if $x > 3:
+    #y += $x * $x;
+        $if $x > 3:  #y += $x * $x; $else  #y += $x; $endif
+    $endif
+
+}
+--------------------------------------------------------------------------------
+
+macro @foo($x, #y)
+{
+    $if $x > 3:
+        #y += $x * $x;
+        $if $x > 3:
+            #y += $x * $x;
+        $else
+            #y += $x;
+        $endif
+    $endif
+
+}
+
+================================================================================
+ct_foreach_in_other
+================================================================================
+macro foo_enum($SomeEnum)
+{
+    $if $x > 3:
+    $foreach ($x : $SomeEnum.values)
+    $foreach ($x : $SomeEnum.values)
+    io::printfn("%d", (int)$x);
+    $endforeach
+    $endforeach
+    $endif
+}
+
+--------------------------------------------------------------------------------
+
+macro foo_enum($SomeEnum)
+{
+    $if $x > 3:
+        $foreach ($x : $SomeEnum.values)
+            $foreach ($x : $SomeEnum.values)
+                io::printfn("%d", (int)$x);
+            $endforeach
+        $endforeach
+    $endif
+}
+
+================================================================================
+ct_switch_in_other
+================================================================================
+macro @foo($x, #y)
+{
+    $switch ($x)
+        $case 1:
+            $switch ($x)
+                $case 1:
+                $default:
+                    #y -= $x;
+            $endswitch
+        $default:
+            #y -= $x;
+            $switch ($x)
+                $case 2:
+                $default:
+                    #y -= $x;
+            $endswitch
+    $endswitch
+}
+--------------------------------------------------------------------------------
+
+macro @foo($x, #y)
+{
+    $switch ($x)
+        $case 1:
+            $switch ($x)
+                $case 1:
+                $default:
+                    #y -= $x;
+            $endswitch
+        $default:
+            #y -= $x;
+            $switch ($x)
+                $case 2:
+                $default:
+                    #y -= $x;
+            $endswitch
+    $endswitch
+}
+

@@ -2153,9 +2153,10 @@ fn TokenType token_from_identifier(String indentifier)
 			return  WHILE;
 		case "assert":
 			return  IDENT;
+		case "tlocal":
+			return  TLOCAL;
 		// Types
 		case "anyfault":
-		case "tlocal":
 		case "var":
 		case "void":
 		case "any":
