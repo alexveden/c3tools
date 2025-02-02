@@ -1545,6 +1545,10 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
                         // Specially for `case FOO: { .. some .. }`
                         if (state.initial_token == SWITCH)  self.indent();
                     }
+                case LBRAPIPE:
+                    // NOTE: LBRAPIPE - return with EOS, so we remove it from stack now
+                    if (state.initial_token != LBRAPIPE) state.check_scope(RBRAPIPE);
+                    nextcase default;
                 case LBRACE:
                     if (state.initial_token == SWITCH && state.last_token == COLON){
                         self.dedent()!;
@@ -1621,7 +1625,10 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
             self.trace("SCOPE");
             switch(t.type) {
                 case LBRAPIPE:
-                    state.initial_token = FOR;
+                    if (state.initial_token != LBRAPIPE){
+                        // case for int i = {| return 0; |}
+                        state.initial_token = FOR;
+                    }
                     nextcase LBRACE;
                 case FN:
                 case DO:
@@ -1636,6 +1643,7 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                         case FOR:
                         case DO:
                         case FN:
+                        case LBRAPIPE:
                             // @custom_macro(a, b; @body) {}
                             // anonymous fn: in_call(fn bool(a, b) {})
                             // do {} [while()]; 
@@ -1644,7 +1652,7 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                             self.cache_statement_dump()!;
                             if (state.initial_token == FN){
                                 self.newline();
-                            } else {
+                            } else if (state.initial_token != LBRAPIPE) {
                                 self.write(" ");
                             }
                             return self.push_run_state(&CodeFmt.format_code_scope, t);
@@ -1668,6 +1676,7 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                         case DO:
                             break;
                         case FOR:
+                        case LBRAPIPE:
                             state.transition(EOS);
                         default:
                             self.cache_statement_add(state, t);
