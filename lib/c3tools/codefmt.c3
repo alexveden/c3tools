@@ -19,7 +19,6 @@ struct CodeFmt {
     usz _line_used;
     bool _print_lex;
     bool _is_paused;
-    bool _is_empty_line;
 }
 
 
@@ -100,10 +99,7 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
 	        case COMMENT_MULTI_INLINE:
 	        case EMPTY_LINE: // disallow EMPTY_LINE inside existing statements! 
 	        case EOF:
-	            if (self.format_comment(&globalstate, t)!) continue LOOP;
-	            // self.format_comment(&globalstate, t)!;
-	            // if (t.type != EOF) continue LOOP;
-	            // if (self.cache_statement_len() > 0) continue LOOP;
+	            if (self.format_comment_or_empty(&globalstate, t)!) continue LOOP;
 	        case SPACE:
 	        default:
 	            break;
@@ -136,7 +132,7 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
 }
 
 <* Generic comment processor if there is not cache_statement pending + fmt: off handler *>
-fn bool! CodeFmt.format_comment(&self, NodeParserState* state, Token* t) {
+fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t) {
     if (t.type == COMMENT_SINGLE) {
         if (t.value.starts_with("// fmt: off") && !self._is_paused) {
             self.cache_statement_dump()!;
@@ -297,8 +293,6 @@ macro CodeFmt.trace(&self, $msg, args...) @private {
 Writes code chunk into internal buffer
 *>
 macro void CodeFmt.write(&self, String format, args...) @private {
-    self._is_empty_line = false;
-
     if (self._lexer.is_whitespace_mode) return;
 
     usz len = self.buf.appendf(format, ...args)!!;
@@ -309,11 +303,8 @@ macro void CodeFmt.write(&self, String format, args...) @private {
 Writes a new line into internal buffer with proper indentation
 *>
 macro void CodeFmt.newline(&self, bool is_empty = false) @private {
-    self._is_empty_line = true;
-
     if (self._lexer.is_whitespace_mode) return;
 
-    self._is_empty_line = true;
     self.buf.append("\n");
     if (!is_empty){
         self._line_used = 0;
@@ -1280,6 +1271,7 @@ fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserSta
         state.transition(SCOPE);
         return false;
     }
+    assert(t.type != EMPTY_LINE);
 
     switch STATE: (state.check(t)){
         case SCOPE:                // generic file content
@@ -1291,22 +1283,6 @@ fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserSta
                     }
                     self.trace("EXIT");
 	                return true;
-                case EMPTY_LINE:
-                    if (state.scope_depth == 0) {
-                        switch(state.last_token){
-                            case EMPTY_LINE:
-                                break;
-                            case DOCS_END:
-                            case EOS:
-                                state.current_token = state.last_token;
-                                break;
-                            default:
-                                self.trace("EMPTY_LINE");
-                                // self.write("last: %s!", state.last_token);
-                                self.newline(is_empty: true);
-                        }
-                    }
-                    break;
                 case DOCS_END:
                     break;
                 case EOS:
@@ -1316,12 +1292,7 @@ fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserSta
                 default:
                     CodeFmtFn fmt_fn = self.global_formatter_dispatch(t)!;
                     if(fmt_fn == null) self.@fail(t, "unknown global scope statement")!;
-                    switch(state.last_token){
-                        case EMPTY_LINE:
-                            break;
-                        default:
-                            self.newline();
-                    }
+                    self.newline();
                     self.push_run_state(fmt_fn, t)!;
             }
         default:
@@ -1336,6 +1307,7 @@ Callable code formatter (fn/macros)
 Format steps: format_fn_args -> format_code_scope -> foreach(format_generic_statement: statements)
 *>
 fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @private {
+    assert(t.type != EMPTY_LINE);
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:         // initial state
@@ -1362,8 +1334,6 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                     nextcase default;
                 case LPAREN:
                     nextcase STATE: state.transition(VAR);
-                case EMPTY_LINE:
-                    break;
                 default:
                     self.write("%s", t.value);
             }
@@ -1379,8 +1349,6 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                     nextcase STATE: state.transition(SCOPE);
                 case RPAREN:
                     if (state.scope_depth != 0) self.@fail(t, "unfinished scope")!;
-                    break;
-                case EMPTY_LINE:
                     break;
                 case IMPLIES:           // => 
                     nextcase STATE: state.transition(IMPLIES);
@@ -1402,8 +1370,6 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                     nextcase STATE: state.transition(IMPLIES);
                 case LBRACE:           // {
                     if (state.scope_depth == 1) nextcase STATE: state.transition(SCOPE);
-                case EMPTY_LINE:
-                    break;
                 case EOS:
                     self.write(";");
                     return true;
@@ -1422,8 +1388,6 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                     self.newline();
                     self.trace("EXIT");
                     return true;
-                case EMPTY_LINE:
-                    break;
                 default:
                     self.@fail(t, "unexpected token in funcion scope")!;
             }
@@ -1432,8 +1396,6 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
             switch(t.type) {
                 case IMPLIES:
                     self.write(" %s ", t.value);
-                    break;
-                case EMPTY_LINE:
                     break;
                 case EOS:
                     self.cache_statement_add(state, t);
@@ -1453,6 +1415,8 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
 Formatting fn/macro arguments 
 *>
 fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state) @private {
+    assert(t.type != EMPTY_LINE);
+
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
             assert(t.type == LPAREN);
@@ -1478,8 +1442,6 @@ fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state)
                     // Typically in @body macro def
                     state.initial_token = FOR;
                     nextcase default;
-                case EMPTY_LINE:
-                    break;
                 default:
                     self.cache_statement_add(state, t);
                     break;
@@ -1496,6 +1458,8 @@ fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state)
 Formatting generic code scope ({ ... } inside a function)
 *>
 fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* state) @private {
+    assert(t.type != EMPTY_LINE);
+
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
             assert(t.type == LBRACE || t.type == LBRAPIPE);
@@ -1546,10 +1510,6 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
                     } else {
                         self.@fail(t, "unexpected case/default statement")!;
                     }
-                case EMPTY_LINE:
-                    if (state.last_token != EMPTY_LINE) {
-                        // self.newline(is_empty: true);
-                    }
                 default:
                     CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;
                     if (new_local_state == null){
@@ -1597,6 +1557,7 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
 Formatting individual (generic statements) ending with ;
 *>
 fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserState* state) @private {
+    assert(t.type != EMPTY_LINE);
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
@@ -1699,6 +1660,7 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
 }
 
 fn bool! CodeFmt.format_generic_extern(CodeFmt* self, Token* t, NodeParserState* state) @private {
+    assert(t.type != EMPTY_LINE);
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
@@ -1729,7 +1691,7 @@ Formatting of generic code flow statement block (for, while, if, foreach, switch
 *>
 fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserState* state) @private {
     assert(state.initial_token != INVALID_TOKEN);
-    if(t == null) return (bool)+1;
+    assert(t.type != EMPTY_LINE);
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
@@ -1853,6 +1815,7 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
 Formatting generic doc string with contracts
 *>
 fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* state) @private {
+    assert(t.type != EMPTY_LINE);
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:         // initial state
@@ -1968,6 +1931,7 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
 Formatting of compile time code flow statement block ($for, $if, $foreach, $switch)
 *>
 fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserState* state) @private {
+    assert(t.type != EMPTY_LINE);
     assert(state.initial_token != INVALID_TOKEN);
 
     switch STATE: (state.check(t)){
@@ -2102,6 +2066,8 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
 
 <* Asm block with automatically disabled formatting *>
 fn bool! CodeFmt.asm_non_fmt_block(CodeFmt* self, Token* t, NodeParserState* state) @private {
+    assert(t.type != EMPTY_LINE);
+
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
             assert(t.type == LBRACE);
@@ -2137,6 +2103,7 @@ fn bool! CodeFmt.asm_non_fmt_block(CodeFmt* self, Token* t, NodeParserState* sta
 Formatting asm() and asm { block }
 *>
 fn bool! CodeFmt.format_asm(CodeFmt* self, Token* t, NodeParserState* state) @private {
+    assert(t.type != EMPTY_LINE);
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
@@ -2181,6 +2148,7 @@ fn bool! CodeFmt.format_asm(CodeFmt* self, Token* t, NodeParserState* state) @pr
 Formatter for struct / union / bitstruct contents
 *>
 fn bool! CodeFmt.format_structural(CodeFmt* self, Token* t, NodeParserState* state) @private {
+    assert(t.type != EMPTY_LINE);
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:         // initial state
@@ -2199,8 +2167,6 @@ fn bool! CodeFmt.format_structural(CodeFmt* self, Token* t, NodeParserState* sta
                     nextcase default;
                 case LBRACE:
                     nextcase STATE: state.transition(SCOPE);
-                case EMPTY_LINE:
-                    break;
                 default:
                     if (state.scope_depth == 0 && t.type != RBRACKET) {
                         self.write(" %s", t.value);
@@ -2236,6 +2202,7 @@ fn bool! CodeFmt.format_structural(CodeFmt* self, Token* t, NodeParserState* sta
 Formatter for struct / union / bitstruct contents
 *>
 fn bool! CodeFmt.format_structural_scope(CodeFmt* self, Token* t, NodeParserState* state) @private {
+    assert(t.type != EMPTY_LINE);
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:         // initial state
@@ -2256,8 +2223,6 @@ fn bool! CodeFmt.format_structural_scope(CodeFmt* self, Token* t, NodeParserStat
                         self.trace("EXIT");
                         return true;
                     } 
-                case EMPTY_LINE:
-                    break;
                 case EOS:
                     self.cache_statement_add(state, t);
                     self.cache_statement_dump()!;
@@ -2284,6 +2249,7 @@ fn bool! CodeFmt.format_structural_scope(CodeFmt* self, Token* t, NodeParserStat
 Formatter for enums, faults
 *>
 fn bool! CodeFmt.format_enumerable(CodeFmt* self, Token* t, NodeParserState* state) @private {
+    assert(t.type != EMPTY_LINE);
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:         // initial state
@@ -2371,6 +2337,7 @@ fn bool! CodeFmt.format_enumerable(CodeFmt* self, Token* t, NodeParserState* sta
 Formatter for interfaces
 *>
 fn bool! CodeFmt.format_interface(CodeFmt* self, Token* t, NodeParserState* state) @private {
+    assert(t.type != EMPTY_LINE);
 
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:         // initial state
@@ -2386,8 +2353,6 @@ fn bool! CodeFmt.format_interface(CodeFmt* self, Token* t, NodeParserState* stat
                     nextcase default;
                 case LBRACE:
                     nextcase STATE: state.transition(SCOPE);
-                case EMPTY_LINE:
-                    break;
                 default:
                     self.write(" %s", t.value);
             }
@@ -2407,8 +2372,6 @@ fn bool! CodeFmt.format_interface(CodeFmt* self, Token* t, NodeParserState* stat
                     self.newline();
                     self.trace("EXIT");
                     return true;
-                case EMPTY_LINE:
-                    break;
                 case FN:
                     self.newline();
                     return self.push_run_state(&CodeFmt.format_fn, t);
