@@ -1234,16 +1234,15 @@ fn CodeFmtFn! CodeFmt.global_formatter_dispatch(CodeFmt* self, Token *t) @privat
         case DOCS_END:
         case EOS:
             break;
+        case EXTERN:
+            return &CodeFmt.format_generic_extern;
         case DEF:
         case DISTINCT:
         case MODULE:
         case CONST:
         case IMPORT:
-            return &CodeFmt.format_generic_statement;
-        case EXTERN:
-            return &CodeFmt.format_generic_extern;
         default:
-            self.@fail(t, "unsupported global token")!;
+            return &CodeFmt.format_generic_statement;
     }
     return null;
 }

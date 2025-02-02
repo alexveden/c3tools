@@ -381,3 +381,50 @@ fn typeid main(typeid t)
     return;
 }
 
+================================================================================
+any_anyfault
+================================================================================
+
+macro any
+main(any foo) { return;}
+
+macro anyfault
+main(anyfault foo) { return;}
+
+--------------------------------------------------------------------------------
+
+macro any main(any foo)
+{
+    return;
+}
+
+macro anyfault main(anyfault foo)
+{
+    return;
+}
+
+================================================================================
+static_and_global_vars
+================================================================================
+
+int foo;
+tlocal bar;
+
+fn void
+main(any foo) { 
+static Win32_LARGE_INTEGER freq;
+static ulong div = 0;
+return;}
+
+--------------------------------------------------------------------------------
+
+int foo;
+tlocal bar;
+
+fn void main(any foo)
+{
+    static Win32_LARGE_INTEGER freq;
+    static ulong div = 0;
+    return;
+}
+
