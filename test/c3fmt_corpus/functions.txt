@@ -315,11 +315,9 @@ start, len, magic_comma,);
 --------------------------------------------------------------------------------
 
 macro CFile stderr() @if(FOO||Bar||   "non form") => __acrt_iob_func(STDERR_FD);
-
 fn bool in_range(char c, char start, char len) => in_range_m(c, start, len, args_are_too, long, and_many, of_them_getting_new_line);
 
 fn bool in_range(char c, char start, char len) => in_range_m(c, start, len, args_are_too, long, and_many, of_them_getting_new_line, but_sometimes_even, multiline);
-
 fn bool in_range(char c, char start, char len) => with_magic_comma(c, start, len, magic_comma,);
 
 ================================================================================

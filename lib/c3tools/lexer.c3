@@ -2075,12 +2075,8 @@ fn TokenType token_from_identifier(String indentifier)
 {
 	switch (indentifier)
 	{
-		case "anyfault":
-			return  ANYFAULT;
 		case "asm":
 			return  ASM;
-		case "assert":
-			return  ASSERT;
 		case "bitstruct":
 			return  BITSTRUCT;
 		case "break":
@@ -2145,8 +2141,6 @@ fn TokenType token_from_identifier(String indentifier)
 			return  STRUCT;
 		case "switch":
 			return  SWITCH;
-		case "tlocal":
-			return  TLOCAL;
 		case "true":
 			return  TRUE;
 		case "try":
@@ -2155,10 +2149,14 @@ fn TokenType token_from_identifier(String indentifier)
 			return  TYPEID;
 		case "union":
 			return  UNION;
-		case "var":
-			return  VAR;
 		case "while":
 			return  WHILE;
+		case "assert":
+			return  IDENT;
+		// Types
+		case "anyfault":
+		case "tlocal":
+		case "var":
 		case "void":
 		case "any":
 		case "bool":
@@ -2183,91 +2181,63 @@ fn TokenType token_from_identifier(String indentifier)
 		case "uptr":
 			return  TYPE_IDENT;
 		case "$alignof":
-			return  CT_ALIGNOF;
 		case "$and":
-			return  CT_ANDFN;
 		case "$append":
-			return  CT_APPEND;
 		case "$assert":
-			return  CT_ASSERT;
 		case "$assignable":
-			return  CT_ASSIGNABLE;
-		case "$case":
-			return  CT_CASE;
 		case "$concat":
-			return  CT_CONCATFN;
-		case "$default":
-			return  CT_DEFAULT;
-		case "$defined":
-			return  CT_DEFINED;
-		case "$else":
-			return  CT_ELSE;
-		case "$embed":
-			return  CT_EMBED;
-		case "$endif":
-			return  CT_ENDIF;
-		case "$endswitch":
-			return  CT_ENDSWITCH;
-		case "$endfor":
-			return  CT_ENDFOR;
-		case "$endforeach":
-			return  CT_ENDFOREACH;
 		case "$eval":
-			return  CT_EVAL;
+		case "$defined":
+		case "$embed":
 		case "$evaltype":
-			return  CT_EVALTYPE;
 		case "$error":
-			return  CT_ERROR;
 		case "$exec":
-			return  CT_EXEC;
 		case "$extnameof":
-			return  CT_EXTNAMEOF;
 		case "$feature":
-			return  CT_FEATURE;
-		case "$for":
-			return  CT_FOR;
-		case "$foreach":
-			return  CT_FOREACH;
-		case "$if":
-			return  CT_IF;
 		case "$is_const":
-			return  CT_IS_CONST;
 		case "$include":
-			return  CT_INCLUDE;
 		case "$vacount":
-			return  CT_VACOUNT;
 		case "$vatype":
-			return  CT_VATYPE;
 		case "$vaconst":
-			return  CT_VACONST;
 		case "$vaarg":
-			return  CT_VAARG;
 		case "$varef":
-			return  CT_VAREF;
 		case "$vaexpr":
-			return  CT_VAEXPR;
 		case "$vasplat":
-			return  CT_VASPLAT;
 		case "$nameof":
-			return  CT_NAMEOF;
 		case "$offsetof":
-			return  CT_OFFSETOF;
 		case "$or":
-			return  CT_ORFN;
 		case "$qnameof":
-			return  CT_QNAMEOF;
 		case "$sizeof":
-			return  CT_SIZEOF;
-		case "$switch":
-			return  CT_SWITCH;
 		case "$typefrom":
-			return  CT_TYPEFROM;
+		case "$stringify":
+		case "$echo":
+			return  CT_IDENT;
 		case "$typeof":
 			return  CT_TYPEOF;
-		case "$stringify":
-			return  CT_STRINGIFY;
-		case "$echo":
-			return  CT_ECHO;
+
+		// ------
+		case "$if":
+			return  CT_IF;
+		case "$else":
+			return  CT_ELSE;
+		case "$endif":
+			return  CT_ENDIF;
+		case "$for":
+			return  CT_FOR;
+		case "$endfor":
+			return  CT_ENDFOR;
+		case "$foreach":
+			return  CT_FOREACH;
+		case "$endforeach":
+			return  CT_ENDFOREACH;
+		case "$switch":
+			return  CT_SWITCH;
+		case "$case":
+			return  CT_CASE;
+		case "$default":
+			return  CT_DEFAULT;
+		case "$endswitch":
+			return  CT_ENDSWITCH;
 		default:
 			return INVALID_TOKEN;
 	}
