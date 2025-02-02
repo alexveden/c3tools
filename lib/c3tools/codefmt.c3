@@ -225,6 +225,7 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
 	            self.newline();
 	            self.write("%s", t.value);
 	        }
+	        self._is_inline_comment = t.type == COMMENT_SINGLE;
 	    case COMMENT_SINGLE_INLINE:
 	    case COMMENT_MULTI_INLINE:
 	        if (self._lexer.is_whitespace_mode) {
@@ -315,7 +316,7 @@ macro void CodeFmt.write(&self, String format, args...) @private {
         // Forcing a new line when previous write was a single line comment
         // if(foo) // comment  { <<<< oops this must be new line
         self.newline();
-        format = format.trim_left(format);
+        format = format.trim_left();
     }
 
     usz len = self.buf.appendf(format, ...args)!!;
