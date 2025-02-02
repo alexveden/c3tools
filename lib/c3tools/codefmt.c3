@@ -1668,6 +1668,12 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                             }
                             return self.push_run_state(&CodeFmt.format_code_scope, t);
                         default:
+                            if (state.last_token == RPAREN) {
+                                // Case for
+                                // mem::@scoped(&allocator){ @body(); };
+                                state.initial_token = FOR;
+                                nextcase LBRAPIPE;
+                            }
                             break;
                     }
                     nextcase default;
