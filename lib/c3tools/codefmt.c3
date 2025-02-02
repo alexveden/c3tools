@@ -317,10 +317,11 @@ macro void CodeFmt.write(&self, String format, args...) @private {
 <*
 Writes a new line into internal buffer with proper indentation
 *>
-macro void CodeFmt.newline(&self, bool is_empty = false) @private {
+macro void CodeFmt.newline(&self, bool is_empty = false, bool indent_only = false) @private {
     if (self._lexer.is_whitespace_mode) return;
 
-    self.buf.append("\n");
+    if (!indent_only) self.buf.append("\n");
+     
     if (!is_empty){
         self._line_used = 0;
         for(int i = 0; i < self._indent_level; i++) {
@@ -1879,12 +1880,15 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
             assert(t.type == DOCS_START);
             self.trace("ENTRY");
             self.write("%s", t.value);
+            if (t.value.ends_with("\n")) {
+                self.newline(indent_only: true);
+            }
             state.transition(SCOPE);
         case SCOPE: // contract scope
             self.trace("SCOPE");
             switch(t.type) {
                 case DOCS_EOL:
-                    self.newline(is_empty: true);
+                    self.newline();
                 case DOCS_END:
                     nextcase STATE: state.transition(EOS);
                 case AT_IDENT:
@@ -1910,7 +1914,7 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
                     self.write(" ");
                     nextcase STATE: state.transition(EOS);
                 case DOCS_EOL:
-                    self.write("%s", t.value);
+                    self.newline();
                     state.transition(SCOPE);
                 default:
                     self.write(" %s", t.value);
@@ -1921,7 +1925,7 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
                     self.write(" ");
                     nextcase STATE: state.transition(EOS);
                 case DOCS_EOL:
-                    self.write("%s", t.value);
+                    self.newline();
                     state.transition(SCOPE);
                 case COMMA:
                 case DOT:
@@ -1946,7 +1950,7 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
                     self.write(" ");
                     nextcase STATE: state.transition(EOS);
                 case DOCS_EOL:
-                    self.write("%s", t.value);
+                    self.newline();
                     state.transition(SCOPE);
                 case BANG:
                     self.write("%s", t.value);
@@ -1965,7 +1969,7 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
                     self.write(" ");
                     nextcase STATE: state.transition(EOS);
                 case DOCS_EOL:
-                    self.write("%s", t.value);
+                    self.newline();
                     state.transition(SCOPE);
                 case LBRACKET:
                     self.write(" %s", t.value);
@@ -2451,6 +2455,12 @@ fn bool! CodeFmt.format_interface(CodeFmt* self, Token* t, NodeParserState* stat
                 case FN:
                     self.newline();
                     return self.push_run_state(&CodeFmt.format_fn, t);
+                case DOCS_START:
+                    if (self.cache_statement_len() != 0) self.@fail(t, "unexpected keyword")!;
+                    self.newline();
+                    return self.push_run_state(&CodeFmt.format_docstring, t);
+                case DOCS_END:
+                    break;
                 case EOS:
                     // returned by fn processor
                     break;

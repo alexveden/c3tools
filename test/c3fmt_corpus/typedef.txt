@@ -482,3 +482,37 @@ enum State
     TERMINATED
 }
 
+================================================================================
+def_interface_with_docs
+================================================================================
+interface Printable @if("sasda")
+{
+    <*
+    Doc
+    @param foo "bar"
+    @param boo "baz"
+    *>
+    fn String* to_string(Allocator allocator) @optional;
+    <* Doc 2 *>
+    fn String* to_string(Allocator allocator) @optional;
+
+    <* Doc 3 empty line *>
+    fn String* to_string(Allocator allocator) @optional;
+}
+--------------------------------------------------------------------------------
+
+interface Printable @if("sasda")
+{
+    <*
+    Doc
+    @param foo "bar"
+    @param boo "baz"
+    *>
+    fn String* to_string(Allocator allocator) @optional;
+    <* Doc 2 *>
+    fn String* to_string(Allocator allocator) @optional;
+
+    <* Doc 3 empty line *>
+    fn String* to_string(Allocator allocator) @optional;
+}
+
