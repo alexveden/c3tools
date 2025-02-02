@@ -1460,6 +1460,7 @@ import std::core::test @public;
 import std::core::builtin;
 import std::io;
 module math_tests::complex(<ElementType>) @test;
+
 ================================================================================
 const
 ================================================================================
@@ -1476,6 +1477,7 @@ const bool KEY_BY_VALUE @private = $assignable(Type{}[0], $typefrom(KeyFn.params
 const Foo F4 = (F1 | ~F2) ^ F3;
 const Foo F5 = Foo { true, false } | Foo { false, true };
 const char[?] TEST_QOI_DATA = b64"cW9pZgAAAVQAAACpBABV/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39";
+
 --------------------------------------------------------------------------------
 
 const Time FAR_FUTURE = long.max;
@@ -1499,6 +1501,7 @@ const bool KEY_BY_VALUE @private = $assignable(
 const Foo F4 = (F1 | ~F2) ^ F3;
 const Foo F5 = Foo{ true, false } | Foo{ false, true };
 const char[?] TEST_QOI_DATA = b64"cW9pZgAAAVQAAACpBABV/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39";
+
 ================================================================================
 extern_func
 ================================================================================
@@ -1513,6 +1516,7 @@ extern Char16* _win_command_line_to_argv_w;
 extern const int FOO @extern("foo1");
 extern void *__stdoutp;
 extern const char *manifest_default_keys[][2];
+
 --------------------------------------------------------------------------------
 
 extern fn Test func_returning_struct();
@@ -1530,6 +1534,7 @@ extern Char16* _win_command_line_to_argv_w;
 extern const int FOO @extern("foo1");
 extern void* __stdoutp;
 extern const char* manifest_default_keys[][2];
+
 ================================================================================
 do_while
 ================================================================================

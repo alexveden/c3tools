@@ -283,7 +283,7 @@ macro @foo($x, #y)
 macro @foo($x, #y)
 {
     $if $x > 3:
-        $switch 
+        $switch
             $case 0:
             $case 1:
                 #y += $x * $x;

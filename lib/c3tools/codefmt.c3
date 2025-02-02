@@ -164,6 +164,7 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
 	    self.state_stack.len() > 0 && 
 	    self.cache_statement_len() > 0) 
 	{
+	    self.trace("COMMENT PASSED");
 	    // doesn't allow empty lines, just skip them
 	    return t.type == EMPTY_LINE;
 	}
@@ -184,8 +185,8 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
 	                    // self._is_empty_line = false;
 	                    break;
 	                case DOCS_END:
-	                    // self._is_empty_line = false;
-	                    nextcase default;
+	                    self._is_empty_line = true;
+	                    break;
 	                case RBRACE:
 	                default:
 	                    return true; 
@@ -199,6 +200,7 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
 	        }
 	        return true;
 	    case EOF:
+	        self.trace("COMMENT EOF");
 	        if (self._is_paused) return false;
 	        // if (self._is_empty_line) return false;
 	        // if (state.scope_depth == 0 && state.last_token == RBRACE && t.type != EOF) return true;
@@ -206,6 +208,9 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
 	            // Do a direct write
 	            self.buf.append("\n");
 	        } else {
+	            if(state.last_token == EOS) {
+	                self.newline(is_empty: true);
+	            }
 	            self.newline(is_empty: true);
 	        }
 	        return false;
@@ -1302,7 +1307,14 @@ fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserSta
                 default:
                     CodeFmtFn fmt_fn = self.global_formatter_dispatch(t)!;
                     if(fmt_fn == null) self.@fail(t, "unknown global scope statement")!;
-                    if(!self._is_empty_line) self.newline();
+
+                    if(!self._is_empty_line) {
+                        // Prevent doubling empty lines
+                        self.newline();
+                    } else {
+                        // we must reset line width to avoid doing multi-line for ()
+                        self._line_used = 0;
+                    }
                     self.push_run_state(fmt_fn, t)!;
             }
         default:
@@ -1946,13 +1958,14 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
             self.trace("ENTRY");
+            self.newline();
             switch(t.type) {
 	            case CT_FOR:               // $for
 	            case CT_FOREACH:           // $foreach
 	            case CT_IF:                // $if
-	            case CT_SWITCH:            // $switch
-                    self.newline();
                     self.write("%s ", t.value);
+	            case CT_SWITCH:            // $switch
+                    self.write("%s", t.value);
                 default: 
                     unreachable();
             }
@@ -1978,6 +1991,11 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
                     } else {
                         nextcase default;
                     }
+                case LPAREN:
+                    if (state.scope_depth == 1 && state.initial_token == CT_SWITCH) {
+                        self.write(" ");
+                    }
+                    nextcase default;
                 case RPAREN:
                     if (state.scope_depth == 0 && state.initial_token != CT_IF){
                         TokenType wrap_rule = self.cache_statement_wrap_rule(state.initial_token);
@@ -2176,6 +2194,10 @@ fn bool! CodeFmt.format_structural(CodeFmt* self, Token* t, NodeParserState* sta
                     nextcase default;
                 case LBRACE:
                     nextcase STATE: state.transition(SCOPE);
+                case LPAREN:
+                    self.write(" %s", t.value);
+                case RPAREN:
+                    self.write("%s", t.value);
                 default:
                     if (state.scope_depth == 0 && t.type != RBRACKET) {
                         self.write(" %s", t.value);

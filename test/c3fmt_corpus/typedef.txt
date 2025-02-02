@@ -247,6 +247,7 @@ def IntList = ElasticArray(<int, 10>);
 def BenchmarkFn = fn void!(int) @if($$OLD_TEST);
 def @Align(y) = { @Align16(y / 2) };
 def @Test = { @noinline };
+
 ================================================================================
 def_interface
 ================================================================================
@@ -299,6 +300,7 @@ distinct Bob = inline Abc;
 distinct Foo = fn void(Foo** x);  // #error: cannot define a new function type
 distinct Foo = inline PrivateFoo(<int>);  // #error: could not be found
 distinct PriorityQueue = inline PrivatePriorityQueue <[Type,false] >;
+
 ================================================================================
 union_with_struct
 ================================================================================
@@ -356,7 +358,7 @@ return;}
 
 extern typeid foo;
 
-struct ReflectedParam(Printable) @if(!$defined(ReflectedParam))
+struct ReflectedParam (Printable) @if(!$defined(ReflectedParam))
 {
     String name;
     typeid type;
