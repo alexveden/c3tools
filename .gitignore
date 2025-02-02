@@ -2,3 +2,5 @@ build/
 .gdb_history
 scripts/c3fmt_gentests
 test/test_c3fmt_corpus.c3
+lib/argparse.c3
+lib/test.c3
