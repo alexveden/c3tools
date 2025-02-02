@@ -4,13 +4,13 @@ simple_struct
 
 struct 
 Person {
-    char age;   String name; }
+    char age;   string::String name; }
 --------------------------------------------------------------------------------
 
 struct Person
 {
     char age;
-    String name;
+    string::String name;
 }
 
 ================================================================================
