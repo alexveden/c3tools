@@ -1625,11 +1625,14 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                     nextcase default;
                 case LBRACE:
                     switch(state.initial_token) {
+                        case AT_IDENT:
+                            // distinguish @some_macro({ <-- and @some_macro() { <--
+                            if (state.scope_depth != 1) break;
+                            nextcase;
                         case FOR:
                         case DO:
                         case FN:
-                        case AT_IDENT:
-                            // @custom_macro(a, b; @body)
+                            // @custom_macro(a, b; @body) {}
                             // anonymous fn: in_call(fn bool(a, b) {})
                             // do {} [while()]; 
                             // @custom_macro(@body) {}
@@ -1655,9 +1658,10 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                 case RBRACE:
                 case RBRAPIPE:
                     switch(state.initial_token){
+                        case AT_IDENT:
+                            if (state.scope_depth != 0) nextcase default;
                         case FN:
                         case DO:
-                        case AT_IDENT:
                             break;
                         case FOR:
                             state.transition(EOS);
