@@ -20,6 +20,7 @@ struct CodeFmt {
     bool _print_lex;
     bool _is_paused;
     bool _is_empty_line;
+    bool _is_inline_comment;
 }
 
 
@@ -231,6 +232,7 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
 	        } else {
 	            self.write("  %s", t.value);
 	        }
+	        self._is_inline_comment = t.type == COMMENT_SINGLE_INLINE;
 	    default:
 	        unreachable("%s: `%s`", t.type, t.value);
 	}
@@ -309,6 +311,12 @@ Writes code chunk into internal buffer
 *>
 macro void CodeFmt.write(&self, String format, args...) @private {
     if (self._lexer.is_whitespace_mode) return;
+    if (self._is_inline_comment) {
+        // Forcing a new line when previous write was a single line comment
+        // if(foo) // comment  { <<<< oops this must be new line
+        self.newline();
+        format = format.trim_left(format);
+    }
 
     usz len = self.buf.appendf(format, ...args)!!;
     self._line_used += (int)len;
@@ -318,6 +326,8 @@ macro void CodeFmt.write(&self, String format, args...) @private {
 Writes a new line into internal buffer with proper indentation
 *>
 macro void CodeFmt.newline(&self, bool is_empty = false, bool indent_only = false) @private {
+    self._is_inline_comment = false;
+
     if (self._lexer.is_whitespace_mode) return;
 
     if (!indent_only) self.buf.append("\n");
@@ -2163,6 +2173,8 @@ fn bool! CodeFmt.asm_non_fmt_block(CodeFmt* self, Token* t, NodeParserState* sta
                     if (state.scope_depth == 0) {
                         // enable formatting, unless there is // fmt: off 
                         if (!self._is_paused) self._lexer.set_whitespace_mode(false);
+                        // it's safe to write even we have inline comment
+                        self._is_inline_comment = false;
                         self.write("}");
                         return true;
                     }
