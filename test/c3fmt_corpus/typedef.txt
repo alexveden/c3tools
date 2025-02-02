@@ -20,7 +20,13 @@ simple_sub_struct
 struct 
 Person @extern(  "foo") {
     struct foo // its a kinda struct
-    { int bar; struct zoo @if(asd || dda) { int c;}}
+    { int bar; struct zoo @if(asd || dda) {
+
+            <* doc c *>
+    int c;
+
+    int d;
+    }}
     }
     struct Friend {
         bool or_foe;
@@ -34,7 +40,11 @@ struct Person @extern(  "foo")
         int bar;
         struct zoo @if(asd || dda)
         {
+
+            <* doc c *>
             int c;
+
+            int d;
         }
     }
 }
@@ -426,5 +436,25 @@ fn void main(any foo)
     static Win32_LARGE_INTEGER freq;
     static ulong div = 0;
     return;
+}
+
+================================================================================
+simple_struct_doc_str
+================================================================================
+
+<* Docstr *>
+struct 
+Person {
+    char age; 
+<* Docstr *>
+    string::String name; }
+--------------------------------------------------------------------------------
+
+<* Docstr *>
+struct Person
+{
+    char age;
+    <* Docstr *>
+    string::String name;
 }
 

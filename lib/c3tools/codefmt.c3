@@ -2299,7 +2299,12 @@ fn bool! CodeFmt.format_structural_scope(CodeFmt* self, Token* t, NodeParserStat
                     if (self.cache_statement_len() != 0) self.@fail(t, "unexpected keyword")!;
                     self.newline();
                     return self.push_run_state(&CodeFmt.format_structural, t);
-
+                case DOCS_START:
+                    if (self.cache_statement_len() != 0) self.@fail(t, "unexpected keyword")!;
+                    self.newline();
+                    return self.push_run_state(&CodeFmt.format_docstring, t);
+                case DOCS_END:
+                    break;
                 default:
                     if (self.cache_statement_len() == 0){
                         self.newline();
