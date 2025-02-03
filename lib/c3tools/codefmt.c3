@@ -624,6 +624,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                 case CT_TYPE_IDENT:
                 case RVEC:
                 case RGENPAR:
+                case STAR:
                 case GREATER:
                     break; // no space
                 default: 
@@ -842,6 +843,7 @@ fn bool CodeFmt._resolve__prev_bang_type(&self) {
         case TYPE_IDENT:
         case RVEC:
         case RGENPAR:
+        case STAR:
         case GREATER: // new generic notation ]>
             return true;
         default:
