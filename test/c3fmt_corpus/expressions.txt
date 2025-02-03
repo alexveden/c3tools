@@ -304,3 +304,76 @@ fn void! main()
     return !(!foo());
 }
 
+================================================================================
+brackets
+================================================================================
+
+fn void main() { 
+    char[] foo = arr[];
+    int ar[?] = { 1 };
+    ar[:] = 1;
+    foo = arr[:a];
+    arr[..a];
+    arr[b..];
+    arr[b..a];
+    arr[b:];
+    arr[:a];
+    arr[b:a];
+    arr[^2..^1];
+    arr[i..^1];
+    arr[i + 1 .. i * 1];
+    arr[i + 1 .. i];
+    arr[foo(1, 2, kwarg: 3) + 1 : bar()];
+    arr[(i & a) * 0xff];
+    arr[(i | a) & 0xff];
+    return a[ : decode()!];
+    arr[(0.2f | DASK) & MASK];
+    arr[(0.2f >> DASK) & MASK];
+    arr[(0.2f << foo()) & MASK];
+    arr[((uint)0.2f << (char)foo()) & (int)MASK];
+    arr[src[i + 1 :]];
+    arr[src[i + 1 : i]];
+    arr[src[i : i + 1]];
+    arr[(char)((result ^ x) & x)];
+    arr[(in[i + 1] & 3) >> 2 * foo];
+    arr[i++];
+    arr[--i];
+    arr[a - 1];
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    char[] foo = arr[];
+    int ar[?] = { 1 };
+    ar[:] = 1;
+    foo = arr[:a];
+    arr[..a];
+    arr[b..];
+    arr[b..a];
+    arr[b:];
+    arr[:a];
+    arr[b:a];
+    arr[^2..^1];
+    arr[i..^1];
+    arr[i + 1 .. i * 1];
+    arr[i + 1 .. i];
+    arr[foo(1, 2, kwarg: 3) + 1 : bar()];
+    arr[(i & a) * 0xff];
+    arr[(i | a) & 0xff];
+    return a[:decode()!];
+    arr[(0.2f | DASK) & MASK];
+    arr[(0.2f >> DASK) & MASK];
+    arr[(0.2f << foo()) & MASK];
+    arr[((uint)0.2f << (char)foo()) & (int)MASK];
+    arr[src[i + 1 :]];
+    arr[src[i + 1 : i]];
+    arr[src[i:i + 1]];
+    arr[(char)((result ^ x) & x)];
+    arr[(in[i + 1] & 3) >> 2 * foo];
+    arr[i++];
+    arr[--i];
+    arr[a - 1];
+}
+

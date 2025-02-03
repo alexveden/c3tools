@@ -405,7 +405,6 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
 		case SHR:
 		case OR:
 		case BIT_OR:
-		case BIT_XOR:
 		case BIT_AND_ASSIGN:
 		case BIT_OR_ASSIGN:
 		case BIT_XOR_ASSIGN:
@@ -507,6 +506,23 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                 default:
                     break;
             }
+        case RBRACKET:
+            switch(prev_t){
+                // pre_space = true;
+                case QUESTION:
+                default:
+                    break;
+            }
+		case BIT_XOR:
+            switch(prev_t){
+                case LBRACKET:
+                case COLON:
+                case DOTDOT:
+                    break;
+                default:
+                    pre_space = true;
+
+            }
         case LPAREN:
             switch(prev_t){
                 case STAR:
@@ -557,7 +573,22 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                 default:
                     break;
             }
+        case DOTDOT:
+            switch(prev_t){
+                case LBRACKET:
+                    break;
+                default:
+		            if (state.prev_scope(1) == LBRACKET) {
+		                pre_space = self._resolve__bracket_is_complex_expr();
+		            } else {
+                        pre_space = false;
+		            }
+		    }
         case COLON:
+            if (state.prev_scope(1) == LBRACKET) {
+		        pre_space = self._resolve__bracket_is_complex_expr();
+		        break; // break switch
+		    }
             switch(prev_t){
                 case CONST_IDENT:
                     switch(state.initial_token) {
@@ -577,7 +608,11 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                         pre_space = true;
                     } 
                 default:
-                    pre_space = true;
+		            if (state.prev_scope(1) == LBRACKET) {
+
+		            } else {
+                        pre_space = true;
+		            }
             }
         case QUESTION:
             // HACK: it's impossible to distinguish err?; and err ? foo : bar;
@@ -603,8 +638,8 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
         // starting [ and end ] - are managed separately above
         // starting statement always without space 
         if (cache_len == 0) return true;
-        if (state.prev_scope(1) == LBRACKET && t.type != LBRACKET) return true;
-        if (t.type == RBRACKET) return true;
+        // if (state.prev_scope(1) == LBRACKET && t.type != LBRACKET) return true;
+        // if (t.type == RBRACKET) return true;
 
         return false;
     |};
@@ -641,6 +676,24 @@ macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state, Token* 
 		    return state.scope_depth <= 1 || t.type == LBRACE;
 		case BANG:
 		    return self._resolve__prev_bang_type();
+		case LBRACKET:
+		    // no space after bracket
+		    return false;
+		case DOTDOT:
+		    if (state.prev_scope(1) == LBRACKET) {
+		        return self._resolve__bracket_is_complex_expr();
+		    } else {
+		        return false;
+		    }
+		case COLON:
+		    if (state.prev_scope(1) == LBRACKET) {
+		        return self._resolve__bracket_is_complex_expr();
+		    } else {
+		        return true;
+		    }
+		case BIT_XOR:
+		    // array[:^1] vs foo ^ 0xF0
+		    return state.prev_scope(1) != LBRACKET;
 		case DIV:
 		case GREATER:
 		case LESS:
@@ -661,7 +714,6 @@ macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state, Token* 
 		case SHR:
 		case OR:
 		case BIT_OR:
-		case BIT_XOR:
 		case RETURN:
 		case EOS:
 		case IDENT:
@@ -700,7 +752,6 @@ macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state, Token* 
 		case TLOCAL:
 		case STATIC:
 		case EXTERN:
-		case COLON:
 		case MODULE:
 		case DO:
 		case IMPORT:
@@ -741,6 +792,35 @@ fn bool CodeFmt._resolve__keyword_call_colon(&self, NodeParserState* state) {
         }
     }
     return is_call_kwarg;
+}
+
+fn bool CodeFmt._resolve__bracket_is_complex_expr(&self) {
+    assert(self.state_stack.len() > 0);
+
+    usz start_len = self.state_stack[^1].token_cache_start;
+    // only 1 token, it's not a binary exp 
+    if (self.__token_cache.len() - start_len == 1) return false;
+
+    int exp_count = 0;
+
+    for LOOP: (usz i = self.__token_cache.len(); i-- > start_len; )
+    {
+        Token* t = &self.__token_cache[i];
+        switch(t.type) {
+            case BIT_XOR: // [^1]
+            case SPACE:
+            case COLON:
+            case DOTDOT:
+                break;
+            case LBRACKET:
+                break LOOP;
+            default:
+                exp_count++;
+        }
+
+        if (exp_count > 1) break LOOP;
+    }
+    return exp_count > 1;
 }
 
 <*
