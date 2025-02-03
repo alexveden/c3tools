@@ -516,6 +516,8 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                 case RGENPAR:
                 case RVEC:
                     break;
+                case LBRACE:
+                    pre_space = true;
                 default:
                     nextcase TOP: default;
             }
@@ -1041,7 +1043,7 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
                                     self.newline();
                                 } else if (
                                     tmpstate.scope_depth == 2 &&
-                                    (t.type == LBRACE || t.type == LBRACKET)
+                                    (t.type == LBRACE || t.type == LBRACKET || t.type == LPAREN)
                                 ){
                                     self.newline();
                                 }
@@ -1159,6 +1161,7 @@ macro bool CodeFmt.split_multiline(&self, NodeParserState* state, TokenType wrap
             if (state.scope_depth == 1 && state.current_token == SPACE) return true;
             if (state.scope_depth == 2 && state.current_token == LBRACKET) return true;
             if (state.scope_depth == 2 && state.current_token == LBRACE) return true;
+            if (state.scope_depth == 2 && state.current_token == LPAREN) return true;
         default:
             break;
     }
