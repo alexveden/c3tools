@@ -51,6 +51,8 @@ call(&StrucType.fn_ptr);
     node = a + *(int*)b;
     return (char[?])foo;
     return { q.v[0] * -foo};
+    node = ((int*)*self & (int)bar);
+    node = ((int*)*self & ~(int)bar);
 }
 
 --------------------------------------------------------------------------------
@@ -69,7 +71,7 @@ fn void* main(int* arg)
     *(int*)&a = 2;
     b = (*a = 2);
     b = { .work = 1, .work = 2 };
-    int** ptr = &(*(int*)&a);
+    int** ptr = & (*(int*)&a);
     (void)free(data);
     (void**)free(data);
     int* bin = &&1;
@@ -83,12 +85,14 @@ fn void* main(int* arg)
     return &StrucType.fn;
     node = some_fn(&&node.next);
     node = a + *b;
-    node = ((w | x) & y) + &(w & y);
+    node = ((w | x) & y) + & (w & y);
     node = (void*.alignof) * 2;
     node = size & PAGE;
     node = (*h ^ ($typeof(*h))x) * FOO;
     node = a + *(int*)b;
     return (char[?]) foo;
     return { q.v[0] * -foo };
+    node = ((int*)*self & (int)bar);
+    node = ((int*)*self & ~(int)bar);
 }
 

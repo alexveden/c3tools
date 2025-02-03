@@ -416,6 +416,15 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
 		case SHR_ASSIGN:
 		case WHILE: // as part of do{} while();
             pre_space = true;
+        case BIT_NOT:
+            switch(prev_t){
+                case BIT_XOR:
+                case BIT_OR:
+                case AMP:
+                    pre_space = true;
+                default:
+                    nextcase TOP: default;
+            }
         case DOT:
             switch(prev_t){
                 case COMMA:
@@ -525,8 +534,9 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
             }
         case LPAREN:
             switch(prev_t){
-                case STAR:
                 case AMP:
+                    pre_space = true;
+                case STAR:
                     if(self._resolve__prev_is_binexp()) pre_space = true;
                 case IDENT:
                 case AT_IDENT:
