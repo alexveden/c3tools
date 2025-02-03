@@ -247,6 +247,7 @@ Descr @param @ensure ignored
 @require foo==0, bar > 0 : "This is a stuff"
 @require !foo : "This is a stuff"
 @ensure foo==null, bar > 0 ``This is raw stuff``
+@require $kindof() "This is a stuff"
 
 @require foo > 1 
 @return IoError.FOO, EioError.BAR
@@ -270,6 +271,7 @@ Descr @param @ensure ignored
 @require foo == 0, bar > 0 : "This is a stuff"
 @require !foo : "This is a stuff"
 @ensure foo == null, bar > 0 ``This is raw stuff``
+@require $kindof() "This is a stuff"
 
 @require foo > 1
 @return IoError.FOO, EioError.BAR

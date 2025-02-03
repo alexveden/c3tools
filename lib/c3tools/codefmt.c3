@@ -1971,7 +1971,6 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
                         case BANG:
                         case LPAREN:
                         case DOT:
-                        case RPAREN:
                             self.write("%s", t.value);
 
                         default:
