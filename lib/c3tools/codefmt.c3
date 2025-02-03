@@ -508,7 +508,6 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
             switch(prev_t){
                 case STAR:
                 case AMP:
-                case BANG: // fn void! (  vs !(a && b)
                     if(self._resolve__prev_is_binexp()) pre_space = true;
                 case IDENT:
                 case AT_IDENT:
@@ -581,6 +580,10 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
         case BANG:
             switch(prev_t){
                 case TYPE_IDENT:
+                case CT_TYPE_IDENT:
+                case RVEC:
+                case RGENPAR:
+                case GREATER:
                     break; // no space
                 default: 
                     nextcase TOP: default;
@@ -621,6 +624,8 @@ macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state, Token* 
 		    return self._resolve__prev_is_binexp();
 		case LBRACE:
 		    return state.scope_depth <= 1 || t.type == LBRACE;
+		case BANG:
+		    return self._resolve__prev_bang_type();
 		case DIV:
 		case GREATER:
 		case LESS:
@@ -722,6 +727,32 @@ fn bool CodeFmt._resolve__keyword_call_colon(&self, NodeParserState* state) {
         }
     }
     return is_call_kwarg;
+}
+
+<*
+resolve  bool! c vs if(!foo)
+*>
+fn bool CodeFmt._resolve__prev_bang_type(&self) {
+    assert(self.state_stack.len() > 0);
+
+    usz start_len = self.state_stack[^1].token_cache_start;
+
+    if (self.__token_cache.len() - start_len < 2) return false;
+
+    assert(self.__token_cache[^1].type == BANG);
+
+    Token* t = &self.__token_cache[^2];
+
+    switch(t.type) {
+        case CT_TYPE_IDENT:
+        case TYPE_IDENT:
+        case RVEC:
+        case RGENPAR:
+        case GREATER: // new generic notation ]>
+            return true;
+        default:
+            return false;
+    }
 }
 
 <*

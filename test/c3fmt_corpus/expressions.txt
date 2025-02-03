@@ -255,3 +255,48 @@ macro bool char_is_base64(char c)
     );
 }
 
+================================================================================
+bang_expressions
+================================================================================
+
+fn List(<int>)! foo() => 0;
+fn int[<2>]! foo() => 0;
+
+def TFoo = fn List(<int>)! foo();
+def TFoo = fn int[<3>]! foo();
+def TFoo = fn int! foo();
+
+fn void! main() { 
+    char! c = call();
+    char c = call()!;
+    char c = !call();
+    int[<2>]! c = call();
+    List<[2]>! c = call();
+    List(<2>)! c = call();
+    if(!foo()) return 0;
+    if(!foo() && (!(foo | bar) && !foo)) return 0;
+    return !(!foo());
+}
+
+--------------------------------------------------------------------------------
+
+fn List(<int>)! foo() => 0;
+fn int[<2>]! foo() => 0;
+
+def TFoo = fn List(<int>)! foo();
+def TFoo = fn int[<3>]! foo();
+def TFoo = fn int! foo();
+
+fn void! main()
+{
+    char! c = call();
+    char c = call()!;
+    char c = !call();
+    int[<2>]! c = call();
+    List <[2] >! c = call();
+    List(<2>)! c = call();
+    if (!foo()) return 0;
+    if (!foo() && (!(foo | bar) && !foo)) return 0;
+    return !(!foo());
+}
+
