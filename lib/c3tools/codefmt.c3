@@ -403,7 +403,6 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
 		case NOT_EQUAL:
 		case SHL:
 		case SHR:
-		case AND:
 		case OR:
 		case BIT_OR:
 		case BIT_XOR:
@@ -439,10 +438,9 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                     pre_space = true;
                 case STAR:
                 case RPAREN:
-                    if (t.type == AT_IDENT) pre_space = true;
-                    // resolve casting to type ()
-                    if(self._resolve__prev_is_binexp()) pre_space = true;
                 case AMP: // likely &var 
+                    if (t.type == AT_IDENT) pre_space = true;
+                    if(self._resolve__prev_is_binexp()) pre_space = true;
                     break;
                 default:
                     nextcase TOP: default;
@@ -464,6 +462,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
         case AMP: // &
 		case MINUS:
 		case PLUS:
+		case AND:
             switch(prev_t){
                 case LPAREN:
                 case LBRACKET:
@@ -478,7 +477,6 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
 		case STAR: // *
             switch(prev_t){
                 case LPAREN:
-                case RPAREN:
                 case TYPE_IDENT:
                 case CT_TYPE_IDENT:
                 case STAR:
@@ -486,6 +484,9 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                 case RGENPAR:
                 case RVEC:
                     break;
+                case RPAREN:
+                case RBRACKET:
+                    if(self._resolve__prev_is_binexp()) pre_space = true;
                 default:
                     pre_space = cache_len > 0;
             }
@@ -516,6 +517,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                 case RPAREN:
                 case RGENPAR:
                 case RVEC:
+                case LPAREN:
                     break;
                 case LBRACE:
                     pre_space = true;
@@ -734,36 +736,61 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
 
     int scope = 0;
     int exp_count = 0;
+    bool has_parens = false;
+    bool has_brackets = false;
+    bool has_type = false;
+    bool has_idents = false;
+    bool has_expr = false;
 
+    TokenType rhs_token = INVALID_TOKEN;
+    
+    // NOTE: looping backwards
     for LOOP: (usz i = self.__token_cache.len(); i-- > start_len; )
     {
         Token* t = &self.__token_cache[i];
         switch(t.type) {
             case RPAREN:
+                has_parens = true;
                 scope++;
             case LPAREN:
                 scope--;
-                if (scope == 0){
-                    return exp_count == 0;
-                } else if (scope <= 0) {
+                if (scope <= 0) {
                     break LOOP;
-                    // return true;
                 }
-            case AMP:
-            case SPACE:
-            case AND: // logical && or &&1 
+            case STAR:
+                if (rhs_token == STAR) break; // double pointer
+                nextcase;
             case PLUS:
             case MINUS:
-            case STAR:
+            case AMP:
+            case AND: // logical && or &&1 
+                has_expr = true;
+                switch (rhs_token) {
+                    case PLUS:
+                    case MINUS:
+                    case AMP:
+                    case STAR:
+                        return false;
+                    default:
+                        break;
+                }
                 break;
+            case SPACE:
+                break;
+            case INTEGER:
+            case IDENT:
+                has_idents = true; 
             case TYPE_IDENT:
             case CT_TYPE_IDENT:
+            case CT_TYPEOF:
+                has_type = true;
             case LVEC:
             case RVEC:
             case LGENPAR:
             case RGENPAR:
-                exp_count++;
-                break;
+            case LBRACKET:
+            case RBRACKET:
+                has_brackets = true;
 		    case BIT_AND_ASSIGN:
 		    case BIT_OR_ASSIGN:
 		    case BIT_XOR_ASSIGN:
@@ -776,6 +803,9 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
 		    case IMPLIES:
 		    case EQ:
 		    case RETURN:
+		    case DEFER:
+		    case TRY:
+		    case CATCH:
 		    case COLON:  // for ternary and foreach
 		    case QUESTION: // for ternary
 		    case ELVIS: // for ternary
@@ -792,8 +822,32 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
             default:
                 return true;
         }
+
+        if (t.type != SPACE) rhs_token = t.type;
     }
-    return exp_count > 0;
+
+    bool is_cast = {|
+        if (has_parens) {
+            // simple cast (void*) 
+            // generic cast (Foo(<void>)*) / array cast (char[8]*)
+            if (has_type) {
+                // return !has_idents || has_brackets;
+                return true;
+            } else {
+                return false;
+            }
+        } else if (scope < 0){
+            // maybe incomplete cast
+            // (*(char[8] ?
+            // (*(char[8] ?
+            if (has_type && has_brackets && has_idents && scope == -1) return true;
+        }
+
+        if (!has_parens && !has_type && !has_brackets && !has_idents) return true;
+        // not a cast
+        return false;
+    |};
+    return !is_cast;
 }
 
 <*

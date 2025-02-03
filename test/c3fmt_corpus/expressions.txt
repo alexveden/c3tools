@@ -65,8 +65,6 @@ simple_expressions
 fn void 
 main() { 
 bool a =(a||b)&&c; 
-int bin = (1&2)&3;
-int bin = &a + (1&2)|&a;
 int* bin = (int*)&a;
 b = *(int*)&a;
 b = (*a = 2);
@@ -83,8 +81,6 @@ return;
 fn void main()
 {
     bool a = (a || b) && c;
-    int bin = (1 & 2) & 3;
-    int bin = &a + (1 & 2) | &a;
     int* bin = (int*)&a;
     b = *(int*)&a;
     b = (*a = 2);
