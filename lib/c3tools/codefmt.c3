@@ -557,6 +557,14 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
         case COLON:
             switch(prev_t){
                 case CONST_IDENT:
+                    switch(state.initial_token) {
+                        case BREAK:
+                        case CONTINUE:
+                        case NEXTCASE:
+                            break;
+                        default:
+                            pre_space = true;
+                    }
                 case LBRACKET:
                     break;
                 case IDENT:
@@ -569,14 +577,18 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                     pre_space = true;
             }
         case QUESTION:
-            switch(prev_t){
-                case CONST_IDENT:
-                case LBRACKET:
-                case LVEC:
-                    break;
-                default:
-                    pre_space = true;
-            }
+            // HACK: it's impossivle to distinguish err?; and err ? foo : bar;
+            // we'll try to resolve it by forward looking hack in dump func()
+            break;
+
+            // switch(prev_t){
+            //     case CONST_IDENT:
+            //     case LBRACKET:
+            //     case LVEC:
+            //         break;
+            //     default:
+            //         pre_space = true;
+            // }
         case BANG:
             switch(prev_t){
                 case TYPE_IDENT:
@@ -616,6 +628,15 @@ Check if previous token type requires a space after it (in general case)
 *>
 macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state, Token* t) @local {
     switch(state.last_token) {
+		case QUESTION:
+		    switch(state.current_token) {
+		        case EOS:
+		        case RPAREN:
+		            return false; // no space
+		        default:
+		            return true;
+		    }
+		    break;
 		case AND:
 		    return self._resolve__prev_is_binexp();
 		case AMP:
@@ -642,7 +663,6 @@ macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state, Token* 
 		case LESS_EQ:
 		case NOT_EQUAL:
 		case QUESTQUEST:
-		case QUESTION:
 		case SHL:
 		case SHR:
 		case OR:
@@ -990,8 +1010,9 @@ Checks next token type in token cache
 *>
 fn TokenType CodeFmt._resolve__next_token(&self, usz current_idx) {
     TokenType result = INVALID_TOKEN;
-    if (current_idx + 1 < self.__token_cache.len()) {
-        result = self.__token_cache[current_idx+1].type;
+    while (++current_idx < self.__token_cache.len()) {
+        result = self.__token_cache[current_idx].type;
+        if (result != SPACE) break;
     }
     return result;
 }
@@ -1078,7 +1099,25 @@ macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TO
         self.@cache_statement_iter(; usz i, Token* t) 
         {
             if (self._print_lex) io::eprintf("%s ", t.type);
-            self.write("%s", t.value);
+            switch(t.type) {
+                case QUESTION:
+                    switch(self._resolve__next_token(i)) {
+                        case EOS:
+                        case RPAREN:
+                        case COLON:
+                        case QUESTQUEST:
+                        case RBRACKET:
+                        case RVEC:
+                        case RGENPAR:
+                        case INVALID_TOKEN:
+                            break;
+                        default:
+                            self.write(" ");
+                    }
+                    nextcase default;
+                default:
+                    self.write("%s", t.value);
+            }
         };
     } else {
         // NOTE: Wrapping is needed!
@@ -1127,6 +1166,21 @@ macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, T
             case COMMENT_MULTI_INLINE:
                 self.write("  %s", t.value);
                 tmpstate.current_token = tmpstate.last_token;
+            case QUESTION:
+                switch(self._resolve__next_token(i)) {
+                    case EOS:
+                    case RPAREN:
+                    case COLON:
+                    case QUESTQUEST:
+                    case RBRACKET:
+                    case RVEC:
+                    case RGENPAR:
+                    case INVALID_TOKEN:
+                        break;
+                    default:
+                        self.write(" ");
+                }
+                nextcase default;
             case SPACE: 
                 if (is_multiline) {
                     if (
@@ -1226,6 +1280,21 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
             case COMMENT_SINGLE_INLINE:
             case COMMENT_MULTI_INLINE:
                 self.write(" %s", t.value);
+            case QUESTION:
+                switch(self._resolve__next_token(i)) {
+                    case EOS:
+                    case RPAREN:
+                    case COLON:
+                    case QUESTQUEST:
+                    case RBRACKET:
+                    case RVEC:
+                    case RGENPAR:
+                    case INVALID_TOKEN:
+                        break;
+                    default:
+                        self.write(" ");
+                }
+                nextcase default;
             default:
                 if (is_multiline) {
                     if (self.split_multiline(&tmpstate, wrap_rule))  {

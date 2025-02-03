@@ -1067,7 +1067,7 @@ fn char[]! test()
 {
     if (catch excuse = foo(call, dab)) {
         // Return the excuse with ? operator
-        return excuse ?;
+        return excuse?;
     }
 }
 
@@ -1100,7 +1100,7 @@ fn void! test()
             io::printn("File not found");
         default: {
             io::printfn("Unexpected Excuse: %s", excuse);
-            return excuse ?;
+            return excuse?;
         }
     }
 }

@@ -374,7 +374,7 @@ struct ReflectedParam (Printable) @if(!$defined(ReflectedParam))
     typeid type;
 }
 
-def Time_t = $typefrom(env::WIN32? long.typeid : CLong.typeid);
+def Time_t = $typefrom(env::WIN32 ? long.typeid : CLong.typeid);
 
 macro bool @typeis(#value, $Type) @const @builtin => $typeof(#value).typeid == $Type.typeid;
 
