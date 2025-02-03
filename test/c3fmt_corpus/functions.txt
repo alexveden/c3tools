@@ -270,7 +270,7 @@ Descr @param @ensure ignored
 @require $defined(resource.open, resource.open()),  ``Expected resource to have an "open" function``
 @require resource != nil
 @require $assignable(resource.open(), void*)
-@require test::@foo(), $assign(&&pass[0]), !bar() "some stuff"
+@require test::@foo(), $assign(&&pass[0], this_is_very_long, call, with, multiple, arguments), !bar() "some stuff"
 @require test::@foo(), $assign(&&pass[0]), !bar(): "some stuff"
 @require {| return resource != nil; |} "Shit!" 
 @mycustom "aoo" , "foo"
@@ -297,7 +297,7 @@ Descr @param @ensure ignored
 @require $defined(resource.open, resource.open()), ``Expected resource to have an "open" function``
 @require resource != nil
 @require $assignable(resource.open(), void*)
-@require test::@foo(), $assign(&&pass[0]), !bar() "some stuff"
+@require test::@foo(), $assign(&&pass[0], this_is_very_long, call, with, multiple, arguments), !bar() "some stuff"
 @require test::@foo(), $assign(&&pass[0]), !bar() : "some stuff"
 @require {|return resource != nil; |} "Shit!"
 @mycustom "aoo" , "foo"

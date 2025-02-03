@@ -2269,13 +2269,13 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
                     self.write(" ");
                     nextcase STATE: state.transition(EOS);
                 case DOCS_EOL:
-                    self.cache_statement_dump()!;
+                    self.cache_statement_dump(no_split: true)!;
                     self.newline();
                     state.transition(SCOPE);
                 case COLON:
                 case STRING:
                 case RAW_STRING:
-                    self.cache_statement_dump()!;
+                    self.cache_statement_dump(no_split: true)!;
                     self.write(" %s", t.value);
                 default:
                     self.cache_statement_add(state, t);
