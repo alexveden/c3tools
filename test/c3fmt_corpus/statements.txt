@@ -1455,7 +1455,7 @@ std::io;
 module math_tests::complex   (< ElementType >) @test;
 --------------------------------------------------------------------------------
 
-module test::std::core::test @test@if(FOO || BAR);
+module test::std::core::test @test @if(FOO || BAR);
 import std::core::test @public;
 import std::core::builtin;
 import std::io;

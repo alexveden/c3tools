@@ -554,3 +554,13 @@ fn void main()
     return;
 }
 
+================================================================================
+func_forward_decl
+================================================================================
+FopenFn native_fopen_fn @weak @if(!$defined(native_fopen_fn));
+FcloseFn native_fclose_fn @weak @if(!$defined(native_fclose_fn));
+--------------------------------------------------------------------------------
+
+FopenFn native_fopen_fn @weak @if(!$defined(native_fopen_fn));
+FcloseFn native_fclose_fn @weak @if(!$defined(native_fclose_fn));
+
