@@ -326,7 +326,7 @@ fn void main()
                 .foo = bar,
                 .zoo = bas
             },
-            .anothe_call = io::prinf(Foo{
+            .anothe_call = io::prinf(Foo {
                 .nowrap = true
             },"hi there it's c3fmt"),
             .a_call_unwrappe = io::prinf_wrapped_if_struct(long_argument_name,"another","hi there it's c3fmt"),
@@ -1489,17 +1489,17 @@ const Base64Alphabet URL = {
     .reverse = 2
 };
 const bool KEY_BY_VALUE @private = NO_KEY_FN ||| $assignable(
-    Type{}[0], $typefrom(KeyFn.paramsof[0].type)
+    Type {}[0], $typefrom(KeyFn.paramsof[0].type)
 );
 const bool KEY_BY_VALUE @private = $assignable(
-    Type{}[0],
+    Type {}[0],
     $typefrom(KeyFn.paramsof[0].type)
 ) ||| $assignable(
-    Type{}[0],
+    Type {}[0],
     $typefrom(KeyFn.paramsof[0].type)
 );
 const Foo F4 = (F1 | ~F2) ^ F3;
-const Foo F5 = Foo{ true, false } | Foo{ false, true };
+const Foo F5 = Foo { true, false } | Foo { false, true };
 const char[?] TEST_QOI_DATA = b64"cW9pZgAAAVQAAACpBABV/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39/f39";
 
 ================================================================================
@@ -1686,10 +1686,10 @@ fn void main()
     MyStruct foo_magic = {
         .bax = 2,
     };
-    call(MyStruct{}, Bar{.soo = 1,});
-    call(MyStruct{1, 2, 3});
-    MyStruct foo = (MyStruct)call(MyStruct{1, 2, 3});
-    MyStruct foo = (MyStruct)call(MyStruct{1, 2, 3,});
+    call(MyStruct {}, Bar {.soo = 1,});
+    call(MyStruct {1, 2, 3});
+    MyStruct foo = (MyStruct)call(MyStruct {1, 2, 3});
+    MyStruct foo = (MyStruct)call(MyStruct {1, 2, 3,});
 }
 
 ================================================================================

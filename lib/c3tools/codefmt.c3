@@ -507,6 +507,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
             switch(prev_t){
                 case STAR:
                 case AMP:
+                case BANG: // fn void! (  vs !(a && b)
                     if(self._resolve__prev_is_binexp()) pre_space = true;
                 case IDENT:
                 case AT_IDENT:
@@ -575,6 +576,13 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                 default:
                     pre_space = true;
             }
+        case BANG:
+            switch(prev_t){
+                case TYPE_IDENT:
+                    break; // no space
+                default: 
+                    nextcase TOP: default;
+            }
         default:
             if (self._resolve_default_space(state, t))  pre_space = true;
     }
@@ -596,34 +604,6 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
     }
     self.trace("ADD");
     self.__token_cache.push(*t);
-}
-
-fn bool CodeFmt._resolve__keyword_call_colon(&self, NodeParserState* state) {
-    assert(state.current_token == COLON);
-    assert(self.state_stack.len() > 0);
-
-    usz start_len = self.state_stack[^1].token_cache_start;
-    // only 1 token, it's not a binary exp 
-    if (self.__token_cache.len() - start_len == 1) return false;
-
-    bool is_call_kwarg = true;
-
-    for LOOP: (usz i = self.__token_cache.len(); i-- > start_len; )
-    {
-        Token* t = &self.__token_cache[i];
-        switch(t.type) {
-            case IDENT:
-            case SPACE:
-                break;
-            case COMMA:
-            case LPAREN:
-                break LOOP;
-            default:
-                is_call_kwarg = false;
-                break LOOP;
-        }
-    }
-    return is_call_kwarg;
 }
 
 <*
@@ -664,6 +644,7 @@ macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state, Token* 
 		case RETURN:
 		case EOS:
 		case IDENT:
+		case TYPE_IDENT:
 		case CT_IDENT:
 		case CT_TYPE_IDENT:
 		case COMMA:
@@ -708,6 +689,37 @@ macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state, Token* 
 		    break;
     }
 	return false;
+}
+
+<*
+Resolves if colon belongs to call(kwarg: 0) or foreach(f : some) 
+*>
+fn bool CodeFmt._resolve__keyword_call_colon(&self, NodeParserState* state) {
+    assert(state.current_token == COLON);
+    assert(self.state_stack.len() > 0);
+
+    usz start_len = self.state_stack[^1].token_cache_start;
+    // only 1 token, it's not a binary exp 
+    if (self.__token_cache.len() - start_len == 1) return false;
+
+    bool is_call_kwarg = true;
+
+    for LOOP: (usz i = self.__token_cache.len(); i-- > start_len; )
+    {
+        Token* t = &self.__token_cache[i];
+        switch(t.type) {
+            case IDENT:
+            case SPACE:
+                break;
+            case COMMA:
+            case LPAREN:
+                break LOOP;
+            default:
+                is_call_kwarg = false;
+                break LOOP;
+        }
+    }
+    return is_call_kwarg;
 }
 
 <*
@@ -784,6 +796,120 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
     return exp_count > 0;
 }
 
+<*
+Distinguish if next (.code.) block is a function call with more than 1 argument
+*>
+fn usz CodeFmt._resolve__next_is_cast_and_dump(&self, usz current_idx) {
+    NodeParserState tmpstate = NodeParserState{};
+
+    bool is_cast = true;
+    bool has_type = false;
+    usz cast_end = current_idx;
+    for(usz i = current_idx; i < self.__token_cache.len(); i++) {
+        Token* t = &self.__token_cache[i];
+        tmpstate.check(t); 
+        if (i == current_idx) {
+            assert(t.type == LPAREN);
+            assert(tmpstate.scope_depth == 1);
+        }
+
+        switch(t.type) {
+            // These are allowed in casts
+            case TYPE_IDENT:
+            case CT_TYPE_IDENT:
+            case CT_TYPEOF:
+                has_type = true;
+            case IDENT:
+            case STAR:
+            case AMP:
+            case LPAREN:
+            case RPAREN:
+            case LVEC:
+            case RVEC:
+            case LGENPAR:
+            case RGENPAR:
+                break;
+            default:
+                is_cast = false;
+        }
+
+        // Looping until next closing paren
+        if(tmpstate.scope_depth == 0) {
+            cast_end = i;
+            break;
+        }
+
+    }
+    if (is_cast && has_type) {
+        // cast must have at least one type
+        for(usz i = current_idx; i <= cast_end; i++) {
+            Token* t = &self.__token_cache[i];
+            self.write("%s", t.value);
+        }
+        return cast_end + 1;
+    } 
+    else {
+        // Not a cast, wrap as usual
+        return current_idx;
+    }
+}
+
+<*
+Distinguish if previous (.code.) block is a function call or type cast
+*>
+fn bool CodeFmt._resolve__prev_is_cast(&self) @private {
+    assert(self.state_stack.len() > 0);
+
+    usz start_len = self.state_stack[^1].token_cache_start;
+
+    int scope = 0;
+    bool is_cast = true;
+    bool has_type = false;
+
+    for LOOP: (usz i = self.__token_cache.len(); i-- > start_len; )
+    {
+        Token* t = &self.__token_cache[i];
+        switch(t.type) {
+            case RPAREN:
+                scope++;
+            case LPAREN:
+                scope--;
+                if (scope == 0){
+                    if (i > 0) {
+                        if(self.__token_cache[i-1].type == CT_TYPEOF) has_type = true;
+                    }
+                    break LOOP;
+                }
+            // These are allowed in casts
+            case TYPE_IDENT:
+            case CT_TYPE_IDENT:
+            case CT_TYPEOF:
+                has_type = true;
+            case IDENT:
+            case STAR:
+            case AMP:
+            case LVEC:
+            case RVEC:
+            case LGENPAR:
+            case RGENPAR:
+                break;
+            default:
+                is_cast = false;
+        }
+    }
+    return is_cast && has_type;
+}
+
+<*
+Checks next token type in token cache
+*>
+fn TokenType CodeFmt._resolve__next_token(&self, usz current_idx) {
+    TokenType result = INVALID_TOKEN;
+    if (current_idx + 1 < self.__token_cache.len()) {
+        result = self.__token_cache[current_idx+1].type;
+    }
+    return result;
+}
 
 macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TOKEN, bool no_split = false) @private {
     if (self.cache_statement_len() == 0) return;
@@ -968,7 +1094,7 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
                     tmpstate.scope_depth == 1 &&
                     brake_type == INVALID_TOKEN
                 ) {
-                    skip_i_until = self._resolve__dump__is_cast(i);
+                    skip_i_until = self._resolve__next_is_cast_and_dump(i);
                     if (skip_i_until == i){
                         self.write("%s", t.value);
                         self.indent();
@@ -1077,71 +1203,6 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
     };
 }
 
-<*
-Distinguish if next (.code.) block is a function call with more than 1 argument
-*>
-fn usz CodeFmt._resolve__dump__is_cast(&self, usz current_idx) {
-    NodeParserState tmpstate = NodeParserState{};
-
-    bool is_cast = true;
-    bool has_type = false;
-    usz cast_end = current_idx;
-    for(usz i = current_idx; i < self.__token_cache.len(); i++) {
-        Token* t = &self.__token_cache[i];
-        tmpstate.check(t); 
-        if (i == current_idx) {
-            assert(t.type == LPAREN);
-            assert(tmpstate.scope_depth == 1);
-        }
-
-        switch(t.type) {
-            // These are allowed in casts
-            case TYPE_IDENT:
-            case CT_TYPE_IDENT:
-            case CT_TYPEOF:
-                has_type = true;
-            case IDENT:
-            case STAR:
-            case AMP:
-            case LPAREN:
-            case RPAREN:
-            case LVEC:
-            case RVEC:
-            case LGENPAR:
-            case RGENPAR:
-                break;
-            default:
-                is_cast = false;
-        }
-
-        // Looping until next closing paren
-        if(tmpstate.scope_depth == 0) {
-            cast_end = i;
-            break;
-        }
-
-    }
-    if (is_cast && has_type) {
-        // cast must have at least one type
-        for(usz i = current_idx; i <= cast_end; i++) {
-            Token* t = &self.__token_cache[i];
-            self.write("%s", t.value);
-        }
-        return cast_end + 1;
-    } 
-    else {
-        // Not a cast, wrap as usual
-        return current_idx;
-    }
-}
-fn TokenType CodeFmt._resolve__next_token(&self, usz current_idx) {
-    TokenType result = INVALID_TOKEN;
-    if (current_idx + 1 < self.__token_cache.len()) {
-        result = self.__token_cache[current_idx+1].type;
-    }
-    return result;
-}
-    
 
 <*
 Check if previous token triggers multi-line split
@@ -1677,12 +1738,17 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                             return self.push_run_state(&CodeFmt.format_code_scope, t);
                         default:
                             if (state.last_token == RPAREN) {
-                                // Case for
-                                // mem::@scoped(&allocator){ @body(); };
-                                state.initial_token = FOR;
-                                nextcase LBRAPIPE;
+                                if (!self._resolve__prev_is_cast()) {
+                                    // Not a cast
+                                    // mem::@scoped(&allocator){ @body(); };
+                                    state.initial_token = FOR;
+                                    nextcase LBRAPIPE;
+                                } else {
+                                    // looks like a cast
+                                    // return $typeof(*mat) { .m = val * ($Type)mat.m };
+                                    break; // nextcase default
+                                }
                             }
-                            break;
                     }
                     nextcase default;
                 case WHILE:

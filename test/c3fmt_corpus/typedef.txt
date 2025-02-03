@@ -184,7 +184,7 @@ enum State : int @if("foo") (
     bool active,
     Position pos,
     FooooLong type,
-    AnotherLoongType,
+    AnotherLoong Type,
     maybe_one_more
 ) @test
 {
@@ -250,11 +250,11 @@ def @Test = { @noinline };
 def EnumSetType = $typefrom(
     private::type_for_enum_elements(Enum.elements)
 ) @private;
-def ElementTest = fn bool(Type* type, any context);
-def TestFailFn = fn void!(bool to_fail);
+def ElementTest = fn bool (Type* type, any context);
+def TestFailFn = fn void! (bool to_fail);
 def FormatTzTestSpec = Triple(<TzDateTime, DateTimeFormat, String>);
 def IntList = ElasticArray(<int, 10>);
-def BenchmarkFn = fn void!(int) @if($$OLD_TEST);
+def BenchmarkFn = fn void! (int) @if($$OLD_TEST);
 def @Align(y) = { @Align16(y / 2) };
 def @Test = { @noinline };
 
@@ -278,11 +278,11 @@ interface Printable @if("sasda")
     fn String to_new_string(Allocator allocator) @optional @deprecated("Use to_string");
     fn usz! to_format(Formatter* formatter) @optional;
     fn usz* to_format(
-        Formatter* formatter, AlooongType, Maybe can, bool wrap, please
+        Formatter* formatter, Alooong Type, Maybe can, bool wrap, please
     ) @optional;
     fn usz* to_format(
         Formatter* formatter,
-        AlooongType,
+        Alooong Type,
         Maybe can,
         bool wrap,
         please,
@@ -307,7 +307,7 @@ distinct PriorityQueue = inline PrivatePriorityQueue <[Type,false] >;
 distinct Color = float[<4>];
 distinct TypeA = char[];
 distinct Bob = inline Abc;
-distinct Foo = fn void(Foo** x);  // #error: cannot define a new function type
+distinct Foo = fn void (Foo** x);  // #error: cannot define a new function type
 distinct Foo = inline PrivateFoo(<int>);  // #error: could not be found
 distinct PriorityQueue = inline PrivatePriorityQueue <[Type,false] >;
 

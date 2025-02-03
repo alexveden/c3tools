@@ -353,7 +353,7 @@ fn void remove_using_test()
         fn bool_long(i, ctx) => *i >= *(int*)ctx, &&10
     );
     assert(removed == 3);
-    thread.create(fn int(void* arg)
+    thread.create(fn int (void* arg)
     {
         UnbufferedChannel(<int>) c = (UnbufferedChannel(<int>))arg;
         c.push(123)!!;

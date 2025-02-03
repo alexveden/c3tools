@@ -9,7 +9,7 @@ fn void remove_using_test()
 
 fn void remove_using_test()
 {
-    removed = test.remove_using_test(fn bool(i, ctx) => *i >= *(int*)ctx, &&10);
+    removed = test.remove_using_test(fn bool (i, ctx) => *i >= *(int*)ctx, &&10);
 }
 
 ================================================================================
