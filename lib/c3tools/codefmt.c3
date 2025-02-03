@@ -435,6 +435,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                 case RBRACKET:
                 case CONST_IDENT:
 		        case CT_TYPE_IDENT:
+		        case ELLIPSIS:
                     pre_space = true;
                 case STAR:
                 case RPAREN:
