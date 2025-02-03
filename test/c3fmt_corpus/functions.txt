@@ -255,6 +255,9 @@ Descr @param @ensure ignored
 @require $defined(resource.open, resource.open()),  ``Expected resource to have an "open" function``
 @require resource != nil
 @require $assignable(resource.open(), void*)
+@require test::@foo(), $assign(&&pass[0]), !bar() "some stuff"
+@require test::@foo(), $assign(&&pass[0]), !bar(): "some stuff"
+@require {| return resource != nil; |} "Shit!" 
 @mycustom "aoo" , "foo"
 *>
 fn void 
@@ -278,7 +281,10 @@ Descr @param @ensure ignored
 @return! IoError.FOO, EioError.BAR
 @require $defined(resource.open, resource.open()), ``Expected resource to have an "open" function``
 @require resource != nil
-@require $assignable(resource.open(), void *)
+@require $assignable(resource.open(), void*)
+@require test::@foo(), $assign(&&pass[0]), !bar() "some stuff"
+@require test::@foo(), $assign(&&pass[0]), !bar() : "some stuff"
+@require {|return resource != nil; |} "Shit!"
 @mycustom "aoo" , "foo"
 *>
 fn void main()

@@ -577,18 +577,9 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                     pre_space = true;
             }
         case QUESTION:
-            // HACK: it's impossivle to distinguish err?; and err ? foo : bar;
+            // HACK: it's impossible to distinguish err?; and err ? foo : bar;
             // we'll try to resolve it by forward looking hack in dump func()
             break;
-
-            // switch(prev_t){
-            //     case CONST_IDENT:
-            //     case LBRACKET:
-            //     case LVEC:
-            //         break;
-            //     default:
-            //         pre_space = true;
-            // }
         case BANG:
             switch(prev_t){
                 case TYPE_IDENT:
@@ -2154,8 +2145,8 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
                         case "@param":  
                             state.transition(VAR);
                         case "@require":  
-                            state.transition(ASSERT);
                         case "@ensure": 
+                            self.write(" ");
                             state.transition(ASSERT);
                         case "@return": 
                             state.transition(RETURN);
@@ -2179,26 +2170,20 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
         case ASSERT:  // @require / @ensure
             switch(t.type) {
                 case DOCS_END:
+                    self.cache_statement_dump()!;
                     self.write(" ");
                     nextcase STATE: state.transition(EOS);
                 case DOCS_EOL:
+                    self.cache_statement_dump()!;
                     self.newline();
                     state.transition(SCOPE);
-                case COMMA:
-                case DOT:
-                case LPAREN:
-                case RPAREN:
-                    self.write("%s", t.value);
+                case COLON:
+                case STRING:
+                case RAW_STRING:
+                    self.cache_statement_dump()!;
+                    self.write(" %s", t.value);
                 default:
-                    switch(state.last_token) {
-                        case BANG:
-                        case LPAREN:
-                        case DOT:
-                            self.write("%s", t.value);
-
-                        default:
-                            self.write(" %s", t.value);
-                    }
+                    self.cache_statement_add(state, t);
             }
         case RETURN:  // @return[!]
             switch(t.type) {
