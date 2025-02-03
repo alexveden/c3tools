@@ -220,16 +220,6 @@ struct TokenData @private
 	}
 }
 
-fn ushort check_col(usz col) @inline @local
-{
-	if (col > 255) return 0;
-	return (ushort)col;
-}
-fn uint check_row(usz line) @inline @local
-{
-	return line > lexer::MAX_SOURCE_LOCATION_LEN ? 0 : (uint)line;
-}
-
 // --- Lexing general methods.
 
 // Peek at the current character in the buffer.
@@ -329,19 +319,22 @@ fn void set_generic_token(Lexer *lexer, TokenType type, String value) @inline @l
 	if (line == lexer.current_row)
 	{
 		// Col is simple difference.
-		col = check_col(lexer.lexing_start - lexer.line_start + 1);
+		assert(lexer.lexing_start >= lexer.line_start);
+		col = (uint)(lexer.lexing_start - lexer.line_start) + 1;
+
 		// Length is diff between current and start.
-		length = check_row(lexer.current - lexer.lexing_start);
+		assert(lexer.current >= lexer.lexing_start);
+		length = (uint)(lexer.current - lexer.lexing_start);
 	}
 	else
 	{
 		// For multiline, we grab the diff from the starting line.
-		col = check_col(lexer.lexing_start - lexer.start_row_start + 1);
+		assert(lexer.lexing_start >= lexer.start_row_start);
+		col = (uint)(lexer.lexing_start - lexer.start_row_start) + 1;
 		// But always set a single token length.
 		length = 1;
 	}
-	// lexer.tok_span.length = (char)length; 
-	lexer.token.col = (char)col;
+	lexer.token.col = col;
 	lexer.token.row = line;
 }
 
@@ -1050,7 +1043,9 @@ fn bool scan_hex_array(Lexer *lexer) @inline @local
 		{
 			return add_error_token_at_current(lexer, "The hex string seems to be missing a terminating ");
 		}
+
 		if (c == start_char) break;
+
 		if (utils_port::char_is_hex(c))
 		{
 			next(lexer);
@@ -1077,7 +1072,11 @@ fn bool scan_hex_array(Lexer *lexer) @inline @local
 		return add_error_token(lexer, "The hexadecimal string is not an even length, did you miss a digit somewhere?");
 	}
 
-	new_token(lexer, BYTES, (String)lexer.lexing_start[..len+1]);
+	char *current = lexer.lexing_start;
+	char *end = lexer.current;
+	len = (usz)(end - current - 1);
+
+	new_token(lexer, BYTES, (String)lexer.lexing_start[..len]);
 	return true;
 }
 
@@ -1127,6 +1126,9 @@ fn bool scan_base64(Lexer *lexer) @inline @local
 			return add_error_token_at_current(lexer, "not a valid base64 character.");
 		}
 	}
+	char *current = lexer.lexing_start;
+	char *end = lexer.current;
+	len = (usz)(end - current - 1);
 	new_token(lexer, BYTES, (String)lexer.lexing_start[..len]);
 	return true;
 }
