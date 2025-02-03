@@ -510,6 +510,8 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                     if(self._resolve__prev_is_binexp()) pre_space = true;
                 case IDENT:
                 case AT_IDENT:
+                case CT_IDENT:
+                case CT_TYPE_IDENT:
                 case RPAREN:
                 case RGENPAR:
                 case RVEC:
@@ -660,6 +662,8 @@ macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state, Token* 
 		case RETURN:
 		case EOS:
 		case IDENT:
+		case CT_IDENT:
+		case CT_TYPE_IDENT:
 		case COMMA:
 		case EQ:
 		case BIT_AND_ASSIGN:
