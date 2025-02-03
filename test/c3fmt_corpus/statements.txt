@@ -1850,3 +1850,42 @@ fn void main()
     };
 }
 
+================================================================================
+designated_initializers_with_comments
+================================================================================
+
+fn void main()
+{
+    argparse::ArgParse agp = {  //  inline2
+        // stuff
+        .description = "c3 code formatting tool",
+        // another
+        .usage = "[options] file1 .. fileN", // maybe inline
+        .options = { 
+            // one moar
+            .foo = {1, 2, 3, // another inline
+            },
+        }, 
+    };
+}
+
+--------------------------------------------------------------------------------
+
+fn void main()
+{
+    argparse::ArgParse agp = {  //  inline2
+        // stuff
+        .description = "c3 code formatting tool",
+        // another
+        .usage = "[options] file1 .. fileN",  // maybe inline
+        .options = {
+            // one moar
+            .foo = {
+                1,
+                2,
+                3,  // another inline
+            },
+        },
+    };
+}
+

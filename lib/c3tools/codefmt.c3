@@ -966,6 +966,7 @@ macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TO
             case COMMENT_MULTI:
             case COMMENT_SINGLE_INLINE:
             case COMMENT_MULTI_INLINE:
+                tmpstate.current_token = tmpstate.last_token;
                 has_magic_comma = true;
             case SPACE:
                 tmpstate.current_token = tmpstate.last_token;
@@ -1036,9 +1037,11 @@ macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, T
             case COMMENT_MULTI:
                 self.newline();
                 self.write("%s", t.value);
+                tmpstate.current_token = tmpstate.last_token;
             case COMMENT_SINGLE_INLINE:
             case COMMENT_MULTI_INLINE:
-                self.write(" %s", t.value);
+                self.write("  %s", t.value);
+                tmpstate.current_token = tmpstate.last_token;
             case SPACE: 
                 if (is_multiline) {
                     if (
