@@ -239,69 +239,6 @@ fn void main()
 }
 
 ================================================================================
-simple_main_docstring_multi_contract
-================================================================================
-<*              
-Descr @param @ensure ignored
-   another line
-
-        maybe one more
-  last one
-
-
-@param [&in] i
-@param num_foo "The number of foos."
-@require foo==0, bar > 0 : "This is a stuff"
-@require !foo : "This is a stuff"
-@ensure foo==null, bar > 0 ``This is raw stuff``
-@require $kindof() "This is a stuff"
-
-@require foo > 1 
-@return IoError.FOO, EioError.BAR
-@return! IoError.FOO, EioError.BAR
-@require $defined(resource.open, resource.open()),  ``Expected resource to have an "open" function``
-@require resource != nil
-@require $assignable(resource.open(), void*)
-@require test::@foo(), $assign(&&pass[0], this_is_very_long, call, with, multiple, arguments), !bar() "some stuff"
-@require test::@foo(), $assign(&&pass[0]), !bar(): "some stuff"
-@require {| return resource != nil; |} "Shit!" 
-@mycustom "aoo" , "foo"
-*>
-fn void 
-main() { return;}
-
---------------------------------------------------------------------------------
-<*
- Descr @param @ensure ignored
- another line
-
- maybe one more
- last one
-
- @param [&in] i
- @param num_foo "The number of foos."
- @require foo == 0, bar > 0 : "This is a stuff"
- @require !foo : "This is a stuff"
- @ensure foo == null, bar > 0 ``This is raw stuff``
- @require $kindof() "This is a stuff"
-
- @require foo > 1
- @return IoError.FOO, EioError.BAR
- @return! IoError.FOO, EioError.BAR
- @require $defined(resource.open, resource.open()), ``Expected resource to have an "open" function``
- @require resource != nil
- @require $assignable(resource.open(), void*)
- @require test::@foo(), $assign(&&pass[0], this_is_very_long, call, with, multiple, arguments), !bar() "some stuff"
- @require test::@foo(), $assign(&&pass[0]), !bar() : "some stuff"
- @require {|return resource != nil; |} "Shit!"
- @mycustom "aoo" , "foo"
-*>
-fn void main()
-{
-    return;
-}
-
-================================================================================
 simple_lambda
 ================================================================================
 
@@ -518,27 +455,6 @@ macro parse_callable_params()
             );
         }
     }
-}
-
-================================================================================
-param_space_in_contract
-================================================================================
-<* 
- Doc
- @require foo > 1 
- *>
-fn void 
-main() { return;}
-
---------------------------------------------------------------------------------
-<*
- Doc
-
- @require foo > 1
-*>
-fn void main()
-{
-    return;
 }
 
 ================================================================================

@@ -1,0 +1,231 @@
+================================================================================
+simple_enum_docs
+================================================================================
+<* Some State *>
+enum State
+{
+    WAITING,  <* Running state*>  RUNNING,
+
+    <* Another with empty line *>
+    TERMINATED
+}
+--------------------------------------------------------------------------------
+<* Some State *>
+enum State
+{
+    WAITING,
+    <* Running state*>
+    RUNNING,
+
+    <* Another with empty line *>
+    TERMINATED
+}
+
+================================================================================
+def_interface_with_docs
+================================================================================
+interface Printable @if("sasda")
+{
+    <*
+     Doc
+     @param foo "bar"
+     @param boo "baz"
+    *>
+    fn String* to_string(Allocator allocator) @optional;
+    <* Doc 2 *>
+    fn String* to_string(Allocator allocator) @optional;
+
+    <* Doc 3 empty line *>
+    fn String* to_string(Allocator allocator) @optional;
+}
+--------------------------------------------------------------------------------
+interface Printable @if("sasda")
+{
+    <*
+     Doc
+
+     @param foo "bar"
+     @param boo "baz"
+    *>
+    fn String* to_string(Allocator allocator) @optional;
+    <* Doc 2 *>
+    fn String* to_string(Allocator allocator) @optional;
+
+    <* Doc 3 empty line *>
+    fn String* to_string(Allocator allocator) @optional;
+}
+
+================================================================================
+simple_struct_doc_str
+================================================================================
+
+<* Docstr *>
+struct 
+Person {
+    char age; 
+<* Docstr *>
+    string::String name; }
+--------------------------------------------------------------------------------
+<* Docstr *>
+struct Person
+{
+    char age;
+    <* Docstr *>
+    string::String name;
+}
+
+================================================================================
+param_space_in_contract
+================================================================================
+<* 
+ Doc
+ @require foo > 1 
+ *>
+fn void 
+main() { return;}
+
+--------------------------------------------------------------------------------
+<*
+ Doc
+
+ @require foo > 1
+*>
+fn void main()
+{
+    return;
+}
+
+================================================================================
+simple_main_docstring_multi_contract
+================================================================================
+<*              
+Descr @param @ensure ignored
+   another line
+
+        maybe one more
+  last one
+
+
+@param [&in] i
+@param num_foo "The number of foos."
+@require foo==0, bar > 0 : "This is a stuff"
+@require !foo : "This is a stuff"
+@ensure foo==null, bar > 0 ``This is raw stuff``
+@require $kindof() "This is a stuff"
+
+@require foo > 1 
+@return IoError.FOO, EioError.BAR
+@return! IoError.FOO, EioError.BAR
+@require $defined(resource.open, resource.open()),  ``Expected resource to have an "open" function``
+@require resource != nil
+@require $assignable(resource.open(), void*)
+@require test::@foo(), $assign(&&pass[0], this_is_very_long, call, with, multiple, arguments), !bar() "some stuff"
+@require test::@foo(), $assign(&&pass[0]), !bar(): "some stuff"
+@require {| return resource != nil; |} "Shit!" 
+@mycustom "aoo" , "foo"
+*>
+fn void 
+main() { return;}
+
+--------------------------------------------------------------------------------
+<*
+ Descr @param @ensure ignored
+ another line
+
+ maybe one more
+ last one
+
+ @param [&in] i
+ @param num_foo "The number of foos."
+ @require foo == 0, bar > 0 : "This is a stuff"
+ @require !foo : "This is a stuff"
+ @ensure foo == null, bar > 0 ``This is raw stuff``
+ @require $kindof() "This is a stuff"
+
+ @require foo > 1
+ @return IoError.FOO, EioError.BAR
+ @return! IoError.FOO, EioError.BAR
+ @require $defined(resource.open, resource.open()), ``Expected resource to have an "open" function``
+ @require resource != nil
+ @require $assignable(resource.open(), void*)
+ @require test::@foo(), $assign(&&pass[0], this_is_very_long, call, with, multiple, arguments), !bar() "some stuff"
+ @require test::@foo(), $assign(&&pass[0]), !bar() : "some stuff"
+ @require {|return resource != nil; |} "Shit!"
+ @mycustom "aoo" , "foo"
+*>
+fn void main()
+{
+    return;
+}
+
+================================================================================
+docstr_double_spaces
+================================================================================
+<* 
+ Doc
+ line2
+
+
+ line3
+ @require foo > 1 
+ *>
+fn void 
+main() { return;}
+
+--------------------------------------------------------------------------------
+<*
+ Doc
+ line2
+
+ line3
+
+ @require foo > 1
+*>
+fn void main()
+{
+    return;
+}
+
+================================================================================
+docstr_code_block
+================================================================================
+<* 
+ Doc string for c3fmt
+ 
+     Here is an example of code with ident:
+``````c3
+int f = 0;
+if (foo) {
+    // code indent maintained
+    return;
+}
+``````
+    This line is indented by 1 space.
+
+ @require foo > 1 
+ *>
+fn void 
+main() { return;}
+
+--------------------------------------------------------------------------------
+<*
+ Doc string for c3fmt
+
+ Here is an example of code with ident:
+
+``````c3
+int f = 0;
+if (foo) {
+    // code indent maintained
+    return;
+}
+``````
+ This line is indented by 1 space.
+
+ @require foo > 1
+*>
+fn void main()
+{
+    return;
+}
+

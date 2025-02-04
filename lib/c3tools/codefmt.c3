@@ -2320,16 +2320,27 @@ fn bool CodeFmt.format_docstring_text_write(&self, Token* t) {
     bool is_multiline = t.value.ends_with("\n");
 
     bool is_new_line = true;
+    bool is_in_code = false;
     int count = 0;
     for LOOP: (usz i = 2; i < t.value.len; i++){
         char c = t.value[i];
-        if (is_new_line) {
+        if (is_new_line && !is_in_code) {
             switch(c){
                 case ' ':
                 case '\t':
                     continue LOOP;
                 case '\n':
                     has_new_line = true;
+                case '`':
+                    if (i < t.value.len - 3) {
+                        if (t.value[i+1] == '`' && t.value[i+2] == '`'){
+                            is_in_code = true;
+                            self.newline();
+                            self.write("%c", c);
+                            continue LOOP;
+                        }
+                    }
+                    nextcase default;
                 default:
                     // first char + append space to it
                     is_new_line = false;
@@ -2341,12 +2352,21 @@ fn bool CodeFmt.format_docstring_text_write(&self, Token* t) {
                     self.write(" %c", c);
             }
         } else {
-            if (c == '\n'){
-                is_new_line = true;
-                has_new_line = false;
-                self.newline(is_empty: true);
-            } else {
-                self.write("%c", c);
+            switch(c){
+                case '\n':
+                    is_new_line = true;
+                    has_new_line = false;
+                    self.newline(is_empty: true);
+                case '`':
+                    if (is_in_code && i < t.value.len - 3) {
+                        if (t.value[i+1] == '`' && t.value[i+2] == '`'){
+                            is_in_code = false;
+                            is_new_line = false;
+                        }
+                    }
+                    nextcase default;
+                default:
+                    self.write("%c", c);
             }
         }
 
