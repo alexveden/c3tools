@@ -523,6 +523,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                 case LBRACKET:
                 case RGENPAR:
                 case RVEC:
+                case BANG:
                     break;
                 case RPAREN:
                 case RBRACKET:
@@ -977,6 +978,7 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
                 }
                 break;
             case SPACE:
+            case BANG: // if(!* 
                 break;
 		    case QUESTION: // for ternary
 		        if (scope == 0) break LOOP;

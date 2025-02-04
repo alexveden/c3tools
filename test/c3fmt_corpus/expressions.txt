@@ -271,6 +271,7 @@ fn void! main() {
     if(!foo()) return 0;
     if(!foo() && (!(foo | bar) && !foo)) return 0;
     return !(!foo());
+    if(!*self) return 0;
 }
 
 --------------------------------------------------------------------------------
@@ -294,6 +295,7 @@ fn void! main()
     if (!foo()) return 0;
     if (!foo() && (!(foo | bar) && !foo)) return 0;
     return !(!foo());
+    if (!*self) return 0;
 }
 
 ================================================================================
