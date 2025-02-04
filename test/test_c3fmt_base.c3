@@ -28,7 +28,6 @@ fn void main()
   if (foo) return 0;
   return 1;
 }
-
 `;
     test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
 }
@@ -55,7 +54,6 @@ fn void main()
         if (foo) return 0;
         return 1;
 }
-
 `;
     test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
 }
@@ -76,6 +74,6 @@ fn void main()
     io::printfn("\nformatted code\n```");
     io::print(formatted);
     io::printfn("```");
-    String expected = "\nfn void main()\n{\n\tif (foo) return 0;\n\treturn 1;\n}\n\n";
+    String expected = "\nfn void main()\n{\n\tif (foo) return 0;\n\treturn 1;\n}\n";
     test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
 }

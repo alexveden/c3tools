@@ -10,7 +10,6 @@ fn void remove_using_test()
 {
     removed = test.remove_using_test(fn bool (i, ctx) => *i >= *(int*)ctx, &&10);
 }
-
 ================================================================================
 casting_pointers
 ================================================================================
@@ -103,4 +102,3 @@ fn void* main(int* arg)
     bitcast((float)x, uint) & 0xff;
     match = (mem::@volatile_load(((char*)data1)[i]) ^ mem::@volatile_load());
 }
-

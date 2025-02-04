@@ -195,7 +195,6 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
 	                case COMMENT_MULTI_INLINE:
 	                case COMMENT_MULTI:
 	                case COMMENT_SINGLE:
-	                    // self._is_empty_line = false;
 	                    break;
 	                case DOCS_END:
 	                    self._is_empty_line = true;
@@ -215,16 +214,8 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
 	    case EOF:
 	        self.trace("COMMENT EOF");
 	        if (self._is_paused) return false;
-	        // if (self._is_empty_line) return false;
-	        // if (state.scope_depth == 0 && state.last_token == RBRACE && t.type != EOF) return true;
-	        if (self._lexer.is_whitespace_mode) {
-	            // Do a direct write
+	        if (self.buf.len() > 0 && self.buf.char_at(self.buf.len()-1) != '\n') {
 	            self.buf.append("\n");
-	        } else {
-	            if(state.last_token == EOS) {
-	                self.newline(is_empty: true);
-	            }
-	            self.newline(is_empty: true);
 	        }
 	        return false;
 
@@ -672,8 +663,6 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
         // starting [ and end ] - are managed separately above
         // starting statement always without space 
         if (cache_len == 0) return true;
-        // if (state.prev_scope(1) == LBRACKET && t.type != LBRACKET) return true;
-        // if (t.type == RBRACKET) return true;
 
         return false;
     |};
@@ -1245,7 +1234,6 @@ macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TO
 		    case LPAREN:
                 if (break_pos != -1 ) nextcase default;
                 if (tmpstate.scope_depth != 1) nextcase default;
-                // if (i == 0) nextcase default;
                 break_pos = (int)i;
                 break_len = 0;
 		    case RBRACE:
@@ -1430,24 +1418,14 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
                     }
                     break;
                 } else {
-                    // self.write("%s", t.value);
                     nextcase default;
                 }
             case LBRACE:  // Array initializers splitting
                 if (tmpstate.scope_depth == 1 && brake_type == INVALID_TOKEN) {
                     self.write("%s", t.value);
                     self.indent();
-                    // self.newline();
                     brake_type = RBRACE;
                 } else {
-                    // if (tmpstate.scope_depth == 2 
-                    //     && brake_type == RBRACE 
-                    //     && tmpstate.last_token == COMMA)
-                    // {
-                    //     self.newline();
-                    //     self.write("%s", t.value);
-                    // } else {
-                    // }
                     nextcase default;
                 }
             case brake_type:
@@ -1485,7 +1463,6 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
                 if (is_multiline) {
                     if (self.split_multiline(&tmpstate, wrap_rule))  {
                         if (tmpstate.current_token == SPACE) {
-                            // self.write("$");
                             tmpstate.current_token = tmpstate.last_token;
                         } else {
                             self.newline();
@@ -1750,9 +1727,6 @@ fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserSta
             self.trace("SCOPE");
             switch(t.type) {
                 case EOF:
-                    if (state.scope_depth == 0 && state.last_token != EMPTY_LINE) {
-                        // self.newline(is_empty: true);
-                    }
                     self.trace("EXIT");
 	                return true;
                 case DOCS_END:
@@ -2299,12 +2273,6 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
                     return true;
                 default:
                     self.cache_statement_add(state, t);
-                    // CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;
-                    // if (new_local_state == null){
-                    //     self.cache_statement_add(state, t);
-                    // } else {                    
-                    //     self.cache_statement_dump(no_split: true)!;
-                    // }
             }
         default:
             unreachable();
@@ -2387,7 +2355,6 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
             assert(t.type == DOCS_START);
             assert(state.initial_token == DOCS_START);
             self.trace("ENTRY");
-            // self.write("%s", t.value);
             if (self.format_docstring_text_write(t)) {
                 // marker of multiline doc
                 state.initial_token = DOCS_EOL;
@@ -2402,11 +2369,7 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
                     nextcase STATE: state.transition(EOS);
                 case AT_IDENT:
                     if (state.initial_token == DOCS_EOL){
-                        // self.write("\n");
                         self.newline();
-                        // self.newline(indent_only: true);
-                        // self.newline(is_empty: true, indent_only: true);
-                        // write new line only before 1st contract
                         state.initial_token = DOCS_START;
                     }
                     
@@ -2506,7 +2469,6 @@ fn bool! CodeFmt.format_comptime_switch_body(CodeFmt* self, Token* t, NodeParser
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:
             self.trace("ENTRY");
-            // self.newline();
             switch(t.type) {
 	            case CT_CASE:
 	            case CT_DEFAULT:
