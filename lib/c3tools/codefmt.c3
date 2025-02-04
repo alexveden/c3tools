@@ -48,10 +48,10 @@ const Token TOKEN_SPACE = Token{.type = SPACE, .value = " "};
 */
 
 <*
-Code formatter constructor
+ Code formatter constructor
 
-@require max_line_width >= 80 : "too short"
-@require max_line_width <= 120 : "too long"
+ @require max_line_width >= 80 : "too short"
+ @require max_line_width <= 120 : "too long"
 *>
 fn CodeFmt CodeFmt.new_init(int max_line_width=80, char indent_type = '4') @operator(construct) {
     CodeFmt self = {
@@ -1645,7 +1645,7 @@ macro usz CodeFmt.cache_statement_len(&self) @private {
 <*
 Iterate to each cached tokens available by only CURRENT stack
 *>
-macro CodeFmt.@cache_statement_iter(&self; @body(idx, token)) @private {
+macro CodeFmt.@cache_statement_iter(&self; @body(idx, token)) @private {           assert(self.state_stack.len() > 0);
     assert(self.state_stack.len() > 0);
 
     usz start_len = self.state_stack[^1].token_cache_start;
@@ -2313,6 +2313,49 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
     return false;
 }
 
+fn bool CodeFmt.format_docstring_text_write(&self, Token* t) {
+    self.write("<*");
+
+    bool has_new_line = false;
+    bool is_multiline = t.value.ends_with("\n");
+
+    bool is_new_line = true;
+    int count = 0;
+    for LOOP: (usz i = 2; i < t.value.len; i++){
+        char c = t.value[i];
+        if (is_new_line) {
+            switch(c){
+                case ' ':
+                case '\t':
+                    continue LOOP;
+                case '\n':
+                    has_new_line = true;
+                default:
+                    // first char + append space to it
+                    is_new_line = false;
+                    if (has_new_line || (is_multiline && count == 0)) {
+                        self.newline();
+                        has_new_line = false;
+                    }
+                    count++;
+                    self.write(" %c", c);
+            }
+        } else {
+            if (c == '\n'){
+                is_new_line = true;
+                has_new_line = false;
+                self.newline(is_empty: true);
+            } else {
+                self.write("%c", c);
+            }
+        }
+
+    }
+    if (is_multiline &&  count == 0)  self.newline();
+    
+    return is_multiline && count > 0;
+}
+
 <*
 Formatting generic doc string with contracts
 *>
@@ -2322,10 +2365,12 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
     switch STATE: (state.check(t)){
         case INVALID_TOKEN:         // initial state
             assert(t.type == DOCS_START);
+            assert(state.initial_token == DOCS_START);
             self.trace("ENTRY");
-            self.write("%s", t.value);
-            if (t.value.ends_with("\n")) {
-                self.newline(indent_only: true);
+            // self.write("%s", t.value);
+            if (self.format_docstring_text_write(t)) {
+                // marker of multiline doc
+                state.initial_token = DOCS_EOL;
             }
             state.transition(SCOPE);
         case SCOPE: // contract scope
@@ -2336,7 +2381,16 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
                 case DOCS_END:
                     nextcase STATE: state.transition(EOS);
                 case AT_IDENT:
-                    self.write("%s", t.value);
+                    if (state.initial_token == DOCS_EOL){
+                        // self.write("\n");
+                        self.newline();
+                        // self.newline(indent_only: true);
+                        // self.newline(is_empty: true, indent_only: true);
+                        // write new line only before 1st contract
+                        state.initial_token = DOCS_START;
+                    }
+                    
+                    self.write(" %s", t.value);
                     switch(t.value) {
                         case "@param":  
                             state.transition(VAR);

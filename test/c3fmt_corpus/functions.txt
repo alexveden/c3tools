@@ -217,7 +217,7 @@ main() { return;}
 
 --------------------------------------------------------------------------------
 <*
-   My doc asdlkjad aiis is not formatted at                                all an used as is
+ My doc asdlkjad aiis is not formatted at                                all an used as is
 *>
 fn void main()
 {
@@ -241,8 +241,12 @@ fn void main()
 ================================================================================
 simple_main_docstring_multi_contract
 ================================================================================
-<* 
+<*              
 Descr @param @ensure ignored
+   another line
+
+        maybe one more
+  last one
 
 
 @param [&in] i
@@ -267,27 +271,30 @@ fn void
 main() { return;}
 
 --------------------------------------------------------------------------------
-<* 
-Descr @param @ensure ignored
+<*
+ Descr @param @ensure ignored
+ another line
 
+ maybe one more
+ last one
 
-@param [&in] i
-@param num_foo "The number of foos."
-@require foo == 0, bar > 0 : "This is a stuff"
-@require !foo : "This is a stuff"
-@ensure foo == null, bar > 0 ``This is raw stuff``
-@require $kindof() "This is a stuff"
+ @param [&in] i
+ @param num_foo "The number of foos."
+ @require foo == 0, bar > 0 : "This is a stuff"
+ @require !foo : "This is a stuff"
+ @ensure foo == null, bar > 0 ``This is raw stuff``
+ @require $kindof() "This is a stuff"
 
-@require foo > 1
-@return IoError.FOO, EioError.BAR
-@return! IoError.FOO, EioError.BAR
-@require $defined(resource.open, resource.open()), ``Expected resource to have an "open" function``
-@require resource != nil
-@require $assignable(resource.open(), void*)
-@require test::@foo(), $assign(&&pass[0], this_is_very_long, call, with, multiple, arguments), !bar() "some stuff"
-@require test::@foo(), $assign(&&pass[0]), !bar() : "some stuff"
-@require {|return resource != nil; |} "Shit!"
-@mycustom "aoo" , "foo"
+ @require foo > 1
+ @return IoError.FOO, EioError.BAR
+ @return! IoError.FOO, EioError.BAR
+ @require $defined(resource.open, resource.open()), ``Expected resource to have an "open" function``
+ @require resource != nil
+ @require $assignable(resource.open(), void*)
+ @require test::@foo(), $assign(&&pass[0], this_is_very_long, call, with, multiple, arguments), !bar() "some stuff"
+ @require test::@foo(), $assign(&&pass[0]), !bar() : "some stuff"
+ @require {|return resource != nil; |} "Shit!"
+ @mycustom "aoo" , "foo"
 *>
 fn void main()
 {
@@ -390,8 +397,10 @@ start, len);
 <* A doc *>
 macro CFile stderr() => __acrt_iob_func(STDERR_FD);
 
-<* Another doc
-@param c "with contracts"
+<*
+ Another doc
+
+ @param c "with contracts"
 *>
 fn bool in_range(char c, char start, char len) => in_range_m(c, start, len);
 
@@ -522,9 +531,10 @@ fn void
 main() { return;}
 
 --------------------------------------------------------------------------------
-<* 
+<*
  Doc
-@require foo > 1
+
+ @require foo > 1
 *>
 fn void main()
 {

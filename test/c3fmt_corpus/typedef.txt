@@ -468,9 +468,9 @@ def_interface_with_docs
 interface Printable @if("sasda")
 {
     <*
-    Doc
-    @param foo "bar"
-    @param boo "baz"
+     Doc
+     @param foo "bar"
+     @param boo "baz"
     *>
     fn String* to_string(Allocator allocator) @optional;
     <* Doc 2 *>
@@ -483,9 +483,10 @@ interface Printable @if("sasda")
 interface Printable @if("sasda")
 {
     <*
-    Doc
-    @param foo "bar"
-    @param boo "baz"
+     Doc
+
+     @param foo "bar"
+     @param boo "baz"
     *>
     fn String* to_string(Allocator allocator) @optional;
     <* Doc 2 *>

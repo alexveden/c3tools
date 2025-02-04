@@ -121,7 +121,7 @@ macro void @swap(#a,     #b)
 
 --------------------------------------------------------------------------------
 <*
-@require $defined(#a = #b, #b = #a)
+ @require $defined(#a = #b, #b = #a)
 *>
 macro void @swap(#a, #b)
 {
