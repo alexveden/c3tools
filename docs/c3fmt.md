@@ -25,7 +25,7 @@ c3c --trust=full build c3fmt
 2. `-i, --indent=<str>` - indent type: 2,4,8 for spaces, t for tabs (default: 4 spaces)
 
 
-## Code style
+## c3fmt
 
 ### Principles
 1. c3fmt tries to preserve original structure as much as possible
@@ -72,13 +72,24 @@ return foo(
 
 ```
 
-## Wrapping logic
+### Wrapping logic
 
 All wrapping logic is based on 1st level of parentheses(calls/logic) or braces (arrays/structs).
 
 **HINT**: if your wrapped expression looks weird, try to add extra parentheses around it.
 
-### Simple calls
+A list of what can be wrapped:
+1. `fn/macro` arguments in definition
+2. `fn lambda(these, can, wrap) => never_wrap;`;
+3. `if / switch / for / while` conditions in `()`
+4. any function calls
+5. any expression in `{}` scopes
+6. Struct initializers
+7. Array initializers
+8. Global const initializers
+
+
+#### Simple calls
 ```c
 
 // calls
@@ -91,7 +102,7 @@ return foo(
     c,
 );
 ```
-### Logic
+#### Logic
 
 ```c
 
@@ -115,7 +126,7 @@ if (
 
 ```
 
-### Arrays 
+#### Arrays 
 ```c
 // initial
 int[][] arr = {{1}, {1, 2}, {3, 4}};
@@ -133,7 +144,7 @@ int[][] arr = {
 };
 ```
 
-### Structs
+#### Structs
 ```c
 // initial
 Foo s = {.foo = 1, .bar = 2, .sub = {.baz = 3}};
@@ -153,7 +164,7 @@ Foo s = {
 };
 ```
 
-### chained calls
+#### Chained calls
 ```c
 // initial
 return foo(a).bar(b, z).baz(c, magic_comma,);
@@ -170,7 +181,7 @@ return foo(
 
 ```
 
-## Wrapping exceptions
+### Wrapping exceptions
 
 Some parts of the language intentionally don't wrap:
 1. Inline flow (if/for/while/etc), for example `if (foo) this_never(wraps)!;`
@@ -179,8 +190,52 @@ Some parts of the language intentionally don't wrap:
 4. Left part of assignment expression: `foo[this_never_wrap] = can(wrap);`
 5. Contents of `asm{}` block never wrap.
 
+### Wrapping quirks
+Sometimes you will find weird chunks of code, which could be weirdly formatted, and before you fill an issue for this try to wrap it with `()`.
 
-## Disabling c3fmt
+Example:
+```c
+
+// initial
+macro bool char_is_base64(char c)
+{
+    return (c >= 'A' && c <= 'Z')
+           || (c >= 'a' && c <= 'z')
+           || (c >= '0' && c <= '9')
+           || c == '+' || c == '/';
+}
+
+// first try 
+// NOTE: actually there's no issue with logic, it wraps at 1st level of ()
+macro bool char_is_base64(char c)
+{
+    return (
+        c >= 'A' &&
+        c <= 'Z'
+    ) || (
+        c >= 'a' &&
+        c <= 'z'
+    ) || (
+        c >= '0' &&
+        c <= '9'
+    ) || c == '+' || c == '/';
+}
+
+// Adding extra (), much better!
+macro bool char_is_base64(char c)
+{
+    return (
+        (c >= 'A' && c <= 'Z') ||
+        (c >= 'a' && c <= 'z') ||
+        (c >= '0' && c <= '9') ||
+        c == '+' ||
+        c == '/'
+    );
+}
+```
+
+
+### Disabling c3fmt
 You can add a single line comment `// fmt: off` (must be exact match!) to temporarily disable formatting for code block of function. Use `// fmt: on` to re-enable it.
 
 ```c
@@ -197,5 +252,113 @@ fn void main()
         }
     }
     return;
+}
+```
+
+### Magic comma 
+You can force multi-line wrap any expression if you add `,` after the last item.
+
+## c3fmt code style
+
+```c
+<*
+ Doc string
+*>
+module foo;
+
+// Empty lines are preserve, but no more then 1 concequently
+
+struct Foo 
+{
+    
+}
+
+<* 
+ Doc
+ Multiline doc
+
+ @param arg "argument"
+ @require arg > 0
+*>
+fn void main(
+    int arg, bool arg2
+) 
+{
+    defer {
+        io::printfn("defer");
+    }
+
+    return a_call_with_magic_comma(
+        arg1,
+        arg + 1,
+        &arg,
+    )
+
+    if (arg) {
+        return;
+    }
+
+    if (
+        long ||
+        condition &&
+        (another || one)
+    ) {
+        return;
+    }
+
+    switch (arg) {
+        case 1:
+            return;
+        default:
+            break;
+    }
+
+    foreach(i,v : array) {
+        for (
+            int long_for_loop = 0;
+            long_for_loop < 100;
+            long_for_loop++            
+        ) {
+            arg++;
+        }
+    }
+
+    int[][] array = { {1}, {2, 3} };
+    int[] array = { 1, 2, 3 };
+
+    argparse::ArgParse agp = {
+        .description = "c3 code formatting tool",
+        .usage = "[options] file1 .. fileN",
+        .options = {
+            argparse::help_opt(),
+            {
+                1,
+                3,
+                4,
+                5,
+                6
+            },
+            argparse::group_opt("Basic options"),
+            {
+                .short_name = 'f',
+                .long_name = "force",
+                .value = &force_mode,
+                .help = "force formatting non .c3 files"
+            },
+            {
+                .short_name = 'n',
+                .long_name = "dry",
+                .value = &dry_mode,
+                .help = "dry mode (only print)"
+            },
+            argparse::group_opt("Code format options"),
+            {
+                .short_name = 'w',
+                .long_name = "line-width",
+                .value = &max_line_width,
+                .help = "max line width"
+            },
+        },
+    };
 }
 ```
