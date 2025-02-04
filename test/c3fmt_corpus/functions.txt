@@ -540,3 +540,36 @@ FcloseFn native_fclose_fn @weak @if(!$defined(native_fclose_fn));
 FopenFn native_fopen_fn @weak @if(!$defined(native_fopen_fn));
 FcloseFn native_fclose_fn @weak @if(!$defined(native_fclose_fn));
 
+================================================================================
+fn_with_long_call_null
+================================================================================
+
+macro parse_callable_params()
+{
+            !win32::createProcessW(null, convert_command_line_win32(command_line), null,   // process security attributes
+            null,   // primary thread security attributes
+            1,   // handles are inherited
+            flags,   // creation flags
+            used_environment,   // environment
+            null,   // use parent dir
+            & start_info,   // startup info ptr
+            & process_info);
+}
+
+--------------------------------------------------------------------------------
+macro parse_callable_params()
+{
+    !win32::createProcessW(
+        null,
+        convert_command_line_win32(command_line),
+        null,  // process security attributes
+        null,  // primary thread security attributes
+        1,  // handles are inherited
+        flags,  // creation flags
+        used_environment,  // environment
+        null,  // use parent dir
+        &start_info,  // startup info ptr
+        &process_info
+    );
+}
+

@@ -1036,6 +1036,10 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
 		    case COLON:  // for ternary / foreach / array slice
 		    case ELVIS: // for ternary
 		    case DOTDOT: // for array slice
+		    case COMMENT_MULTI:
+		    case COMMENT_MULTI_INLINE:
+		    case COMMENT_SINGLE:
+		    case COMMENT_SINGLE_INLINE:
 		        // assignment operator reached
 		        break LOOP;
 		    case COMMA:
