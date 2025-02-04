@@ -6,23 +6,76 @@ import c3tools::codecorpus @public;
 import c3tools::codefmt;
 
 
-fn void test_format_basic() {
-    CodeFmt fmt = CodeFmt.new_init();
+fn void test_two_spaces() 
+{
+    CodeFmt fmt = CodeFmt.new_init(indent_type: '2');
     defer fmt.free();
-    
-    test::equal(fmt.max_line_width, 80);
+    String input = `
+fn void main() 
+{  
+    if(foo) return 0;
+    return 1;
+}
 
-    String content = `
-    fn 
-    void
-    main() {
-    return 0;
-    }
-    `;
-    String out = fmt.format(content, print_lex: true)!!;
+`;
+    String formatted = fmt.format(input[1..], print_lex: false)!!;
+    io::printfn("\nformatted code\n```");
+    io::print(formatted);
+    io::printfn("```");
+    String expected = `
+fn void main()
+{
+  if (foo) return 0;
+  return 1;
+}
 
-    io::printfn("\n\nFormatted code");
-    io::printfn("```\n%s```", out);
+`;
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
+}
 
-    // test::equal(1, 0);
+fn void test_eight_spaces() 
+{
+    CodeFmt fmt = CodeFmt.new_init(indent_type: '8');
+    defer fmt.free();
+    String input = `
+fn void main() 
+{  
+    if(foo) return 0;
+    return 1;
+}
+
+`;
+    String formatted = fmt.format(input[1..], print_lex: false)!!;
+    io::printfn("\nformatted code\n```");
+    io::print(formatted);
+    io::printfn("```");
+    String expected = `
+fn void main()
+{
+        if (foo) return 0;
+        return 1;
+}
+
+`;
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
+}
+
+fn void test_tabs() 
+{
+    CodeFmt fmt = CodeFmt.new_init(indent_type: 't');
+    defer fmt.free();
+    String input = `
+fn void main() 
+{  
+    if(foo) return 0;
+    return 1;
+}
+
+`;
+    String formatted = fmt.format(input[1..], print_lex: false)!!;
+    io::printfn("\nformatted code\n```");
+    io::print(formatted);
+    io::printfn("```");
+    String expected = "\nfn void main()\n{\n\tif (foo) return 0;\n\treturn 1;\n}\n\n";
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
 }

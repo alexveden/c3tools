@@ -14,6 +14,7 @@ struct CodeFmt {
     DString buf;
     List(<CodeFmtState>) state_stack;
     List(<Token>) __token_cache;
+    char indent_type;
     usz max_line_width;
     usz _indent_level;
     usz _line_used;
@@ -52,9 +53,10 @@ Code formatter constructor
 @require max_line_width >= 80 : "too short"
 @require max_line_width <= 120 : "too long"
 *>
-fn CodeFmt CodeFmt.new_init(int max_line_width=80) @operator(construct) {
+fn CodeFmt CodeFmt.new_init(int max_line_width=80, char indent_type = '4') @operator(construct) {
     CodeFmt self = {
-        .max_line_width = max_line_width
+        .max_line_width = max_line_width,
+        .indent_type = indent_type,
     };
     self.buf.new_init(); 
     self.state_stack.new_init();
@@ -78,6 +80,17 @@ Formats code chunk and return str view of internal buffer.
 NOTE: result will live until next CodeFmt.format() or CodeFmt.free() call 
 *>
 fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
+    switch(self.indent_type) {
+        case '2':
+        case '4':
+        case '8':
+        case 't':
+            break;
+        default:
+            io::eprintfn("Invalid separator value: expected 2,4,8 or t");
+            return IoError.GENERAL_ERROR?;
+    }
+
     self._print_lex = print_lex;
     self.buf.clear();
     self.state_stack.clear();
@@ -337,9 +350,23 @@ macro void CodeFmt.newline(&self, bool is_empty = false, bool indent_only = fals
     if (!is_empty){
         self._line_used = 0;
         for(int i = 0; i < self._indent_level; i++) {
-            // TODO: add tabs too
-            self.buf.append("    ");
-            self._line_used += 4;
+            switch(self.indent_type) {
+                case '2':
+                    self.buf.append("  ");
+                    self._line_used += 2;
+                case '4':
+                    self.buf.append("    ");
+                    self._line_used += 4;
+                case '8':
+                    self.buf.append("        ");
+                    self._line_used += 8;
+                case 't':
+                    self.buf.append("\t");
+                    self._line_used += 4;
+                default:
+                    unreachable();
+            }
+
         }
     }
 }
