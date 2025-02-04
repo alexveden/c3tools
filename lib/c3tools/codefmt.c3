@@ -163,8 +163,9 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
         if (t.value.starts_with("// fmt: on") && self._is_paused) {
             self._lexer.set_whitespace_mode(false);
             self._is_paused = false;
+	        self._is_empty_line = true;
             self.write("%s", t.value);
-            self.newline();
+	        self._is_inline_comment = true;
 	        if(self.state_stack.len() > 0) {
 	            self.state_stack[^1].state.current_token = EMPTY_LINE;
 	        } 

@@ -61,7 +61,6 @@ fn void main()
     if(   foo (far)) {
           s = {.abs = 2, .zozo = 3,};
     // fmt: on
-        
         if (abs(mode.to)) {
             return 0;
         }
