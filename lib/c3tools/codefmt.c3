@@ -955,6 +955,7 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
 		        has_expr = true;
             case INTEGER:
             case IDENT:
+            case HASH_IDENT:
                 // is a binary expression sign
                 // ident &
                 // ident *

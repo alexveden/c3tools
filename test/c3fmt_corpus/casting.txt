@@ -37,6 +37,8 @@ int** ptr = &(*(int*)&a);
 
 call(&StrucType.fn_ptr);
     node = ($typeof(self))node.next;            
+    node = ($typeof(#self))node.next;            
+    node = ($typeof(#self[0]))node.next;            
     node = ($Type*)node.next;            
     defer (void)f.close();
     return (*(char[8]*))foo;
@@ -79,6 +81,8 @@ fn void* main(int* arg)
 
     call(&StrucType.fn_ptr);
     node = ($typeof(self))node.next;
+    node = ($typeof(#self))node.next;
+    node = ($typeof(#self[0]))node.next;
     node = ($Type*)node.next;
     defer (void) f.close();
     return (*(char[8]*))foo;
