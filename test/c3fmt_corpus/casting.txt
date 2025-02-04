@@ -53,6 +53,7 @@ call(&StrucType.fn_ptr);
     return { q.v[0] * -foo};
     node = ((int*)*self & (int)bar);
     node = ((int*)*self & ~(int)bar);
+    node = (*h * ($typeof(*h))x) & FOO;
 }
 
 --------------------------------------------------------------------------------
@@ -94,5 +95,6 @@ fn void* main(int* arg)
     return { q.v[0] * -foo };
     node = ((int*)*self & (int)bar);
     node = ((int*)*self & ~(int)bar);
+    node = (*h * ($typeof(*h))x) & FOO;
 }
 

@@ -352,6 +352,11 @@ fn void main() {
     foreach (&c : s) if (c.is_upper() @pure) &c = null;
 }
 
+fn void b(int[2]* p) 
+{
+
+}
+
 --------------------------------------------------------------------------------
 
 fn void main()
@@ -395,5 +400,10 @@ fn void main()
     int a = (int)arr[i ^ 1];
     foreach (&c : s) if (c.is_upper() @pure) *c += 'a' - 'A';
     foreach (&c : s) if (c.is_upper() @pure) &c = null;
+}
+
+fn void b(int[2]* p) 
+{
+
 }
 

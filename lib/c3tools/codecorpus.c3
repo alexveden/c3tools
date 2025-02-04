@@ -178,7 +178,7 @@ fn List(<CodeCorpus>)! new_parse(String file_name) {
 
                 // extending string by pointer arithmetic, because code is adjacent
                 usz input_len = l.ptr - current.case_input.ptr + l.len;
-                assert (input_len < 1024);
+                assert (input_len < 4096);
 
                 current.case_input = (String)(current.case_input.ptr)[..input_len];
             }
@@ -197,7 +197,7 @@ fn List(<CodeCorpus>)! new_parse(String file_name) {
                 if (l.ptr >= contents.ptr + contents.len) continue;
 
                 usz output_len = l.ptr - current.case_output.ptr + l.len;
-                assert (output_len < 1024);
+                assert (output_len < 4096);
 
                 current.case_output = (String)(current.case_output.ptr)[..output_len];
             }

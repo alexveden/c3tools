@@ -887,7 +887,10 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
         switch(t.type) {
             case LBRACKET:
                 scope--;
-                if (scope <= 0) {
+                if (scope < 0) {
+                    // breaks when we are inside array access expression
+                    // arr[
+                    // arr[1:|
                     break LOOP;
                 }
             case RBRACKET:
@@ -904,6 +907,7 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
             case STAR:
                 if (rhs_token == STAR) break; // double pointer
                 nextcase;
+            case BIT_XOR:
             case PLUS:
             case MINUS:
             case AMP:
@@ -919,12 +923,18 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
                         break;
                 }
                 break;
-            case BIT_XOR:
-                has_expr = true;
             case SPACE:
                 break;
             case INTEGER:
             case IDENT:
+                switch (rhs_token) {
+                    case AMP:
+                    case STAR:
+                    case BIT_XOR:
+                        return true;
+                    default:
+                        break;
+                }
                 has_idents = true; 
             case TYPE_IDENT:
             case CT_TYPE_IDENT:
