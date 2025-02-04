@@ -24,7 +24,7 @@ fn void! format_file(String file_name, int max_line_width, bool force_mode, bool
 	String contents = (String)file::load_new(p.str_view())!;
 	defer contents.free();
 
-    CodeFmt fmt = CodeFmt.new_init();
+    CodeFmt fmt = CodeFmt.new_init(max_line_width: max_line_width);
     defer fmt.free();
 
     String formatted = fmt.format(contents, print_lex: false)!!;
