@@ -173,7 +173,6 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
 	switch(t.type) {
 	    case EMPTY_LINE:
 	        if (state.last_token == EMPTY_LINE) {
-	            self._is_empty_line = true;
                 return true;
 	        }
 	        if (state.scope_depth == 0) {
