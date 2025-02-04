@@ -84,7 +84,7 @@ fn void* main(int* arg)
     node = ($typeof(#self))node.next;
     node = ($typeof(#self[0]))node.next;
     node = ($Type*)node.next;
-    defer (void) f.close();
+    defer (void)f.close();
     return (*(char[8]*))foo;
     return (char[8])foo;
     return &StrucType.fn;

@@ -2214,6 +2214,10 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
                 case COLON:
                     nextcase default;
                 default:
+                    if (state.initial_token == DEFER && t.type == TYPE_IDENT) {
+                        // likely defer (void)call();
+                        nextcase STATE: state.transition(IMPLIES);
+                    }
                     self.cache_statement_add(state, t);
             }
         case SCOPE:
