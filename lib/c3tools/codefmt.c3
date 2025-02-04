@@ -678,9 +678,11 @@ macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state, Token* 
 		            return true;
 		    }
 		    break;
+		// resolving ambiguity between &, *, &&, -, +
+		case BIT_XOR:
 		case AND:
-		    return self._resolve__prev_is_binexp();
 		case AMP:
+		case STAR:
 		case MINUS:
 		case PLUS:
 		    return self._resolve__prev_is_binexp();
@@ -703,14 +705,10 @@ macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state, Token* 
 		    } else {
 		        return true;
 		    }
-		case BIT_XOR:
-		    // array[:^1] vs foo ^ 0xF0
-		    return state.prev_scope(1) != LBRACKET;
 		case DIV:
 		case GREATER:
 		case LESS:
 		case MOD:
-		case STAR:
 		case CT_AND:
 		case CT_OR:
 		case CT_CONCAT:
@@ -887,6 +885,14 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
     {
         Token* t = &self.__token_cache[i];
         switch(t.type) {
+            case LBRACKET:
+                scope--;
+                if (scope <= 0) {
+                    break LOOP;
+                }
+            case RBRACKET:
+                scope++;
+                has_brackets = true;
             case RPAREN:
                 has_parens = true;
                 scope++;
@@ -913,6 +919,8 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
                         break;
                 }
                 break;
+            case BIT_XOR:
+                has_expr = true;
             case SPACE:
                 break;
             case INTEGER:
@@ -926,8 +934,6 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
             case RVEC:
             case LGENPAR:
             case RGENPAR:
-            case LBRACKET:
-            case RBRACKET:
                 has_brackets = true;
 		    case BIT_AND_ASSIGN:
 		    case BIT_OR_ASSIGN:
@@ -944,9 +950,10 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
 		    case DEFER:
 		    case TRY:
 		    case CATCH:
-		    case COLON:  // for ternary and foreach
+		    case COLON:  // for ternary / foreach / array slice
 		    case QUESTION: // for ternary
 		    case ELVIS: // for ternary
+		    case DOTDOT: // for array slice
 		        // assignment operator reached
 		        break LOOP;
 		    case COMMA:

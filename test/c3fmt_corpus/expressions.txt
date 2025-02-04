@@ -321,6 +321,8 @@ fn void main() {
     arr[b:];
     arr[:a];
     arr[b:a];
+    arr[^1:];
+    arr[:^2];
     arr[^2..^1];
     arr[i..^1];
     arr[i + 1 .. i * 1];
@@ -341,6 +343,13 @@ fn void main() {
     arr[i++];
     arr[--i];
     arr[a - 1];
+    int a = (int)arr[i + 1];
+    int a = (int)arr[i - 1];
+    int a = (int)arr[i * 1];
+    int a = (int)arr[i & 1];
+    int a = (int)arr[i ^ 1];
+    foreach (&c : s) if (c.is_upper() @pure) * c += 'a' - 'A';
+    foreach (&c : s) if (c.is_upper() @pure) &c = null;
 }
 
 --------------------------------------------------------------------------------
@@ -357,6 +366,8 @@ fn void main()
     arr[b:];
     arr[:a];
     arr[b:a];
+    arr[^1:];
+    arr[:^2];
     arr[^2..^1];
     arr[i..^1];
     arr[i + 1 .. i * 1];
@@ -377,5 +388,12 @@ fn void main()
     arr[i++];
     arr[--i];
     arr[a - 1];
+    int a = (int)arr[i + 1];
+    int a = (int)arr[i - 1];
+    int a = (int)arr[i * 1];
+    int a = (int)arr[i & 1];
+    int a = (int)arr[i ^ 1];
+    foreach (&c : s) if (c.is_upper() @pure) *c += 'a' - 'A';
+    foreach (&c : s) if (c.is_upper() @pure) &c = null;
 }
 
