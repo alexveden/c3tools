@@ -130,13 +130,16 @@ typed_vargs
 ================================================================================
 
 fn String[]! 
-Foo.main(String[] args, int... varg
-) { return   0   ;}
+Foo.main(String[] args, int ...varg
+) { 
+call(i, j, ...varg);
+return   0   ;}
 
 --------------------------------------------------------------------------------
 
-fn String[]! Foo.main(String[] args, int... varg)
+fn String[]! Foo.main(String[] args, int ...varg)
 {
+    call(i, j, ...varg);
     return 0;
 }
 

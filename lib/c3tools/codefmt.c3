@@ -443,7 +443,6 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                 case RBRACKET:
                 case CONST_IDENT:
 		        case CT_TYPE_IDENT:
-		        case ELLIPSIS:
 		        case AT_IDENT:
 		        case IDENT:
                     pre_space = true;
@@ -465,6 +464,8 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
             }
         case ELLIPSIS:
             switch(prev_t){
+                case TYPE_IDENT:
+                case CT_TYPE_IDENT:
                 case COMMA:
                     pre_space = true;
                 default:
