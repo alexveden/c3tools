@@ -397,8 +397,8 @@ fn void main()
     int a = (int)arr[i * 1];
     int a = (int)arr[i & 1];
     int a = (int)arr[i ^ 1];
-    foreach (&c : s) if (c.is_upper() @pure) *c += 'a' - 'A';
-    foreach (&c : s) if (c.is_upper() @pure) &c = null;
+    foreach (&c : s) if (c.is_upper() @pure) * c += 'a' - 'A';
+    foreach (&c : s) if (c.is_upper() @pure) & c = null;
 }
 
 fn void b(int[2]* p, int* p2)

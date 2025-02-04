@@ -602,14 +602,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
 		    }
             switch(prev_t){
                 case CONST_IDENT:
-                    switch(state.initial_token) {
-                        case BREAK:
-                        case CONTINUE:
-                        case NEXTCASE:
-                            break;
-                        default:
-                            pre_space = true;
-                    }
+                    pre_space = !self._resolve__const_label();
                 case LBRACKET:
                     break;
                 case IDENT:
@@ -858,6 +851,38 @@ fn bool CodeFmt._resolve__prev_bang_type(&self) {
         default:
             return false;
     }
+}
+
+<*
+nextcase CONST: label vs ? test.CONST : ternary
+*>
+fn bool CodeFmt._resolve__const_label(&self) {
+    assert(self.state_stack.len() > 0);
+
+    usz start_len = self.state_stack[^1].token_cache_start;
+    if (self.__token_cache.len() - start_len < 3) return false;
+
+    for LOOP: (usz i = self.__token_cache.len(); i-- > start_len; ) {
+        Token* t = &self.__token_cache[i];
+
+        switch(t.type) {
+            case SPACE:
+            case CONST_IDENT:
+            case COLON:
+                break;
+            case IF:
+            case BREAK:
+            case CONTINUE:
+            case SWITCH:
+            case FOR:
+            case WHILE:
+            case NEXTCASE:
+                return true;
+            default:
+                return false;
+        }
+    }
+    return false;
 }
 
 <*
@@ -2221,16 +2246,12 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
                     self.trace("EXIT");
                     return true;
                 default:
-                    // self.write("%s", t.value);
                     self.cache_statement_add(state, t);
-                    // self.write(" ");
                     // CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;
                     // if (new_local_state == null){
-                    //     // Not a keyword or anything special, just a statement
-                    //     return self.push_run_state(&CodeFmt.format_generic_statement, t);
+                    //     self.cache_statement_add(state, t);
                     // } else {                    
-                    //     // Special keyword or statement
-                    //     return self.push_run_state(new_local_state, t);
+                    //     self.cache_statement_dump(no_split: true)!;
                     // }
             }
         default:

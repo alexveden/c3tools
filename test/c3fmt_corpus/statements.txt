@@ -856,6 +856,7 @@ fn void main()
             case BAZ:
             case "another":
             case 922:
+                    if(foo) nextcase STATE: state.transition(SCOPE);
             case 1..0xffff:
             foo();
             default:  nextcase LABEL : FOO;
@@ -874,6 +875,7 @@ fn void main()
         case BAZ:
         case "another":
         case 922:
+            if (foo) nextcase STATE: state.transition(SCOPE);
         case 1..0xffff:
             foo();
         default:
