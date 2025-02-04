@@ -1419,7 +1419,7 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
                 self.write("%s", t.value);
             case COMMENT_SINGLE_INLINE:
             case COMMENT_MULTI_INLINE:
-                self.write(" %s", t.value);
+                self.write("  %s", t.value);
             case QUESTION:
                 switch(self._resolve__next_token(i)) {
                     case EOS:
@@ -1508,6 +1508,7 @@ macro bool CodeFmt.split_multiline(&self, NodeParserState* state, TokenType wrap
     TokenType tt = state.last_token;
     switch(state.last_token) {
         case COMMENT_SINGLE_INLINE:
+        case COMMENT_MULTI_INLINE:
         case COMMENT_MULTI:
         case COMMENT_SINGLE:
             return true;
