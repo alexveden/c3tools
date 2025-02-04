@@ -91,7 +91,7 @@ fn void* main(int* arg)
     node = size & PAGE;
     node = (*h ^ ($typeof(*h))x) * FOO;
     node = a + *(int*)b;
-    return (char[?]) foo;
+    return (char[?])foo;
     return { q.v[0] * -foo };
     node = ((int*)*self & (int)bar);
     node = ((int*)*self & ~(int)bar);

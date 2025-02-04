@@ -312,7 +312,7 @@ brackets
 
 fn void main() { 
     char[] foo = arr[];
-    int ar[?] = { 1 };
+    int[?] arr = { 1 };
     ar[:] = 1;
     foo = arr[:a];
     arr[..a];
@@ -352,9 +352,8 @@ fn void main() {
     foreach (&c : s) if (c.is_upper() @pure) &c = null;
 }
 
-fn void b(int[2]* p) 
+fn void b(int[2]* p, int* p2)
 {
-
 }
 
 --------------------------------------------------------------------------------
@@ -362,7 +361,7 @@ fn void b(int[2]* p)
 fn void main()
 {
     char[] foo = arr[];
-    int ar[?] = { 1 };
+    int[?] arr = { 1 };
     ar[:] = 1;
     foo = arr[:a];
     arr[..a];
@@ -402,8 +401,7 @@ fn void main()
     foreach (&c : s) if (c.is_upper() @pure) &c = null;
 }
 
-fn void b(int[2]* p) 
+fn void b(int[2]* p, int* p2)
 {
-
 }
 

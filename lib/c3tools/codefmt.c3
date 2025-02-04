@@ -925,8 +925,15 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
                 break;
             case SPACE:
                 break;
+		    case QUESTION: // for ternary
+		        if (scope == 0) break LOOP;
+		        has_expr = true;
             case INTEGER:
             case IDENT:
+                // is a binary expression sign
+                // ident &
+                // ident *
+                // ident ^
                 switch (rhs_token) {
                     case AMP:
                     case STAR:
@@ -961,7 +968,6 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
 		    case TRY:
 		    case CATCH:
 		    case COLON:  // for ternary / foreach / array slice
-		    case QUESTION: // for ternary
 		    case ELVIS: // for ternary
 		    case DOTDOT: // for array slice
 		        // assignment operator reached
@@ -992,10 +998,14 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
                 return false;
             }
         } else if (scope < 0){
-            // maybe incomplete cast
-            // (*(char[8] ?
-            // (*(char[8] ?
-            if (has_type && has_brackets && has_idents && scope == -1) return true;
+            // maybe incomplete cast or fn argument
+            // (char[8]   | ?
+            // (char[8]   |* ?
+            // (char[8]*  |) ?
+            // (char[8]*  |param ?
+            if (has_type && has_brackets){
+                if(has_idents && !has_expr) return true;
+            } 
         }
 
         if (!has_parens && !has_type && !has_brackets && !has_idents) return true;
