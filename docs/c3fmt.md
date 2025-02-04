@@ -266,7 +266,7 @@ You can force multi-line wrap any expression if you add `,` after the last item.
 *>
 module foo;
 
-// Empty lines are preserve, but no more then 1 concequently
+// Empty lines are preserved, but no more than 1 consequently
 
 struct Foo 
 {
