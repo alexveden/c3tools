@@ -55,6 +55,8 @@ call(&StrucType.fn_ptr);
     node = ((int*)*self & (int)bar);
     node = ((int*)*self & ~(int)bar);
     node = (*h * ($typeof(*h))x) & FOO;
+    bitcast( (float)x, uint) & 0xff;
+    match = (mem::@volatile_load(((char*)data1)[i]) ^ mem::@volatile_load());
 }
 
 --------------------------------------------------------------------------------
@@ -98,5 +100,7 @@ fn void* main(int* arg)
     node = ((int*)*self & (int)bar);
     node = ((int*)*self & ~(int)bar);
     node = (*h * ($typeof(*h))x) & FOO;
+    bitcast((float)x, uint) & 0xff;
+    match = (mem::@volatile_load(((char*)data1)[i]) ^ mem::@volatile_load());
 }
 

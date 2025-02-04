@@ -953,6 +953,12 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
             case RPAREN:
                 has_parens = true;
                 scope++;
+                switch (rhs_token) {
+                    case BIT_XOR:
+                        return true;
+                    default:
+                        break;
+                }
             case LPAREN:
                 scope--;
                 if (scope <= 0) {
@@ -1033,6 +1039,8 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
 		        // assignment operator reached
 		        break LOOP;
 		    case COMMA:
+		        if (scope == 0) break LOOP; 
+		        return true; // call(a, b, <-) |
 		    case EQEQ:
 		    case GREATER_EQ:
 		    case LESS_EQ:
