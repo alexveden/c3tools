@@ -5,11 +5,11 @@ import c3tools::ast;
 import std::io;
 import std::collections::list;
 
-
 <*
-Code Formatter Object
+ Code Formatter Object
 *>
-struct CodeFmt {
+struct CodeFmt
+{
     Lexer _lexer;
     DString buf;
     List(<CodeFmtState>) state_stack;
@@ -24,24 +24,23 @@ struct CodeFmt {
     bool _is_inline_comment;
 }
 
-
 <*
-CodeFmt processing function signature
+ CodeFmt processing function signature
 *>
 def CodeFmtFn = fn bool! (CodeFmt* self, Token* t, NodeParserState* state);
 
-
 <*
-Item for code formatting state stack
+ Item for code formatting state stack
 *>
-struct CodeFmtState {
+struct CodeFmtState
+{
     CodeFmtFn state_fn;
     NodeParserState state;
     usz token_cache_start;
 }
 
 <* Simple white space synthetic token *>
-const Token TOKEN_SPACE = Token{.type = SPACE, .value = " "};
+const Token TOKEN_SPACE = Token { .type = SPACE, .value = " " };
 
 /*
 *                  CODE FORMATTER OBJECT
@@ -53,21 +52,23 @@ const Token TOKEN_SPACE = Token{.type = SPACE, .value = " "};
  @require max_line_width >= 80 : "too short"
  @require max_line_width <= 120 : "too long"
 *>
-fn CodeFmt CodeFmt.new_init(int max_line_width=80, char indent_type = '4') @operator(construct) {
+fn CodeFmt CodeFmt.new_init(int max_line_width = 80, char indent_type = '4') @operator(construct)
+{
     CodeFmt self = {
         .max_line_width = max_line_width,
         .indent_type = indent_type,
     };
-    self.buf.new_init(); 
+    self.buf.new_init();
     self.state_stack.new_init();
     self.__token_cache.new_init();
     return self;
 }
 
-<* 
-Code formatter destructor
+<*
+ Code formatter destructor
 *>
-fn void CodeFmt.free(&self) {
+fn void CodeFmt.free(&self)
+{
     self.buf.free();
     self.state_stack.free();
     self.__token_cache.free();
@@ -75,12 +76,13 @@ fn void CodeFmt.free(&self) {
 }
 
 <*
-Formats code chunk and return str view of internal buffer. 
+ Formats code chunk and return str view of internal buffer. 
 
-NOTE: result will live until next CodeFmt.format() or CodeFmt.free() call 
+ NOTE: result will live until next CodeFmt.format() or CodeFmt.free() call 
 *>
-fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
-    switch(self.indent_type) {
+fn String! CodeFmt.format(&self, String contents, bool print_lex = false)
+{
+    switch (self.indent_type) {
         case '2':
         case '4':
         case '8':
@@ -95,53 +97,56 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
     self.buf.clear();
     self.state_stack.clear();
 
-	lexer::init(&self._lexer, contents);
-	self._lexer.set_whitespace_mode(false);
+    lexer::init(&self._lexer, contents);
+    self._lexer.set_whitespace_mode(false);
 
     // Default scope formatter
-	self.push_run_state(&CodeFmt.format_global_file_scope, null)!;
-	self._is_empty_line = true;
+    self.push_run_state(&CodeFmt.format_global_file_scope, null)!;
+    self._is_empty_line = true;
 
     NodeParserState globalstate;
-	while LOOP: (self._lexer.next_token()) {
-	    Token * t = &self._lexer.token;
-	    globalstate.check(t);
-	    if (print_lex) t.print(new_line: true);
+    while LOOP: (self._lexer.next_token()) {
+        Token* t = &self._lexer.token;
+        globalstate.check(t);
+        if (print_lex) t.print(new_line: true);
 
-	    switch(t.type) {
-	        case COMMENT_SINGLE:
-	        case COMMENT_MULTI:
-	        case COMMENT_SINGLE_INLINE:
-	        case COMMENT_MULTI_INLINE:
-	        case EMPTY_LINE: // disallow EMPTY_LINE inside existing statements! 
-	        case EOF:
-	            if (self.format_comment_or_empty(&globalstate, t)!) continue LOOP;
-	        case SPACE:
-	        default:
-	            break;
-	    }
+        switch (t.type) {
+            case COMMENT_SINGLE:
+            case COMMENT_MULTI:
+            case COMMENT_SINGLE_INLINE:
+            case COMMENT_MULTI_INLINE:
+            case EMPTY_LINE:  // disallow EMPTY_LINE inside existing statements! 
+            case EOF:
+                if (self.format_comment_or_empty(&globalstate, t)!) continue LOOP;
+            case SPACE:
+            default:
+                break;
+        }
 
-        if(t.type != SPACE && self.run_state(t)!) {
+        if (t.type != SPACE && self.run_state(t)!) {
             self.pop_state()!;
 
             // Ending one state, may trigger cascade parent exit
-            if(self.run_state(t)!) {
+            if (self.run_state(t)!) {
                 self.pop_state()!;
             }
         }
-	    self._is_empty_line = false;
+        self._is_empty_line = false;
 
-	    if (self._lexer.is_whitespace_mode && t.type != EOF ) {
-	        // NOTE: Printing raw when // fmt: off
-	        assert(self.cache_statement_len() == 0, "cache_statement_dump must be called befor fmt: off");
-	        assert(t.value.len > 0);
-	        self.buf.append(t.value);
-	    }
+        if (self._lexer.is_whitespace_mode && t.type != EOF) {
+            // NOTE: Printing raw when // fmt: off
+            assert(
+                self.cache_statement_len() == 0,
+                "cache_statement_dump must be called befor fmt: off"
+            );
+            assert(t.value.len > 0);
+            self.buf.append(t.value);
+        }
     }
 
-	if (self.state_stack.len() != 0) {
-	    self.@fail(&self._lexer.token, "Not all code structures resolved, or bad file syntax")!;
-	}
+    if (self.state_stack.len() != 0) {
+        self.@fail(&self._lexer.token, "Not all code structures resolved, or bad file syntax")!;
+    }
 
     self._is_paused = false;
     self._lexer.set_whitespace_mode(false);
@@ -149,7 +154,8 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
 }
 
 <* Generic comment processor if there is not cache_statement pending + fmt: off handler *>
-fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t) {
+fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t)
+{
     if (t.type == COMMENT_SINGLE) {
         if (t.value.starts_with("// fmt: off") && !self._is_paused) {
             self.cache_statement_dump()!;
@@ -163,96 +169,100 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
         if (t.value.starts_with("// fmt: on") && self._is_paused) {
             self._lexer.set_whitespace_mode(false);
             self._is_paused = false;
-	        self._is_empty_line = true;
+            self._is_empty_line = true;
             self.write("%s", t.value);
-	        self._is_inline_comment = true;
-	        if(self.state_stack.len() > 0) {
-	            self.state_stack[^1].state.current_token = EMPTY_LINE;
-	        } 
-	        state.current_token = EMPTY_LINE;
+            self._is_inline_comment = true;
+            if (self.state_stack.len() > 0) {
+                self.state_stack[^1].state.current_token = EMPTY_LINE;
+            }
+            state.current_token = EMPTY_LINE;
             return true;
-        } 
+        }
     }
 
     // We have existing caches statements, let cache_statement_dump() handle this 
-	if (!self._lexer.is_whitespace_mode &&
-	    self.state_stack.len() > 0 && 
-	    self.cache_statement_len() > 0) 
-	{
-	    self.trace("COMMENT PASSED");
-	    // doesn't allow empty lines, just skip them
-	    return t.type == EMPTY_LINE;
-	}
+    if (
+        !self._lexer.is_whitespace_mode &&
+        self.state_stack.len() > 0 &&
+        self.cache_statement_len() > 0
+    ) {
+        self.trace("COMMENT PASSED");
+        // doesn't allow empty lines, just skip them
+        return t.type == EMPTY_LINE;
+    }
 
-	switch(t.type) {
-	    case EMPTY_LINE:
-	        if (state.last_token == EMPTY_LINE) {
+    switch (t.type) {
+        case EMPTY_LINE:
+            if (state.last_token == EMPTY_LINE) {
                 return true;
-	        }
-	        if (state.scope_depth == 0) {
-	            switch(state.last_token) {
-	                case EOS:
-	                case COMMENT_SINGLE_INLINE:
-	                case COMMENT_MULTI_INLINE:
-	                case COMMENT_MULTI:
-	                case COMMENT_SINGLE:
-	                    break;
-	                case DOCS_END:
-	                    self._is_empty_line = true;
-	                    break;
-	                case RBRACE:
-	                default:
-	                    return true; 
-	            }
-	        }
-	        if (self._lexer.is_whitespace_mode) {
-	            // Do a direct write
-	            self.buf.append("\n");
-	        } else {
-	            self.newline(is_empty: true);
-	        }
-	        return true;
-	    case EOF:
-	        self.trace("COMMENT EOF");
-	        if (self._is_paused) return false;
-	        if (self.buf.len() > 0 && self.buf.char_at(self.buf.len()-1) != '\n') {
-	            self.buf.append("\n");
-	        }
-	        return false;
+            }
+            if (state.scope_depth == 0) {
+                switch (state.last_token) {
+                    case EOS:
+                    case COMMENT_SINGLE_INLINE:
+                    case COMMENT_MULTI_INLINE:
+                    case COMMENT_MULTI:
+                    case COMMENT_SINGLE:
+                        break;
+                    case DOCS_END:
+                        self._is_empty_line = true;
+                        break;
+                    case RBRACE:
+                    default:
+                        return true;
+                }
+            }
+            if (self._lexer.is_whitespace_mode) {
+                // Do a direct write
+                self.buf.append("\n");
+            } else {
+                self.newline(is_empty: true);
+            }
+            return true;
+        case EOF:
+            self.trace("COMMENT EOF");
+            if (self._is_paused) return false;
+            if (self.buf.len() > 0 && self.buf.char_at(self.buf.len() - 1) != '\n') {
+                self.buf.append("\n");
+            }
+            return false;
 
-	    case COMMENT_SINGLE:
-	    case COMMENT_MULTI:
-	        if (self._lexer.is_whitespace_mode) {
-	            // Do a direct write
-	            self.buf.append(t.value);
-	        } else {
-	            if(!self._is_empty_line) self.newline();
-	            self.write("%s", t.value);
-	        }
-	        self._is_empty_line = false;
-	        self._is_inline_comment = t.type == COMMENT_SINGLE;
-	    case COMMENT_SINGLE_INLINE:
-	    case COMMENT_MULTI_INLINE:
-	        if (self._lexer.is_whitespace_mode) {
-	            self.buf.append(t.value);
-	        } else {
-	            self.write("  %s", t.value);
-	        }
-	        self._is_empty_line = false;
-	        self._is_inline_comment = t.type == COMMENT_SINGLE_INLINE;
-	    default:
-	        unreachable("%s: `%s`", t.type, t.value);
-	}
+        case COMMENT_SINGLE:
+        case COMMENT_MULTI:
+            if (self._lexer.is_whitespace_mode) {
+                // Do a direct write
+                self.buf.append(t.value);
+            } else {
+                if (!self._is_empty_line) self.newline();
+                self.write("%s", t.value);
+            }
+            self._is_empty_line = false;
+            self._is_inline_comment = t.type == COMMENT_SINGLE;
+        case COMMENT_SINGLE_INLINE:
+        case COMMENT_MULTI_INLINE:
+            if (self._lexer.is_whitespace_mode) {
+                self.buf.append(t.value);
+            } else {
+                self.write("  %s", t.value);
+            }
+            self._is_empty_line = false;
+            self._is_inline_comment = t.type == COMMENT_SINGLE_INLINE;
+        default:
+            unreachable("%s: `%s`", t.type, t.value);
+    }
 
-	self.trace("COMMENT DUMP");
+    self.trace("COMMENT DUMP");
 
     return true;
 }
 
 <*
-Pushes new state handler function to stack. Allows parsing sub-structs, etc...
+ Pushes new state handler function to stack. Allows parsing sub-structs, etc...
 *>
-fn bool! CodeFmt.push_run_state(&self, CodeFmtFn new_state, Token* t, TokenType initial_token = INVALID_TOKEN) @private {
+fn bool! CodeFmt.push_run_state(
+    &self, CodeFmtFn new_state, Token* t, TokenType initial_token = INVALID_TOKEN
+) @private
+{
     if (self.state_stack.len() > 0) {
         assert(self.cache_statement_len() == 0, "you must cache_statement_dump, before next state");
     }
@@ -270,43 +280,49 @@ fn bool! CodeFmt.push_run_state(&self, CodeFmtFn new_state, Token* t, TokenType 
 }
 
 <*
-Pops last state from state_stack
+ Pops last state from state_stack
 *>
-fn void! CodeFmt.pop_state(&self) @private {
+fn void! CodeFmt.pop_state(&self) @private
+{
     assert(self.cache_statement_len() == 0, "cache_statement is not empty, forgot dump?");
 
     self.state_stack.remove_last();
 }
 
 <*
-Runs last state in the state_stack with current token
+ Runs last state in the state_stack with current token
 *>
-fn bool! CodeFmt.run_state(&self, Token* t) @private {
-	if(self.state_stack.len() == 0) return false;
-	CodeFmtFn state_fn = self.state_stack[^1].state_fn;
+fn bool! CodeFmt.run_state(&self, Token* t) @private
+{
+    if (self.state_stack.len() == 0) return false;
+    CodeFmtFn state_fn = self.state_stack[^1].state_fn;
     bool result = state_fn(self, t, &self.state_stack[^1].state)!;
     return result;
 }
 
 <*
-Emits formatting procedure error with debug message
+ Emits formatting procedure error with debug message
 *>
-macro bool! CodeFmt.@fail(&self, Token* t, String msg) @private {
+macro bool! CodeFmt.@fail(&self, Token* t, String msg) @private
+{
+    io::eprintfn("Patially formatted code:\n```\n%s```", self.buf.str_view());
     io::eprintfn(
-        "Patially formatted code:\n```\n%s```", 
-        self.buf.str_view()
-    );
-    io::eprintfn(
-        "Error (%s:%d) at [Token: %s] line:col %d:%d - %s", 
-        $$FILE, $$LINE, t.type, t.row, t.col, msg
+        "Error (%s:%d) at [Token: %s] line:col %d:%d - %s",
+        $$FILE,
+        $$LINE,
+        t.type,
+        t.row,
+        t.col,
+        msg
     );
     return IoError.GENERAL_ERROR?;
 }
 
-<* 
-Debug logging (only when self._print_lex = true)
+<*
+ Debug logging (only when self._print_lex = true)
 *>
-macro CodeFmt.trace(&self, $msg, args...) @private {
+macro CodeFmt.trace(&self, $msg, args...) @private
+{
     if (!self._print_lex) return;
 
     io::eprintf("\t\t%s (%s:%d): ", $$FUNC, $$FILE, $$LINE);
@@ -314,9 +330,10 @@ macro CodeFmt.trace(&self, $msg, args...) @private {
 }
 
 <*
-Writes code chunk into internal buffer
+ Writes code chunk into internal buffer
 *>
-macro void CodeFmt.write(&self, String format, args...) @private {
+macro void CodeFmt.write(&self, String format, args...) @private
+{
     if (self._lexer.is_whitespace_mode) return;
     if (self._is_inline_comment) {
         // Forcing a new line when previous write was a single line comment
@@ -330,19 +347,20 @@ macro void CodeFmt.write(&self, String format, args...) @private {
 }
 
 <*
-Writes a new line into internal buffer with proper indentation
+ Writes a new line into internal buffer with proper indentation
 *>
-macro void CodeFmt.newline(&self, bool is_empty = false, bool indent_only = false) @private {
+macro void CodeFmt.newline(&self, bool is_empty = false, bool indent_only = false) @private
+{
     self._is_inline_comment = false;
 
     if (self._lexer.is_whitespace_mode) return;
 
     if (!indent_only) self.buf.append("\n");
-     
-    if (!is_empty){
+
+    if (!is_empty) {
         self._line_used = 0;
-        for(int i = 0; i < self._indent_level; i++) {
-            switch(self.indent_type) {
+        for (int i = 0; i < self._indent_level; i++) {
+            switch (self.indent_type) {
                 case '2':
                     self.buf.append("  ");
                     self._line_used += 2;
@@ -364,39 +382,41 @@ macro void CodeFmt.newline(&self, bool is_empty = false, bool indent_only = fals
 }
 
 <*
-Increase code indent
+ Increase code indent
 *>
-macro void CodeFmt.indent(&self) @private {
+macro void CodeFmt.indent(&self) @private
+{
     self.trace("indent");
     self._indent_level++;
 }
 
 <*
-Decreases code indent
+ Decreases code indent
 *>
-macro void! CodeFmt.dedent(&self) @private {
+macro void! CodeFmt.dedent(&self) @private
+{
     self.trace("dedent");
-    if(self._indent_level == 0) {
+    if (self._indent_level == 0) {
         self.@fail(&self._lexer.token, "indentation error")!;
     }
     self._indent_level--;
 }
 
-
 /*
 *                  CODE WRAP FUNCTIONS
 */
 
-<* 
-Adds a token to composite statement cache for further formatting.
+<*
+ Adds a token to composite statement cache for further formatting.
 *>
-macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) @private {
+macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token* t) @private
+{
     if (self._lexer.is_whitespace_mode) return;
     assert(t.type != EMPTY_LINE);
     assert(t.type != SPACE);
 
     usz cache_len = self.cache_statement_len();
-    TokenType prev_t = cache_len > 0 ? self.__token_cache[^1].type : TokenType.INVALID_TOKEN; 
+    TokenType prev_t = cache_len > 0 ? self.__token_cache[^1].type : TokenType.INVALID_TOKEN;
     bool pre_space = false;
 
     switch TOP: (t.type) {
@@ -405,39 +425,39 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
         case PLUSPLUS:
         case SCOPE:
             break;
-		case EQ:
-		case DIV:
-		case GREATER:
-		case LESS:
-		case MOD:
-		case CT_AND:
-		case CT_OR:
-		case CT_CONCAT:
-		case DIV_ASSIGN:
-		case ELVIS:
+        case EQ:
+        case DIV:
+        case GREATER:
+        case LESS:
+        case MOD:
+        case CT_AND:
+        case CT_OR:
+        case CT_CONCAT:
+        case DIV_ASSIGN:
+        case ELVIS:
         case QUESTQUEST:
-		case EQEQ:
-		case GREATER_EQ:
-		case IMPLIES:
-		case LESS_EQ:
-		case NOT_EQUAL:
-		case SHL:
-		case SHR:
-		case OR:
-		case BIT_OR:
-		case BIT_AND_ASSIGN:
-		case BIT_OR_ASSIGN:
-		case BIT_XOR_ASSIGN:
-		case MINUS_ASSIGN:
-		case MULT_ASSIGN:
-		case MOD_ASSIGN:
-		case PLUS_ASSIGN:
-		case SHL_ASSIGN:
-		case SHR_ASSIGN:
-		case WHILE: // as part of do{} while();
+        case EQEQ:
+        case GREATER_EQ:
+        case IMPLIES:
+        case LESS_EQ:
+        case NOT_EQUAL:
+        case SHL:
+        case SHR:
+        case OR:
+        case BIT_OR:
+        case BIT_AND_ASSIGN:
+        case BIT_OR_ASSIGN:
+        case BIT_XOR_ASSIGN:
+        case MINUS_ASSIGN:
+        case MULT_ASSIGN:
+        case MOD_ASSIGN:
+        case PLUS_ASSIGN:
+        case SHL_ASSIGN:
+        case SHR_ASSIGN:
+        case WHILE:  // as part of do{} while();
             pre_space = true;
         case BIT_NOT:
-            switch(prev_t){
+            switch (prev_t) {
                 case BIT_XOR:
                 case BIT_OR:
                 case AMP:
@@ -446,11 +466,11 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                     nextcase TOP: default;
             }
         case DOT:
-            switch(prev_t){
+            switch (prev_t) {
                 case COMMA:
                     pre_space = true;
                 case LBRACE:
-		            pre_space = state.scope_depth == 1;
+                    pre_space = state.scope_depth == 1;
                 default:
                     break;
             }
@@ -458,32 +478,32 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
         case CT_IDENT:
         case CONST_IDENT:
         case IDENT:
-            switch(prev_t){
+            switch (prev_t) {
                 case TYPE_IDENT:
                 case RBRACKET:
                 case CONST_IDENT:
-		        case CT_TYPE_IDENT:
-		        case AT_IDENT:
-		        case IDENT:
+                case CT_TYPE_IDENT:
+                case AT_IDENT:
+                case IDENT:
                     pre_space = true;
                 case STAR:
                 case RPAREN:
-                case AMP: // likely &var 
+                case AMP:  // likely &var 
                     if (t.type == AT_IDENT) pre_space = true;
-                    if(self._resolve__prev_is_binexp()) pre_space = true;
+                    if (self._resolve__prev_is_binexp()) pre_space = true;
                     break;
                 default:
                     nextcase TOP: default;
             }
         case TYPE_IDENT:
-            switch(prev_t){
-                case AMP: // likely &Type.foo 
-                    if(self._resolve__prev_is_binexp()) pre_space = true;
+            switch (prev_t) {
+                case AMP:  // likely &Type.foo 
+                    if (self._resolve__prev_is_binexp()) pre_space = true;
                 default:
                     nextcase TOP: default;
             }
         case ELLIPSIS:
-            switch(prev_t){
+            switch (prev_t) {
                 case TYPE_IDENT:
                 case CT_TYPE_IDENT:
                 case COMMA:
@@ -491,23 +511,23 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                 default:
                     break;
             }
-        case AMP: // &
-		case MINUS:
-		case PLUS:
-		case AND:
-            switch(prev_t){
+        case AMP:  // &
+        case MINUS:
+        case PLUS:
+        case AND:
+            switch (prev_t) {
                 case LPAREN:
                 case LBRACKET:
                     break;
                 case RPAREN:
                     // distinguish casting and regular expression
-                    if(self._resolve__prev_is_binexp()) pre_space = true;
+                    if (self._resolve__prev_is_binexp()) pre_space = true;
                     break;
                 default:
                     pre_space = true;
             }
-		case STAR: // *
-            switch(prev_t){
+        case STAR:  // *
+            switch (prev_t) {
                 case LPAREN:
                 case TYPE_IDENT:
                 case CT_TYPE_IDENT:
@@ -519,7 +539,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                     break;
                 case RPAREN:
                 case RBRACKET:
-                    if(self._resolve__prev_is_binexp()) pre_space = true;
+                    if (self._resolve__prev_is_binexp()) pre_space = true;
                 default:
                     pre_space = cache_len > 0;
             }
@@ -530,7 +550,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
             // No space for vectors and generic type 
             break;
         case LBRACKET:
-            switch(prev_t){
+            switch (prev_t) {
                 case LBRACE:
                 case COMMA:
                     pre_space = true;
@@ -538,14 +558,14 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                     break;
             }
         case RBRACKET:
-            switch(prev_t){
+            switch (prev_t) {
                 // pre_space = true;
                 case QUESTION:
                 default:
                     break;
             }
-		case BIT_XOR:
-            switch(prev_t){
+        case BIT_XOR:
+            switch (prev_t) {
                 case LBRACKET:
                 case COLON:
                 case DOTDOT:
@@ -555,11 +575,11 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
 
             }
         case LPAREN:
-            switch(prev_t){
+            switch (prev_t) {
                 case AMP:
                     pre_space = true;
                 case STAR:
-                    if(self._resolve__prev_is_binexp()) pre_space = true;
+                    if (self._resolve__prev_is_binexp()) pre_space = true;
                 case IDENT:
                 case AT_IDENT:
                 case CT_IDENT:
@@ -578,16 +598,16 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
             break;
         case RBRACE:
             // array related brace
-            switch(prev_t){
+            switch (prev_t) {
                 case LBRACE:
                     // empty {}
                     break;
                 default:
-		            pre_space = state.scope_depth == 0;
+                    pre_space = state.scope_depth == 0;
             }
-		    break;
+            break;
         case LBRACE:
-            switch(prev_t){
+            switch (prev_t) {
                 case RGENPAR:
                 case RVEC:
                     // List(<Foo>){}.init(...)
@@ -598,7 +618,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                     nextcase TOP: default;
             }
         case EOS:
-            switch(prev_t){
+            switch (prev_t) {
                 case LPAREN:
                 case EOS:
                     break;
@@ -606,22 +626,22 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                     break;
             }
         case DOTDOT:
-            switch(prev_t){
+            switch (prev_t) {
                 case LBRACKET:
                     break;
                 default:
-		            if (state.prev_scope(1) == LBRACKET) {
-		                pre_space = self._resolve__bracket_is_complex_expr();
-		            } else {
+                    if (state.prev_scope(1) == LBRACKET) {
+                        pre_space = self._resolve__bracket_is_complex_expr();
+                    } else {
                         pre_space = false;
-		            }
-		    }
+                    }
+            }
         case COLON:
             if (state.prev_scope(1) == LBRACKET) {
-		        pre_space = self._resolve__bracket_is_complex_expr();
-		        break; // break switch
-		    }
-            switch(prev_t){
+                pre_space = self._resolve__bracket_is_complex_expr();
+                break;  // break switch
+            }
+            switch (prev_t) {
                 case CONST_IDENT:
                     pre_space = !self._resolve__const_label();
                 case LBRACKET:
@@ -631,32 +651,32 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
                         pre_space = true;
                     } else if (!self._resolve__keyword_call_colon(state)) {
                         pre_space = true;
-                    } 
+                    }
                 default:
-		            if (state.prev_scope(1) == LBRACKET) {
+                    if (state.prev_scope(1) == LBRACKET) {
 
-		            } else {
+                    } else {
                         pre_space = true;
-		            }
+                    }
             }
         case QUESTION:
             // HACK: it's impossible to distinguish err?; and err ? foo : bar;
             // we'll try to resolve it by forward looking hack in dump func()
             break;
         case BANG:
-            switch(prev_t){
+            switch (prev_t) {
                 case TYPE_IDENT:
                 case CT_TYPE_IDENT:
                 case RVEC:
                 case RGENPAR:
                 case STAR:
                 case GREATER:
-                    break; // no space
-                default: 
+                    break;  // no space
+                default:
                     nextcase TOP: default;
             }
         default:
-            if (self._resolve_default_space(state, t))  pre_space = true;
+            if (self._resolve_default_space(state, t)) pre_space = true;
     }
 
     bool never_space = {|
@@ -677,118 +697,120 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token *t) 
 }
 
 <*
-Check if previous token type requires a space after it (in general case)
+ Check if previous token type requires a space after it (in general case)
 *>
-macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state, Token* t) @local {
-    switch(state.last_token) {
-		case QUESTION:
-		    switch(state.current_token) {
-		        case EOS:
-		        case RPAREN:
-		            return false; // no space
-		        default:
-		            return true;
-		    }
-		    break;
-		// resolving ambiguity between &, *, &&, -, +
-		case BIT_XOR:
-		case AND:
-		case AMP:
-		case STAR:
-		case MINUS:
-		case PLUS:
-		    return self._resolve__prev_is_binexp();
-		case LBRACE:
-		    return state.scope_depth <= 1 || t.type == LBRACE;
-		case BANG:
-		    return self._resolve__prev_bang_type();
-		case LBRACKET:
-		    // no space after bracket
-		    return false;
-		case DOTDOT:
-		    if (state.prev_scope(1) == LBRACKET) {
-		        return self._resolve__bracket_is_complex_expr();
-		    } else {
-		        return false;
-		    }
-		case COLON:
-		    if (state.prev_scope(1) == LBRACKET) {
-		        return self._resolve__bracket_is_complex_expr();
-		    } else {
-		        return true;
-		    }
-		case DIV:
-		case GREATER:
-		case LESS:
-		case MOD:
-		case CT_AND:
-		case CT_OR:
-		case CT_CONCAT:
-		case DIV_ASSIGN:
-		case ELVIS:
-		case EQEQ:
-		case GREATER_EQ:
-		case IMPLIES:
-		case LESS_EQ:
-		case NOT_EQUAL:
-		case QUESTQUEST:
-		case SHL:
-		case SHR:
-		case OR:
-		case BIT_OR:
-		case RETURN:
-		case EOS:
-		case IDENT:
-		case TYPE_IDENT:
-		case CT_IDENT:
-		case CT_TYPE_IDENT:
-		case COMMA:
-		case EQ:
-		case BIT_AND_ASSIGN:
-		case BIT_OR_ASSIGN:
-		case BIT_XOR_ASSIGN:
-		case MINUS_ASSIGN:
-		case MULT_ASSIGN:
-		case MOD_ASSIGN:
-		case PLUS_ASSIGN:
-		case SHL_ASSIGN:
-		case SHR_ASSIGN:
-		case CATCH:
-		case VAR:
-		case NEXTCASE:
-		case INLINE:
-		case TYPEID:
-		case DISTINCT:
-		case BREAK:
-		case CONTINUE:
-		case RVEC:
-		case RGENPAR:
-		case TRY:
-		case FN:
-		case IF:
-		case FOR:
-		case FOREACH:
-		case DEFER:
-		case DEF:
-		case CONST:
-		case TLOCAL:
-		case STATIC:
-		case EXTERN:
-		case MODULE:
-		case DO:
-		case IMPORT:
-		case COMMENT_MULTI_INLINE:
-		    return true;
-		default: 
-		    break;
+macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state, Token* t) @local
+{
+    switch (state.last_token) {
+        case QUESTION:
+            switch (state.current_token) {
+                case EOS:
+                case RPAREN:
+                    return false;  // no space
+                default:
+                    return true;
+            }
+            break;
+            // resolving ambiguity between &, *, &&, -, +
+        case BIT_XOR:
+        case AND:
+        case AMP:
+        case STAR:
+        case MINUS:
+        case PLUS:
+            return self._resolve__prev_is_binexp();
+        case LBRACE:
+            return state.scope_depth <= 1 || t.type == LBRACE;
+        case BANG:
+            return self._resolve__prev_bang_type();
+        case LBRACKET:
+            // no space after bracket
+            return false;
+        case DOTDOT:
+            if (state.prev_scope(1) == LBRACKET) {
+                return self._resolve__bracket_is_complex_expr();
+            } else {
+                return false;
+            }
+        case COLON:
+            if (state.prev_scope(1) == LBRACKET) {
+                return self._resolve__bracket_is_complex_expr();
+            } else {
+                return true;
+            }
+        case DIV:
+        case GREATER:
+        case LESS:
+        case MOD:
+        case CT_AND:
+        case CT_OR:
+        case CT_CONCAT:
+        case DIV_ASSIGN:
+        case ELVIS:
+        case EQEQ:
+        case GREATER_EQ:
+        case IMPLIES:
+        case LESS_EQ:
+        case NOT_EQUAL:
+        case QUESTQUEST:
+        case SHL:
+        case SHR:
+        case OR:
+        case BIT_OR:
+        case RETURN:
+        case EOS:
+        case IDENT:
+        case TYPE_IDENT:
+        case CT_IDENT:
+        case CT_TYPE_IDENT:
+        case COMMA:
+        case EQ:
+        case BIT_AND_ASSIGN:
+        case BIT_OR_ASSIGN:
+        case BIT_XOR_ASSIGN:
+        case MINUS_ASSIGN:
+        case MULT_ASSIGN:
+        case MOD_ASSIGN:
+        case PLUS_ASSIGN:
+        case SHL_ASSIGN:
+        case SHR_ASSIGN:
+        case CATCH:
+        case VAR:
+        case NEXTCASE:
+        case INLINE:
+        case TYPEID:
+        case DISTINCT:
+        case BREAK:
+        case CONTINUE:
+        case RVEC:
+        case RGENPAR:
+        case TRY:
+        case FN:
+        case IF:
+        case FOR:
+        case FOREACH:
+        case DEFER:
+        case DEF:
+        case CONST:
+        case TLOCAL:
+        case STATIC:
+        case EXTERN:
+        case MODULE:
+        case DO:
+        case IMPORT:
+        case COMMENT_MULTI_INLINE:
+            return true;
+        default:
+            break;
     }
-	return false;
+    return false;
 }
 
 <*
-Resolves if colon belongs to call(kwarg: 0) or foreach(f : some) 
+ Resolves if colon belongs to call(kwarg: 0) or foreach(f : some) 
 *>
-fn bool CodeFmt._resolve__keyword_call_colon(&self, NodeParserState* state) {
+fn bool CodeFmt._resolve__keyword_call_colon(&self, NodeParserState* state)
+{
     assert(state.current_token == COLON);
     assert(self.state_stack.len() > 0);
 
@@ -798,10 +820,9 @@ fn bool CodeFmt._resolve__keyword_call_colon(&self, NodeParserState* state) {
 
     bool is_call_kwarg = true;
 
-    for LOOP: (usz i = self.__token_cache.len(); i-- > start_len; )
-    {
+    for LOOP: (usz i = self.__token_cache.len(); i-- > start_len;) {
         Token* t = &self.__token_cache[i];
-        switch(t.type) {
+        switch (t.type) {
             case IDENT:
             case SPACE:
                 break;
@@ -816,7 +837,8 @@ fn bool CodeFmt._resolve__keyword_call_colon(&self, NodeParserState* state) {
     return is_call_kwarg;
 }
 
-fn bool CodeFmt._resolve__bracket_is_complex_expr(&self) {
+fn bool CodeFmt._resolve__bracket_is_complex_expr(&self)
+{
     assert(self.state_stack.len() > 0);
 
     usz start_len = self.state_stack[^1].token_cache_start;
@@ -825,11 +847,10 @@ fn bool CodeFmt._resolve__bracket_is_complex_expr(&self) {
 
     int exp_count = 0;
 
-    for LOOP: (usz i = self.__token_cache.len(); i-- > start_len; )
-    {
+    for LOOP: (usz i = self.__token_cache.len(); i-- > start_len;) {
         Token* t = &self.__token_cache[i];
-        switch(t.type) {
-            case BIT_XOR: // [^1]
+        switch (t.type) {
+            case BIT_XOR:  // [^1]
             case SPACE:
             case COLON:
             case DOTDOT:
@@ -846,9 +867,10 @@ fn bool CodeFmt._resolve__bracket_is_complex_expr(&self) {
 }
 
 <*
-resolve  bool! c vs if(!foo)
+ resolve  bool! c vs if(!foo)
 *>
-fn bool CodeFmt._resolve__prev_bang_type(&self) {
+fn bool CodeFmt._resolve__prev_bang_type(&self)
+{
     assert(self.state_stack.len() > 0);
 
     usz start_len = self.state_stack[^1].token_cache_start;
@@ -859,13 +881,13 @@ fn bool CodeFmt._resolve__prev_bang_type(&self) {
 
     Token* t = &self.__token_cache[^2];
 
-    switch(t.type) {
+    switch (t.type) {
         case CT_TYPE_IDENT:
         case TYPE_IDENT:
         case RVEC:
         case RGENPAR:
         case STAR:
-        case GREATER: // new generic notation ]>
+        case GREATER:  // new generic notation ]>
             return true;
         default:
             return false;
@@ -873,18 +895,19 @@ fn bool CodeFmt._resolve__prev_bang_type(&self) {
 }
 
 <*
-nextcase CONST: label vs ? test.CONST : ternary
+ nextcase CONST: label vs ? test.CONST : ternary
 *>
-fn bool CodeFmt._resolve__const_label(&self) {
+fn bool CodeFmt._resolve__const_label(&self)
+{
     assert(self.state_stack.len() > 0);
 
     usz start_len = self.state_stack[^1].token_cache_start;
     if (self.__token_cache.len() - start_len < 3) return false;
 
-    for LOOP: (usz i = self.__token_cache.len(); i-- > start_len; ) {
+    for LOOP: (usz i = self.__token_cache.len(); i-- > start_len;) {
         Token* t = &self.__token_cache[i];
 
-        switch(t.type) {
+        switch (t.type) {
             case SPACE:
             case CONST_IDENT:
             case COLON:
@@ -905,9 +928,10 @@ fn bool CodeFmt._resolve__const_label(&self) {
 }
 
 <*
-Resolves ambiguity conflict for casting (void)&some and expression (1 | 2) & some
+ Resolves ambiguity conflict for casting (void)&some and expression (1 | 2) & some
 *>
-fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
+fn bool CodeFmt._resolve__prev_is_binexp(&self) @private
+{
     assert(self.state_stack.len() > 0);
 
     usz start_len = self.state_stack[^1].token_cache_start;
@@ -923,12 +947,11 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
     bool has_expr = false;
 
     TokenType rhs_token = INVALID_TOKEN;
-    
+
     // NOTE: looping backwards
-    for LOOP: (usz i = self.__token_cache.len(); i-- > start_len; )
-    {
+    for LOOP: (usz i = self.__token_cache.len(); i-- > start_len;) {
         Token* t = &self.__token_cache[i];
-        switch(t.type) {
+        switch (t.type) {
             case LBRACKET:
                 scope--;
                 if (scope < 0) {
@@ -955,13 +978,13 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
                     break LOOP;
                 }
             case STAR:
-                if (rhs_token == STAR) break; // double pointer
+                if (rhs_token == STAR) break;  // double pointer
                 nextcase;
             case BIT_XOR:
             case PLUS:
             case MINUS:
             case AMP:
-            case AND: // logical && or &&1 
+            case AND:  // logical && or &&1 
                 has_expr = true;
                 switch (rhs_token) {
                     case PLUS:
@@ -974,11 +997,11 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
                 }
                 break;
             case SPACE:
-            case BANG: // if(!* 
+            case BANG:  // if(!* 
                 break;
-		    case QUESTION: // for ternary
-		        if (scope == 0) break LOOP;
-		        has_expr = true;
+            case QUESTION:  // for ternary
+                if (scope == 0) break LOOP;
+                has_expr = true;
             case INTEGER:
             case IDENT:
             case HASH_IDENT:
@@ -998,7 +1021,7 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
                     default:
                         break;
                 }
-                has_idents = true; 
+                has_idents = true;
             case TYPE_IDENT:
             case CT_TYPE_IDENT:
             case CT_TYPEOF:
@@ -1008,40 +1031,40 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
             case LGENPAR:
             case RGENPAR:
                 has_brackets = true;
-		    case BIT_AND_ASSIGN:
-		    case BIT_OR_ASSIGN:
-		    case BIT_XOR_ASSIGN:
-		    case MINUS_ASSIGN:
-		    case MULT_ASSIGN:
-		    case MOD_ASSIGN:
-		    case PLUS_ASSIGN:
-		    case SHL_ASSIGN:
-		    case SHR_ASSIGN:
-		    case IMPLIES:
-		    case EQ:
-		    case RETURN:
-		    case DEFER:
-		    case TRY:
-		    case CATCH:
-		    case COLON:  // for ternary / foreach / array slice
-		    case ELVIS: // for ternary
-		    case DOTDOT: // for array slice
-		    case COMMENT_MULTI:
-		    case COMMENT_MULTI_INLINE:
-		    case COMMENT_SINGLE:
-		    case COMMENT_SINGLE_INLINE:
-		        // assignment operator reached
-		        break LOOP;
-		    case COMMA:
-		        if (scope == 0) break LOOP; 
-		        return true; // call(a, b, <-) |
-		    case EQEQ:
-		    case GREATER_EQ:
-		    case LESS_EQ:
-		    case NOT_EQUAL:
-		    case GREATER:
-		    case LESS: 
-		        break LOOP;
+            case BIT_AND_ASSIGN:
+            case BIT_OR_ASSIGN:
+            case BIT_XOR_ASSIGN:
+            case MINUS_ASSIGN:
+            case MULT_ASSIGN:
+            case MOD_ASSIGN:
+            case PLUS_ASSIGN:
+            case SHL_ASSIGN:
+            case SHR_ASSIGN:
+            case IMPLIES:
+            case EQ:
+            case RETURN:
+            case DEFER:
+            case TRY:
+            case CATCH:
+            case COLON:  // for ternary / foreach / array slice
+            case ELVIS:  // for ternary
+            case DOTDOT:  // for array slice
+            case COMMENT_MULTI:
+            case COMMENT_MULTI_INLINE:
+            case COMMENT_SINGLE:
+            case COMMENT_SINGLE_INLINE:
+                // assignment operator reached
+                break LOOP;
+            case COMMA:
+                if (scope == 0) break LOOP;
+                return true;  // call(a, b, <-) |
+            case EQEQ:
+            case GREATER_EQ:
+            case LESS_EQ:
+            case NOT_EQUAL:
+            case GREATER:
+            case LESS:
+                break LOOP;
             default:
                 return true;
         }
@@ -1059,15 +1082,15 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
             } else {
                 return false;
             }
-        } else if (scope < 0){
+        } else if (scope < 0) {
             // maybe incomplete cast or fn argument
             // (char[8]   | ?
             // (char[8]   |* ?
             // (char[8]*  |) ?
             // (char[8]*  |param ?
-            if (has_type && has_brackets){
-                if(has_idents && !has_expr) return true;
-            } 
+            if (has_type && has_brackets) {
+                if (has_idents && !has_expr) return true;
+            }
         }
 
         if (!has_parens && !has_type && !has_brackets && !has_idents) return true;
@@ -1078,23 +1101,24 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
 }
 
 <*
-Distinguish if next (.code.) block is a function call with more than 1 argument
+ Distinguish if next (.code.) block is a function call with more than 1 argument
 *>
-fn usz CodeFmt._resolve__next_is_cast_and_dump(&self, usz current_idx) {
-    NodeParserState tmpstate = NodeParserState{};
+fn usz CodeFmt._resolve__next_is_cast_and_dump(&self, usz current_idx)
+{
+    NodeParserState tmpstate = NodeParserState {};
 
     bool is_cast = true;
     bool has_type = false;
     usz cast_end = current_idx;
-    for(usz i = current_idx; i < self.__token_cache.len(); i++) {
+    for (usz i = current_idx; i < self.__token_cache.len(); i++) {
         Token* t = &self.__token_cache[i];
-        tmpstate.check(t); 
+        tmpstate.check(t);
         if (i == current_idx) {
             assert(t.type == LPAREN);
             assert(tmpstate.scope_depth == 1);
         }
 
-        switch(t.type) {
+        switch (t.type) {
             // These are allowed in casts
             case TYPE_IDENT:
             case CT_TYPE_IDENT:
@@ -1115,7 +1139,7 @@ fn usz CodeFmt._resolve__next_is_cast_and_dump(&self, usz current_idx) {
         }
 
         // Looping until next closing paren
-        if(tmpstate.scope_depth == 0) {
+        if (tmpstate.scope_depth == 0) {
             cast_end = i;
             break;
         }
@@ -1123,22 +1147,22 @@ fn usz CodeFmt._resolve__next_is_cast_and_dump(&self, usz current_idx) {
     }
     if (is_cast && has_type) {
         // cast must have at least one type
-        for(usz i = current_idx; i <= cast_end; i++) {
+        for (usz i = current_idx; i <= cast_end; i++) {
             Token* t = &self.__token_cache[i];
             self.write("%s", t.value);
         }
         return cast_end + 1;
-    } 
-    else {
+    } else {
         // Not a cast, wrap as usual
         return current_idx;
     }
 }
 
 <*
-Distinguish if previous (.code.) block is a function call or type cast
+ Distinguish if previous (.code.) block is a function call or type cast
 *>
-fn bool CodeFmt._resolve__prev_is_cast(&self) @private {
+fn bool CodeFmt._resolve__prev_is_cast(&self) @private
+{
     assert(self.state_stack.len() > 0);
 
     usz start_len = self.state_stack[^1].token_cache_start;
@@ -1147,21 +1171,20 @@ fn bool CodeFmt._resolve__prev_is_cast(&self) @private {
     bool is_cast = true;
     bool has_type = false;
 
-    for LOOP: (usz i = self.__token_cache.len(); i-- > start_len; )
-    {
+    for LOOP: (usz i = self.__token_cache.len(); i-- > start_len;) {
         Token* t = &self.__token_cache[i];
-        switch(t.type) {
+        switch (t.type) {
             case RPAREN:
                 scope++;
             case LPAREN:
                 scope--;
-                if (scope == 0){
+                if (scope == 0) {
                     if (i > 0) {
-                        if(self.__token_cache[i-1].type == CT_TYPEOF) has_type = true;
+                        if (self.__token_cache[i - 1].type == CT_TYPEOF) has_type = true;
                     }
                     break LOOP;
                 }
-            // These are allowed in casts
+                // These are allowed in casts
             case TYPE_IDENT:
             case CT_TYPE_IDENT:
             case CT_TYPEOF:
@@ -1182,9 +1205,10 @@ fn bool CodeFmt._resolve__prev_is_cast(&self) @private {
 }
 
 <*
-Checks next token type in token cache
+ Checks next token type in token cache
 *>
-fn TokenType CodeFmt._resolve__next_token(&self, usz current_idx) {
+fn TokenType CodeFmt._resolve__next_token(&self, usz current_idx)
+{
     TokenType result = INVALID_TOKEN;
     while (++current_idx < self.__token_cache.len()) {
         result = self.__token_cache[current_idx].type;
@@ -1193,7 +1217,10 @@ fn TokenType CodeFmt._resolve__next_token(&self, usz current_idx) {
     return result;
 }
 
-macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TOKEN, bool no_split = false) @private {
+macro void! CodeFmt.cache_statement_dump(
+    &self, TokenType wrap_rule = INVALID_TOKEN, bool no_split = false
+) @private
+{
     if (self.cache_statement_len() == 0) return;
 
     usz token_len = 0;
@@ -1213,36 +1240,36 @@ macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TO
 
         token_len += t.value.len;
         switch TOP: (t.type) {
-		    case BIT_AND_ASSIGN:
-		    case BIT_OR_ASSIGN:
-		    case BIT_XOR_ASSIGN:
-		    case DIV_ASSIGN:
-		    case MINUS_ASSIGN:
-		    case MULT_ASSIGN:
-		    case MOD_ASSIGN:
-		    case PLUS_ASSIGN:
-	        case SHL_ASSIGN:
-		    case SHR_ASSIGN:
-		    case EQ:
-		        // if it's an assignment use only RHS part for splitting
-		        if (tmpstate.scope_depth == 0) {
-		            // NOTE: use only first assignment (struct designated initializers case)
-		            is_assignment = true;
-		            break_pos = -1;
-		            break_len = 0;
-		        }
-		    case LBRACE:
-		    case LPAREN:
-                if (break_pos != -1 ) nextcase default;
+            case BIT_AND_ASSIGN:
+            case BIT_OR_ASSIGN:
+            case BIT_XOR_ASSIGN:
+            case DIV_ASSIGN:
+            case MINUS_ASSIGN:
+            case MULT_ASSIGN:
+            case MOD_ASSIGN:
+            case PLUS_ASSIGN:
+            case SHL_ASSIGN:
+            case SHR_ASSIGN:
+            case EQ:
+                // if it's an assignment use only RHS part for splitting
+                if (tmpstate.scope_depth == 0) {
+                    // NOTE: use only first assignment (struct designated initializers case)
+                    is_assignment = true;
+                    break_pos = -1;
+                    break_len = 0;
+                }
+            case LBRACE:
+            case LPAREN:
+                if (break_pos != -1) nextcase default;
                 if (tmpstate.scope_depth != 1) nextcase default;
                 break_pos = (int)i;
                 break_len = 0;
-		    case RBRACE:
-		    case RPAREN:
-                if (break_pos == -1 ) nextcase default;
+            case RBRACE:
+            case RPAREN:
+                if (break_pos == -1) nextcase default;
                 if (tmpstate.scope_depth != 0) nextcase default;
                 if (last_non_space_tok == COMMA) has_magic_comma = true;
-            // NOTE: single line comments in statements forcing multi-line print 
+                // NOTE: single line comments in statements forcing multi-line print 
             case COMMENT_SINGLE:
             case COMMENT_MULTI:
             case COMMENT_SINGLE_INLINE:
@@ -1253,30 +1280,34 @@ macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TO
                 tmpstate.current_token = tmpstate.last_token;
                 nextcase default;
             case DOT:
-                if (tmpstate.scope_depth == 1){
+                if (tmpstate.scope_depth == 1) {
                     if (tmpstate.last_token == LBRACE || tmpstate.last_token == COMMA) {
                         is_struct_design = true;
                     }
                 }
                 nextcase default;
             default:
-                if(break_pos != -1) break_len += t.value.len;
-                if(t.type != SPACE) last_non_space_tok = t.type;
+                if (break_pos != -1) break_len += t.value.len;
+                if (t.type != SPACE) last_non_space_tok = t.type;
         }
     };
 
-    self.trace("cache_statement_dump: _line_used: %d, cache_len: %d, break_pos: %d break_len: %d last_non_space_tok: %s",
-        self._line_used, token_len, break_pos, break_len, last_non_space_tok
+    self.trace(
+        "cache_statement_dump: _line_used: %d, cache_len: %d, break_pos: %d break_len: %d last_non_space_tok: %s",
+        self._line_used,
+        token_len,
+        break_pos,
+        break_len,
+        last_non_space_tok
     );
 
     if (no_split || (!has_magic_comma && self._line_used + token_len <= self.max_line_width)) {
         // NOTE: Fits in line no wrapping needed write as is with standard formatting.
-        self.@cache_statement_iter(; usz i, Token* t) 
-        {
+        self.@cache_statement_iter(; usz i, Token* t) {
             if (self._print_lex) io::eprintf("%s ", t.type);
-            switch(t.type) {
+            switch (t.type) {
                 case QUESTION:
-                    switch(self._resolve__next_token(i)) {
+                    switch (self._resolve__next_token(i)) {
                         case EOS:
                         case RPAREN:
                         case COLON:
@@ -1297,39 +1328,41 @@ macro void! CodeFmt.cache_statement_dump(&self, TokenType wrap_rule = INVALID_TO
     } else {
         // NOTE: Wrapping is needed!
 
-        bool is_multiline = (has_magic_comma ||
-                             break_len + (self._indent_level + 1) * 4 > self.max_line_width);
+        bool is_multiline = (
+            has_magic_comma || break_len + (self._indent_level + 1) * 4 > self.max_line_width
+        );
 
         if (is_struct_design) {
             // hierarchical struct initialization
-            self.cache_statement_dump_struct_init(is_multiline, wrap_rule)!;        
+            self.cache_statement_dump_struct_init(is_multiline, wrap_rule)!;
         } else {
             // generic if/for/ func call or statement
-            self.cache_statement_dump_generic(is_multiline, wrap_rule)!;        
+            self.cache_statement_dump_generic(is_multiline, wrap_rule)!;
         }
-        
+
     }
 
     if (self._print_lex) io::eprintf("\n");
     self.cache_statement_clear();
 }
 
-macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, TokenType wrap_rule){
-    NodeParserState tmpstate = NodeParserState{};
+macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, TokenType wrap_rule)
+{
+    NodeParserState tmpstate = NodeParserState {};
     TokenType brake_type = INVALID_TOKEN;
     self.@cache_statement_iter(; usz i, Token* t) {
         if (self._print_lex) io::eprintf("%s ", t.type);
-        tmpstate.check(t); // this is used only for current scope_depth
+        tmpstate.check(t);  // this is used only for current scope_depth
 
-        switch TOP: (t.type){
+        switch TOP: (t.type) {
             case LBRACE:
-                if (is_multiline){
+                if (is_multiline) {
                     if (tmpstate.last_token == COMMA) self.newline();
                 }
                 self.write("%s", t.value);
                 self.indent();
             case RBRACE:
-                self.dedent()!; 
+                self.dedent()!;
                 self.newline();
                 self.write("%s", t.value);
             case COMMENT_SINGLE:
@@ -1342,7 +1375,7 @@ macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, T
                 self.write("  %s", t.value);
                 tmpstate.current_token = tmpstate.last_token;
             case QUESTION:
-                switch(self._resolve__next_token(i)) {
+                switch (self._resolve__next_token(i)) {
                     case EOS:
                     case RPAREN:
                     case COLON:
@@ -1356,32 +1389,32 @@ macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, T
                         self.write(" ");
                 }
                 nextcase default;
-            case SPACE: 
+            case SPACE:
                 if (is_multiline) {
                     if (
-                        tmpstate.last_token != COMMA && 
+                        tmpstate.last_token != COMMA &&
                         tmpstate.last_token != LBRACE &&
                         self._resolve__next_token(i) != RBRACE
                     ) {
-                         self.write("%s", t.value);
+                        self.write("%s", t.value);
                     }
-                } else  {
+                } else {
                     if (tmpstate.last_token != LBRACE && self._resolve__next_token(i) != RBRACE) {
                         self.write("%s", t.value);
                     }
                 }
                 tmpstate.current_token = tmpstate.last_token;
             default:
-                switch(tmpstate.last_token) {
+                switch (tmpstate.last_token) {
                     case DOT:
                     case COMMA:
                     case LBRACE:
                         if (tmpstate.last_token == LBRACE) self.newline();
 
-                        if (is_multiline){
-                            if (tmpstate.last_token == COMMA && tmpstate.prev_scope(1) == LBRACE){
+                        if (is_multiline) {
+                            if (tmpstate.last_token == COMMA && tmpstate.prev_scope(1) == LBRACE) {
                                 self.newline();
-                            } 
+                            }
                         }
                         self.write("%s", t.value);
                     default:
@@ -1391,8 +1424,9 @@ macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, T
     };
 }
 
-macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, TokenType wrap_rule){
-    NodeParserState tmpstate = NodeParserState{};
+macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, TokenType wrap_rule)
+{
+    NodeParserState tmpstate = NodeParserState {};
     TokenType brake_type = INVALID_TOKEN;
 
     // This filter is used for forcing raw writing (e.g. cast vs call ambiguity)
@@ -1400,137 +1434,129 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
 
     self.@cache_statement_iter(; usz i, Token* t) {
         if (self._print_lex) io::eprintf("%s ", t.type);
-        tmpstate.check(t); // this is used only for current scope_depth
+        tmpstate.check(t);  // this is used only for current scope_depth
 
         // WTF: c3 doesn't support continue in macro @body!
         if (i >= skip_i_until) {
 
-        switch TOP: (t.type){
-            case LPAREN:  // Function params and conditions splitting
-                if (
-                    tmpstate.scope_depth == 1 &&
-                    brake_type == INVALID_TOKEN
-                ) {
-                    skip_i_until = self._resolve__next_is_cast_and_dump(i);
-                    if (skip_i_until == i){
+            switch TOP: (t.type) {
+                case LPAREN:  // Function params and conditions splitting
+                    if (tmpstate.scope_depth == 1 && brake_type == INVALID_TOKEN) {
+                        skip_i_until = self._resolve__next_is_cast_and_dump(i);
+                        if (skip_i_until == i) {
+                            self.write("%s", t.value);
+                            self.indent();
+                            brake_type = RPAREN;
+                        }
+                        break;
+                    } else {
+                        nextcase default;
+                    }
+                case LBRACE:  // Array initializers splitting
+                    if (tmpstate.scope_depth == 1 && brake_type == INVALID_TOKEN) {
                         self.write("%s", t.value);
                         self.indent();
-                        brake_type = RPAREN;
-                    }
-                    break;
-                } else {
-                    nextcase default;
-                }
-            case LBRACE:  // Array initializers splitting
-                if (tmpstate.scope_depth == 1 && brake_type == INVALID_TOKEN) {
-                    self.write("%s", t.value);
-                    self.indent();
-                    brake_type = RBRACE;
-                } else {
-                    nextcase default;
-                }
-            case brake_type:
-                if (tmpstate.scope_depth == 0) {
-                    self.dedent()!;
-                    self.newline();
-                    brake_type = INVALID_TOKEN;
-                    self.write("%s", t.value);
-                } else {
-                    nextcase default;
-                }
-            case COMMENT_SINGLE:
-            case COMMENT_MULTI:
-                self.newline();
-                self.write("%s", t.value);
-            case COMMENT_SINGLE_INLINE:
-            case COMMENT_MULTI_INLINE:
-                self.write("  %s", t.value);
-            case QUESTION:
-                switch(self._resolve__next_token(i)) {
-                    case EOS:
-                    case RPAREN:
-                    case COLON:
-                    case QUESTQUEST:
-                    case RBRACKET:
-                    case RVEC:
-                    case RGENPAR:
-                    case INVALID_TOKEN:
-                        break;
-                    default:
-                        self.write(" ");
-                }
-                nextcase default;
-            default:
-                if (is_multiline) {
-                    if (self.split_multiline(&tmpstate, wrap_rule))  {
-                        if (tmpstate.current_token == SPACE) {
-                            tmpstate.current_token = tmpstate.last_token;
-                        } else {
-                            self.newline();
-                            self.write("%s", t.value);
-                        }
+                        brake_type = RBRACE;
                     } else {
-                        if (tmpstate.current_token == SPACE) {
-                            tmpstate.current_token = tmpstate.last_token;
-                            if (self._resolve__next_token(i) == RBRACE) break;
-                        } 
-                        self.write("%s", t.value);
+                        nextcase default;
                     }
-                } else {
-                    switch(tmpstate.last_token) {
-                        case LBRACE:
+                case brake_type:
+                    if (tmpstate.scope_depth == 0) {
+                        self.dedent()!;
+                        self.newline();
+                        brake_type = INVALID_TOKEN;
+                        self.write("%s", t.value);
+                    } else {
+                        nextcase default;
+                    }
+                case COMMENT_SINGLE:
+                case COMMENT_MULTI:
+                    self.newline();
+                    self.write("%s", t.value);
+                case COMMENT_SINGLE_INLINE:
+                case COMMENT_MULTI_INLINE:
+                    self.write("  %s", t.value);
+                case QUESTION:
+                    switch (self._resolve__next_token(i)) {
+                        case EOS:
+                        case RPAREN:
+                        case COLON:
+                        case QUESTQUEST:
+                        case RBRACKET:
+                        case RVEC:
+                        case RGENPAR:
+                        case INVALID_TOKEN:
+                            break;
+                        default:
+                            self.write(" ");
+                    }
+                    nextcase default;
+                default:
+                    if (is_multiline) {
+                        if (self.split_multiline(&tmpstate, wrap_rule)) {
                             if (tmpstate.current_token == SPACE) {
                                 tmpstate.current_token = tmpstate.last_token;
-                                break;
-                            } else if (
-                                brake_type == RBRACE &&
-                                t.type != RBRACE
-                            ) {
-                                if (tmpstate.scope_depth == 1) {
-                                    self.newline();
-                                } else if (
-                                    tmpstate.scope_depth == 2 &&
-                                    (t.type == LBRACE || t.type == LBRACKET || t.type == LPAREN)
-                                ){
-                                    self.newline();
-                                }
-                            } 
-                            nextcase default;
-                        case LPAREN:
-                            if (tmpstate.scope_depth == 1 && 
-                                brake_type == RPAREN &&
-                                t.type != RPAREN
-                            ) {
+                            } else {
                                 self.newline();
-                            }else if (
-                                tmpstate.scope_depth == 2 &&
-                                t.type == LPAREN
-                            ) {
-                                self.newline();
+                                self.write("%s", t.value);
                             }
-                            nextcase default;
-                        default:
-
+                        } else {
                             if (tmpstate.current_token == SPACE) {
                                 tmpstate.current_token = tmpstate.last_token;
                                 if (self._resolve__next_token(i) == RBRACE) break;
-                            } 
+                            }
                             self.write("%s", t.value);
-                    }
+                        }
+                    } else {
+                        switch (tmpstate.last_token) {
+                            case LBRACE:
+                                if (tmpstate.current_token == SPACE) {
+                                    tmpstate.current_token = tmpstate.last_token;
+                                    break;
+                                } else if (brake_type == RBRACE && t.type != RBRACE) {
+                                    if (tmpstate.scope_depth == 1) {
+                                        self.newline();
+                                    } else if (
+                                        tmpstate.scope_depth == 2 &&
+                                        (t.type == LBRACE || t.type == LBRACKET || t.type == LPAREN)
+                                    ) {
+                                        self.newline();
+                                    }
+                                }
+                                nextcase default;
+                            case LPAREN:
+                                if (
+                                    tmpstate.scope_depth == 1 &&
+                                    brake_type == RPAREN &&
+                                    t.type != RPAREN
+                                ) {
+                                    self.newline();
+                                } else if (tmpstate.scope_depth == 2 && t.type == LPAREN) {
+                                    self.newline();
+                                }
+                                nextcase default;
+                            default:
 
-                }
+                                if (tmpstate.current_token == SPACE) {
+                                    tmpstate.current_token = tmpstate.last_token;
+                                    if (self._resolve__next_token(i) == RBRACE) break;
+                                }
+                                self.write("%s", t.value);
+                        }
+
+                    }
             }
         }
     };
 }
 
-
 <*
-Check if previous token triggers multi-line split
+ Check if previous token triggers multi-line split
 *>
-macro bool CodeFmt.split_multiline(&self, NodeParserState* state, TokenType wrap_rule) {
+macro bool CodeFmt.split_multiline(&self, NodeParserState* state, TokenType wrap_rule)
+{
     TokenType tt = state.last_token;
-    switch(state.last_token) {
+    switch (state.last_token) {
         case COMMENT_SINGLE_INLINE:
         case COMMENT_MULTI_INLINE:
         case COMMENT_MULTI:
@@ -1549,9 +1575,9 @@ macro bool CodeFmt.split_multiline(&self, NodeParserState* state, TokenType wrap
             break;
     }
     if (state.scope_depth == 2) {
-        switch (state.current_token){
-            case LBRACE:   //aray initializers { [1..23] = 2}
-            case LBRACKET: // array of structs { {1, 2}, {2, 4}}
+        switch (state.current_token) {
+            case LBRACE:  //aray initializers { [1..23] = 2}
+            case LBRACKET:  // array of structs { {1, 2}, {2, 4}}
             case LPAREN:  // ( (some && cond) || (another || cond))
                 break;
             default:
@@ -1559,9 +1585,9 @@ macro bool CodeFmt.split_multiline(&self, NodeParserState* state, TokenType wrap
         }
     } else if (state.scope_depth != 1) return false;
 
-    switch(wrap_rule) {
+    switch (wrap_rule) {
         case INVALID_TOKEN:
-            switch(state.last_token) {
+            switch (state.last_token) {
                 case COMMA:
                 case OR:
                 case AND:
@@ -1585,11 +1611,11 @@ macro bool CodeFmt.split_multiline(&self, NodeParserState* state, TokenType wrap
 }
 
 <*
-Define appropriate code wrapping rule for token type
+ Define appropriate code wrapping rule for token type
 *>
 macro TokenType CodeFmt.cache_statement_wrap_rule(&self, TokenType initial_token)
 {
-    switch(initial_token) {
+    switch (initial_token) {
         case FOR:
             return EOS;
         case FOREACH:
@@ -1602,17 +1628,18 @@ macro TokenType CodeFmt.cache_statement_wrap_rule(&self, TokenType initial_token
         case SWITCH:
         case ELSE:
             return BOOL;
-        default: 
+        default:
             // typically it's COMMA + BOOL
             return INVALID_TOKEN;
     }
 }
 
 <*
-Cache size for current formatter state
+ Cache size for current formatter state
 *>
-macro usz CodeFmt.cache_statement_len(&self) @private {
-    if(self.state_stack.len() == 0) return 0;
+macro usz CodeFmt.cache_statement_len(&self) @private
+{
+    if (self.state_stack.len() == 0) return 0;
 
     usz start_len = self.state_stack[^1].token_cache_start;
     assert(self.__token_cache.len() >= start_len);
@@ -1621,25 +1648,28 @@ macro usz CodeFmt.cache_statement_len(&self) @private {
 }
 
 <*
-Iterate to each cached tokens available by only CURRENT stack
+ Iterate to each cached tokens available by only CURRENT stack
 *>
-macro CodeFmt.@cache_statement_iter(&self; @body(idx, token)) @private {           assert(self.state_stack.len() > 0);
+macro CodeFmt.@cache_statement_iter(&self; @body(idx, token)) @private
+{
+    assert(self.state_stack.len() > 0);
     assert(self.state_stack.len() > 0);
 
     usz start_len = self.state_stack[^1].token_cache_start;
-    for(usz i = start_len; i < self.__token_cache.len(); i++){
+    for (usz i = start_len; i < self.__token_cache.len(); i++) {
         @body(i, &self.__token_cache[i]);
     }
 }
 
 <*
-Clear cache statements for current stack
+ Clear cache statements for current stack
 *>
-macro void CodeFmt.cache_statement_clear(&self) @private {
+macro void CodeFmt.cache_statement_clear(&self) @private
+{
     assert(self.state_stack.len() > 0);
 
     usz start_len = self.state_stack[^1].token_cache_start;
-    while(self.__token_cache.len() > start_len){
+    while (self.__token_cache.len() > start_len) {
         self.__token_cache.remove_last()!!;
     }
 }
@@ -1649,10 +1679,11 @@ macro void CodeFmt.cache_statement_clear(&self) @private {
 */
 
 <*
-Returns appropriate formatter function/state for global level statements
+ Returns appropriate formatter function/state for global level statements
 *>
-fn CodeFmtFn! CodeFmt.global_formatter_dispatch(CodeFmt* self, Token *t) @private {
-    switch(t.type) {
+fn CodeFmtFn! CodeFmt.global_formatter_dispatch(CodeFmt* self, Token* t) @private
+{
+    switch (t.type) {
         case FN:
         case MACRO:
             return &CodeFmt.format_fn;
@@ -1684,10 +1715,11 @@ fn CodeFmtFn! CodeFmt.global_formatter_dispatch(CodeFmt* self, Token *t) @privat
 }
 
 <*
-Returns special formatter function for in-scope token.
+ Returns special formatter function for in-scope token.
 *>
-fn CodeFmtFn! CodeFmt.local_formatter_dispatch(CodeFmt* self, Token *t) @private {
-    switch(t.type) {
+fn CodeFmtFn! CodeFmt.local_formatter_dispatch(CodeFmt* self, Token* t) @private
+{
+    switch (t.type) {
         case IF:
         case ELSE:
         case FOR:
@@ -1699,10 +1731,10 @@ fn CodeFmtFn! CodeFmt.local_formatter_dispatch(CodeFmt* self, Token *t) @private
             return &CodeFmt.format_statement_code_flow;
         case ASM:
             return &CodeFmt.format_asm;
-	    case CT_FOR:               // $for
-	    case CT_FOREACH:           // $foreach
-	    case CT_IF:                // $if
-	    case CT_SWITCH:            // $switch
+        case CT_FOR:  // $for
+        case CT_FOREACH:  // $foreach
+        case CT_IF:  // $if
+        case CT_SWITCH:  // $switch
             return &CodeFmt.format_comptime_code_flow;
         default:
             return null;
@@ -1710,11 +1742,12 @@ fn CodeFmtFn! CodeFmt.local_formatter_dispatch(CodeFmt* self, Token *t) @private
 }
 
 <*
-Formatter for generic file contents
+ Formatter for generic file contents
 *>
-fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserState* state) @private {
+fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserState* state) @private
+{
     // initialization with null token
-    if (state.current_state == INVALID_TOKEN){
+    if (state.current_state == INVALID_TOKEN) {
         assert(t == null);
         assert(state != null);
         self.trace("ENTRY");
@@ -1723,24 +1756,24 @@ fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserSta
     }
     assert(t.type != EMPTY_LINE);
 
-    switch STATE: (state.check(t)){
-        case SCOPE:                // generic file content
+    switch STATE: (state.check(t)) {
+        case SCOPE:  // generic file content
             self.trace("SCOPE");
-            switch(t.type) {
+            switch (t.type) {
                 case EOF:
                     self.trace("EXIT");
-	                return true;
+                    return true;
                 case DOCS_END:
                     break;
                 case EOS:
                 case RBRACE:
-                    if(state.scope_depth != 0) self.@fail(t, "scope was not properly closed?")!;
+                    if (state.scope_depth != 0) self.@fail(t, "scope was not properly closed?")!;
                     break;
                 default:
                     CodeFmtFn fmt_fn = self.global_formatter_dispatch(t)!;
-                    if(fmt_fn == null) self.@fail(t, "unknown global scope statement")!;
+                    if (fmt_fn == null) self.@fail(t, "unknown global scope statement")!;
 
-                    if(!self._is_empty_line) {
+                    if (!self._is_empty_line) {
                         // Prevent doubling empty lines
                         self.newline();
                     } else {
@@ -1756,15 +1789,16 @@ fn bool! CodeFmt.format_global_file_scope(CodeFmt* self, Token* t, NodeParserSta
 }
 
 <*
-Callable code formatter (fn/macros)
+ Callable code formatter (fn/macros)
 
-Format steps: format_fn_args -> format_code_scope -> foreach(format_generic_statement: statements)
+ Format steps: format_fn_args -> format_code_scope -> foreach(format_generic_statement: statements)
 *>
-fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @private {
+fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @private
+{
     assert(t.type != EMPTY_LINE);
 
-    switch STATE: (state.check(t)){
-        case INVALID_TOKEN:         // initial state
+    switch STATE: (state.check(t)) {
+        case INVALID_TOKEN:  // initial state
             assert(t.type == FN || t.type == MACRO || t.type == EXTERN);
             self.trace("ENTRY");
             self.write("%s", t.value);
@@ -1775,9 +1809,9 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                 // 'extern '
                 self.write(" ", t.value);
             }
-        case RETURN:                // return type 
+        case RETURN:  // return type 
             self.trace("RETURN");
-            switch(t.type) {
+            switch (t.type) {
                 case AT_IDENT:
                 case IDENT:
                     if (state.scope_depth == 0 && state.last_token != DOT) self.write(" ");
@@ -1791,9 +1825,9 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                 default:
                     self.write("%s", t.value);
             }
-        case VAR:    // arguments
+        case VAR:  // arguments
             self.trace("VAR");
-            switch(t.type) {
+            switch (t.type) {
                 case LPAREN:
                     state.transition(VAR);
                     return self.push_run_state(&CodeFmt.format_fn_args, t);
@@ -1804,7 +1838,7 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                 case RPAREN:
                     if (state.scope_depth != 0) self.@fail(t, "unfinished scope")!;
                     break;
-                case IMPLIES:           // => 
+                case IMPLIES:  // => 
                     nextcase STATE: state.transition(IMPLIES);
                 case EOS:
                     self.write(";");
@@ -1812,17 +1846,17 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                 default:
                     self.@fail(t, "unexpected token in funcion args")!;
             }
-        case AT_IDENT: // function attributes
+        case AT_IDENT:  // function attributes
             self.trace("AT_IDENT");
-            switch(t.type) {
+            switch (t.type) {
                 case AT_IDENT:
                     self._lexer.extend_current_attribute();
                     self.write(" ");
                     self.write("%s", t.value);
                     break;
-                case IMPLIES:           // => 
+                case IMPLIES:  // => 
                     nextcase STATE: state.transition(IMPLIES);
-                case LBRACE:           // {
+                case LBRACE:  // {
                     if (state.scope_depth == 1) nextcase STATE: state.transition(SCOPE);
                 case EOS:
                     self.write(";");
@@ -1830,10 +1864,10 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                 default:
                     self.@fail(t, "unexpected token in funcion attributes")!;
             }
-        case SCOPE: // function scope { ... }
+        case SCOPE:  // function scope { ... }
             self.trace("SCOPE");
-            switch(t.type) {
-                case LBRACE:           // {
+            switch (t.type) {
+                case LBRACE:  // {
                     if (state.scope_depth != 1) self.@fail(t, "bad scope")!;
                     self.newline();
                     return self.push_run_state(&CodeFmt.format_code_scope, t);
@@ -1845,9 +1879,9 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                 default:
                     self.@fail(t, "unexpected token in funcion scope")!;
             }
-        case IMPLIES: // lambda func
+        case IMPLIES:  // lambda func
             self.trace("IMPLIES");
-            switch(t.type) {
+            switch (t.type) {
                 case IMPLIES:
                     self.write(" %s ", t.value);
                     break;
@@ -1865,19 +1899,20 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
 }
 
 <*
-Formatting fn/macro arguments 
+ Formatting fn/macro arguments 
 *>
-fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state) @private {
+fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state) @private
+{
     assert(t.type != EMPTY_LINE);
 
-    switch STATE: (state.check(t)){
+    switch STATE: (state.check(t)) {
         case INVALID_TOKEN:
             assert(t.type == LPAREN);
             self.trace("ENTRY");
             nextcase STATE: state.transition(VAR);
         case VAR:
             self.trace("VAR");
-            switch(t.type) {
+            switch (t.type) {
                 case RPAREN:
                     self.cache_statement_add(state, t);
 
@@ -1901,19 +1936,20 @@ fn bool! CodeFmt.format_fn_args(CodeFmt* self, Token* t, NodeParserState* state)
             }
         default:
             self.trace("format_fn_args default");
-            
+
     }
 
     return false;
 }
 
 <*
-Formatting generic code scope ({ ... } inside a function)
+ Formatting generic code scope ({ ... } inside a function)
 *>
-fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* state) @private {
+fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* state) @private
+{
     assert(t.type != EMPTY_LINE);
 
-    switch STATE: (state.check(t)){
+    switch STATE: (state.check(t)) {
         case INVALID_TOKEN:
             assert(t.type == LBRACE || t.type == LBRAPIPE);
             assert(state.scope_depth == 1);
@@ -1923,7 +1959,7 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
             state.transition(SCOPE);
         case SCOPE:
             self.trace("SCOPE");
-            switch(t.type) {
+            switch (t.type) {
                 case CT_ENDFOREACH:
                 case CT_ENDFOR:
                 case CT_ENDSWITCH:
@@ -1942,14 +1978,14 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
                         return true;
                     } else {
                         // Specially for `case FOO: { .. some .. }`
-                        if (state.initial_token == SWITCH)  self.indent();
+                        if (state.initial_token == SWITCH) self.indent();
                     }
                 case LBRAPIPE:
                     // NOTE: LBRAPIPE - return with EOS, so we remove it from stack now
                     if (state.initial_token != LBRAPIPE) state.check_scope(RBRAPIPE);
                     nextcase default;
                 case LBRACE:
-                    if (state.initial_token == SWITCH && state.last_token == COLON){
+                    if (state.initial_token == SWITCH && state.last_token == COLON) {
                         self.dedent()!;
                         self.write(" ");
                     } else {
@@ -1960,8 +1996,8 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
                 case DEFAULT:
                     if (state.scope_depth == 1) {
                         state.initial_token = SWITCH;
-                        if (state.last_token == LBRACE){
-                           self.indent(); // extra indent, at first case
+                        if (state.last_token == LBRACE) {
+                            self.indent();  // extra indent, at first case
                         }
                         nextcase STATE: state.transition(CASE);
                     } else {
@@ -1969,23 +2005,23 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
                     }
                 default:
                     CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;
-                    if (new_local_state == null){
+                    if (new_local_state == null) {
                         // Not a keyword or anything special, just a statement
                         if (t.type == LPAREN) {
                             // NOTE: casting case, e.g. (void)free(data);
                             // prevent open LPAREN to influence current scope_depth
-                            state.check_scope(RPAREN); // remove LPAREN scope
+                            state.check_scope(RPAREN);  // remove LPAREN scope
                         }
                         self.newline();
                         return self.push_run_state(&CodeFmt.format_generic_statement, t);
-                    } else {                    
+                    } else {
                         // Special keyword or statement
                         return self.push_run_state(new_local_state, t);
                     }
             }
         case CASE:
             self.trace("CASE");
-            switch(t.type) {
+            switch (t.type) {
                 case CASE:
                     self.dedent()!;
                     self.newline();
@@ -2005,26 +2041,27 @@ fn bool! CodeFmt.format_code_scope(CodeFmt* self, Token* t, NodeParserState* sta
             }
         default:
             unreachable();
-            
+
     }
     return false;
 }
 
 <*
-Formatting individual (generic statements) ending with ;
+ Formatting individual (generic statements) ending with ;
 *>
-fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserState* state) @private {
+fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserState* state) @private
+{
     assert(t.type != EMPTY_LINE);
 
-    switch STATE: (state.check(t)){
+    switch STATE: (state.check(t)) {
         case INVALID_TOKEN:
             self.trace("ENTRY");
             nextcase state.transition(SCOPE);
         case SCOPE:
             self.trace("SCOPE");
-            switch(t.type) {
+            switch (t.type) {
                 case LBRAPIPE:
-                    if (state.initial_token != LBRAPIPE){
+                    if (state.initial_token != LBRAPIPE) {
                         // case for int i = {| return 0; |}
                         state.initial_token = FOR;
                     }
@@ -2034,7 +2071,7 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                     state.initial_token = t.type;
                     nextcase default;
                 case LBRACE:
-                    switch(state.initial_token) {
+                    switch (state.initial_token) {
                         case AT_IDENT:
                             // distinguish @some_macro({ <-- and @some_macro() { <--
                             if (state.scope_depth != 1) break;
@@ -2049,7 +2086,7 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                             // @custom_macro(@body) {}
                             // @custom_macro { }
                             self.cache_statement_dump()!;
-                            if (state.initial_token == FN){
+                            if (state.initial_token == FN) {
                                 self.newline();
                             } else if (state.initial_token != LBRAPIPE) {
                                 self.write(" ");
@@ -2065,7 +2102,7 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                                 } else {
                                     // looks like a cast
                                     // return $typeof(*mat) { .m = val * ($Type)mat.m };
-                                    break; // nextcase default
+                                    break;  // nextcase default
                                 }
                             }
                     }
@@ -2073,13 +2110,12 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                 case WHILE:
                     if (self.cache_statement_len() == 0) {
                         self.write(" %s", t.value);
-                    }
-                    else {
+                    } else {
                         nextcase default;
                     }
                 case RBRACE:
                 case RBRAPIPE:
-                    switch(state.initial_token){
+                    switch (state.initial_token) {
                         case AT_IDENT:
                             if (state.scope_depth != 0) nextcase default;
                         case FN:
@@ -2094,7 +2130,7 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                 case EOS:
                     if (state.scope_depth != 0) {
                         // check if we not at @body @macro(foo; some) { }
-                        if(state.scope_depth != 1 || state.prev_scope(1) != LPAREN) {
+                        if (state.scope_depth != 1 || state.prev_scope(1) != LPAREN) {
                             self.cache_statement_dump()!;
                             self.@fail(t, "unclosed scope")!;
                         }
@@ -2116,7 +2152,7 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
             // NOTE: special state for expecting closing ; for @body macro / {| block |}
 
             self.trace("EOS");
-            switch(t.type) {
+            switch (t.type) {
                 case BANG:
                     self.write("!");
                 case BANGBANG:
@@ -2128,7 +2164,7 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                 default:
                     self.@fail(t, "unexpected token after @body macro or expr block")!;
                     break;
-            };
+            }
         default:
             unreachable();
     }
@@ -2136,10 +2172,11 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
     return false;
 }
 
-fn bool! CodeFmt.format_generic_extern(CodeFmt* self, Token* t, NodeParserState* state) @private {
+fn bool! CodeFmt.format_generic_extern(CodeFmt* self, Token* t, NodeParserState* state) @private
+{
     assert(t.type != EMPTY_LINE);
 
-    switch STATE: (state.check(t)){
+    switch STATE: (state.check(t)) {
         case INVALID_TOKEN:
             assert(t.type == EXTERN);
             self.trace("ENTRY");
@@ -2147,14 +2184,14 @@ fn bool! CodeFmt.format_generic_extern(CodeFmt* self, Token* t, NodeParserState*
             state.transition(SCOPE);
         case SCOPE:
             self.trace("SCOPE");
-            switch(t.type) {
+            switch (t.type) {
                 case FN:
                     return self.push_run_state(&CodeFmt.format_fn, t);
                 case EOS:
                     return true;
                 default:
                     return self.push_run_state(&CodeFmt.format_generic_statement, t);
-                         
+
             }
         default:
             unreachable();
@@ -2164,16 +2201,17 @@ fn bool! CodeFmt.format_generic_extern(CodeFmt* self, Token* t, NodeParserState*
 }
 
 <*
-Formatting of generic code flow statement block (for, while, if, foreach, switch, defer)
+ Formatting of generic code flow statement block (for, while, if, foreach, switch, defer)
 *>
-fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserState* state) @private {
+fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserState* state) @private
+{
     assert(state.initial_token != INVALID_TOKEN);
     assert(t.type != EMPTY_LINE);
 
-    switch STATE: (state.check(t)){
+    switch STATE: (state.check(t)) {
         case INVALID_TOKEN:
             self.trace("ENTRY");
-            switch(t.type) {
+            switch (t.type) {
                 case FOREACH_R:
                     state.initial_token = FOREACH;
                     nextcase FOREACH;
@@ -2189,20 +2227,20 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
                 case ELSE:
                     // else goes into single line
                     self.write(" else");
-                default: 
+                default:
                     unreachable();
             }
 
             state.transition(CONST_IDENT);
         case CONST_IDENT:
             self.trace("CONST_IDENT");
-            switch(t.type) {
+            switch (t.type) {
                 case CONST_IDENT:  // LABEL
                     self.write(" %s", t.value);
-                case IF: // else if
+                case IF:  // else if
                     self.write(" %s", t.value);
-                case ELSE: // single else
-                case COLON: // LABEL: colon
+                case ELSE:  // single else
+                case COLON:  // LABEL: colon
                     self.write("%s", t.value);
                 case CATCH:
                 case TRY:
@@ -2219,16 +2257,16 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
                     self.write(" ");
                     nextcase STATE: state.transition(IMPLIES);
             }
-        case VAR: // if/switch/for parens (...)
+        case VAR:  // if/switch/for parens (...)
             self.trace("VAR");
-            switch(t.type) {
+            switch (t.type) {
                 case LPAREN:
                     // entry condition state
                     if (state.scope_depth == 1) self.write(" ");
                     nextcase default;
                 case RPAREN:
                     self.cache_statement_add(state, t);
-                    if (state.scope_depth == 0){
+                    if (state.scope_depth == 0) {
                         TokenType wrap_rule = self.cache_statement_wrap_rule(state.initial_token);
                         self.cache_statement_dump(wrap_rule)!;
                         state.transition(SCOPE);
@@ -2244,7 +2282,7 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
             }
         case SCOPE:
             self.trace("SCOPE");
-            switch(t.type) {
+            switch (t.type) {
                 case LBRACE:
                     if (state.scope_depth != 1) self.@fail(t, "invalid scope")!;
                     self.write(" ");
@@ -2265,7 +2303,7 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
             }
         case IMPLIES:
             self.trace("IMPLIES");
-            switch(t.type) {
+            switch (t.type) {
                 case EOS:
                     if (state.scope_depth != 0) self.@fail(t, "invalid scope")!;
                     self.cache_statement_add(state, t);
@@ -2282,7 +2320,8 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
     return false;
 }
 
-fn bool CodeFmt.format_docstring_text_write(&self, Token* t) {
+fn bool CodeFmt.format_docstring_text_write(&self, Token* t)
+{
     self.write("<*");
 
     bool has_new_line = false;
@@ -2291,10 +2330,10 @@ fn bool CodeFmt.format_docstring_text_write(&self, Token* t) {
     bool is_new_line = true;
     bool is_in_code = false;
     int count = 0;
-    for LOOP: (usz i = 2; i < t.value.len; i++){
+    for LOOP: (usz i = 2; i < t.value.len; i++) {
         char c = t.value[i];
         if (is_new_line && !is_in_code) {
-            switch(c){
+            switch (c) {
                 case ' ':
                 case '\t':
                     continue LOOP;
@@ -2302,7 +2341,7 @@ fn bool CodeFmt.format_docstring_text_write(&self, Token* t) {
                     has_new_line = true;
                 case '`':
                     if (i < t.value.len - 3) {
-                        if (t.value[i+1] == '`' && t.value[i+2] == '`'){
+                        if (t.value[i + 1] == '`' && t.value[i + 2] == '`') {
                             is_in_code = true;
                             self.newline();
                             self.write("%c", c);
@@ -2321,14 +2360,14 @@ fn bool CodeFmt.format_docstring_text_write(&self, Token* t) {
                     self.write(" %c", c);
             }
         } else {
-            switch(c){
+            switch (c) {
                 case '\n':
                     is_new_line = true;
                     has_new_line = false;
                     self.newline(is_empty: true);
                 case '`':
                     if (is_in_code && i < t.value.len - 3) {
-                        if (t.value[i+1] == '`' && t.value[i+2] == '`'){
+                        if (t.value[i + 1] == '`' && t.value[i + 2] == '`') {
                             is_in_code = false;
                             is_new_line = false;
                         }
@@ -2340,19 +2379,20 @@ fn bool CodeFmt.format_docstring_text_write(&self, Token* t) {
         }
 
     }
-    if (is_multiline &&  count == 0)  self.newline();
-    
+    if (is_multiline && count == 0) self.newline();
+
     return is_multiline && count > 0;
 }
 
 <*
-Formatting generic doc string with contracts
+ Formatting generic doc string with contracts
 *>
-fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* state) @private {
+fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* state) @private
+{
     assert(t.type != EMPTY_LINE);
 
-    switch STATE: (state.check(t)){
-        case INVALID_TOKEN:         // initial state
+    switch STATE: (state.check(t)) {
+        case INVALID_TOKEN:  // initial state
             assert(t.type == DOCS_START);
             assert(state.initial_token == DOCS_START);
             self.trace("ENTRY");
@@ -2361,37 +2401,37 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
                 state.initial_token = DOCS_EOL;
             }
             state.transition(SCOPE);
-        case SCOPE: // contract scope
+        case SCOPE:  // contract scope
             self.trace("SCOPE");
-            switch(t.type) {
+            switch (t.type) {
                 case DOCS_EOL:
                     self.newline();
                 case DOCS_END:
                     nextcase STATE: state.transition(EOS);
                 case AT_IDENT:
-                    if (state.initial_token == DOCS_EOL){
+                    if (state.initial_token == DOCS_EOL) {
                         self.newline();
                         state.initial_token = DOCS_START;
                     }
-                    
+
                     self.write(" %s", t.value);
-                    switch(t.value) {
-                        case "@param":  
+                    switch (t.value) {
+                        case "@param":
                             state.transition(VAR);
-                        case "@require":  
-                        case "@ensure": 
+                        case "@require":
+                        case "@ensure":
                             self.write(" ");
                             state.transition(ASSERT);
-                        case "@return": 
+                        case "@return":
                             state.transition(RETURN);
-                        default: 
+                        default:
                             state.transition(AT_IDENT);
                     }
                 default:
                     self.@fail(t, "expected doc contract, or *>")!;
             }
-        case AT_IDENT: // generic contract (any other)
-            switch(t.type) {
+        case AT_IDENT:  // generic contract (any other)
+            switch (t.type) {
                 case DOCS_END:
                     self.write(" ");
                     nextcase STATE: state.transition(EOS);
@@ -2402,7 +2442,7 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
                     self.write(" %s", t.value);
             }
         case ASSERT:  // @require / @ensure
-            switch(t.type) {
+            switch (t.type) {
                 case DOCS_END:
                     self.cache_statement_dump()!;
                     self.write(" ");
@@ -2420,7 +2460,7 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
                     self.cache_statement_add(state, t);
             }
         case RETURN:  // @return[!]
-            switch(t.type) {
+            switch (t.type) {
                 case DOCS_END:
                     self.write(" ");
                     nextcase STATE: state.transition(EOS);
@@ -2439,7 +2479,7 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
                     self.write(" %s", t.value);
             }
         case VAR:  // @param
-            switch(t.type) {
+            switch (t.type) {
                 case DOCS_END:
                     self.write(" ");
                     nextcase STATE: state.transition(EOS);
@@ -2463,23 +2503,24 @@ fn bool! CodeFmt.format_docstring(CodeFmt* self, Token* t, NodeParserState* stat
     return false;
 }
 
-fn bool! CodeFmt.format_comptime_switch_body(CodeFmt* self, Token* t, NodeParserState* state) @private {
+fn bool! CodeFmt.format_comptime_switch_body(CodeFmt* self, Token* t, NodeParserState* state) @private
+{
     assert(t.type != EMPTY_LINE);
     assert(state.initial_token != INVALID_TOKEN);
 
-    switch STATE: (state.check(t)){
+    switch STATE: (state.check(t)) {
         case INVALID_TOKEN:
             self.trace("ENTRY");
-            switch(t.type) {
-	            case CT_CASE:
-	            case CT_DEFAULT:
+            switch (t.type) {
+                case CT_CASE:
+                case CT_DEFAULT:
                     nextcase STATE: state.transition(CASE);
-                default: 
+                default:
                     unreachable();
             }
         case SCOPE:
             self.trace("SCOPE");
-            switch(t.type) {
+            switch (t.type) {
                 case EOS:
                     // Fallback from format_generic_statement
                     break;
@@ -2502,26 +2543,26 @@ fn bool! CodeFmt.format_comptime_switch_body(CodeFmt* self, Token* t, NodeParser
                     self.dedent()!;
                     self.newline();
                     self.write("%s", t.value);
-                    return true;                        
+                    return true;
                 default:
                     CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;
-                    if (new_local_state == null){
+                    if (new_local_state == null) {
                         // Not a keyword or anything special, just a statement
                         if (t.type == LPAREN) {
                             // NOTE: casting case, e.g. (void)free(data);
                             // prevent open LPAREN to influence current scope_depth
-                            state.check_scope(RPAREN); // remove LPAREN scope
+                            state.check_scope(RPAREN);  // remove LPAREN scope
                         }
                         self.newline();
                         return self.push_run_state(&CodeFmt.format_generic_statement, t);
-                    } else {                    
+                    } else {
                         // Special keyword or statement
                         return self.push_run_state(new_local_state, t);
                     }
             }
         case CASE:
             self.trace("CASE");
-            switch(t.type) {
+            switch (t.type) {
                 case CT_CASE:
                     self.newline();
                     self.write("%s ", t.value);
@@ -2530,7 +2571,7 @@ fn bool! CodeFmt.format_comptime_switch_body(CodeFmt* self, Token* t, NodeParser
                     self.write("%s", t.value);
                 case COLON:
                     self.indent();
-                    if (state.scope_depth == 0){
+                    if (state.scope_depth == 0) {
                         self.cache_statement_dump()!;
                         self.write(":");
                         state.transition(SCOPE);
@@ -2546,39 +2587,41 @@ fn bool! CodeFmt.format_comptime_switch_body(CodeFmt* self, Token* t, NodeParser
 
     return false;
 }
+
 <*
-Formatting of compile time code flow statement block ($for, $if, $foreach, $switch)
+ Formatting of compile time code flow statement block ($for, $if, $foreach, $switch)
 *>
-fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserState* state) @private {
+fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserState* state) @private
+{
     assert(t.type != EMPTY_LINE);
     assert(state.initial_token != INVALID_TOKEN);
 
-    switch STATE: (state.check(t)){
+    switch STATE: (state.check(t)) {
         case INVALID_TOKEN:
             self.trace("ENTRY");
             self.newline();
-            switch(t.type) {
-	            case CT_FOR:               // $for
-	            case CT_FOREACH:           // $foreach
-	            case CT_IF:                // $if
+            switch (t.type) {
+                case CT_FOR:  // $for
+                case CT_FOREACH:  // $foreach
+                case CT_IF:  // $if
                     self.write("%s ", t.value);
-	            case CT_SWITCH:            // $switch
+                case CT_SWITCH:  // $switch
                     self.write("%s", t.value);
-                default: 
+                default:
                     unreachable();
             }
 
             state.transition(VAR);
         case VAR:
             self.trace("VAR");
-            switch(t.type) {
+            switch (t.type) {
                 case CT_CASE:
                 case CT_DEFAULT:
                     self.indent();
                     self.indent();
                     nextcase STATE: state.transition(SCOPE);
                 case COLON:
-                    if (state.scope_depth == 0 && state.initial_token == CT_IF){
+                    if (state.scope_depth == 0 && state.initial_token == CT_IF) {
                         self.cache_statement_dump(wrap_rule: BOOL)!;
                         self.write("%s", t.value);
                         self.indent();
@@ -2592,7 +2635,7 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
                     }
                     nextcase default;
                 case RPAREN:
-                    if (state.scope_depth == 0 && state.initial_token != CT_IF){
+                    if (state.scope_depth == 0 && state.initial_token != CT_IF) {
                         TokenType wrap_rule = self.cache_statement_wrap_rule(state.initial_token);
                         self.cache_statement_dump(wrap_rule)!;
                         self.write("%s", t.value);
@@ -2607,7 +2650,7 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
             }
         case SCOPE:
             self.trace("SCOPE");
-            switch(t.type) {
+            switch (t.type) {
                 case EOS:
                     // Fallback from format_generic_statement
                     break;
@@ -2636,23 +2679,23 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
                     }
                 case CT_ENDIF:
                     if (state.initial_token == CT_IF) nextcase INVALID_TOKEN;
-                case INVALID_TOKEN: // temp placeholder case
+                case INVALID_TOKEN:  // temp placeholder case
                     self.dedent()!;
                     self.newline();
                     self.write("%s", t.value);
-                    return true;                        
+                    return true;
                 default:
                     CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;
-                    if (new_local_state == null){
+                    if (new_local_state == null) {
                         // Not a keyword or anything special, just a statement
                         if (t.type == LPAREN) {
                             // NOTE: casting case, e.g. (void)free(data);
                             // prevent open LPAREN to influence current scope_depth
-                            state.check_scope(RPAREN); // remove LPAREN scope
+                            state.check_scope(RPAREN);  // remove LPAREN scope
                         }
                         self.newline();
                         return self.push_run_state(&CodeFmt.format_generic_statement, t);
-                    } else {                    
+                    } else {
                         // Special keyword or statement
                         return self.push_run_state(new_local_state, t);
                     }
@@ -2665,17 +2708,18 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
 }
 
 <* Asm block with automatically disabled formatting *>
-fn bool! CodeFmt.asm_non_fmt_block(CodeFmt* self, Token* t, NodeParserState* state) @private {
+fn bool! CodeFmt.asm_non_fmt_block(CodeFmt* self, Token* t, NodeParserState* state) @private
+{
     assert(t.type != EMPTY_LINE);
 
-    switch STATE: (state.check(t)){
+    switch STATE: (state.check(t)) {
         case INVALID_TOKEN:
             assert(t.type == LBRACE);
             self.trace("ENTRY");
             nextcase STATE: state.transition(SCOPE);
         case SCOPE:
             self.trace("SCOPE");
-            switch(t.type) {
+            switch (t.type) {
                 case LBRACE:
                     if (state.scope_depth == 1) {
                         // { will be printed by raw printer
@@ -2702,12 +2746,13 @@ fn bool! CodeFmt.asm_non_fmt_block(CodeFmt* self, Token* t, NodeParserState* sta
 }
 
 <*
-Formatting asm() and asm { block }
+ Formatting asm() and asm { block }
 *>
-fn bool! CodeFmt.format_asm(CodeFmt* self, Token* t, NodeParserState* state) @private {
+fn bool! CodeFmt.format_asm(CodeFmt* self, Token* t, NodeParserState* state) @private
+{
     assert(t.type != EMPTY_LINE);
 
-    switch STATE: (state.check(t)){
+    switch STATE: (state.check(t)) {
         case INVALID_TOKEN:
             self.trace("ENTRY");
             self.newline();
@@ -2715,7 +2760,7 @@ fn bool! CodeFmt.format_asm(CodeFmt* self, Token* t, NodeParserState* state) @pr
             state.transition(VAR);
         case VAR:
             self.trace("VAR");
-            switch(t.type) {
+            switch (t.type) {
                 case LBRACE:
                     nextcase STATE: state.transition(SCOPE);
                 case EOS:
@@ -2727,7 +2772,7 @@ fn bool! CodeFmt.format_asm(CodeFmt* self, Token* t, NodeParserState* state) @pr
             }
         case SCOPE:
             self.trace("SCOPE");
-            switch(t.type) {
+            switch (t.type) {
                 case LBRACE:
                     if (state.scope_depth == 1) {
                         return self.push_run_state(&CodeFmt.asm_non_fmt_block, t);
@@ -2747,20 +2792,21 @@ fn bool! CodeFmt.format_asm(CodeFmt* self, Token* t, NodeParserState* state) @pr
 }
 
 <*
-Formatter for struct / union / bitstruct contents
+ Formatter for struct / union / bitstruct contents
 *>
-fn bool! CodeFmt.format_structural(CodeFmt* self, Token* t, NodeParserState* state) @private {
+fn bool! CodeFmt.format_structural(CodeFmt* self, Token* t, NodeParserState* state) @private
+{
     assert(t.type != EMPTY_LINE);
 
-    switch STATE: (state.check(t)){
-        case INVALID_TOKEN:         // initial state
+    switch STATE: (state.check(t)) {
+        case INVALID_TOKEN:  // initial state
             assert(t.type == STRUCT || t.type == UNION || t.type == BITSTRUCT);
-            self.trace("ENTRY"); 
+            self.trace("ENTRY");
             self.write("%s", t.value);
             state.transition(TYPE_IDENT);
-        case TYPE_IDENT:                // struct type name and other meta header stuff
+        case TYPE_IDENT:  // struct type name and other meta header stuff
             self.trace("TYPE_IDENT");
-            switch(t.type) {
+            switch (t.type) {
                 case AT_IDENT:  // struct attrs
                     self._lexer.extend_current_attribute();
                     nextcase default;
@@ -2780,15 +2826,15 @@ fn bool! CodeFmt.format_structural(CodeFmt* self, Token* t, NodeParserState* sta
                         self.write("%s", t.value);
                     }
             }
-        case SCOPE: // struct scope {}
+        case SCOPE:  // struct scope {}
             self.trace("SCOPE");
-            switch(t.type) {
-                case LBRACE:           // {
+            switch (t.type) {
+                case LBRACE:  // {
                     return self.push_run_state(&CodeFmt.format_structural_scope, t);
                 case RBRACE:
                     if (state.scope_depth == 0) {
                         self.trace("EXIT");
-                        if (self.state_stack.len() == 2){
+                        if (self.state_stack.len() == 2) {
                             // NOTE: printing new line only at exit from top struct
                             self.newline();
                         }
@@ -2805,22 +2851,23 @@ fn bool! CodeFmt.format_structural(CodeFmt* self, Token* t, NodeParserState* sta
 }
 
 <*
-Formatter for struct / union / bitstruct contents
+ Formatter for struct / union / bitstruct contents
 *>
-fn bool! CodeFmt.format_structural_scope(CodeFmt* self, Token* t, NodeParserState* state) @private {
+fn bool! CodeFmt.format_structural_scope(CodeFmt* self, Token* t, NodeParserState* state) @private
+{
     assert(t.type != EMPTY_LINE);
 
-    switch STATE: (state.check(t)){
-        case INVALID_TOKEN:         // initial state
+    switch STATE: (state.check(t)) {
+        case INVALID_TOKEN:  // initial state
             assert(t.type == LBRACE);
-            self.trace("ENTRY"); 
+            self.trace("ENTRY");
             self.newline();
             self.write("{");
             self.indent();
             state.transition(SCOPE);
-        case SCOPE: // struct scope {}
+        case SCOPE:  // struct scope {}
             self.trace("SCOPE");
-            switch(t.type) {
+            switch (t.type) {
                 case RBRACE:
                     self.dedent()!;
                     self.newline();
@@ -2828,7 +2875,7 @@ fn bool! CodeFmt.format_structural_scope(CodeFmt* self, Token* t, NodeParserStat
                     if (state.scope_depth == 0) {
                         self.trace("EXIT");
                         return true;
-                    } 
+                    }
                 case EOS:
                     self.cache_statement_add(state, t);
                     self.cache_statement_dump()!;
@@ -2845,7 +2892,7 @@ fn bool! CodeFmt.format_structural_scope(CodeFmt* self, Token* t, NodeParserStat
                 case DOCS_END:
                     break;
                 default:
-                    if (self.cache_statement_len() == 0){
+                    if (self.cache_statement_len() == 0) {
                         self.newline();
                     }
                     self.cache_statement_add(state, t);
@@ -2857,20 +2904,21 @@ fn bool! CodeFmt.format_structural_scope(CodeFmt* self, Token* t, NodeParserStat
 }
 
 <*
-Formatter for enums, faults
+ Formatter for enums, faults
 *>
-fn bool! CodeFmt.format_enumerable(CodeFmt* self, Token* t, NodeParserState* state) @private {
+fn bool! CodeFmt.format_enumerable(CodeFmt* self, Token* t, NodeParserState* state) @private
+{
     assert(t.type != EMPTY_LINE);
 
-    switch STATE: (state.check(t)){
-        case INVALID_TOKEN:         // initial state
+    switch STATE: (state.check(t)) {
+        case INVALID_TOKEN:  // initial state
             assert(t.type == ENUM || t.type == FAULT);
-            self.trace("ENTRY"); 
+            self.trace("ENTRY");
             self.write("%s", t.value);
             state.transition(TYPE_IDENT);
-        case TYPE_IDENT:                // enum type name
+        case TYPE_IDENT:  // enum type name
             self.trace("TYPE_IDENT");
-            switch(t.type) {
+            switch (t.type) {
                 case AT_IDENT:  // attrs
                     self._lexer.extend_current_attribute();
                     nextcase default;
@@ -2884,8 +2932,8 @@ fn bool! CodeFmt.format_enumerable(CodeFmt* self, Token* t, NodeParserState* sta
                 default:
                     self.write(" %s", t.value);
             }
-        case VAR: // enum associated vars
-            switch(t.type) {
+        case VAR:  // enum associated vars
+            switch (t.type) {
                 case RPAREN:
                     self.cache_statement_add(state, t);
                     if (state.scope_depth == 0) {
@@ -2896,10 +2944,10 @@ fn bool! CodeFmt.format_enumerable(CodeFmt* self, Token* t, NodeParserState* sta
                     self.cache_statement_add(state, t);
 
             }
-        case SCOPE: // enum scope {}
+        case SCOPE:  // enum scope {}
             self.trace("SCOPE");
-            switch(t.type) {
-                case LBRACE:           // {
+            switch (t.type) {
+                case LBRACE:  // {
                     if (state.scope_depth == 1) {
                         self.newline();
                         self.write("{");
@@ -2933,11 +2981,11 @@ fn bool! CodeFmt.format_enumerable(CodeFmt* self, Token* t, NodeParserState* sta
                     break;
                 case COMMA:
                     self.cache_statement_add(state, t);
-                    if (state.scope_depth == 1){
+                    if (state.scope_depth == 1) {
                         self.cache_statement_dump()!;
                     }
                 default:
-                    if (self.cache_statement_len() == 0){
+                    if (self.cache_statement_len() == 0) {
                         self.newline();
                     }
                     self.cache_statement_add(state, t);
@@ -2949,20 +2997,21 @@ fn bool! CodeFmt.format_enumerable(CodeFmt* self, Token* t, NodeParserState* sta
 }
 
 <*
-Formatter for interfaces
+ Formatter for interfaces
 *>
-fn bool! CodeFmt.format_interface(CodeFmt* self, Token* t, NodeParserState* state) @private {
+fn bool! CodeFmt.format_interface(CodeFmt* self, Token* t, NodeParserState* state) @private
+{
     assert(t.type != EMPTY_LINE);
 
-    switch STATE: (state.check(t)){
-        case INVALID_TOKEN:         // initial state
+    switch STATE: (state.check(t)) {
+        case INVALID_TOKEN:  // initial state
             assert(t.type == INTERFACE);
-            self.trace("ENTRY"); 
+            self.trace("ENTRY");
             self.write("%s", t.value);
             state.transition(TYPE_IDENT);
-        case TYPE_IDENT:                // enum type name
+        case TYPE_IDENT:  // enum type name
             self.trace("TYPE_IDENT");
-            switch(t.type) {
+            switch (t.type) {
                 case AT_IDENT:  // attrs
                     self._lexer.extend_current_attribute();
                     nextcase default;
@@ -2971,10 +3020,10 @@ fn bool! CodeFmt.format_interface(CodeFmt* self, Token* t, NodeParserState* stat
                 default:
                     self.write(" %s", t.value);
             }
-        case SCOPE: // interface scope {}
+        case SCOPE:  // interface scope {}
             self.trace("SCOPE");
-            switch(t.type) {
-                case LBRACE:           // {
+            switch (t.type) {
+                case LBRACE:  // {
                     if (state.scope_depth != 1) self.@fail(t, "unexpeced interface scope")!;
                     self.newline();
                     self.write("{");

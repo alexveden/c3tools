@@ -1,7 +1,9 @@
 <*
-Code generation tool for C3, mimics original code structure
+ Code generation tool for C3, mimics original code structure
 
-Example: ```c3
+ Example: 
+
+```c3
 
 CodeGen* c = CodeGen{}.new_init(); 
 defer c.free();
@@ -29,58 +31,66 @@ io::printfn("%s", c.buf.str_view());
 *>
 module c3tools::codegen;
 
-struct CodeGen {
+struct CodeGen
+{
     int indent;
     DString buf;
 }
 
 <*
-CodeGen constructor 
+ CodeGen constructor 
 *>
-fn CodeGen* CodeGen.new_init(&self) {
+fn CodeGen* CodeGen.new_init(&self)
+{
     self.buf.new_init();
     return self;
 }
 
 <*
-CodeGen destructor 
+ CodeGen destructor 
 *>
-fn void CodeGen.free(&self) {
+fn void CodeGen.free(&self)
+{
     self.buf.free();
 }
 
-
 <* Reset CodeGen buffer and state *>
-fn void CodeGen.reset(&self) {
+fn void CodeGen.reset(&self)
+{
     self.buf.clear();
 }
 
-<* Writes new code statement indent + code + ;\n *> 
-macro CodeGen.wn(&self, String format, args...) {
+<* Writes new code statement indent + code + ;\n *>
+macro CodeGen.wn(&self, String format, args...)
+{
     self.ws(format, ...args);
     self.buf.appendf(";\n");
 }
 
-<* Writes new code (with indentation) *> 
-macro CodeGen.ws(&self, String format, args...) {
-    for(int i = 0; i < self.indent; i++) {
+<* Writes new code (with indentation) *>
+macro CodeGen.ws(&self, String format, args...)
+{
+    for (int i = 0; i < self.indent; i++) {
         self.buf.append(" ");
     }
     self.buf.appendf(format, ...args);
 }
 
 <* Gen c3 module statement *>
-macro CodeGen.@module(&self, #format, args...) {
+macro CodeGen.@module(&self, #format, args...)
+{
     self.buf.appendf("module " +++ #format +++ ";\n", ...args);
 }
 
 <* Gen c3 import statement *>
-macro CodeGen.@import(&self, #format, args...) {
+macro CodeGen.@import(&self, #format, args...)
+{
     self.buf.appendf("import " +++ #format +++ ";\n", ...args);
 }
 
 <* Gen c3 return statement *>
-macro CodeGen.@return(&self, #format, args...) {
+macro CodeGen.@return(&self, #format, args...)
+{
     self.ws("return " +++ #format +++ ";\n", ...args);
 }
 
@@ -118,4 +128,3 @@ macro CodeGen.@struct(&self, #format, args...; @body())
     self.indent -= 4;
     self.ws("}\n");
 }
-
