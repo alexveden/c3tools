@@ -229,3 +229,53 @@ fn void main()
     return;
 }
 
+================================================================================
+def_interface_indented_code
+================================================================================
+interface Printable @if("sasda")
+{
+    <*
+     Doc
+
+     This is an example:
+    ``````c3
+     if (foo) {
+        return 0;
+     }
+    ``````
+
+     @param foo "bar"
+     @param boo "baz"
+    *>
+    fn String* to_string(Allocator allocator) @optional;
+    <* Doc 2 *>
+    fn String* to_string(Allocator allocator) @optional;
+
+    <* Doc 3 empty line *>
+    fn String* to_string(Allocator allocator) @optional;
+}
+--------------------------------------------------------------------------------
+interface Printable @if("sasda")
+{
+    <*
+     Doc
+
+     This is an example:
+
+    ``````c3
+     if (foo) {
+        return 0;
+     }
+    ``````
+
+     @param foo "bar"
+     @param boo "baz"
+    *>
+    fn String* to_string(Allocator allocator) @optional;
+    <* Doc 2 *>
+    fn String* to_string(Allocator allocator) @optional;
+
+    <* Doc 3 empty line *>
+    fn String* to_string(Allocator allocator) @optional;
+}
+
