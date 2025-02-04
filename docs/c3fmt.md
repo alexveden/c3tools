@@ -32,7 +32,10 @@ c3c --trust=full build c3fmt
 2. Line width is a soft constraint, but not an ultimate goal.
 3. Wrapping can only occur inside 1st level of parentheses or braces `(wrap, (no_wrap))`, or `{wrap, {no_wrap}}`
 4. Comments and doc-strings are untouched
-5. Dotted array initializers will wrap recursively.
+5. Inline comments don't preserve right indentation, it will be prepended by 2 spaces: "  // comment"
+6. Dotted struct initializers will wrap recursively.
+7. c3fmt preserves empty lines, but no more that 2 consecutive empty lines (add a comment inside if you need more).
+
 
 ### Code wrapping
 
