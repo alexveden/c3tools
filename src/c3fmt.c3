@@ -7,7 +7,6 @@ import std::os::argparse;
 fn void! format_file(String file_name, int max_line_width, bool force_mode, bool dry_mode, String indent_type) {
     path::Path p = path::temp_new(file_name)!;
 
-	io::printfn("Path: %s", p);
     if (!path::exists(p)) {
         io::printfn("File not exists: %s", file_name);
         return IoError.FILE_NOT_FOUND?;
@@ -24,6 +23,8 @@ fn void! format_file(String file_name, int max_line_width, bool force_mode, bool
         io::printfn("--indent= parameter must be a 2,4,8 or t, got '%s'", indent_type);
         return IoError.GENERAL_ERROR?;
     }
+
+	io::printfn("Path: %s", p.str_view());
 
 	String contents = (String)file::load_new(p.str_view())!;
 	defer contents.free();

@@ -988,7 +988,11 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private {
                 // ident &
                 // ident *
                 // ident ^
+                // ident + foo
+                // ident - foo
                 switch (rhs_token) {
+                    case PLUS:
+                    case MINUS:
                     case AMP:
                     case STAR:
                     case BIT_XOR:
