@@ -87,7 +87,7 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false) {
 
     // Default scope formatter
 	self.push_run_state(&CodeFmt.format_global_file_scope, null)!;
-	// self._is_empty_line = true;
+	self._is_empty_line = true;
 
     NodeParserState globalstate;
 	while LOOP: (self._lexer.next_token()) {
@@ -140,7 +140,7 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
     if (t.type == COMMENT_SINGLE) {
         if (t.value.starts_with("// fmt: off") && !self._is_paused) {
             self.cache_statement_dump()!;
-            self.newline();
+            if (!self._is_empty_line) self.newline();
             self.write("%s", t.value);
 
             self._lexer.set_whitespace_mode(true);
@@ -221,9 +221,10 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
 	            // Do a direct write
 	            self.buf.append(t.value);
 	        } else {
-	            self.newline();
+	            if(!self._is_empty_line) self.newline();
 	            self.write("%s", t.value);
 	        }
+	        self._is_empty_line = false;
 	        self._is_inline_comment = t.type == COMMENT_SINGLE;
 	    case COMMENT_SINGLE_INLINE:
 	    case COMMENT_MULTI_INLINE:
@@ -232,6 +233,7 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
 	        } else {
 	            self.write("  %s", t.value);
 	        }
+	        self._is_empty_line = false;
 	        self._is_inline_comment = t.type == COMMENT_SINGLE_INLINE;
 	    default:
 	        unreachable("%s: `%s`", t.type, t.value);

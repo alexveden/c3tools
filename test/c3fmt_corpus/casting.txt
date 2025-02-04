@@ -6,7 +6,6 @@ fn void remove_using_test()
     removed = test.remove_using_test(fn bool(i, ctx) => *i >= *(int*)ctx, &&10);
 }
 --------------------------------------------------------------------------------
-
 fn void remove_using_test()
 {
     removed = test.remove_using_test(fn bool (i, ctx) => *i >= *(int*)ctx, &&10);
@@ -59,7 +58,6 @@ call(&StrucType.fn_ptr);
 }
 
 --------------------------------------------------------------------------------
-
 fn void* main(int* arg)
 {
     bool a = (a || b) && c;

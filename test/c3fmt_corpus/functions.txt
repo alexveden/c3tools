@@ -6,7 +6,6 @@ fn void
 main() { return;}
 
 --------------------------------------------------------------------------------
-
 fn void main()
 {
     return;
@@ -22,7 +21,6 @@ String[] args
 ) { return   0   ;}
 
 --------------------------------------------------------------------------------
-
 fn int main(String[] args)
 {
     return 0;
@@ -38,7 +36,6 @@ String[] args
 ) { return   0   ;}
 
 --------------------------------------------------------------------------------
-
 fn List(<int>) main(String[] args)
 {
     return 0;
@@ -54,7 +51,6 @@ String[] args
 ) { return   0   ;}
 
 --------------------------------------------------------------------------------
-
 fn List(<int>)*! main(String[] args)
 {
     return 0;
@@ -70,7 +66,6 @@ String[] args
 ) { return   0   ;}
 
 --------------------------------------------------------------------------------
-
 fn List(<int>)*! Foo.main(String[] args)
 {
     return 0;
@@ -86,7 +81,6 @@ String[] args
 ) @test @if("dio" || too) { return   0   ;}
 
 --------------------------------------------------------------------------------
-
 fn List(<int>)*! Foo.main(String[] args) @test @if("dio" || too)
 {
     return 0;
@@ -102,7 +96,6 @@ String[] args
 ) { return   0   ;}
 
 --------------------------------------------------------------------------------
-
 fn String[]! Foo.main(String[] args)
 {
     return 0;
@@ -119,7 +112,6 @@ bar, na   ,    varg...
 ) { return   0   ;}
 
 --------------------------------------------------------------------------------
-
 fn String[]! Foo.main(String[] args, int* foo, List(<float>) bar, na, varg...)
 {
     return 0;
@@ -136,7 +128,6 @@ call(i, j, ...varg);
 return   0   ;}
 
 --------------------------------------------------------------------------------
-
 fn String[]! Foo.main(String[] args, int ...varg)
 {
     call(i, j, ...varg);
@@ -151,7 +142,6 @@ fn String[]! Foo.main(String[] args, int* foo, List(<float>) bar, MySuperClass[]
 ) { return   0   ;}
 
 --------------------------------------------------------------------------------
-
 fn String[]! Foo.main(
     String[] args, int* foo, List(<float>) bar, MySuperClass[] last
 )
@@ -167,7 +157,6 @@ fn String[]! Foo.main(SoTypeIsHuuuuuuge ok, String[] args, int* foo, List(<float
 ) { return   0   ;}
 
 --------------------------------------------------------------------------------
-
 fn String[]! Foo.main(
     SoTypeIsHuuuuuuge ok,
     String[] args,
@@ -191,7 +180,6 @@ bar, na   ,
 ) { return   0   ;}
 
 --------------------------------------------------------------------------------
-
 fn String[]! Foo.main(
     String[] args,
     int* foo,
@@ -210,7 +198,6 @@ fn void
 main() { return;}
 
 --------------------------------------------------------------------------------
-
 <* My doc *>
 fn void main()
 {
@@ -229,7 +216,6 @@ fn void
 main() { return;}
 
 --------------------------------------------------------------------------------
-
 <*
    My doc asdlkjad aiis is not formatted at                                all an used as is
 *>
@@ -246,7 +232,6 @@ fn void
 main() { return;}
 
 --------------------------------------------------------------------------------
-
 <* @require foo > 1 *>
 fn void main()
 {
@@ -282,7 +267,6 @@ fn void
 main() { return;}
 
 --------------------------------------------------------------------------------
-
 <* 
 Descr @param @ensure ignored
 
@@ -320,7 +304,6 @@ char start, char len) => in_range_m(c,
 start, len);
 
 --------------------------------------------------------------------------------
-
 macro CFile stderr() => __acrt_iob_func(STDERR_FD);
 fn bool in_range(char c, char start, char len) => in_range_m(c, start, len);
 
@@ -339,7 +322,6 @@ start, len, args_are_too, long, and_many, of_them_getting_new_line, but_sometime
 fn bool in_range(char c, char start, char len) => with_magic_comma(c, 
 start, len, magic_comma,);
 --------------------------------------------------------------------------------
-
 macro CFile stderr() @if(FOO||Bar||   "non form") => __acrt_iob_func(STDERR_FD);
 fn bool in_range(char c, char start, char len) => in_range_m(c, start, len, args_are_too, long, and_many, of_them_getting_new_line);
 
@@ -367,7 +349,6 @@ fn void remove_using_test()
 
 }
 --------------------------------------------------------------------------------
-
 fn void remove_using_test()
 {
     IntList test;
@@ -406,7 +387,6 @@ char start, char len) => in_range_m(c,
 start, len);
 
 --------------------------------------------------------------------------------
-
 <* A doc *>
 macro CFile stderr() => __acrt_iob_func(STDERR_FD);
 
@@ -424,7 +404,6 @@ macro NodeParserState.check_scope( &self, TokenType t)
 }
 
 --------------------------------------------------------------------------------
-
 macro NodeParserState.check_scope(&self, TokenType t)
 {
 }
@@ -443,7 +422,6 @@ macro parse_callable_params(
 }
 
 --------------------------------------------------------------------------------
-
 macro parse_callable_params(
     Ast* ast, Token* t, AstCallable* node_func, NodeParserState* state
 ) @local
@@ -469,7 +447,6 @@ macro parse_callable_params()
 }
 
 --------------------------------------------------------------------------------
-
 macro parse_callable_params()
 {
     if (foo) {
@@ -495,7 +472,6 @@ macro parse_callable_params()
 }
 
 --------------------------------------------------------------------------------
-
 macro parse_callable_params()
 {
     if (foo) {
@@ -524,7 +500,6 @@ macro parse_callable_params()
 }
 
 --------------------------------------------------------------------------------
-
 macro parse_callable_params()
 {
     if (foo) {
@@ -547,7 +522,6 @@ fn void
 main() { return;}
 
 --------------------------------------------------------------------------------
-
 <* 
  Doc
 @require foo > 1
@@ -563,7 +537,6 @@ func_forward_decl
 FopenFn native_fopen_fn @weak @if(!$defined(native_fopen_fn));
 FcloseFn native_fclose_fn @weak @if(!$defined(native_fclose_fn));
 --------------------------------------------------------------------------------
-
 FopenFn native_fopen_fn @weak @if(!$defined(native_fopen_fn));
 FcloseFn native_fclose_fn @weak @if(!$defined(native_fclose_fn));
 

@@ -6,7 +6,6 @@ struct
 Person {
     char age;   string::String name; }
 --------------------------------------------------------------------------------
-
 struct Person
 {
     char age;
@@ -32,7 +31,6 @@ Person @extern(  "foo") {
         bool or_foe;
     }
 --------------------------------------------------------------------------------
-
 struct Person @extern(  "foo")
 {
     struct foo  // its a kinda struct
@@ -65,7 +63,6 @@ inline    Pet    cat  ;
     { int bar; union zoo @if(asd || dda) { int  [34 ] c;}}
     }
 --------------------------------------------------------------------------------
-
 union Person @extern(  "foo")
 {
     inline Pet cat;
@@ -89,7 +86,6 @@ char
     int a : 0..2;   int b : 4..6;   bool c : 7;
 }
 --------------------------------------------------------------------------------
-
 bitstruct Foo : char @bigendian
 {
     int a : 0..2;
@@ -106,7 +102,6 @@ bitstruct Test2 : char[4] @bigendian
     ushort b : 16..31;
 }
 --------------------------------------------------------------------------------
-
 bitstruct Test2 : char[4] @bigendian
 {
     ushort a : 0..15;
@@ -121,7 +116,6 @@ enum State
     WAITING,    RUNNING,    TERMINATED
 }
 --------------------------------------------------------------------------------
-
 enum State
 {
     WAITING,
@@ -138,7 +132,6 @@ int @test @if( asd || bar)
     WAITING,    RUNNING,    TERMINATED,
 }
 --------------------------------------------------------------------------------
-
 enum State : int @test @if( asd || bar)
 {
     WAITING,
@@ -158,7 +151,6 @@ String desc, bool active, Position pos
     TERMINATED = { "ended",   false, {0, 0} },
 }
 --------------------------------------------------------------------------------
-
 enum State : int @if("foo") (String desc, bool active, Position pos) @test
 {
     WAITING = { "waiting", false, {1, 2} },  // this is a comment
@@ -178,7 +170,6 @@ String desc, bool active, Position pos, FooooLong type, AnotherLoong Type, maybe
     TERMINATED = { "ended",   false, { 0, 0} },
 }
 --------------------------------------------------------------------------------
-
 enum State : int @if("foo") (
     String desc,
     bool active,
@@ -205,7 +196,6 @@ String desc, bool active, Position pos
     TERMINATED = { "ended",   false, {0, 0} },
 }
 --------------------------------------------------------------------------------
-
 enum State : int @if("foo") (String desc, bool active, Position pos) @test
 {
     WAITING = {
@@ -226,7 +216,6 @@ fault Err
     LOTS_OF_OOPS
 }
 --------------------------------------------------------------------------------
-
 fault Err
 {
     OOPS,
@@ -246,7 +235,6 @@ def BenchmarkFn = fn void!(int) @if($$OLD_TEST);
 def @Align(y) = { @Align16(y / 2) };
 def @Test = { @noinline };
 --------------------------------------------------------------------------------
-
 def EnumSetType = $typefrom(
     private::type_for_enum_elements(Enum.elements)
 ) @private;
@@ -271,7 +259,6 @@ interface Printable @if("sasda")
     fn usz* to_format(Formatter* magic_comma, ) @optional;
 }
 --------------------------------------------------------------------------------
-
 interface Printable @if("sasda")
 {
     fn String* to_string(Allocator allocator) @optional;
@@ -303,7 +290,6 @@ distinct Foo = fn void(Foo** x); // #error: cannot define a new function type
 distinct Foo = inline PrivateFoo(<int>); // #error: could not be found
 distinct PriorityQueue = inline PrivatePriorityQueue <[Type,false] >;
 --------------------------------------------------------------------------------
-
 distinct Color = float[<4>];
 distinct TypeA = char[];
 distinct Bob = inline Abc;
@@ -325,7 +311,6 @@ union SourceSpan
     ulong a;
 }
 --------------------------------------------------------------------------------
-
 union SourceSpan
 {
     struct
@@ -365,7 +350,6 @@ main( typeid t) {
 return;}
 
 --------------------------------------------------------------------------------
-
 extern typeid foo;
 
 struct ReflectedParam (Printable) @if(!$defined(ReflectedParam))
@@ -402,7 +386,6 @@ macro anyfault
 main(anyfault foo) { return;}
 
 --------------------------------------------------------------------------------
-
 macro any main(any foo)
 {
     return;
@@ -427,7 +410,6 @@ static ulong div = 0;
 return;}
 
 --------------------------------------------------------------------------------
-
 int foo;
 tlocal bar;
 
@@ -449,7 +431,6 @@ Person {
 <* Docstr *>
     string::String name; }
 --------------------------------------------------------------------------------
-
 <* Docstr *>
 struct Person
 {
@@ -470,7 +451,6 @@ enum State
     TERMINATED
 }
 --------------------------------------------------------------------------------
-
 <* Some State *>
 enum State
 {
@@ -500,7 +480,6 @@ interface Printable @if("sasda")
     fn String* to_string(Allocator allocator) @optional;
 }
 --------------------------------------------------------------------------------
-
 interface Printable @if("sasda")
 {
     <*
