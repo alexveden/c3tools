@@ -105,3 +105,12 @@ jobs:
       - name: run c3tools unit tests after formatting
         run: |
           c3c --trust=full test
+
+      - name: c3fmt format c3c stdlib
+        run: |
+          find c3c/lib | grep ".c3$" | xargs -I{} ./build/c3fmt {}
+
+      - name: c3c unit tests on formatted stdlib
+        run: |
+          cd c3c/test
+          ../build/c3c compile-test unit
