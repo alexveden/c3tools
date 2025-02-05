@@ -94,9 +94,8 @@ jobs:
           pwd
           echo "HOME: $HOME"
           echo "PATH: $PATH"
-          echo "GITHUB_ENV: $GITHUB_ENV"
-          echo "$HOME/c3c/build/:$PATH" >> $GITHUB_ENV
-          echo "GITHUB_ENV: $GITHUB_ENV"
+          echo "$PWD/c3c/build:$PATH" >> $GITHUB_ENV
+          echo "PATH: $PATH"
 
       - name: c3tools unit tests
         run: |
