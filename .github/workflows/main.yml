@@ -100,7 +100,9 @@ jobs:
 
       - name: c3fmt format c3tools
         run: |
-          find lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt {}
+          find lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w 80 -i t {}
+          echo "Checking if any changes after formatting"
+          git add . && git diff --quiet && git diff --cached | head
 
       - name: run c3tools unit tests after formatting
         run: |
@@ -108,7 +110,10 @@ jobs:
 
       - name: c3fmt format c3c stdlib
         run: |
-          find c3c/lib | grep ".c3$" | xargs -I{} ./build/c3fmt {}
+          find c3c/lib | grep ".c3$" | xargs -I{} ./build/c3fmt -w 80 -i 2 {}
+          cd c3c/
+          echo "Checking if any changes in files"
+          git add . && git diff --quiet && git diff --cached | head
 
       - name: c3c unit tests on formatted stdlib
         run: |
