@@ -478,6 +478,13 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token* t) 
                     break;
             }
         case AT_IDENT:
+            switch (prev_t) {
+                case AT_IDENT: // attributes @foo @bar("")
+                case RPAREN: // fn sig(int) @foo
+                    pre_space = true;
+                default:
+                    nextcase TOP: IDENT;
+            }
         case CT_IDENT:
         case CONST_IDENT:
         case IDENT:
@@ -492,7 +499,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token* t) 
                 case STAR:
                 case RPAREN:
                 case AMP:  // likely &var 
-                    if (t.type == AT_IDENT) pre_space = true;
+                    // if (t.type == AT_IDENT) pre_space = true;
                     if (self._resolve__prev_is_binexp()) pre_space = true;
                     break;
                 default:
@@ -580,7 +587,6 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token* t) 
         case LPAREN:
             switch (prev_t) {
                 case AMP:
-                    pre_space = true;
                 case STAR:
                     if (self._resolve__prev_is_binexp()) pre_space = true;
                 case IDENT:
@@ -1014,12 +1020,14 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private
                 // ident ^
                 // ident + foo
                 // ident - foo
+                // indent[i]
                 switch (rhs_token) {
                     case PLUS:
                     case MINUS:
                     case AMP:
                     case STAR:
                     case BIT_XOR:
+                    case LBRACKET:
                         return true;
                     default:
                         break;
@@ -1056,6 +1064,7 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private
             case COMMENT_MULTI_INLINE:
             case COMMENT_SINGLE:
             case COMMENT_SINGLE_INLINE:
+            case EOS:
                 // assignment operator reached
                 break LOOP;
             case COMMA:
@@ -1085,7 +1094,7 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private
             } else {
                 return false;
             }
-        } else if (scope < 0) {
+        } else if (scope <= 0) {
             // maybe incomplete cast or fn argument
             // (char[8]   | ?
             // (char[8]   |* ?
