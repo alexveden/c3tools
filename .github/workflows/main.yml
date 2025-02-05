@@ -95,7 +95,7 @@ jobs:
         run: |
           find lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
           echo "Checking if any changes after formatting (must be the same!)"
-          (git add lib/ && git diff --quiet && git diff --cached | head) || echo "Good no double format changes"
+          git diff --quiet
 
       - name: c3tools unit tests after (double) formatting
         run: |
@@ -119,7 +119,7 @@ jobs:
           find c3c/lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
           cd c3c/
           echo "Checking if any changes after formatting (must be the same!)"
-          git add . && git diff --quiet && git diff --cached | head
+          git diff --quiet
 
       - name: c3c unit tests on formatted stdlib (double)
         run: |
