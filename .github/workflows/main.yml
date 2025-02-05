@@ -40,27 +40,11 @@ jobs:
       - name: Install Clang ${{env.llvm_version}}
         run: |
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          if [[ "${{env.llvm_version}}" < 18 ]]; then
-            sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${{env.llvm_version}} main"
-            sudo apt-get update
-            sudo apt-get install -y -t llvm-toolchain-focal-${{env.llvm_version}} libpolly-${{env.llvm_version}}-dev \
-              clang-${{env.llvm_version}} llvm-${{env.llvm_version}} llvm-${{env.llvm_version}}-dev \
-              lld-${{env.llvm_version}} liblld-${{env.llvm_version}}-dev libmlir-${{env.llvm_version}} \
-              libmlir-${{env.llvm_version}}-dev mlir-${{env.llvm_version}}-tools
-          else
-            if [[ "${{env.llvm_version}}" < "${{env.LLVM_DEV_VERSION}}" ]]; then
-              sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${{env.llvm_version}} main"
-              sudo apt-get update
-              sudo apt-get install -y -t llvm-toolchain-focal-${{env.llvm_version}} libpolly-${{env.llvm_version}}-dev \
-                clang-${{env.llvm_version}} llvm-${{env.llvm_version}} llvm-${{env.llvm_version}}-dev \
-                lld-${{env.llvm_version}} liblld-${{env.llvm_version}}-dev
-            else
-              sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal main"
-              sudo apt-get install -y -t llvm-toolchain-focal libpolly-${{env.llvm_version}}-dev \
-                clang-${{env.llvm_version}} llvm-${{env.llvm_version}} llvm-${{env.llvm_version}}-dev \
-                lld-${{env.llvm_version}} liblld-${{env.llvm_version}}-dev
-            fi
-          fi
+          sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${{env.llvm_version}} main"
+          sudo apt-get update
+          sudo apt-get install -y -t llvm-toolchain-focal-${{env.llvm_version}} libpolly-${{env.llvm_version}}-dev \
+            clang-${{env.llvm_version}} llvm-${{env.llvm_version}} llvm-${{env.llvm_version}}-dev \
+            lld-${{env.llvm_version}} liblld-${{env.llvm_version}}-dev
 
       - name: CMake18
         if: env.llvm_version >= 18 && env.llvm_version != env.LLVM_DEV_VERSION
