@@ -1817,3 +1817,33 @@ TestContext state @local = {
     },
     .bar = 1,
 };
+================================================================================
+struct_init_with_sub_previous_sub_struct
+================================================================================
+
+TestContext state @local = {
+    .foo = 1, 
+    .sub_struct ={
+        .sub_field = 1,
+        .sub_field = 2
+    }, 
+    .teardown_fn = fn void!() { // inline
+        state.n_runs = 0;
+        io::printn("test teardown"); // inline
+    },
+    .bar = 1, 
+};
+
+--------------------------------------------------------------------------------
+TestContext state @local = {
+    .foo = 1,
+    .sub_struct = {
+        .sub_field = 1,
+        .sub_field = 2
+    },
+    .teardown_fn = fn void! () {  // inline
+        state.n_runs = 0;
+        io::printn("test teardown");  // inline
+    },
+    .bar = 1,
+};
