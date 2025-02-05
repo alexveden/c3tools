@@ -126,3 +126,11 @@ jobs:
           cd c3c/test
           ../build/c3c compile-test unit
 
+      - name: c3fmt c3c/test/unit
+        run: |
+          find c3c/test/unit | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
+
+      - name: c3c unit tests on formatted stdlib
+        run: |
+          cd c3c/test
+          ../build/c3c compile-test unit
