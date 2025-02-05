@@ -28,7 +28,7 @@ jobs:
           repository: c3lang/c3c
           path: c3c
 
-      - name: Append to PATH
+      - name: Setup environment
         run: |
           echo "$PWD/c3c/build" >> "$GITHUB_PATH"
           echo "PATH: $PATH"
@@ -95,7 +95,7 @@ jobs:
         run: |
           find lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
           echo "Checking if any changes after formatting (must be the same!)"
-          (git add lib/ && git diff --quiet && git diff --cached && echo "Double formatting changes") || echo "Good no double format changes"
+          (git add lib/ && git diff --quiet && git diff --cached | head) || echo "Good no double format changes"
 
       - name: run c3tools unit tests after (double) formatting
         run: |
