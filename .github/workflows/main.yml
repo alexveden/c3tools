@@ -24,7 +24,17 @@ jobs:
         llvm_version: [18]
 
     steps:
+      - name: Checkout c3tools 
       - uses: actions/checkout@v4
+
+      - name: Checkout c3c compiler source
+        uses: actions/checkout@v4
+        with:
+          repository: c3lang/c3c
+          path: c3c
+        run: |
+          cd c3c/
+
       - name: Install common deps
         run: |
           sudo apt-get install zlib1g zlib1g-dev python3 ninja-build curl
@@ -53,23 +63,11 @@ jobs:
                 lld-${{matrix.llvm_version}} liblld-${{matrix.llvm_version}}-dev
             fi
           fi
-      - name: CMake
-        if: matrix.llvm_version < 18 || matrix.llvm_version == env.LLVM_DEV_VERSION
-        run: |
-          cmake -B build \
-                -G Ninja \
-                -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
-                -DCMAKE_C_COMPILER=clang-${{matrix.llvm_version}} \
-                -DCMAKE_CXX_COMPILER=clang++-${{matrix.llvm_version}} \
-                -DCMAKE_LINKER=lld-link-${{matrix.llvm_version}} \
-                -DCMAKE_OBJCOPY=llvm-objcopy-${{matrix.llvm_version}} \
-                -DCMAKE_STRIP=llvm-strip-${{matrix.llvm_version}} \
-                -DCMAKE_DLLTOOL=llvm-dlltool-${{matrix.llvm_version}} \
-                -DC3_LLVM_VERSION=${{matrix.llvm_version}}
-          cmake --build build
+
       - name: CMake18
         if: matrix.llvm_version >= 18 && matrix.llvm_version != env.LLVM_DEV_VERSION
         run: |
+          cd ../c3c/
           cmake -B build \
                 -G Ninja \
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
