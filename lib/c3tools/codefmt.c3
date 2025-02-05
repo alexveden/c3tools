@@ -423,9 +423,18 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token* t) 
     bool pre_space = false;
 
     switch TOP: (t.type) {
-        case COMMA:
         case MINUSMINUS:
         case PLUSPLUS:
+            switch (prev_t) {
+                case IDENT:
+                case HASH_IDENT:
+                case RBRACKET:
+                case CT_IDENT:
+                    break;
+                default:
+                    nextcase TOP: default;
+            }
+        case COMMA:
         case SCOPE:
             break;
         case EQ:
