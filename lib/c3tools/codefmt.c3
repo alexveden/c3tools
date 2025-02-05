@@ -22,6 +22,7 @@ struct CodeFmt
     bool _is_paused;
     bool _is_empty_line;
     bool _is_inline_comment;
+    bool _is_cascade_call;
 }
 
 <*
@@ -123,10 +124,12 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false)
                 break;
         }
 
+        self._is_cascade_call = false;
         if (t.type != SPACE && self.run_state(t)!) {
             self.pop_state()!;
 
             // Ending one state, may trigger cascade parent exit
+            self._is_cascade_call = true;
             if (self.run_state(t)!) {
                 self.pop_state()!;
             }
@@ -2071,7 +2074,7 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                     }
                     nextcase LBRACE;
                 case DOT:
-                    if (state.initial_token == STRUCT && state.last_token == COMMA && state.scope_depth == 1) {
+                    if (state.initial_token == STRUCT && state.last_token == COMMA) {
                         self.cache_statement_dump_struct_init(is_multiline: true, wrap_rule: COMMA)!;
                         self.newline();
                     } 
@@ -2142,12 +2145,11 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                         case DO:
                             break;
                         case STRUCT:
-                            if (state.scope_depth == 0) {
-                                self.cache_statement_dump_struct_init(is_multiline: true, wrap_rule: COMMA)!;
-                                self.dedent()!;
-                                self.newline();
-                                nextcase default;
-                            }
+                            if (self._is_cascade_call) break;
+                            self.cache_statement_dump_struct_init(is_multiline: true, wrap_rule: COMMA)!;
+                            self.dedent()!;
+                            self.newline();
+                            self.write("%s", t.value);
                         case FOR:
                         case LBRAPIPE:
                             state.transition(EOS);

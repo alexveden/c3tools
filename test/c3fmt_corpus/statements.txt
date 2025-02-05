@@ -1779,3 +1779,41 @@ TestContext state @local = {
     },
     .bar = 1,
 };
+================================================================================
+struct_init_with_sub_fn
+================================================================================
+
+TestContext state @local = {
+    .foo = 1, 
+    .sub_struct ={
+        .setup_fn = fn void!() {
+            io::printn("new test setup");
+            // initialize something heavy (maybe a DB)
+            state.n_runs = 777;
+        }, 
+        .sub_field = 1
+    }, 
+    .teardown_fn = fn void!() { // inline
+        state.n_runs = 0;
+        io::printn("test teardown"); // inline
+    },
+    .bar = 1, 
+};
+
+--------------------------------------------------------------------------------
+TestContext state @local = {
+    .foo = 1,
+    .sub_struct = {
+        .setup_fn = fn void! () {
+            io::printn("new test setup");
+            // initialize something heavy (maybe a DB)
+            state.n_runs = 777;
+        },
+        .sub_field = 1
+    },
+    .teardown_fn = fn void! () {  // inline
+        state.n_runs = 0;
+        io::printn("test teardown");  // inline
+    },
+    .bar = 1,
+};
