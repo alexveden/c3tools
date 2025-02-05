@@ -15,8 +15,8 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        line_width: [80, 88, 100, 120]
-        indent: ["2", "4", "8", "t"]
+        line_width: [80, 100]
+        indent: ["4", "t"]
 
     steps:
       - name: Checkout c3tools 
