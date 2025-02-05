@@ -7,20 +7,16 @@ on:
     branches: [ main, dev ]
 
 env:
-  LLVM_RELEASE_VERSION_WINDOWS: 18
-  LLVM_RELEASE_VERSION_MAC: 17
-  LLVM_RELEASE_VERSION_LINUX: 17
-  LLVM_RELEASE_VERSION_UBUNTU20: 17
-  LLVM_DEV_VERSION: 21
+  llvm_version: 18
+
 jobs:
 
   build-linux:
     runs-on: ubuntu-22.04
     strategy:
-      # Don't abort runners if a single one fails
-      fail-fast: false
       matrix:
-        llvm_version: [18]
+        line_width: [80, 88, 100, 120]
+        indent: ["2", "4", "8", "t"]
 
     steps:
       - name: Checkout c3tools 
@@ -41,45 +37,45 @@ jobs:
         run: |
           sudo apt-get install zlib1g zlib1g-dev python3 ninja-build curl
 
-      - name: Install Clang ${{matrix.llvm_version}}
+      - name: Install Clang ${{env.llvm_version}}
         run: |
           wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
-          if [[ "${{matrix.llvm_version}}" < 18 ]]; then
-            sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${{matrix.llvm_version}} main"
+          if [[ "${{env.llvm_version}}" < 18 ]]; then
+            sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${{env.llvm_version}} main"
             sudo apt-get update
-            sudo apt-get install -y -t llvm-toolchain-focal-${{matrix.llvm_version}} libpolly-${{matrix.llvm_version}}-dev \
-              clang-${{matrix.llvm_version}} llvm-${{matrix.llvm_version}} llvm-${{matrix.llvm_version}}-dev \
-              lld-${{matrix.llvm_version}} liblld-${{matrix.llvm_version}}-dev libmlir-${{matrix.llvm_version}} \
-              libmlir-${{matrix.llvm_version}}-dev mlir-${{matrix.llvm_version}}-tools
+            sudo apt-get install -y -t llvm-toolchain-focal-${{env.llvm_version}} libpolly-${{env.llvm_version}}-dev \
+              clang-${{env.llvm_version}} llvm-${{env.llvm_version}} llvm-${{env.llvm_version}}-dev \
+              lld-${{env.llvm_version}} liblld-${{env.llvm_version}}-dev libmlir-${{env.llvm_version}} \
+              libmlir-${{env.llvm_version}}-dev mlir-${{env.llvm_version}}-tools
           else
-            if [[ "${{matrix.llvm_version}}" < "${{env.LLVM_DEV_VERSION}}" ]]; then
-              sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${{matrix.llvm_version}} main"
+            if [[ "${{env.llvm_version}}" < "${{env.LLVM_DEV_VERSION}}" ]]; then
+              sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${{env.llvm_version}} main"
               sudo apt-get update
-              sudo apt-get install -y -t llvm-toolchain-focal-${{matrix.llvm_version}} libpolly-${{matrix.llvm_version}}-dev \
-                clang-${{matrix.llvm_version}} llvm-${{matrix.llvm_version}} llvm-${{matrix.llvm_version}}-dev \
-                lld-${{matrix.llvm_version}} liblld-${{matrix.llvm_version}}-dev
+              sudo apt-get install -y -t llvm-toolchain-focal-${{env.llvm_version}} libpolly-${{env.llvm_version}}-dev \
+                clang-${{env.llvm_version}} llvm-${{env.llvm_version}} llvm-${{env.llvm_version}}-dev \
+                lld-${{env.llvm_version}} liblld-${{env.llvm_version}}-dev
             else
               sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal main"
-              sudo apt-get install -y -t llvm-toolchain-focal libpolly-${{matrix.llvm_version}}-dev \
-                clang-${{matrix.llvm_version}} llvm-${{matrix.llvm_version}} llvm-${{matrix.llvm_version}}-dev \
-                lld-${{matrix.llvm_version}} liblld-${{matrix.llvm_version}}-dev
+              sudo apt-get install -y -t llvm-toolchain-focal libpolly-${{env.llvm_version}}-dev \
+                clang-${{env.llvm_version}} llvm-${{env.llvm_version}} llvm-${{env.llvm_version}}-dev \
+                lld-${{env.llvm_version}} liblld-${{env.llvm_version}}-dev
             fi
           fi
 
       - name: CMake18
-        if: matrix.llvm_version >= 18 && matrix.llvm_version != env.LLVM_DEV_VERSION
+        if: env.llvm_version >= 18 && env.llvm_version != env.LLVM_DEV_VERSION
         run: |
           cd c3c
           cmake -B build \
                 -G Ninja \
                 -DCMAKE_BUILD_TYPE=Release \
-                -DCMAKE_C_COMPILER=clang-${{matrix.llvm_version}} \
-                -DCMAKE_CXX_COMPILER=clang++-${{matrix.llvm_version}} \
-                -DCMAKE_LINKER=lld-link-${{matrix.llvm_version}} \
-                -DCMAKE_OBJCOPY=llvm-objcopy-${{matrix.llvm_version}} \
-                -DCMAKE_STRIP=llvm-strip-${{matrix.llvm_version}} \
-                -DCMAKE_DLLTOOL=llvm-dlltool-${{matrix.llvm_version}} \
-                -DC3_LLVM_VERSION=${{matrix.llvm_version}}.1
+                -DCMAKE_C_COMPILER=clang-${{env.llvm_version}} \
+                -DCMAKE_CXX_COMPILER=clang++-${{env.llvm_version}} \
+                -DCMAKE_LINKER=lld-link-${{env.llvm_version}} \
+                -DCMAKE_OBJCOPY=llvm-objcopy-${{env.llvm_version}} \
+                -DCMAKE_STRIP=llvm-strip-${{env.llvm_version}} \
+                -DCMAKE_DLLTOOL=llvm-dlltool-${{env.llvm_version}} \
+                -DC3_LLVM_VERSION=${{env.llvm_version}}.1
           cmake --build build
 
       - name: c3c compile and run
@@ -100,17 +96,28 @@ jobs:
 
       - name: c3fmt format c3tools
         run: |
-          find lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w 80 -i t {}
+          find lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
           echo "Checking if any changes after formatting"
           git add . && git diff --quiet && git diff --cached | head
+          git commit -m "CI commit after formatting"
 
       - name: run c3tools unit tests after formatting
         run: |
           c3c --trust=full test
 
-      - name: c3fmt format c3c stdlib (re-use spaces)
+      - name: c3fmt (double) format c3tools
         run: |
-          find c3c/lib | grep ".c3$" | xargs -I{} ./build/c3fmt -w 80 -i 2 {}
+          find lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
+          echo "Checking if any changes after formatting (must be the same!)"
+          git add . && git diff --quiet && git diff --cached | head
+
+      - name: run c3tools unit tests after (double) formatting
+        run: |
+          c3c --trust=full test
+
+      - name: c3fmt format c3c stdlib
+        run: |
+          find c3c/lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
           cd c3c/
           echo "Checking if any changes in files"
           git add . && git diff --quiet && git diff --cached | head
@@ -120,9 +127,9 @@ jobs:
           cd c3c/test
           ../build/c3c compile-test unit
 
-      - name: c3fmt format c3c stdlib (re-use tabs)
+      - name: c3fmt format c3c stdlib (after double formatting)
         run: |
-          find c3c/lib | grep ".c3$" | xargs -I{} ./build/c3fmt -w 80 -i t {}
+          find c3c/lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
           cd c3c/
           echo "Checking if any changes in files"
           git add . && git diff --quiet && git diff --cached | head
@@ -131,3 +138,4 @@ jobs:
         run: |
           cd c3c/test
           ../build/c3c compile-test unit
+
