@@ -80,28 +80,28 @@ jobs:
           c3c --trust=full build c3fmt
           c3c --trust=full test
 
-      - name: c3fmt format c3tools
+      - name: c3fmt c3tools
         run: |
           find lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
           echo "Checking if any changes after formatting"
           git add lib/ && git diff --quiet && git diff --cached | head
           git commit -m "CI commit after formatting"
 
-      - name: run c3tools unit tests after formatting
+      - name: c3tools unit tests after formatting
         run: |
           c3c --trust=full test
 
-      - name: c3fmt (double) format c3tools
+      - name: c3fmt c3tools (double)
         run: |
           find lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
           echo "Checking if any changes after formatting (must be the same!)"
           (git add lib/ && git diff --quiet && git diff --cached | head) || echo "Good no double format changes"
 
-      - name: run c3tools unit tests after (double) formatting
+      - name: c3tools unit tests after (double) formatting
         run: |
           c3c --trust=full test
 
-      - name: c3fmt format c3c stdlib
+      - name: c3fmt stdlib
         run: |
           find c3c/lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
           cd c3c/
@@ -113,14 +113,14 @@ jobs:
           cd c3c/test
           ../build/c3c compile-test unit
 
-      - name: c3fmt format c3c stdlib (after double formatting)
+      - name: c3fmt stdlib (double)
         run: |
           find c3c/lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
           cd c3c/
           echo "Checking if any changes in files"
           git add . && git diff --quiet && git diff --cached | head
 
-      - name: c3c unit tests on formatted stdlib
+      - name: c3c unit tests on formatted stdlib (double)
         run: |
           cd c3c/test
           ../build/c3c compile-test unit
