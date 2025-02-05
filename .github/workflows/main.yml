@@ -32,12 +32,11 @@ jobs:
         with:
           repository: c3lang/c3c
           path: c3c
-        run: |
-          cd c3c/
 
       - name: Install common deps
         run: |
           sudo apt-get install zlib1g zlib1g-dev python3 ninja-build curl
+          cd c3c && echo "c3c exists"
 
       - name: Install Clang ${{matrix.llvm_version}}
         run: |
