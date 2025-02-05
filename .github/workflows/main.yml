@@ -95,7 +95,7 @@ jobs:
       
       - name: c3tools unit tests
         run: |
-          c3c --trust=full test
+          c3c --trust=full build
           c3c --trust=full test
 
       - name: c3fmt format c3tools
