@@ -2417,7 +2417,7 @@ fn bool CodeFmt.format_docstring_text_write(&self, Token* t)
                         if (t.value[i + 1] == '`' && t.value[i + 2] == '`') {
                             is_in_code = true;
                             self.newline();
-                            self.write("%c", c);
+                            self.buf.append(c);
                             continue LOOP;
                         }
                     }
@@ -2430,7 +2430,8 @@ fn bool CodeFmt.format_docstring_text_write(&self, Token* t)
                         has_new_line = false;
                     }
                     count++;
-                    self.write(" %c", c);
+                    self.buf.append(' ');
+                    self.buf.append(c);
             }
         } else {
             switch (c) {
@@ -2447,7 +2448,7 @@ fn bool CodeFmt.format_docstring_text_write(&self, Token* t)
                     }
                     nextcase default;
                 default:
-                    self.write("%c", c);
+                    self.buf.append(c);
             }
         }
 

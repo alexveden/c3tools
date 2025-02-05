@@ -271,3 +271,30 @@ interface Printable @if("sasda")
     <* Doc 3 empty line *>
     fn String* to_string(Allocator allocator) @optional;
 }
+================================================================================
+docstr_unicode
+================================================================================
+<* 
+ Doc привет мир!
+ Hello, 世界! 
+ Print any value to stderr, appending an '\n’ after.
+
+ @require foo > 1 
+ *>
+fn void main() 
+{
+    String uni = "привет мир";
+}
+
+--------------------------------------------------------------------------------
+<*
+ Doc привет мир!
+ Hello, 世界! 
+ Print any value to stderr, appending an '\n’ after.
+
+ @require foo > 1
+*>
+fn void main()
+{
+    String uni = "привет мир";
+}
