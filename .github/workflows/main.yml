@@ -25,7 +25,7 @@ jobs:
 
     steps:
       - name: Checkout c3tools 
-      - uses: actions/checkout@v4
+        uses: actions/checkout@v4
 
       - name: Checkout c3c compiler source
         uses: actions/checkout@v4
