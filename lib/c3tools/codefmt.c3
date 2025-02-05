@@ -1325,6 +1325,8 @@ macro void! CodeFmt.cache_statement_dump(
                     self.write("%s", t.value);
             }
         };
+        if (self._print_lex) io::eprintf("\n");
+        self.cache_statement_clear();
     } else {
         // NOTE: Wrapping is needed!
 
@@ -1342,8 +1344,6 @@ macro void! CodeFmt.cache_statement_dump(
 
     }
 
-    if (self._print_lex) io::eprintf("\n");
-    self.cache_statement_clear();
 }
 
 macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, TokenType wrap_rule)
@@ -1422,6 +1422,8 @@ macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, T
                 }
         }
     };
+    if (self._print_lex) io::eprintf("\n");
+    self.cache_statement_clear();
 }
 
 macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, TokenType wrap_rule)
@@ -1548,6 +1550,8 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
             }
         }
     };
+    if (self._print_lex) io::eprintf("\n");
+    self.cache_statement_clear();
 }
 
 <*
@@ -2066,31 +2070,38 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                         state.initial_token = FOR;
                     }
                     nextcase LBRACE;
-                case FN:
                 case DO:
-                    state.initial_token = t.type;
+                case FN:
+                    if (state.last_token == EQ && state.initial_token != DEF && state.initial_token != DISTINCT){
+                        self.cache_statement_dump_struct_init(is_multiline: true, wrap_rule: COMMA)!;
+                        state.initial_token = STRUCT;
+                        break;
+                    } else {
+                        state.initial_token = t.type;
+                    }
                     nextcase default;
                 case LBRACE:
                     switch (state.initial_token) {
                         case AT_IDENT:
                             // distinguish @some_macro({ <-- and @some_macro() { <--
                             if (state.scope_depth != 1) break;
-                            nextcase;
+                            self.cache_statement_dump()!;
+                            self.write(" ");
+                            return self.push_run_state(&CodeFmt.format_code_scope, t);
+                        case STRUCT:
+                            self.cache_statement_dump_struct_init(is_multiline: true, wrap_rule: COMMA)!;
+                            return self.push_run_state(&CodeFmt.format_code_scope, t);
+                        case FN:
+                            self.cache_statement_dump()!;
+                            self.newline();
+                            return self.push_run_state(&CodeFmt.format_code_scope, t);
                         case FOR:
                         case DO:
-                        case FN:
-                        case LBRAPIPE:
-                            // @custom_macro(a, b; @body) {}
-                            // anonymous fn: in_call(fn bool(a, b) {})
-                            // do {} [while()]; 
-                            // @custom_macro(@body) {}
-                            // @custom_macro { }
                             self.cache_statement_dump()!;
-                            if (state.initial_token == FN) {
-                                self.newline();
-                            } else if (state.initial_token != LBRAPIPE) {
-                                self.write(" ");
-                            }
+                            self.write(" ");
+                            return self.push_run_state(&CodeFmt.format_code_scope, t);
+                        case LBRAPIPE:
+                            self.cache_statement_dump()!;
                             return self.push_run_state(&CodeFmt.format_code_scope, t);
                         default:
                             if (state.last_token == RPAREN) {
@@ -2098,7 +2109,7 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                                     // Not a cast
                                     // mem::@scoped(&allocator){ @body(); };
                                     state.initial_token = FOR;
-                                    nextcase LBRAPIPE;
+                                    nextcase FOR;
                                 } else {
                                     // looks like a cast
                                     // return $typeof(*mat) { .m = val * ($Type)mat.m };
@@ -2119,6 +2130,8 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                         case AT_IDENT:
                             if (state.scope_depth != 0) nextcase default;
                         case FN:
+                            // function scope exit
+                            state.initial_token = INVALID_TOKEN;
                         case DO:
                             break;
                         case FOR:
