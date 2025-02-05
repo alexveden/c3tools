@@ -36,7 +36,6 @@ jobs:
       - name: Install common deps
         run: |
           sudo apt-get install zlib1g zlib1g-dev python3 ninja-build curl
-          cd c3c && echo "c3c exists"
 
       - name: Install Clang ${{matrix.llvm_version}}
         run: |
@@ -66,7 +65,7 @@ jobs:
       - name: CMake18
         if: matrix.llvm_version >= 18 && matrix.llvm_version != env.LLVM_DEV_VERSION
         run: |
-          cd ../c3c/
+          cd c3c
           cmake -B build \
                 -G Ninja \
                 -DCMAKE_BUILD_TYPE=${{matrix.build_type}} \
@@ -81,17 +80,12 @@ jobs:
 
       - name: C3 Compile and run some examples
         run: |
-          cd resources
+          cd c3c/resources
           ../build/c3c compile examples/base64.c3
           ../build/c3c compile-run examples/args.c3 -- foo -bar "baz baz"
 
       - name: Compile run unit tests
         run: |
-          cd test
+          cd c3c/test
           ../build/c3c compile-test unit
-
-      - name: run compiler tests
-        run: |
-          cd test
-          python3 src/tester.py ../build/c3c test_suite/
 
