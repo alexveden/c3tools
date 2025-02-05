@@ -107,6 +107,7 @@ jobs:
           cd c3c/
           echo "Checking if any changes in files"
           git add . && git diff --quiet && git diff --cached | head
+          git commit -m "CI commit after formatting"
 
       - name: c3c unit tests on formatted stdlib
         run: |
@@ -117,7 +118,7 @@ jobs:
         run: |
           find c3c/lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
           cd c3c/
-          echo "Checking if any changes in files"
+          echo "Checking if any changes after formatting (must be the same!)"
           git add . && git diff --quiet && git diff --cached | head
 
       - name: c3c unit tests on formatted stdlib (double)
