@@ -88,7 +88,16 @@ jobs:
         run: |
           cd c3c/test
           ../build/c3c compile-test unit
+      
+      - name: Append to PATH
+        run: |
+          pwd
+          echo "HOME: $HOME"
+          echo "PATH: $PATH"
+          echo "GITHUB_ENV: $GITHUB_ENV"
+          echo "$HOME/c3c/build/:$PATH" >> $GITHUB_ENV
+          echo "GITHUB_ENV: $GITHUB_ENV"
 
       - name: c3tools unit tests
         run: |
-          ./c3c/build/c3c --trust=full test
+          c3c --trust=full test
