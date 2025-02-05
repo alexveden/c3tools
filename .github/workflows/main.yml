@@ -70,11 +70,15 @@ jobs:
           ../build/c3c compile examples/base64.c3
           ../build/c3c compile-run examples/args.c3 -- foo -bar "baz baz"
 
-      - name: c3c unit tests
+      - name: c3c stdlib unit tests
         run: |
           cd c3c/test
           ../build/c3c compile-test unit
+
       
+      #
+      #   c3tools self formatting block
+      #
       - name: c3tools unit tests
         run: |
           c3c --trust=full build c3fmt
@@ -100,6 +104,15 @@ jobs:
       - name: c3tools unit tests after (double) formatting
         run: |
           c3c --trust=full test
+
+      #
+      #   c3c formatting block
+      #
+
+      - name: c3c compiler tests (original)
+        run: |
+          cd c3c/test
+          python3 src/tester.py ../build/c3c test_suite/
 
       - name: c3fmt stdlib
         run: |
@@ -135,7 +148,3 @@ jobs:
           cd c3c/test
           ../build/c3c compile-test unit
 
-      - name: c3c compiler tests (original)
-        run: |
-          cd c3c/test
-          python3 src/tester.py ../build/c3c test_suite/
