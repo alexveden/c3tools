@@ -78,14 +78,17 @@ jobs:
                 -DC3_LLVM_VERSION=${{matrix.llvm_version}}.1
           cmake --build build
 
-      - name: C3 Compile and run some examples
+      - name: c3c compile and run
         run: |
           cd c3c/resources
           ../build/c3c compile examples/base64.c3
           ../build/c3c compile-run examples/args.c3 -- foo -bar "baz baz"
 
-      - name: Compile run unit tests
+      - name: c3c unit tests
         run: |
           cd c3c/test
           ../build/c3c compile-test unit
 
+      - name: c3tools unit tests
+        run: |
+          ./c3c/build/c3c --trust=full test
