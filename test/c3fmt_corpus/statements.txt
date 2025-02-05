@@ -1853,3 +1853,19 @@ TestContext state @local = {
     },
     .bar = 1,
 };
+================================================================================
+inline_code_flow
+================================================================================
+fn void main()
+{
+    foreach (&c : s) if (c.is_upper() @pure) *c += 'a' - 'A';
+    foreach (&c : s) if (c.is_upper() @pure) &c = null;
+    foreach (&c : s) if (c.is_upper() @pure) return 0;
+}
+--------------------------------------------------------------------------------
+fn void main()
+{
+    foreach (&c : s) if (c.is_upper() @pure) *c += 'a' - 'A';
+    foreach (&c : s) if (c.is_upper() @pure) &c = null;
+    foreach (&c : s) if (c.is_upper() @pure) return 0;
+}

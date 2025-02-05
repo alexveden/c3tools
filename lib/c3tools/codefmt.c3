@@ -23,6 +23,7 @@ struct CodeFmt
     bool _is_empty_line;
     bool _is_inline_comment;
     bool _is_cascade_call;
+    bool _skip_next_new_line;
 }
 
 <*
@@ -354,6 +355,13 @@ macro void CodeFmt.write(&self, String format, args...) @private
 *>
 macro void CodeFmt.newline(&self, bool is_empty = false, bool indent_only = false) @private
 {
+    if (self._skip_next_new_line){
+        self._skip_next_new_line = false;
+        return;
+    } else {
+        self._skip_next_new_line = false;
+    }
+
     self._is_inline_comment = false;
 
     if (self._lexer.is_whitespace_mode) return;
@@ -2362,12 +2370,21 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
             switch (t.type) {
                 case EOS:
                     if (state.scope_depth != 0) self.@fail(t, "invalid scope")!;
-                    self.cache_statement_add(state, t);
-                    self.cache_statement_dump(no_split: true)!;
-                    self.trace("EXIT");
+                    if (!self._is_cascade_call) {
+                        self.cache_statement_add(state, t);
+                        self.cache_statement_dump(no_split: true)!;
+                        self.trace("EXIT");
+                    }
                     return true;
                 default:
-                    self.cache_statement_add(state, t);
+                    CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;
+                    if (new_local_state == null) {
+                        self.cache_statement_add(state, t);
+                    } else {
+                        self.cache_statement_dump(no_split: true)!;
+                        self._skip_next_new_line = true;
+                        return self.push_run_state(new_local_state, t);
+                    }
             }
         default:
             unreachable();
