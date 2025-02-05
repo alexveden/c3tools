@@ -2070,11 +2070,19 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                         state.initial_token = FOR;
                     }
                     nextcase LBRACE;
+                case DOT:
+                    if (state.initial_token == STRUCT && state.last_token == COMMA && state.scope_depth == 1) {
+                        self.cache_statement_dump_struct_init(is_multiline: true, wrap_rule: COMMA)!;
+                        self.newline();
+                    } 
+                    nextcase default;
                 case DO:
                 case FN:
                     if (state.last_token == EQ && state.initial_token != DEF && state.initial_token != DISTINCT){
+                        // = {.my_func = fn void () ...}
                         self.cache_statement_dump_struct_init(is_multiline: true, wrap_rule: COMMA)!;
                         state.initial_token = STRUCT;
+                        self.write(" %s ", t.value);
                         break;
                     } else {
                         state.initial_token = t.type;
@@ -2090,6 +2098,7 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                             return self.push_run_state(&CodeFmt.format_code_scope, t);
                         case STRUCT:
                             self.cache_statement_dump_struct_init(is_multiline: true, wrap_rule: COMMA)!;
+                            self.write(" ");
                             return self.push_run_state(&CodeFmt.format_code_scope, t);
                         case FN:
                             self.cache_statement_dump()!;
@@ -2130,10 +2139,15 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                         case AT_IDENT:
                             if (state.scope_depth != 0) nextcase default;
                         case FN:
-                            // function scope exit
-                            state.initial_token = INVALID_TOKEN;
                         case DO:
                             break;
+                        case STRUCT:
+                            if (state.scope_depth == 0) {
+                                self.cache_statement_dump_struct_init(is_multiline: true, wrap_rule: COMMA)!;
+                                self.dedent()!;
+                                self.newline();
+                                nextcase default;
+                            }
                         case FOR:
                         case LBRAPIPE:
                             state.transition(EOS);

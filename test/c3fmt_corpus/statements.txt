@@ -1766,15 +1766,16 @@ TestContext state @local  = {
 };
 
 --------------------------------------------------------------------------------
-TestContext state @local  = {
-    .setup_fn = fn void!() {
+TestContext state @local = {
+    .foo = 1,
+    .setup_fn = fn void! () {
         io::printn("new test setup");
         // initialize something heavy (maybe a DB)
         state.n_runs = 777;
-    }, 
-    .teardown_fn = fn void!() { // inline
+    },
+    .teardown_fn = fn void! () {  // inline
         state.n_runs = 0;
-        io::printn("test teardown"); // inline
-    }
+        io::printn("test teardown");  // inline
+    },
+    .bar = 1,
 };
-Te
