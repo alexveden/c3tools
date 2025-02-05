@@ -97,3 +97,11 @@ jobs:
         run: |
           c3c --trust=full test
           c3c --trust=full test
+
+      - name: c3fmt format c3tools
+        run: |
+          find lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt {}
+
+      - name: run c3tools unit tests after formatting
+        run: |
+          c3c --trust=full test
