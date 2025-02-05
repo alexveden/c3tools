@@ -32,7 +32,7 @@ Person @extern(  "foo") {
 --------------------------------------------------------------------------------
 struct Person @extern(  "foo")
 {
-    struct foo  // its a kinda struct
+    struct foo   // its a kinda struct
     {
         int bar;
         struct zoo @if(asd || dda)
@@ -64,7 +64,7 @@ inline    Pet    cat  ;
 union Person @extern(  "foo")
 {
     inline Pet cat;
-    struct foo  // its a kinda struct
+    struct foo   // its a kinda struct
     {
         int bar;
         union zoo @if(asd || dda)
@@ -401,4 +401,57 @@ fn void main(any foo)
     static Win32_LARGE_INTEGER freq;
     static ulong div = 0;
     return;
+}
+================================================================================
+simple_struct_with_multiple_interfaces
+================================================================================
+
+struct Person (Printable, Foo, Bar)
+{
+    char age;
+    string::String name;
+}
+--------------------------------------------------------------------------------
+struct Person (Printable, Foo, Bar)
+{
+    char age;
+    string::String name;
+}
+================================================================================
+struct_with_bitstruct_member
+================================================================================
+
+struct Person (Printable, Foo, Bar)
+{
+    bitstruct foo : char @bigendian
+    {
+        int a : 0..2;
+    }
+}
+--------------------------------------------------------------------------------
+struct Person (Printable, Foo, Bar)
+{
+    bitstruct foo : char @bigendian
+    {
+        int a : 0..2;
+    }
+}
+================================================================================
+struct_with_bitstruct_anonymous
+================================================================================
+
+struct Person (Printable, Foo, Bar)
+{
+    bitstruct : char @bigendian
+    {
+        int a : 0..2;
+    }
+}
+--------------------------------------------------------------------------------
+struct Person (Printable, Foo, Bar)
+{
+    bitstruct : char @bigendian
+    {
+        int a : 0..2;
+    }
 }

@@ -662,12 +662,19 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token* t) 
             switch (prev_t) {
                 case CONST_IDENT:
                     pre_space = !self._resolve__const_label();
+                case BITSTRUCT:
+                case ENUM:
+                case STRUCT:
+                case UNION:
+                    nextcase TOP: default;
                 case LBRACKET:
                     break;
                 case IDENT:
                     if (state.initial_token == FOREACH && state.scope_depth == 1) {
                         pre_space = true;
                     } else if (!self._resolve__keyword_call_colon(state)) {
+                        pre_space = true;
+                    } else if (state.initial_token == BITSTRUCT){
                         pre_space = true;
                     }
                 default:
@@ -818,6 +825,11 @@ macro bool CodeFmt._resolve_default_space(&self, NodeParserState* state, Token* 
         case DO:
         case IMPORT:
         case COMMENT_MULTI_INLINE:
+        case STRUCT:
+        case ENUM:
+        case UNION:
+        case BITSTRUCT:
+        case INTERFACE:
             return true;
         default:
             break;
@@ -2846,7 +2858,7 @@ fn bool! CodeFmt.format_structural(CodeFmt* self, Token* t, NodeParserState* sta
         case INVALID_TOKEN:  // initial state
             assert(t.type == STRUCT || t.type == UNION || t.type == BITSTRUCT);
             self.trace("ENTRY");
-            self.write("%s", t.value);
+            self.cache_statement_add(state, t);
             state.transition(TYPE_IDENT);
         case TYPE_IDENT:  // struct type name and other meta header stuff
             self.trace("TYPE_IDENT");
@@ -2854,21 +2866,11 @@ fn bool! CodeFmt.format_structural(CodeFmt* self, Token* t, NodeParserState* sta
                 case AT_IDENT:  // struct attrs
                     self._lexer.extend_current_attribute();
                     nextcase default;
-                case IDENT:  // substruct name
-                case TYPE_IDENT:
-                    nextcase default;
                 case LBRACE:
+                    self.cache_statement_dump()!;
                     nextcase STATE: state.transition(SCOPE);
-                case LPAREN:
-                    self.write(" %s", t.value);
-                case RPAREN:
-                    self.write("%s", t.value);
                 default:
-                    if (state.scope_depth == 0 && t.type != RBRACKET) {
-                        self.write(" %s", t.value);
-                    } else {
-                        self.write("%s", t.value);
-                    }
+                    self.cache_statement_add(state, t);
             }
         case SCOPE:  // struct scope {}
             self.trace("SCOPE");
