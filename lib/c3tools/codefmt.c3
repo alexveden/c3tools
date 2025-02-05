@@ -2099,7 +2099,7 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                     nextcase default;
                 case DO:
                 case FN:
-                    if (state.last_token == EQ && state.initial_token != DEF && state.initial_token != DISTINCT){
+                    if (state.last_token == EQ && state.prev_scope(1) == LBRACE) {
                         // = {.my_func = fn void () ...}
                         self.cache_statement_dump_struct_init(is_multiline: true, wrap_rule: COMMA)!;
                         state.initial_token = STRUCT;
@@ -2118,12 +2118,13 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                             self.write(" ");
                             return self.push_run_state(&CodeFmt.format_code_scope, t);
                         case STRUCT:
-                            self.cache_statement_dump_struct_init(is_multiline: true, wrap_rule: COMMA)!;
+                            // self.cache_statement_dump_struct_init(is_multiline: true, wrap_rule: COMMA)!;
+                            self.cache_statement_dump()!;
                             self.write(" ");
                             return self.push_run_state(&CodeFmt.format_code_scope, t);
                         case FN:
                             self.cache_statement_dump()!;
-                            self.newline();
+                            self.write(" ");
                             return self.push_run_state(&CodeFmt.format_code_scope, t);
                         case FOR:
                         case DO:

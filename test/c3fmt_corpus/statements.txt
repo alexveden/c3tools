@@ -1786,7 +1786,8 @@ struct_init_with_sub_fn
 TestContext state @local = {
     .foo = 1, 
     .sub_struct ={
-        .setup_fn = fn void!() {
+        .another = {1, 2, 3},
+        .setup_fn = fn void! (int a, int b, $typeof(c) c) {
             io::printn("new test setup");
             // initialize something heavy (maybe a DB)
             state.n_runs = 777;
@@ -1804,7 +1805,12 @@ TestContext state @local = {
 TestContext state @local = {
     .foo = 1,
     .sub_struct = {
-        .setup_fn = fn void! () {
+        .another = {
+            1,
+            2,
+            3
+        },
+        .setup_fn = fn void! (int a, int b, $typeof(c) c) {
             io::printn("new test setup");
             // initialize something heavy (maybe a DB)
             state.n_runs = 777;
