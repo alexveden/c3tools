@@ -688,7 +688,8 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token* t) 
                 case RVEC:
                 case RGENPAR:
                 case STAR:
-                case GREATER:
+                case GREATER: // new generic syntax Foo<[bar]>
+                case QUESTION:
                     break;  // no space
                 default:
                     nextcase TOP: default;
@@ -1238,6 +1239,37 @@ fn TokenType CodeFmt._resolve__next_token(&self, usz current_idx)
     return result;
 }
 
+<*
+Checks if we need a white space before ?
+*>
+fn bool CodeFmt._resolve__next_question_is_error(&self, usz current_idx) {
+    // Resolves ambiguity
+    // foo ? bar : baz;
+    // return foo?;
+    // foo ?? ERR?!;
+    // a = foo ? !bar : baz;
+    switch (self._resolve__next_token(current_idx)) {
+        case EOS:
+        case RPAREN:
+        case COLON:
+        case QUESTQUEST:
+        case RBRACKET:
+        case RVEC:
+        case RGENPAR:
+        case INVALID_TOKEN:
+            return false;
+        case BANG:
+            // ?!;
+            // return false;
+            // self.write("%s", self._resolve__next_token(current_idx + 2));
+            if (self._resolve__next_token(current_idx + 2) == EOS) return false;
+            if (self._resolve__next_token(current_idx + 1) == EOS) return false;
+        default:
+            break;
+    }
+    return true;
+}
+
 macro void! CodeFmt.cache_statement_dump(
     &self, TokenType wrap_rule = INVALID_TOKEN, bool no_split = false
 ) @private
@@ -1328,19 +1360,7 @@ macro void! CodeFmt.cache_statement_dump(
             if (self._print_lex) io::eprintf("%s ", t.type);
             switch (t.type) {
                 case QUESTION:
-                    switch (self._resolve__next_token(i)) {
-                        case EOS:
-                        case RPAREN:
-                        case COLON:
-                        case QUESTQUEST:
-                        case RBRACKET:
-                        case RVEC:
-                        case RGENPAR:
-                        case INVALID_TOKEN:
-                            break;
-                        default:
-                            self.write(" ");
-                    }
+                    if (self._resolve__next_question_is_error(i)) self.write(" ");
                     nextcase default;
                 default:
                     self.write("%s", t.value);
@@ -1384,7 +1404,7 @@ macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, T
                 self.indent();
             case RBRACE:
                 self.dedent()!;
-                self.newline();
+                if (tmpstate.last_token != LBRACE) self.newline();
                 self.write("%s", t.value);
             case COMMENT_SINGLE:
             case COMMENT_MULTI:
@@ -1396,19 +1416,7 @@ macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, T
                 self.write("  %s", t.value);
                 tmpstate.current_token = tmpstate.last_token;
             case QUESTION:
-                switch (self._resolve__next_token(i)) {
-                    case EOS:
-                    case RPAREN:
-                    case COLON:
-                    case QUESTQUEST:
-                    case RBRACKET:
-                    case RVEC:
-                    case RGENPAR:
-                    case INVALID_TOKEN:
-                        break;
-                    default:
-                        self.write(" ");
-                }
+                if (self._resolve__next_question_is_error(i)) self.write(" ");
                 nextcase default;
             case SPACE:
                 if (is_multiline) {
@@ -1500,19 +1508,7 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
                 case COMMENT_MULTI_INLINE:
                     self.write("  %s", t.value);
                 case QUESTION:
-                    switch (self._resolve__next_token(i)) {
-                        case EOS:
-                        case RPAREN:
-                        case COLON:
-                        case QUESTQUEST:
-                        case RBRACKET:
-                        case RVEC:
-                        case RGENPAR:
-                        case INVALID_TOKEN:
-                            break;
-                        default:
-                            self.write(" ");
-                    }
+                    if (self._resolve__next_question_is_error(i)) self.write(" ");
                     nextcase default;
                 default:
                     if (is_multiline) {
@@ -2188,8 +2184,8 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
 
                         return false;
                     } else {
+                        self.cache_statement_add(state, t);
                         self.cache_statement_dump()!;
-                        self.write(";");
                         self.trace("EXIT");
                         return true;
                     }

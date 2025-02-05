@@ -94,7 +94,7 @@ fn void main()
     return 2 + foo_log_long + 
     io::printf(
         "soo", a, 
-        sooo::foo::bar("adskjalsda", looong, var1), another_var1
+        sooo::foo::bar("adskja", looong, var1), another_var1
     ) + bar;
 }
 
@@ -102,7 +102,7 @@ fn void main()
 fn void main()
 {
     return 2 + foo_log_long + io::printf(
-        "soo", a, sooo::foo::bar("adskjalsda", looong, var1), another_var1
+        "soo", a, sooo::foo::bar("adskja", looong, var1), another_var1
     ) + bar;
 }
 ================================================================================

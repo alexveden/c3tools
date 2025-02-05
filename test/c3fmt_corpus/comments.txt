@@ -70,7 +70,8 @@ return/* inline comment before ; */;
 a comment */
 fn void main()
 {
-    return   /* inline comment before ; */;
+    return   /* inline comment before ; */
+    ;
     /* multi
     line comment {
     */

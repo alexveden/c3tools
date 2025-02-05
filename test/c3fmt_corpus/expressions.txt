@@ -411,3 +411,37 @@ fn void main()
     return ++a;
     return --a;
 }
+================================================================================
+double_quest_errors
+================================================================================
+fn void main()
+{
+    String text = io::readline() ?? InputResult.FAILED_TO_READ?!;
+    io::fprintf(out, "%s", s.title.get() ?? "missing", s.ok)!;
+    return Summary {
+        .title = new_string_val(doc.head.get().title.get()) ?? MaybeString {},
+        .ok = true,
+    };
+    long e10 = String.to_long() ?? NumberConversion.MALFORMED_FLOAT ? !;
+    url.path = decode(allocator) ?? UrlParsingResult.INVALID_PATH ? !;
+    int! b = foo((a + 3) ?? 2);
+    char* data4 = $embed("fiek") ?? null;
+    bool r = foo ? !bar : !vrr;
+    bool r = foo ? (!bar) : !vrr;
+}
+--------------------------------------------------------------------------------
+fn void main()
+{
+    String text = io::readline() ?? InputResult.FAILED_TO_READ?!;
+    io::fprintf(out, "%s", s.title.get() ?? "missing", s.ok)!;
+    return Summary {
+        .title = new_string_val(doc.head.get().title.get()) ?? MaybeString {},
+        .ok = true,
+    };
+    long e10 = String.to_long() ?? NumberConversion.MALFORMED_FLOAT?!;
+    url.path = decode(allocator) ?? UrlParsingResult.INVALID_PATH?!;
+    int! b = foo((a + 3) ?? 2);
+    char* data4 = $embed("fiek") ?? null;
+    bool r = foo ?!bar : !vrr;
+    bool r = foo ? (!bar) : !vrr;
+}

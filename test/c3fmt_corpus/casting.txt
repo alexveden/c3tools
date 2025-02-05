@@ -3,12 +3,12 @@ fn_with_lambda_arg
 ================================================================================
 fn void remove_using_test()
 {
-    removed = test.remove_using_test(fn bool(i, ctx) => *i >= *(int*)ctx, &&10);
+    removed = test.remove_using_test(fn bool(i, c) => *i >= *(int*)ctx, &&10);
 }
 --------------------------------------------------------------------------------
 fn void remove_using_test()
 {
-    removed = test.remove_using_test(fn bool (i, ctx) => *i >= *(int*)ctx, &&10);
+    removed = test.remove_using_test(fn bool (i, c) => *i >= *(int*)ctx, &&10);
 }
 ================================================================================
 casting_pointers
