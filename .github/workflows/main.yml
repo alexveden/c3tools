@@ -109,7 +109,7 @@ jobs:
           git add . && git diff --quiet && git diff --cached | head
           git commit -m "CI commit after formatting"
 
-      - name: c3c unit tests on formatted stdlib
+      - name: c3c stdlib unit tests formatted
         run: |
           cd c3c/test
           ../build/c3c compile-test unit
@@ -121,7 +121,7 @@ jobs:
           echo "Checking if any changes after formatting (must be the same!)"
           git diff --quiet
 
-      - name: c3c unit tests on formatted stdlib (double)
+      - name: c3c stdlib unit tests formatted (double)
         run: |
           cd c3c/test
           ../build/c3c compile-test unit
@@ -130,7 +130,12 @@ jobs:
         run: |
           find c3c/test/unit | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
 
-      - name: c3c unit tests on formatted stdlib
+      - name: c3c unit tests on formatted c3c/test/unit
         run: |
           cd c3c/test
           ../build/c3c compile-test unit
+
+      - name: c3c compiler tests (original)
+        run: |
+          cd c3c/test
+          python3 src/tester.py ../build/c3c test_suite/
