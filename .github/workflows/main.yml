@@ -108,9 +108,21 @@ jobs:
         run: |
           c3c --trust=full test
 
-      - name: c3fmt format c3c stdlib
+      - name: c3fmt format c3c stdlib (re-use spaces)
         run: |
           find c3c/lib | grep ".c3$" | xargs -I{} ./build/c3fmt -w 80 -i 2 {}
+          cd c3c/
+          echo "Checking if any changes in files"
+          git add . && git diff --quiet && git diff --cached | head
+
+      - name: c3c unit tests on formatted stdlib
+        run: |
+          cd c3c/test
+          ../build/c3c compile-test unit
+
+      - name: c3fmt format c3c stdlib (re-use tabs)
+        run: |
+          find c3c/lib | grep ".c3$" | xargs -I{} ./build/c3fmt -w 80 -i t {}
           cd c3c/
           echo "Checking if any changes in files"
           git add . && git diff --quiet && git diff --cached | head
