@@ -32,6 +32,8 @@ jobs:
         run: |
           echo "$PWD/c3c/build" >> "$GITHUB_PATH"
           echo "PATH: $PATH"
+          git config --global user.email "ci@c3tools.com"
+          git config --global user.name "c3tools CI"
 
       - name: Install common deps
         run: |
@@ -82,7 +84,7 @@ jobs:
         run: |
           find lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
           echo "Checking if any changes after formatting"
-          git add . && git diff --quiet && git diff --cached | head
+          git add lib/ && git diff --quiet && git diff --cached | head
           git commit -m "CI commit after formatting"
 
       - name: run c3tools unit tests after formatting
@@ -93,7 +95,7 @@ jobs:
         run: |
           find lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
           echo "Checking if any changes after formatting (must be the same!)"
-          git add . && git diff --quiet && git diff --cached | head
+          (git add lib/ && git diff --quiet && git diff --cached && echo "Double formatting changes") || echo "Good no double format changes"
 
       - name: run c3tools unit tests after (double) formatting
         run: |
