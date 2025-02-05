@@ -34,8 +34,8 @@ simple_inline_after_eos_comment
 
 fn void 
 main() {  
-return;//this is inline comment
-// single line comment
+return;//this is inline comment       
+// single line comment               
         if(fgoo) { return bar; // another inline coment
     } 
 }

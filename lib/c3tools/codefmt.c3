@@ -163,7 +163,7 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
         if (t.value.starts_with("// fmt: off") && !self._is_paused) {
             self.cache_statement_dump()!;
             if (!self._is_empty_line) self.newline();
-            self.write("%s", t.value);
+            self.write("%s", t.value.trim_right());
 
             self._lexer.set_whitespace_mode(true);
             self._is_paused = true;
@@ -173,7 +173,7 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
             self._lexer.set_whitespace_mode(false);
             self._is_paused = false;
             self._is_empty_line = true;
-            self.write("%s", t.value);
+            self.write("%s", t.value.trim_right());
             self._is_inline_comment = true;
             if (self.state_stack.len() > 0) {
                 self.state_stack[^1].state.current_token = EMPTY_LINE;
@@ -237,7 +237,7 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
                 self.buf.append(t.value);
             } else {
                 if (!self._is_empty_line) self.newline();
-                self.write("%s", t.value);
+                self.write("%s", t.value.trim_right());
             }
             self._is_empty_line = false;
             self._is_inline_comment = t.type == COMMENT_SINGLE;
@@ -246,7 +246,7 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
             if (self._lexer.is_whitespace_mode) {
                 self.buf.append(t.value);
             } else {
-                self.write("  %s", t.value);
+                self.write("  %s", t.value.trim_right());
             }
             self._is_empty_line = false;
             self._is_inline_comment = t.type == COMMENT_SINGLE_INLINE;
