@@ -8,6 +8,317 @@ import std::collections::list;
 *                  CODE WRAP FUNCTIONS
 */
 
+
+<*
+Dumps and formats collected cache_statement_ array into code
+*>
+macro void! CodeFmt.cache_statement_dump(
+    &self, TokenType wrap_rule = INVALID_TOKEN, bool no_split = false
+) @private
+{
+    if (self.cache_statement_len() == 0) return;
+
+    usz token_len = 0;
+    usz break_len = 0;
+    int break_pos = -1;
+    bool is_assignment = false;
+    bool has_magic_comma = false;
+    bool is_struct_design = false;
+    TokenType last_non_space_tok = INVALID_TOKEN;
+    NodeParserState tmpstate;
+
+    // NOTE:
+    // Decide when we should start wrapping and if it's necessary
+    // Ignore LHS of assignment expression
+    self.@cache_statement_iter(; usz i, Token* t) {
+        tmpstate.check(t);
+
+        token_len += t.value.len;
+        switch TOP: (t.type) {
+            case BIT_AND_ASSIGN:
+            case BIT_OR_ASSIGN:
+            case BIT_XOR_ASSIGN:
+            case DIV_ASSIGN:
+            case MINUS_ASSIGN:
+            case MULT_ASSIGN:
+            case MOD_ASSIGN:
+            case PLUS_ASSIGN:
+            case SHL_ASSIGN:
+            case SHR_ASSIGN:
+            case EQ:
+                // if it's an assignment use only RHS part for splitting
+                if (tmpstate.scope_depth == 0) {
+                    // NOTE: use only first assignment (struct designated initializers case)
+                    is_assignment = true;
+                    break_pos = -1;
+                    break_len = 0;
+                }
+            case LBRACE:
+            case LPAREN:
+                if (break_pos != -1) nextcase default;
+                if (tmpstate.scope_depth != 1) nextcase default;
+                break_pos = (int)i;
+                break_len = 0;
+            case RBRACE:
+            case RPAREN:
+                if (break_pos == -1) nextcase default;
+                if (tmpstate.scope_depth != 0) nextcase default;
+                if (last_non_space_tok == COMMA) has_magic_comma = true;
+                // NOTE: single line comments in statements forcing multi-line print
+            case COMMENT_SINGLE:
+            case COMMENT_MULTI:
+            case COMMENT_SINGLE_INLINE:
+            case COMMENT_MULTI_INLINE:
+                tmpstate.current_token = tmpstate.last_token;
+                has_magic_comma = true;
+            case SPACE:
+                tmpstate.current_token = tmpstate.last_token;
+                nextcase default;
+            case DOT:
+                if (tmpstate.scope_depth == 1) {
+                    if (tmpstate.last_token == LBRACE || tmpstate.last_token == COMMA) {
+                        is_struct_design = true;
+                    }
+                }
+                nextcase default;
+            default:
+                if (break_pos != -1) break_len += t.value.len;
+                if (t.type != SPACE) last_non_space_tok = t.type;
+        }
+    };
+
+    self.trace(
+        "cache_statement_dump: _line_used: %d, cache_len: %d, break_pos: %d break_len: %d last_non_space_tok: %s",
+        self._line_used,
+        token_len,
+        break_pos,
+        break_len,
+        last_non_space_tok
+    );
+
+    if (no_split || (!has_magic_comma && self._line_used + token_len <= self.max_line_width)) {
+        // NOTE: Fits in line no wrapping needed write as is with standard formatting.
+        self.@cache_statement_iter(; usz i, Token* t) {
+            if (self._print_lex) io::eprintf("%s ", t.type);
+            switch (t.type) {
+                case QUESTION:
+                    if (self._resolve__next_question_is_error(i)) self.write(" ");
+                    nextcase default;
+                default:
+                    self.write("%s", t.value);
+            }
+        };
+        if (self._print_lex) io::eprintf("\n");
+        self.cache_statement_clear();
+    } else {
+        // NOTE: Wrapping is needed!
+
+        bool is_multiline = (
+            has_magic_comma || break_len + (self._indent_level + 1) * 4 > self.max_line_width
+        );
+
+        if (is_struct_design) {
+            // hierarchical struct initialization
+            self.cache_statement_dump_struct_init(is_multiline, wrap_rule)!;
+        } else {
+            // generic if/for/ func call or statement
+            self.cache_statement_dump_generic(is_multiline, wrap_rule)!;
+        }
+
+    }
+
+}
+
+<*
+Struct initializers dump MyStruct s = {.foo = 1, .sub = {.bar = 0}}
+*>
+macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, TokenType wrap_rule) @private
+{
+    NodeParserState tmpstate = NodeParserState {};
+    TokenType brake_type = INVALID_TOKEN;
+    self.@cache_statement_iter(; usz i, Token* t) {
+        if (self._print_lex) io::eprintf("%s ", t.type);
+        tmpstate.check(t);  // this is used only for current scope_depth
+
+        switch TOP: (t.type) {
+            case LBRACE:
+                if (is_multiline) {
+                    if (tmpstate.last_token == COMMA) self.newline();
+                }
+                self.write("%s", t.value);
+                self.indent();
+            case RBRACE:
+                self.dedent()!;
+                if (tmpstate.last_token != LBRACE) self.newline();
+                self.write("%s", t.value);
+            case COMMENT_SINGLE:
+            case COMMENT_MULTI:
+                self.newline();
+                self.write("%s", t.value);
+                tmpstate.current_token = tmpstate.last_token;
+            case COMMENT_SINGLE_INLINE:
+            case COMMENT_MULTI_INLINE:
+                self.write("  %s", t.value);
+                tmpstate.current_token = tmpstate.last_token;
+            case QUESTION:
+                if (self._resolve__next_question_is_error(i)) self.write(" ");
+                nextcase default;
+            case SPACE:
+                if (is_multiline) {
+                    if (
+                        tmpstate.last_token != COMMA &&
+                        tmpstate.last_token != LBRACE &&
+                        self._resolve__next_token(i) != RBRACE
+                    ) {
+                        self.write("%s", t.value);
+                    }
+                } else {
+                    if (tmpstate.last_token != LBRACE && self._resolve__next_token(i) != RBRACE) {
+                        self.write("%s", t.value);
+                    }
+                }
+                tmpstate.current_token = tmpstate.last_token;
+            default:
+                switch (tmpstate.last_token) {
+                    case DOT:
+                    case COMMA:
+                    case LBRACE:
+                        if (tmpstate.last_token == LBRACE) self.newline();
+
+                        if (is_multiline) {
+                            if (tmpstate.last_token == COMMA && tmpstate.prev_scope(1) == LBRACE) {
+                                self.newline();
+                            }
+                        }
+                        self.write("%s", t.value);
+                    default:
+                        self.write("%s", t.value);
+                }
+        }
+    };
+    if (self._print_lex) io::eprintf("\n");
+    self.cache_statement_clear();
+}
+
+<*
+Generic statement dumper
+*>
+macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, TokenType wrap_rule) @private
+{
+    NodeParserState tmpstate = NodeParserState {};
+    TokenType brake_type = INVALID_TOKEN;
+
+    // This filter is used for forcing raw writing (e.g. cast vs call ambiguity)
+    usz skip_i_until = 0;
+
+    self.@cache_statement_iter(; usz i, Token* t) {
+        if (self._print_lex) io::eprintf("%s ", t.type);
+        tmpstate.check(t);  // this is used only for current scope_depth
+
+        // WTF: c3 doesn't support continue in macro @body!
+        if (i >= skip_i_until) {
+
+            switch TOP: (t.type) {
+                case LPAREN:  // Function params and conditions splitting
+                    if (tmpstate.scope_depth == 1 && brake_type == INVALID_TOKEN) {
+                        skip_i_until = self._resolve__next_is_cast_and_dump(i);
+                        if (skip_i_until == i) {
+                            self.write("%s", t.value);
+                            self.indent();
+                            brake_type = RPAREN;
+                        }
+                        break;
+                    } else {
+                        nextcase default;
+                    }
+                case LBRACE:  // Array initializers splitting
+                    if (tmpstate.scope_depth == 1 && brake_type == INVALID_TOKEN) {
+                        self.write("%s", t.value);
+                        self.indent();
+                        brake_type = RBRACE;
+                    } else {
+                        nextcase default;
+                    }
+                case brake_type:
+                    if (tmpstate.scope_depth == 0) {
+                        self.dedent()!;
+                        self.newline();
+                        brake_type = INVALID_TOKEN;
+                        self.write("%s", t.value);
+                    } else {
+                        nextcase default;
+                    }
+                case COMMENT_SINGLE:
+                case COMMENT_MULTI:
+                    self.newline();
+                    self.write("%s", t.value);
+                case COMMENT_SINGLE_INLINE:
+                case COMMENT_MULTI_INLINE:
+                    self.write("  %s", t.value);
+                case QUESTION:
+                    if (self._resolve__next_question_is_error(i)) self.write(" ");
+                    nextcase default;
+                default:
+                    if (is_multiline) {
+                        if (self.split_multiline(&tmpstate, wrap_rule)) {
+                            if (tmpstate.current_token == SPACE) {
+                                tmpstate.current_token = tmpstate.last_token;
+                            } else {
+                                self.newline();
+                                self.write("%s", t.value);
+                            }
+                        } else {
+                            if (tmpstate.current_token == SPACE) {
+                                tmpstate.current_token = tmpstate.last_token;
+                                if (self._resolve__next_token(i) == RBRACE) break;
+                            }
+                            self.write("%s", t.value);
+                        }
+                    } else {
+                        switch (tmpstate.last_token) {
+                            case LBRACE:
+                                if (tmpstate.current_token == SPACE) {
+                                    tmpstate.current_token = tmpstate.last_token;
+                                    break;
+                                } else if (brake_type == RBRACE && t.type != RBRACE) {
+                                    if (tmpstate.scope_depth == 1) {
+                                        self.newline();
+                                    } else if (
+                                        tmpstate.scope_depth == 2 &&
+                                        (t.type == LBRACE || t.type == LBRACKET || t.type == LPAREN)
+                                    ) {
+                                        self.newline();
+                                    }
+                                }
+                                nextcase default;
+                            case LPAREN:
+                                if (
+                                    tmpstate.scope_depth == 1 &&
+                                    brake_type == RPAREN &&
+                                    t.type != RPAREN
+                                ) {
+                                    self.newline();
+                                } else if (tmpstate.scope_depth == 2 && t.type == LPAREN) {
+                                    self.newline();
+                                }
+                                nextcase default;
+                            default:
+
+                                if (tmpstate.current_token == SPACE) {
+                                    tmpstate.current_token = tmpstate.last_token;
+                                    if (self._resolve__next_token(i) == RBRACE) break;
+                                }
+                                self.write("%s", t.value);
+                        }
+
+                    }
+            }
+        }
+    };
+    if (self._print_lex) io::eprintf("\n");
+    self.cache_statement_clear();
+}
+
 <*
  Adds a token to composite statement cache for further formatting.
 *>
@@ -467,6 +778,9 @@ fn bool CodeFmt._resolve__keyword_call_colon(&self, NodeParserState* state) @loc
     return is_call_kwarg;
 }
 
+<*
+Resolves if array access bracket contain expression [a:b] vs [a + 1 : b - 1]
+*>
 fn bool CodeFmt._resolve__bracket_is_complex_expr(&self) @local
 {
     assert(self.state_stack.len() > 0);
@@ -880,307 +1194,6 @@ fn bool CodeFmt._resolve__next_question_is_error(&self, usz current_idx) @local
             break;
     }
     return true;
-}
-
-macro void! CodeFmt.cache_statement_dump(
-    &self, TokenType wrap_rule = INVALID_TOKEN, bool no_split = false
-) @private
-{
-    if (self.cache_statement_len() == 0) return;
-
-    usz token_len = 0;
-    usz break_len = 0;
-    int break_pos = -1;
-    bool is_assignment = false;
-    bool has_magic_comma = false;
-    bool is_struct_design = false;
-    TokenType last_non_space_tok = INVALID_TOKEN;
-    NodeParserState tmpstate;
-
-    // NOTE:
-    // Decide when we should start wrapping and if it's necessary
-    // Ignore LHS of assignment expression
-    self.@cache_statement_iter(; usz i, Token* t) {
-        tmpstate.check(t);
-
-        token_len += t.value.len;
-        switch TOP: (t.type) {
-            case BIT_AND_ASSIGN:
-            case BIT_OR_ASSIGN:
-            case BIT_XOR_ASSIGN:
-            case DIV_ASSIGN:
-            case MINUS_ASSIGN:
-            case MULT_ASSIGN:
-            case MOD_ASSIGN:
-            case PLUS_ASSIGN:
-            case SHL_ASSIGN:
-            case SHR_ASSIGN:
-            case EQ:
-                // if it's an assignment use only RHS part for splitting
-                if (tmpstate.scope_depth == 0) {
-                    // NOTE: use only first assignment (struct designated initializers case)
-                    is_assignment = true;
-                    break_pos = -1;
-                    break_len = 0;
-                }
-            case LBRACE:
-            case LPAREN:
-                if (break_pos != -1) nextcase default;
-                if (tmpstate.scope_depth != 1) nextcase default;
-                break_pos = (int)i;
-                break_len = 0;
-            case RBRACE:
-            case RPAREN:
-                if (break_pos == -1) nextcase default;
-                if (tmpstate.scope_depth != 0) nextcase default;
-                if (last_non_space_tok == COMMA) has_magic_comma = true;
-                // NOTE: single line comments in statements forcing multi-line print
-            case COMMENT_SINGLE:
-            case COMMENT_MULTI:
-            case COMMENT_SINGLE_INLINE:
-            case COMMENT_MULTI_INLINE:
-                tmpstate.current_token = tmpstate.last_token;
-                has_magic_comma = true;
-            case SPACE:
-                tmpstate.current_token = tmpstate.last_token;
-                nextcase default;
-            case DOT:
-                if (tmpstate.scope_depth == 1) {
-                    if (tmpstate.last_token == LBRACE || tmpstate.last_token == COMMA) {
-                        is_struct_design = true;
-                    }
-                }
-                nextcase default;
-            default:
-                if (break_pos != -1) break_len += t.value.len;
-                if (t.type != SPACE) last_non_space_tok = t.type;
-        }
-    };
-
-    self.trace(
-        "cache_statement_dump: _line_used: %d, cache_len: %d, break_pos: %d break_len: %d last_non_space_tok: %s",
-        self._line_used,
-        token_len,
-        break_pos,
-        break_len,
-        last_non_space_tok
-    );
-
-    if (no_split || (!has_magic_comma && self._line_used + token_len <= self.max_line_width)) {
-        // NOTE: Fits in line no wrapping needed write as is with standard formatting.
-        self.@cache_statement_iter(; usz i, Token* t) {
-            if (self._print_lex) io::eprintf("%s ", t.type);
-            switch (t.type) {
-                case QUESTION:
-                    if (self._resolve__next_question_is_error(i)) self.write(" ");
-                    nextcase default;
-                default:
-                    self.write("%s", t.value);
-            }
-        };
-        if (self._print_lex) io::eprintf("\n");
-        self.cache_statement_clear();
-    } else {
-        // NOTE: Wrapping is needed!
-
-        bool is_multiline = (
-            has_magic_comma || break_len + (self._indent_level + 1) * 4 > self.max_line_width
-        );
-
-        if (is_struct_design) {
-            // hierarchical struct initialization
-            self.cache_statement_dump_struct_init(is_multiline, wrap_rule)!;
-        } else {
-            // generic if/for/ func call or statement
-            self.cache_statement_dump_generic(is_multiline, wrap_rule)!;
-        }
-
-    }
-
-}
-
-macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, TokenType wrap_rule) @private
-{
-    NodeParserState tmpstate = NodeParserState {};
-    TokenType brake_type = INVALID_TOKEN;
-    self.@cache_statement_iter(; usz i, Token* t) {
-        if (self._print_lex) io::eprintf("%s ", t.type);
-        tmpstate.check(t);  // this is used only for current scope_depth
-
-        switch TOP: (t.type) {
-            case LBRACE:
-                if (is_multiline) {
-                    if (tmpstate.last_token == COMMA) self.newline();
-                }
-                self.write("%s", t.value);
-                self.indent();
-            case RBRACE:
-                self.dedent()!;
-                if (tmpstate.last_token != LBRACE) self.newline();
-                self.write("%s", t.value);
-            case COMMENT_SINGLE:
-            case COMMENT_MULTI:
-                self.newline();
-                self.write("%s", t.value);
-                tmpstate.current_token = tmpstate.last_token;
-            case COMMENT_SINGLE_INLINE:
-            case COMMENT_MULTI_INLINE:
-                self.write("  %s", t.value);
-                tmpstate.current_token = tmpstate.last_token;
-            case QUESTION:
-                if (self._resolve__next_question_is_error(i)) self.write(" ");
-                nextcase default;
-            case SPACE:
-                if (is_multiline) {
-                    if (
-                        tmpstate.last_token != COMMA &&
-                        tmpstate.last_token != LBRACE &&
-                        self._resolve__next_token(i) != RBRACE
-                    ) {
-                        self.write("%s", t.value);
-                    }
-                } else {
-                    if (tmpstate.last_token != LBRACE && self._resolve__next_token(i) != RBRACE) {
-                        self.write("%s", t.value);
-                    }
-                }
-                tmpstate.current_token = tmpstate.last_token;
-            default:
-                switch (tmpstate.last_token) {
-                    case DOT:
-                    case COMMA:
-                    case LBRACE:
-                        if (tmpstate.last_token == LBRACE) self.newline();
-
-                        if (is_multiline) {
-                            if (tmpstate.last_token == COMMA && tmpstate.prev_scope(1) == LBRACE) {
-                                self.newline();
-                            }
-                        }
-                        self.write("%s", t.value);
-                    default:
-                        self.write("%s", t.value);
-                }
-        }
-    };
-    if (self._print_lex) io::eprintf("\n");
-    self.cache_statement_clear();
-}
-
-macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, TokenType wrap_rule) @private
-{
-    NodeParserState tmpstate = NodeParserState {};
-    TokenType brake_type = INVALID_TOKEN;
-
-    // This filter is used for forcing raw writing (e.g. cast vs call ambiguity)
-    usz skip_i_until = 0;
-
-    self.@cache_statement_iter(; usz i, Token* t) {
-        if (self._print_lex) io::eprintf("%s ", t.type);
-        tmpstate.check(t);  // this is used only for current scope_depth
-
-        // WTF: c3 doesn't support continue in macro @body!
-        if (i >= skip_i_until) {
-
-            switch TOP: (t.type) {
-                case LPAREN:  // Function params and conditions splitting
-                    if (tmpstate.scope_depth == 1 && brake_type == INVALID_TOKEN) {
-                        skip_i_until = self._resolve__next_is_cast_and_dump(i);
-                        if (skip_i_until == i) {
-                            self.write("%s", t.value);
-                            self.indent();
-                            brake_type = RPAREN;
-                        }
-                        break;
-                    } else {
-                        nextcase default;
-                    }
-                case LBRACE:  // Array initializers splitting
-                    if (tmpstate.scope_depth == 1 && brake_type == INVALID_TOKEN) {
-                        self.write("%s", t.value);
-                        self.indent();
-                        brake_type = RBRACE;
-                    } else {
-                        nextcase default;
-                    }
-                case brake_type:
-                    if (tmpstate.scope_depth == 0) {
-                        self.dedent()!;
-                        self.newline();
-                        brake_type = INVALID_TOKEN;
-                        self.write("%s", t.value);
-                    } else {
-                        nextcase default;
-                    }
-                case COMMENT_SINGLE:
-                case COMMENT_MULTI:
-                    self.newline();
-                    self.write("%s", t.value);
-                case COMMENT_SINGLE_INLINE:
-                case COMMENT_MULTI_INLINE:
-                    self.write("  %s", t.value);
-                case QUESTION:
-                    if (self._resolve__next_question_is_error(i)) self.write(" ");
-                    nextcase default;
-                default:
-                    if (is_multiline) {
-                        if (self.split_multiline(&tmpstate, wrap_rule)) {
-                            if (tmpstate.current_token == SPACE) {
-                                tmpstate.current_token = tmpstate.last_token;
-                            } else {
-                                self.newline();
-                                self.write("%s", t.value);
-                            }
-                        } else {
-                            if (tmpstate.current_token == SPACE) {
-                                tmpstate.current_token = tmpstate.last_token;
-                                if (self._resolve__next_token(i) == RBRACE) break;
-                            }
-                            self.write("%s", t.value);
-                        }
-                    } else {
-                        switch (tmpstate.last_token) {
-                            case LBRACE:
-                                if (tmpstate.current_token == SPACE) {
-                                    tmpstate.current_token = tmpstate.last_token;
-                                    break;
-                                } else if (brake_type == RBRACE && t.type != RBRACE) {
-                                    if (tmpstate.scope_depth == 1) {
-                                        self.newline();
-                                    } else if (
-                                        tmpstate.scope_depth == 2 &&
-                                        (t.type == LBRACE || t.type == LBRACKET || t.type == LPAREN)
-                                    ) {
-                                        self.newline();
-                                    }
-                                }
-                                nextcase default;
-                            case LPAREN:
-                                if (
-                                    tmpstate.scope_depth == 1 &&
-                                    brake_type == RPAREN &&
-                                    t.type != RPAREN
-                                ) {
-                                    self.newline();
-                                } else if (tmpstate.scope_depth == 2 && t.type == LPAREN) {
-                                    self.newline();
-                                }
-                                nextcase default;
-                            default:
-
-                                if (tmpstate.current_token == SPACE) {
-                                    tmpstate.current_token = tmpstate.last_token;
-                                    if (self._resolve__next_token(i) == RBRACE) break;
-                                }
-                                self.write("%s", t.value);
-                        }
-
-                    }
-            }
-        }
-    };
-    if (self._print_lex) io::eprintf("\n");
-    self.cache_statement_clear();
 }
 
 <*
