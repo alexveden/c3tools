@@ -41,8 +41,7 @@ process_file() {
     # Run the c3fmt command on the file (making maximally intrusive)
     if ./build/c3fmt -w 80 -i 4 "$file"; then
         if c3c compile-only --obj-out ./build/c3c_test_suite "$file"; then 
-            # all good
-            echo "[OK  ]"
+            echo "[OK  ] formatted + compiled"
             return 0
         else
             echo "[ERR ] c3c compile-only error"

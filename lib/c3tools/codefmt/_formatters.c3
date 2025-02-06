@@ -584,7 +584,8 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                             self.write("%s", t.value);
                         case FOR:
                         case LBRAPIPE:
-                            state.transition(EOS);
+                            if (self._is_cascade_call) break;
+                            nextcase default;
                         default:
                             self.cache_statement_add(state, t);
                     }
