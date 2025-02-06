@@ -99,6 +99,7 @@ jobs:
         run: |
           find lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
           echo "Checking if any changes after formatting (must be the same!)"
+          git diff | head
           git diff --quiet
 
       - name: c3tools unit tests after (double) formatting
