@@ -84,7 +84,8 @@ fn void test_bool_flag()
     bool val = false;
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'f',
                 .long_name = "flt",
                 .value = &val
@@ -108,7 +109,8 @@ fn void test_bool_flag_default()
     bool val = true;
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'f',
                 .long_name = "flt",
                 .value = &val
@@ -132,7 +134,8 @@ fn void test_bool_flag_unset()
     bool val = true;
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'f',
                 .long_name = "flt",
                 .value = &val
@@ -156,7 +159,8 @@ fn void test_str_default()
     String val = "foo";
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'f',
                 .long_name = "flt",
                 .value = &val
@@ -180,7 +184,8 @@ fn void test_str_set_equal()
     String val = "foo";
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'f',
                 .long_name = "flt",
                 .value = &val
@@ -204,7 +209,8 @@ fn void test_str_set_next_arg()
     String val = "foo";
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'f',
                 .long_name = "flt",
                 .value = &val
@@ -228,7 +234,8 @@ fn void test_str_set_short_arg()
     String val = "foo";
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'f',
                 .long_name = "flt",
                 .value = &val
@@ -252,7 +259,8 @@ fn void test_invalid_arg_short()
     String val = "foo";
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'f',
                 .long_name = "flt",
                 .value = &val
@@ -270,7 +278,8 @@ fn void test_invalid_arg_long()
     String val = "foo";
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'f',
                 .long_name = "flt",
                 .value = &val
@@ -288,7 +297,8 @@ fn void test_missing_require_argument()
     bool val = false;
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'f',
                 .long_name = "flt",
                 .value = &val,
@@ -308,7 +318,8 @@ fn void test_missing_require_arguments_many()
     bool val2 = false;
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'f',
                 .long_name = "flt",
                 .value = &val,
@@ -333,7 +344,8 @@ fn void test_passing_short_option_after_argument()
     bool val = false;
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'f',
                 .long_name = "flt",
                 .value = &val
@@ -351,7 +363,8 @@ fn void test_passing_long_option_after_argument()
     bool val = false;
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'f',
                 .long_name = "flt",
                 .value = &val
@@ -370,7 +383,8 @@ fn void test_multiple_short_args()
     bool val2 = false;
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'f',
                 .long_name = "flt",
                 .value = &val
@@ -398,7 +412,8 @@ fn void test_str_set_next_arg_missing_value_with_eqchar()
     String val = "foo";
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'f',
                 .long_name = "flt",
                 .value = &val
@@ -416,7 +431,8 @@ fn void test_str_set_next_arg_missing_value()
     String val = "foo";
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'f',
                 .long_name = "flt",
                 .value = &val
@@ -435,7 +451,8 @@ fn void test_str_set_next_arg_is_another_option()
     bool val2 = true;
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'f',
                 .long_name = "flt",
                 .value = &val
@@ -458,7 +475,8 @@ fn void test_str_set_next_arg_is_another_option_long()
     bool val2 = true;
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'f',
                 .long_name = "flt",
                 .value = &val
@@ -513,7 +531,8 @@ fn void test_integer_option_parsing_error()
     int val = 0;
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'i',
                 .long_name = "int",
                 .value = &val
@@ -531,7 +550,8 @@ fn void test_integer_option_parsing_error_short()
     int val = 0;
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'i',
                 .long_name = "int",
                 .value = &val
@@ -658,7 +678,8 @@ fn void test_multi_short_flags()
     bool val2 = false;
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'a',
                 .value = &val
             },
@@ -683,7 +704,8 @@ fn void test_empty_argument()
     bool val2 = false;
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'a',
                 .value = &val
             },
@@ -705,7 +727,8 @@ fn void test_multi_arguments_double_dash()
     bool val2 = false;
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'a',
                 .value = &val
             },
@@ -734,7 +757,8 @@ fn void test_multi_arguments()
     bool val2 = false;
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'a',
                 .value = &val
             },
@@ -762,7 +786,8 @@ fn void test_multi_arguments_stop_at_non_option()
     bool val2 = false;
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'a',
                 .value = &val
             },
@@ -795,7 +820,8 @@ fn void test_subcommands()
     bool val2 = false;
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'a',
                 .value = &val
             },
@@ -812,7 +838,8 @@ fn void test_subcommands()
     int cmd_int = 0;
     argparse::ArgParse agp_cmd = {
         .description = "test sub command",
-        .options = {{
+        .options = {
+            {
                 .long_name = "int",
                 .value = &cmd_int
             },
@@ -969,7 +996,8 @@ fn void test_bool_flag_unset_no_short()
     bool val = true;
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .long_name = "color",
                 .value = &val,
                 .help = "Test output with colors, --no-color to disable"
@@ -990,7 +1018,8 @@ fn void test_bool_flag_unset_has_arg()
     bool val = true;
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .long_name = "color",
                 .value = &val,
                 .help = "Test output with colors, --no-color to disable"
@@ -1015,7 +1044,8 @@ fn void test_short_arguments()
     bool val2 = false;
     argparse::ArgParse agp = {
         .description = "test ArgParse program",
-        .options = {{
+        .options = {
+            {
                 .short_name = 'a',
                 .value = &val
             },

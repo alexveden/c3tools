@@ -3,7 +3,7 @@ import c3tools::codefmt;
 import c3tools::codefmt::codecorpus @public;
 import std::io;
 
-fn void test_corpus__statements__generic_statements() 
+fn void test_corpus__statements__generic_statements()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -39,7 +39,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__generic_statements DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -47,7 +47,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__multiple_decl() 
+fn void test_corpus__statements__multiple_decl()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -74,7 +74,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__multiple_decl DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -82,7 +82,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__call_statement_single_line() 
+fn void test_corpus__statements__call_statement_single_line()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -118,7 +118,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__call_statement_single_line DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -126,7 +126,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__double_long_call() 
+fn void test_corpus__statements__double_long_call()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -166,7 +166,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__double_long_call DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -174,7 +174,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__arith_and_long_call() 
+fn void test_corpus__statements__arith_and_long_call()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -207,7 +207,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__arith_and_long_call DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -215,7 +215,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__logical_with_calls_in_parens() 
+fn void test_corpus__statements__logical_with_calls_in_parens()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -251,7 +251,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__logical_with_calls_in_parens DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -259,7 +259,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__logical_with_calls_no_parens() 
+fn void test_corpus__statements__logical_with_calls_no_parens()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -295,7 +295,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__logical_with_calls_no_parens DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -303,7 +303,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__chained_call() 
+fn void test_corpus__statements__chained_call()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -345,7 +345,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__chained_call DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -353,7 +353,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__assignment_with_call() 
+fn void test_corpus__statements__assignment_with_call()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -386,7 +386,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__assignment_with_call DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -394,7 +394,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__assignment_left_too_long() 
+fn void test_corpus__statements__assignment_left_too_long()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -427,7 +427,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__assignment_left_too_long DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -435,7 +435,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__designated_initializers_struct() 
+fn void test_corpus__statements__designated_initializers_struct()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -462,7 +462,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__designated_initializers_struct DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -470,7 +470,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__designated_initializers_struct_wrap() 
+fn void test_corpus__statements__designated_initializers_struct_wrap()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -499,15 +499,17 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__statements__designated_initializers_struct_wrap DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__statements__designated_initializers_struct_wrap DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__designated_initializers_struct_wrap_multiline() 
+fn void test_corpus__statements__designated_initializers_struct_wrap_multiline()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -520,7 +522,9 @@ fn void main()
 
 `;
     String formatted = fmt.format(input[1..], print_lex: false)!!;
-    io::printfn("\n__statements__designated_initializers_struct_wrap_multiline formatted code\n```");
+    io::printfn(
+        "\n__statements__designated_initializers_struct_wrap_multiline formatted code\n```"
+    );
     io::print(formatted);
     io::printfn("```");
     String expected = `
@@ -540,15 +544,17 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__statements__designated_initializers_struct_wrap_multiline DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__statements__designated_initializers_struct_wrap_multiline DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__designated_initializers_with_sub_structs() 
+fn void test_corpus__statements__designated_initializers_with_sub_structs()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -598,15 +604,17 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__statements__designated_initializers_with_sub_structs DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__statements__designated_initializers_with_sub_structs DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__if_statement_simple() 
+fn void test_corpus__statements__if_statement_simple()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -639,7 +647,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__if_statement_simple DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -647,7 +655,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__if_statement_simple_inside_if() 
+fn void test_corpus__statements__if_statement_simple_inside_if()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -686,7 +694,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__if_statement_simple_inside_if DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -694,7 +702,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__if_statement_simple_sub_with_looong_condition() 
+fn void test_corpus__statements__if_statement_simple_sub_with_looong_condition()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -713,7 +721,9 @@ return 200;
 
 `;
     String formatted = fmt.format(input[1..], print_lex: false)!!;
-    io::printfn("\n__statements__if_statement_simple_sub_with_looong_condition formatted code\n```");
+    io::printfn(
+        "\n__statements__if_statement_simple_sub_with_looong_condition formatted code\n```"
+    );
     io::print(formatted);
     io::printfn("```");
     String expected = `
@@ -738,15 +748,17 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__statements__if_statement_simple_sub_with_looong_condition DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__statements__if_statement_simple_sub_with_looong_condition DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__if_statement_with_label() 
+fn void test_corpus__statements__if_statement_with_label()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -790,7 +802,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__if_statement_with_label DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -798,7 +810,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__if_single_line() 
+fn void test_corpus__statements__if_single_line()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -829,7 +841,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__if_single_line DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -837,7 +849,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__if_single_line_never_wraps() 
+fn void test_corpus__statements__if_single_line_never_wraps()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -868,7 +880,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__if_single_line_never_wraps DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -876,7 +888,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__if_else_simple() 
+fn void test_corpus__statements__if_else_simple()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -914,7 +926,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__if_else_simple DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -922,7 +934,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__if_elseif_simple() 
+fn void test_corpus__statements__if_elseif_simple()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -962,7 +974,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__if_elseif_simple DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -970,7 +982,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__for_loop() 
+fn void test_corpus__statements__for_loop()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1012,7 +1024,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__for_loop DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1020,7 +1032,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__for_loop_long_wrap_axis_semicol() 
+fn void test_corpus__statements__for_loop_long_wrap_axis_semicol()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1056,7 +1068,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__for_loop_long_wrap_axis_semicol DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1064,7 +1076,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__for_loop_infinite() 
+fn void test_corpus__statements__for_loop_infinite()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1096,7 +1108,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__for_loop_infinite DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1104,7 +1116,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__while_loop() 
+fn void test_corpus__statements__while_loop()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1140,7 +1152,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__while_loop DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1148,7 +1160,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__foreach_loop_single() 
+fn void test_corpus__statements__foreach_loop_single()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1180,7 +1192,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__foreach_loop_single DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1188,7 +1200,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__foreach_r_loop_single() 
+fn void test_corpus__statements__foreach_r_loop_single()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1220,7 +1232,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__foreach_r_loop_single DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1228,7 +1240,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__foreach_loop() 
+fn void test_corpus__statements__foreach_loop()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1263,7 +1275,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__foreach_loop DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1271,7 +1283,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__foreach_r_loop() 
+fn void test_corpus__statements__foreach_r_loop()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1306,7 +1318,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__foreach_r_loop DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1314,7 +1326,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__defer_inline() 
+fn void test_corpus__statements__defer_inline()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1343,7 +1355,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__defer_inline DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1351,7 +1363,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__defer_braces() 
+fn void test_corpus__statements__defer_braces()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1385,7 +1397,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__defer_braces DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1393,7 +1405,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__switch_empty() 
+fn void test_corpus__statements__switch_empty()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1423,7 +1435,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__switch_empty DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1431,7 +1443,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__switch_empty_condition_wrap() 
+fn void test_corpus__statements__switch_empty_condition_wrap()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1465,7 +1477,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__switch_empty_condition_wrap DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1473,7 +1485,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__designated_initializers_struct_magic_comma() 
+fn void test_corpus__statements__designated_initializers_struct_magic_comma()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1503,15 +1515,17 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__statements__designated_initializers_struct_magic_comma DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__statements__designated_initializers_struct_magic_comma DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__switch_with_cases_and_default() 
+fn void test_corpus__statements__switch_with_cases_and_default()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1565,7 +1579,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__switch_with_cases_and_default DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1573,7 +1587,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__switch_with_cases_in_braces() 
+fn void test_corpus__statements__switch_with_cases_in_braces()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1631,7 +1645,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__switch_with_cases_in_braces DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1639,7 +1653,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__scope_in_scope() 
+fn void test_corpus__statements__scope_in_scope()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1672,7 +1686,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__scope_in_scope DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1680,7 +1694,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__defer_catch() 
+fn void test_corpus__statements__defer_catch()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1713,7 +1727,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__defer_catch DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1721,7 +1735,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__defer_catch_full_example() 
+fn void test_corpus__statements__defer_catch_full_example()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1765,7 +1779,7 @@ fn char[]! test()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__defer_catch_full_example DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1773,7 +1787,7 @@ fn char[]! test()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__defer_catch_no_paren() 
+fn void test_corpus__statements__defer_catch_no_paren()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1804,7 +1818,7 @@ fn char[]! test()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__defer_catch_no_paren DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1812,7 +1826,7 @@ fn char[]! test()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__defer_catch_braces() 
+fn void test_corpus__statements__defer_catch_braces()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1845,7 +1859,7 @@ fn char[]! test()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__defer_catch_braces DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1853,7 +1867,7 @@ fn char[]! test()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__if_catch_return_excuse() 
+fn void test_corpus__statements__if_catch_return_excuse()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1887,7 +1901,7 @@ fn char[]! test()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__if_catch_return_excuse DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1895,7 +1909,7 @@ fn char[]! test()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__if_catch_switch() 
+fn void test_corpus__statements__if_catch_switch()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1940,7 +1954,7 @@ fn void! test()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__if_catch_switch DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1948,7 +1962,7 @@ fn void! test()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__body_macro() 
+fn void test_corpus__statements__body_macro()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -1980,7 +1994,7 @@ fn char[]! test()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__body_macro DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -1988,7 +2002,7 @@ fn char[]! test()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__expr_block() 
+fn void test_corpus__statements__expr_block()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -2020,7 +2034,7 @@ fn char[]! test()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__expr_block DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -2028,7 +2042,7 @@ fn char[]! test()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__expr_block_bangbang() 
+fn void test_corpus__statements__expr_block_bangbang()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -2060,7 +2074,7 @@ fn char[]! test()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__expr_block_bangbang DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -2068,7 +2082,7 @@ fn char[]! test()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__switch_jump_atts() 
+fn void test_corpus__statements__switch_jump_atts()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -2100,7 +2114,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__switch_jump_atts DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -2108,7 +2122,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__switch_conditional() 
+fn void test_corpus__statements__switch_conditional()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -2153,7 +2167,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__switch_conditional DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -2161,7 +2175,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__asm_block() 
+fn void test_corpus__statements__asm_block()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -2220,7 +2234,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__asm_block DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -2228,7 +2242,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__designated_initializers_array() 
+fn void test_corpus__statements__designated_initializers_array()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -2289,7 +2303,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__designated_initializers_array DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -2297,7 +2311,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__vectors_arrays_generic() 
+fn void test_corpus__statements__vectors_arrays_generic()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -2344,7 +2358,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__vectors_arrays_generic DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -2352,7 +2366,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__array_initializers() 
+fn void test_corpus__statements__array_initializers()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -2379,7 +2393,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__array_initializers DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -2387,7 +2401,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__array_initializers_wide() 
+fn void test_corpus__statements__array_initializers_wide()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -2416,7 +2430,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__array_initializers_wide DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -2424,7 +2438,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__array_initializers_multiline() 
+fn void test_corpus__statements__array_initializers_multiline()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -2458,7 +2472,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__array_initializers_multiline DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -2466,7 +2480,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__pointers() 
+fn void test_corpus__statements__pointers()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -2507,7 +2521,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__pointers DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -2515,7 +2529,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__module_import() 
+fn void test_corpus__statements__module_import()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -2543,7 +2557,7 @@ module math_tests::complex(<ElementType>) @test;
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__module_import DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -2551,7 +2565,7 @@ module math_tests::complex(<ElementType>) @test;
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__const() 
+fn void test_corpus__statements__const()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -2603,7 +2617,7 @@ const char[?] TEST_QOI_DATA = b64"cW9pZgAAAVQAAACpBABV/f39/f39/f39/f39/f39/f39/f
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__const DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -2611,7 +2625,7 @@ const char[?] TEST_QOI_DATA = b64"cW9pZgAAAVQAAACpBABV/f39/f39/f39/f39/f39/f39/f
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__extern_func() 
+fn void test_corpus__statements__extern_func()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -2655,7 +2669,7 @@ extern const char* manifest_default_keys[][2];
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__extern_func DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -2663,7 +2677,7 @@ extern const char* manifest_default_keys[][2];
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__do_while() 
+fn void test_corpus__statements__do_while()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -2699,7 +2713,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__do_while DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -2707,7 +2721,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__designated_initializers_array_of_structs() 
+fn void test_corpus__statements__designated_initializers_array_of_structs()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -2736,15 +2750,17 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__statements__designated_initializers_array_of_structs DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__statements__designated_initializers_array_of_structs DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__designated_initializers_array_of_structs_magic_comma() 
+fn void test_corpus__statements__designated_initializers_array_of_structs_magic_comma()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -2757,7 +2773,9 @@ int[][4] wrapped_array = { run_stuff_of_someth(),{.foo = 2, .bar = 3},{.sub = 1}
 
 `;
     String formatted = fmt.format(input[1..], print_lex: false)!!;
-    io::printfn("\n__statements__designated_initializers_array_of_structs_magic_comma formatted code\n```");
+    io::printfn(
+        "\n__statements__designated_initializers_array_of_structs_magic_comma formatted code\n```"
+    );
     io::print(formatted);
     io::printfn("```");
     String expected = `
@@ -2776,15 +2794,17 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__statements__designated_initializers_array_of_structs_magic_comma DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__statements__designated_initializers_array_of_structs_magic_comma DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__designated_initializers_with_arrays() 
+fn void test_corpus__statements__designated_initializers_with_arrays()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -2856,15 +2876,17 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__statements__designated_initializers_with_arrays DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__statements__designated_initializers_with_arrays DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__struct_designated_init_in_different_ctx() 
+fn void test_corpus__statements__struct_designated_init_in_different_ctx()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -2907,15 +2929,17 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__statements__struct_designated_init_in_different_ctx DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__statements__struct_designated_init_in_different_ctx DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__body_macro_with_arg() 
+fn void test_corpus__statements__body_macro_with_arg()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -2953,7 +2977,7 @@ fn String Token.to_string(&self, Allocator allocator) @dynamic
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__body_macro_with_arg DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -2961,7 +2985,7 @@ fn String Token.to_string(&self, Allocator allocator) @dynamic
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__body_macro_no_arg() 
+fn void test_corpus__statements__body_macro_no_arg()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -2999,7 +3023,7 @@ fn String Token.to_string(&self, Allocator allocator) @dynamic
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__body_macro_no_arg DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -3007,7 +3031,7 @@ fn String Token.to_string(&self, Allocator allocator) @dynamic
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__expr_block_standalone() 
+fn void test_corpus__statements__expr_block_standalone()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -3039,7 +3063,7 @@ fn char[]! test()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__expr_block_standalone DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -3047,7 +3071,7 @@ fn char[]! test()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__expr_block_standalone_body_macro() 
+fn void test_corpus__statements__expr_block_standalone_body_macro()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -3086,7 +3110,7 @@ fn String Token.to_string(&self, Allocator allocator) @dynamic
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__expr_block_standalone_body_macro DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -3094,7 +3118,7 @@ fn String Token.to_string(&self, Allocator allocator) @dynamic
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__array_with_parens() 
+fn void test_corpus__statements__array_with_parens()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -3121,7 +3145,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__array_with_parens DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -3129,7 +3153,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__array_with_parens_single_wrap() 
+fn void test_corpus__statements__array_with_parens_single_wrap()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -3158,7 +3182,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__array_with_parens_single_wrap DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -3166,7 +3190,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__array_with_parens_multi_wrap() 
+fn void test_corpus__statements__array_with_parens_multi_wrap()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -3198,7 +3222,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__array_with_parens_multi_wrap DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -3206,7 +3230,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__designated_initializers_with_comments() 
+fn void test_corpus__statements__designated_initializers_with_comments()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -3256,15 +3280,17 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__statements__designated_initializers_with_comments DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__statements__designated_initializers_with_comments DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__struct_init_with_fn_pointers() 
+fn void test_corpus__statements__struct_init_with_fn_pointers()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -3309,7 +3335,7 @@ TestContext state @local = {
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__struct_init_with_fn_pointers DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -3317,7 +3343,7 @@ TestContext state @local = {
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__struct_init_with_sub_fn() 
+fn void test_corpus__statements__struct_init_with_sub_fn()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -3374,7 +3400,7 @@ TestContext state @local = {
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__struct_init_with_sub_fn DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -3382,7 +3408,7 @@ TestContext state @local = {
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__struct_init_with_sub_previous_sub_struct() 
+fn void test_corpus__statements__struct_init_with_sub_previous_sub_struct()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -3425,15 +3451,17 @@ TestContext state @local = {
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__statements__struct_init_with_sub_previous_sub_struct DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__statements__struct_init_with_sub_previous_sub_struct DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__inline_code_flow() 
+fn void test_corpus__statements__inline_code_flow()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -3462,7 +3490,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__statements__inline_code_flow DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -3470,7 +3498,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__statements__array_inside_struct_1st_brace_new_line() 
+fn void test_corpus__statements__array_inside_struct_1st_brace_new_line()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -3512,15 +3540,17 @@ fn void test_str_set_next_arg_missing_value_with_eqchar()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__statements__array_inside_struct_1st_brace_new_line DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__statements__array_inside_struct_1st_brace_new_line DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__expressions__expressions() 
+fn void test_corpus__expressions__expressions()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -3591,7 +3621,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__expressions__expressions DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -3599,7 +3629,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__expressions__simple_expressions() 
+fn void test_corpus__expressions__simple_expressions()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -3642,7 +3672,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__expressions__simple_expressions DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -3650,7 +3680,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__expressions__ternary() 
+fn void test_corpus__expressions__ternary()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -3697,7 +3727,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__expressions__ternary DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -3705,7 +3735,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__expressions__numbers() 
+fn void test_corpus__expressions__numbers()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -3750,7 +3780,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__expressions__numbers DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -3758,7 +3788,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__expressions__generic_vec_expr() 
+fn void test_corpus__expressions__generic_vec_expr()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -3788,7 +3818,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__expressions__generic_vec_expr DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -3796,7 +3826,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__expressions__conditional_expr_multi_parens_multiline() 
+fn void test_corpus__expressions__conditional_expr_multi_parens_multiline()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -3828,15 +3858,17 @@ macro bool char_is_base64(char c)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__expressions__conditional_expr_multi_parens_multiline DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__expressions__conditional_expr_multi_parens_multiline DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__expressions__conditional_expr_multi_parens_single_line() 
+fn void test_corpus__expressions__conditional_expr_multi_parens_single_line()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -3865,15 +3897,17 @@ macro bool char_is_base64(char c)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__expressions__conditional_expr_multi_parens_single_line DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__expressions__conditional_expr_multi_parens_single_line DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__expressions__call_with_parens_single_line_wrap() 
+fn void test_corpus__expressions__call_with_parens_single_line_wrap()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -3904,15 +3938,17 @@ macro bool char_is_base64(char c)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__expressions__call_with_parens_single_line_wrap DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__expressions__call_with_parens_single_line_wrap DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__expressions__call_with_parens_multi_line_wrap() 
+fn void test_corpus__expressions__call_with_parens_multi_line_wrap()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -3942,7 +3978,7 @@ macro bool char_is_base64(char c)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__expressions__call_with_parens_multi_line_wrap DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -3950,7 +3986,7 @@ macro bool char_is_base64(char c)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__expressions__bang_expressions() 
+fn void test_corpus__expressions__bang_expressions()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4012,7 +4048,7 @@ fn void! main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__expressions__bang_expressions DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -4020,7 +4056,7 @@ fn void! main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__expressions__brackets() 
+fn void test_corpus__expressions__brackets()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4134,7 +4170,7 @@ fn void b(int[2]* p, int* p2)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__expressions__brackets DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -4142,7 +4178,7 @@ fn void b(int[2]* p, int* p2)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__expressions__double_plus_minus() 
+fn void test_corpus__expressions__double_plus_minus()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4173,7 +4209,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__expressions__double_plus_minus DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -4181,7 +4217,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__expressions__double_quest_errors() 
+fn void test_corpus__expressions__double_quest_errors()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4228,7 +4264,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__expressions__double_quest_errors DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -4236,7 +4272,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__comments__simple_one_line_comment() 
+fn void test_corpus__comments__simple_one_line_comment()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4264,7 +4300,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__comments__simple_one_line_comment DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -4272,7 +4308,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__comments__simple_inline_comment() 
+fn void test_corpus__comments__simple_inline_comment()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4300,7 +4336,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__comments__simple_inline_comment DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -4308,7 +4344,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__comments__simple_inline_after_eos_comment() 
+fn void test_corpus__comments__simple_inline_after_eos_comment()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4342,7 +4378,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__comments__simple_inline_after_eos_comment DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -4350,7 +4386,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__comments__multiline_comments() 
+fn void test_corpus__comments__multiline_comments()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4393,7 +4429,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__comments__multiline_comments DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -4401,7 +4437,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__comments__comments_inside_func_args() 
+fn void test_corpus__comments__comments_inside_func_args()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4436,7 +4472,7 @@ fn String[]! Foo.main(
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__comments__comments_inside_func_args DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -4444,7 +4480,7 @@ fn String[]! Foo.main(
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__comments__comments_single_line_forces_multiline() 
+fn void test_corpus__comments__comments_single_line_forces_multiline()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4477,15 +4513,17 @@ fn String[]! Foo.main(
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__comments__comments_single_line_forces_multiline DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__comments__comments_single_line_forces_multiline DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__comments__comments_in_statements_inline() 
+fn void test_corpus__comments__comments_in_statements_inline()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4524,7 +4562,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__comments__comments_in_statements_inline DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -4532,7 +4570,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__comments__in_call_comments() 
+fn void test_corpus__comments__in_call_comments()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4571,7 +4609,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__comments__in_call_comments DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -4579,7 +4617,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__comments__comment_before_next_fn() 
+fn void test_corpus__comments__comment_before_next_fn()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4617,7 +4655,7 @@ fn bool bar()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__comments__comment_before_next_fn DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -4625,7 +4663,7 @@ fn bool bar()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__comments__in_code_scope_mixed_with_empty_lines() 
+fn void test_corpus__comments__in_code_scope_mixed_with_empty_lines()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4663,15 +4701,17 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__comments__in_code_scope_mixed_with_empty_lines DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__comments__in_code_scope_mixed_with_empty_lines DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__comments__if_inline_comments() 
+fn void test_corpus__comments__if_inline_comments()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4704,7 +4744,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__comments__if_inline_comments DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -4712,7 +4752,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__comments__comment_before_fn() 
+fn void test_corpus__comments__comment_before_fn()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4746,7 +4786,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__comments__comment_before_fn DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -4754,7 +4794,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__comments__array_with_multi_inline_comments() 
+fn void test_corpus__comments__array_with_multi_inline_comments()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4791,7 +4831,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__comments__array_with_multi_inline_comments DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -4799,7 +4839,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__comments__designated_initializers_struct_single_comments_inside() 
+fn void test_corpus__comments__designated_initializers_struct_single_comments_inside()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4814,7 +4854,9 @@ fn void main()
 
 `;
     String formatted = fmt.format(input[1..], print_lex: false)!!;
-    io::printfn("\n__comments__designated_initializers_struct_single_comments_inside formatted code\n```");
+    io::printfn(
+        "\n__comments__designated_initializers_struct_single_comments_inside formatted code\n```"
+    );
     io::print(formatted);
     io::printfn("```");
     String expected = `
@@ -4832,15 +4874,17 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__comments__designated_initializers_struct_single_comments_inside DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__comments__designated_initializers_struct_single_comments_inside DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__comments__designated_initializers_struct_inline_comments() 
+fn void test_corpus__comments__designated_initializers_struct_inline_comments()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4871,15 +4915,17 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__comments__designated_initializers_struct_inline_comments DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__comments__designated_initializers_struct_inline_comments DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__comments__designated_initializers_struct_multi_comments_inside() 
+fn void test_corpus__comments__designated_initializers_struct_multi_comments_inside()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4894,7 +4940,9 @@ fn void main()
 
 `;
     String formatted = fmt.format(input[1..], print_lex: false)!!;
-    io::printfn("\n__comments__designated_initializers_struct_multi_comments_inside formatted code\n```");
+    io::printfn(
+        "\n__comments__designated_initializers_struct_multi_comments_inside formatted code\n```"
+    );
     io::print(formatted);
     io::printfn("```");
     String expected = `
@@ -4912,15 +4960,17 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__comments__designated_initializers_struct_multi_comments_inside DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__comments__designated_initializers_struct_multi_comments_inside DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__comments__designated_initializers_struct_multi_inline_comments_inside() 
+fn void test_corpus__comments__designated_initializers_struct_multi_inline_comments_inside()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4934,7 +4984,9 @@ fn void main()
 
 `;
     String formatted = fmt.format(input[1..], print_lex: false)!!;
-    io::printfn("\n__comments__designated_initializers_struct_multi_inline_comments_inside formatted code\n```");
+    io::printfn(
+        "\n__comments__designated_initializers_struct_multi_inline_comments_inside formatted code\n```"
+    );
     io::print(formatted);
     io::printfn("```");
     String expected = `
@@ -4951,15 +5003,17 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__comments__designated_initializers_struct_multi_inline_comments_inside DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__comments__designated_initializers_struct_multi_inline_comments_inside DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__typedef__simple_struct() 
+fn void test_corpus__typedef__simple_struct()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -4985,7 +5039,7 @@ struct Person
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__typedef__simple_struct DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -4993,7 +5047,7 @@ struct Person
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__typedef__simple_sub_struct() 
+fn void test_corpus__typedef__simple_sub_struct()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5045,7 +5099,7 @@ struct Friend
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__typedef__simple_sub_struct DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -5053,7 +5107,7 @@ struct Friend
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__typedef__struct_union_inline() 
+fn void test_corpus__typedef__struct_union_inline()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5089,7 +5143,7 @@ union Person @extern(  "foo")
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__typedef__struct_union_inline DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -5097,7 +5151,7 @@ union Person @extern(  "foo")
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__typedef__bitstruct() 
+fn void test_corpus__typedef__bitstruct()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5126,7 +5180,7 @@ bitstruct Foo : char @bigendian
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__typedef__bitstruct DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -5134,7 +5188,7 @@ bitstruct Foo : char @bigendian
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__typedef__bitstruct_char_array() 
+fn void test_corpus__typedef__bitstruct_char_array()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5161,7 +5215,7 @@ bitstruct Test2 : char[4] @bigendian
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__typedef__bitstruct_char_array DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -5169,7 +5223,7 @@ bitstruct Test2 : char[4] @bigendian
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__typedef__simple_enum() 
+fn void test_corpus__typedef__simple_enum()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5196,7 +5250,7 @@ enum State
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__typedef__simple_enum DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -5204,7 +5258,7 @@ enum State
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__typedef__simple_enum_multi_comma() 
+fn void test_corpus__typedef__simple_enum_multi_comma()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5232,7 +5286,7 @@ enum State : int @test @if( asd || bar)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__typedef__simple_enum_multi_comma DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -5240,7 +5294,7 @@ enum State : int @test @if( asd || bar)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__typedef__enum_associated() 
+fn void test_corpus__typedef__enum_associated()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5271,7 +5325,7 @@ enum State : int @if("foo") (String desc, bool active, Position pos) @test
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__typedef__enum_associated DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -5279,7 +5333,7 @@ enum State : int @if("foo") (String desc, bool active, Position pos) @test
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__typedef__enum_associated_definition_wrapping() 
+fn void test_corpus__typedef__enum_associated_definition_wrapping()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5317,7 +5371,7 @@ enum State : int @if("foo") (
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__typedef__enum_associated_definition_wrapping DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -5325,7 +5379,7 @@ enum State : int @if("foo") (
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__typedef__enum_associated_magic_comma() 
+fn void test_corpus__typedef__enum_associated_magic_comma()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5360,7 +5414,7 @@ enum State : int @if("foo") (String desc, bool active, Position pos) @test
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__typedef__enum_associated_magic_comma DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -5368,7 +5422,7 @@ enum State : int @if("foo") (String desc, bool active, Position pos) @test
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__typedef__fault_simple() 
+fn void test_corpus__typedef__fault_simple()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5396,7 +5450,7 @@ fault Err
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__typedef__fault_simple DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -5404,7 +5458,7 @@ fault Err
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__typedef__def_statement_global() 
+fn void test_corpus__typedef__def_statement_global()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5439,7 +5493,7 @@ def @Test = { @noinline };
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__typedef__def_statement_global DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -5447,7 +5501,7 @@ def @Test = { @noinline };
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__typedef__def_interface() 
+fn void test_corpus__typedef__def_interface()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5493,7 +5547,7 @@ interface Printable @if("sasda")
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__typedef__def_interface DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -5501,7 +5555,7 @@ interface Printable @if("sasda")
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__typedef__distinct() 
+fn void test_corpus__typedef__distinct()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5530,7 +5584,7 @@ distinct PriorityQueue = inline PrivatePriorityQueue <[Type, false] >;
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__typedef__distinct DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -5538,7 +5592,7 @@ distinct PriorityQueue = inline PrivatePriorityQueue <[Type, false] >;
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__typedef__union_with_struct() 
+fn void test_corpus__typedef__union_with_struct()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5575,7 +5629,7 @@ union SourceSpan
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__typedef__union_with_struct DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -5583,7 +5637,7 @@ union SourceSpan
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__typedef__typeid_cases() 
+fn void test_corpus__typedef__typeid_cases()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5648,7 +5702,7 @@ fn typeid main(typeid t)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__typedef__typeid_cases DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -5656,7 +5710,7 @@ fn typeid main(typeid t)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__typedef__any_anyfault() 
+fn void test_corpus__typedef__any_anyfault()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5689,7 +5743,7 @@ macro anyfault main(anyfault foo)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__typedef__any_anyfault DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -5697,7 +5751,7 @@ macro anyfault main(anyfault foo)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__typedef__static_and_global_vars() 
+fn void test_corpus__typedef__static_and_global_vars()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5733,7 +5787,7 @@ fn void main(any foo)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__typedef__static_and_global_vars DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -5741,7 +5795,7 @@ fn void main(any foo)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__typedef__simple_struct_with_multiple_interfaces() 
+fn void test_corpus__typedef__simple_struct_with_multiple_interfaces()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5769,15 +5823,17 @@ struct Person (Printable, Foo, Bar)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__typedef__simple_struct_with_multiple_interfaces DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__typedef__simple_struct_with_multiple_interfaces DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__typedef__struct_with_bitstruct_member() 
+fn void test_corpus__typedef__struct_with_bitstruct_member()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5809,7 +5865,7 @@ struct Person (Printable, Foo, Bar)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__typedef__struct_with_bitstruct_member DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -5817,7 +5873,7 @@ struct Person (Printable, Foo, Bar)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__typedef__struct_with_bitstruct_anonymous() 
+fn void test_corpus__typedef__struct_with_bitstruct_anonymous()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5849,7 +5905,7 @@ struct Person (Printable, Foo, Bar)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__typedef__struct_with_bitstruct_anonymous DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -5857,7 +5913,7 @@ struct Person (Printable, Foo, Bar)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__fmtoff__full_off_full() 
+fn void test_corpus__fmtoff__full_off_full()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5890,7 +5946,7 @@ return;}
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__fmtoff__full_off_full DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -5898,7 +5954,7 @@ return;}
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__fmtoff__full_off_inside_code_scope() 
+fn void test_corpus__fmtoff__full_off_inside_code_scope()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5931,7 +5987,7 @@ return;}
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__fmtoff__full_off_inside_code_scope DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -5939,7 +5995,7 @@ return;}
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__fmtoff__full_off_inside_code_scope_restoring_formatting() 
+fn void test_corpus__fmtoff__full_off_inside_code_scope_restoring_formatting()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -5981,15 +6037,17 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__fmtoff__full_off_inside_code_scope_restoring_formatting DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__fmtoff__full_off_inside_code_scope_restoring_formatting DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__fmtoff__off_inside_cache_statement_ugly() 
+fn void test_corpus__fmtoff__off_inside_cache_statement_ugly()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6040,7 +6098,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__fmtoff__off_inside_cache_statement_ugly DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6048,7 +6106,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__simple_main() 
+fn void test_corpus__functions__simple_main()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6073,7 +6131,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__simple_main DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6081,7 +6139,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__simple_main_int() 
+fn void test_corpus__functions__simple_main_int()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6108,7 +6166,7 @@ fn int main(String[] args)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__simple_main_int DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6116,7 +6174,7 @@ fn int main(String[] args)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__ret_generic_list() 
+fn void test_corpus__functions__ret_generic_list()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6143,7 +6201,7 @@ fn List(<int>) main(String[] args)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__ret_generic_list DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6151,7 +6209,7 @@ fn List(<int>) main(String[] args)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__ret_generic_list_pointer_opt() 
+fn void test_corpus__functions__ret_generic_list_pointer_opt()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6178,7 +6236,7 @@ fn List(<int>)*! main(String[] args)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__ret_generic_list_pointer_opt DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6186,7 +6244,7 @@ fn List(<int>)*! main(String[] args)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__ret_generic_method() 
+fn void test_corpus__functions__ret_generic_method()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6213,7 +6271,7 @@ fn List(<int>)*! Foo.main(String[] args)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__ret_generic_method DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6221,7 +6279,7 @@ fn List(<int>)*! Foo.main(String[] args)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__ret_generic_method_attrs() 
+fn void test_corpus__functions__ret_generic_method_attrs()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6248,7 +6306,7 @@ fn List(<int>)*! Foo.main(String[] args) @test @if("dio" || too)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__ret_generic_method_attrs DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6256,7 +6314,7 @@ fn List(<int>)*! Foo.main(String[] args) @test @if("dio" || too)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__returns_array_type() 
+fn void test_corpus__functions__returns_array_type()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6283,7 +6341,7 @@ fn String[]! Foo.main(String[] args)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__returns_array_type DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6291,7 +6349,7 @@ fn String[]! Foo.main(String[] args)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__returns_multiple_arguments() 
+fn void test_corpus__functions__returns_multiple_arguments()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6319,7 +6377,7 @@ fn String[]! Foo.main(String[] args, int* foo, List(<float>) bar, na, varg...)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__returns_multiple_arguments DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6327,7 +6385,7 @@ fn String[]! Foo.main(String[] args, int* foo, List(<float>) bar, na, varg...)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__typed_vargs() 
+fn void test_corpus__functions__typed_vargs()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6356,7 +6414,7 @@ fn String[]! Foo.main(String[] args, int ...varg)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__typed_vargs DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6364,7 +6422,7 @@ fn String[]! Foo.main(String[] args, int ...varg)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__long_arguments() 
+fn void test_corpus__functions__long_arguments()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6391,7 +6449,7 @@ fn String[]! Foo.main(
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__long_arguments DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6399,7 +6457,7 @@ fn String[]! Foo.main(
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__long_arguments_multiline() 
+fn void test_corpus__functions__long_arguments_multiline()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6431,7 +6489,7 @@ fn String[]! Foo.main(
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__long_arguments_multiline DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6439,7 +6497,7 @@ fn String[]! Foo.main(
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__arguments_magic_comma() 
+fn void test_corpus__functions__arguments_magic_comma()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6472,7 +6530,7 @@ fn String[]! Foo.main(
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__arguments_magic_comma DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6480,7 +6538,7 @@ fn String[]! Foo.main(
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__simple_main_docstring() 
+fn void test_corpus__functions__simple_main_docstring()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6506,7 +6564,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__simple_main_docstring DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6514,7 +6572,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__simple_main_docstring_multiline() 
+fn void test_corpus__functions__simple_main_docstring_multiline()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6546,7 +6604,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__simple_main_docstring_multiline DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6554,7 +6612,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__simple_main_docstring_only_contract() 
+fn void test_corpus__functions__simple_main_docstring_only_contract()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6580,15 +6638,17 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__functions__simple_main_docstring_only_contract DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__functions__simple_main_docstring_only_contract DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__simple_lambda() 
+fn void test_corpus__functions__simple_lambda()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6613,7 +6673,7 @@ fn bool in_range(char c, char start, char len) => in_range_m(c, start, len);
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__simple_lambda DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6621,7 +6681,7 @@ fn bool in_range(char c, char start, char len) => in_range_m(c, start, len);
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__simple_lambda_with_attrs() 
+fn void test_corpus__functions__simple_lambda_with_attrs()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6654,7 +6714,7 @@ fn bool in_range(char c, char start, char len) => with_magic_comma(c, start, len
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__simple_lambda_with_attrs DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6662,7 +6722,7 @@ fn bool in_range(char c, char start, char len) => with_magic_comma(c, start, len
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__fn_with_lambda_arg() 
+fn void test_corpus__functions__fn_with_lambda_arg()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6715,7 +6775,7 @@ fn void remove_using_test()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__fn_with_lambda_arg DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6723,7 +6783,7 @@ fn void remove_using_test()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__simple_lambda_with_docs() 
+fn void test_corpus__functions__simple_lambda_with_docs()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6762,7 +6822,7 @@ fn bool in_range(char c, char start, char len) => in_range_m(c, start, len);
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__simple_lambda_with_docs DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6770,7 +6830,7 @@ fn bool in_range(char c, char start, char len) => in_range_m(c, start, len);
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__fn_with_amp_self() 
+fn void test_corpus__functions__fn_with_amp_self()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6795,7 +6855,7 @@ macro NodeParserState.check_scope(&self, TokenType t)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__fn_with_amp_self DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6803,7 +6863,7 @@ macro NodeParserState.check_scope(&self, TokenType t)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__fn_with_long_cast_in_ternary() 
+fn void test_corpus__functions__fn_with_long_cast_in_ternary()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6836,7 +6896,7 @@ macro parse_callable_params(
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__fn_with_long_cast_in_ternary DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6844,7 +6904,7 @@ macro parse_callable_params(
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__fn_with_long_call_wrap_when_cast() 
+fn void test_corpus__functions__fn_with_long_call_wrap_when_cast()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6887,7 +6947,7 @@ macro parse_callable_params()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__fn_with_long_call_wrap_when_cast DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -6895,7 +6955,7 @@ macro parse_callable_params()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__fn_with_long_call_wrap_no_args_assert() 
+fn void test_corpus__functions__fn_with_long_call_wrap_no_args_assert()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6931,15 +6991,17 @@ macro parse_callable_params()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__functions__fn_with_long_call_wrap_no_args_assert DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__functions__fn_with_long_call_wrap_no_args_assert DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__fn_with_long_call_with_last_params_no_wrap() 
+fn void test_corpus__functions__fn_with_long_call_with_last_params_no_wrap()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -6978,15 +7040,17 @@ macro parse_callable_params()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__functions__fn_with_long_call_with_last_params_no_wrap DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__functions__fn_with_long_call_with_last_params_no_wrap DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__func_forward_decl() 
+fn void test_corpus__functions__func_forward_decl()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7007,7 +7071,7 @@ FcloseFn native_fclose_fn @weak @if(!$defined(native_fclose_fn));
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__func_forward_decl DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7015,7 +7079,7 @@ FcloseFn native_fclose_fn @weak @if(!$defined(native_fclose_fn));
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__fn_with_long_call_null() 
+fn void test_corpus__functions__fn_with_long_call_null()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7060,7 +7124,7 @@ macro parse_callable_params()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__fn_with_long_call_null DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7068,7 +7132,7 @@ macro parse_callable_params()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__functions__fn_variable_invalid_arg_list() 
+fn void test_corpus__functions__fn_variable_invalid_arg_list()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7098,7 +7162,7 @@ macro parse_callable_params()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__functions__fn_variable_invalid_arg_list DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7106,7 +7170,7 @@ macro parse_callable_params()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__macros__simple_macro() 
+fn void test_corpus__macros__simple_macro()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7132,7 +7196,7 @@ macro main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__macros__simple_macro DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7140,7 +7204,7 @@ macro main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__macros__simple_ct_macro() 
+fn void test_corpus__macros__simple_ct_macro()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7170,7 +7234,7 @@ macro @m(#x, y)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__macros__simple_ct_macro DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7178,7 +7242,7 @@ macro @m(#x, y)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__macros__simple_macro_ct_type() 
+fn void test_corpus__macros__simple_macro_ct_type()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7206,7 +7270,7 @@ macro size($Type)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__macros__simple_macro_ct_type DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7214,7 +7278,7 @@ macro size($Type)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__macros__simple_macro_body_definition() 
+fn void test_corpus__macros__simple_macro_body_definition()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7248,7 +7312,7 @@ macro SomeType*! @for_each(list; @body(it))
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__macros__simple_macro_body_definition DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7256,7 +7320,7 @@ macro SomeType*! @for_each(list; @body(it))
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__macros__name_fields() 
+fn void test_corpus__macros__name_fields()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7287,7 +7351,7 @@ macro usz @offset($Type, #field)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__macros__name_fields DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7295,7 +7359,7 @@ macro usz @offset($Type, #field)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__macros__hash_macro() 
+fn void test_corpus__macros__hash_macro()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7326,7 +7390,7 @@ macro Foo.@check(#expr, $Type t, args...)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__macros__hash_macro DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7334,7 +7398,7 @@ macro Foo.@check(#expr, $Type t, args...)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__macros__hash_macro_with_contracts() 
+fn void test_corpus__macros__hash_macro_with_contracts()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7370,7 +7434,7 @@ macro void @swap(#a, #b)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__macros__hash_macro_with_contracts DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7378,7 +7442,7 @@ macro void @swap(#a, #b)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__macros__ct_if_else() 
+fn void test_corpus__macros__ct_if_else()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7415,7 +7479,7 @@ macro @foo($x, #y)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__macros__ct_if_else DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7423,7 +7487,7 @@ macro @foo($x, #y)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__macros__ct_for_in_ct_scope() 
+fn void test_corpus__macros__ct_for_in_ct_scope()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7457,7 +7521,7 @@ macro foo($a)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__macros__ct_for_in_ct_scope DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7465,7 +7529,7 @@ macro foo($a)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__macros__ct_foreach() 
+fn void test_corpus__macros__ct_foreach()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7499,7 +7563,7 @@ macro foo_enum($SomeEnum)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__macros__ct_foreach DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7507,7 +7571,7 @@ macro foo_enum($SomeEnum)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__macros__ct_switch() 
+fn void test_corpus__macros__ct_switch()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7563,7 +7627,7 @@ macro @foo($x, #y)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__macros__ct_switch DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7571,7 +7635,7 @@ macro @foo($x, #y)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__macros__ct_switch_no_top_cond() 
+fn void test_corpus__macros__ct_switch_no_top_cond()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7631,7 +7695,7 @@ macro @foo($x, #y)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__macros__ct_switch_no_top_cond DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7639,7 +7703,7 @@ macro @foo($x, #y)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__macros__ct_if_call_colon_position() 
+fn void test_corpus__macros__ct_if_call_colon_position()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7668,7 +7732,7 @@ macro @foo($x, #y)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__macros__ct_if_call_colon_position DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7676,7 +7740,7 @@ macro @foo($x, #y)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__macros__body_macro_with_vector_init() 
+fn void test_corpus__macros__body_macro_with_vector_init()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7712,7 +7776,7 @@ macro void Slice2d.@each(&self; @body(usz[<2>], Type))
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__macros__body_macro_with_vector_init DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7720,7 +7784,7 @@ macro void Slice2d.@each(&self; @body(usz[<2>], Type))
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__macros__mem_scoped_stack_pool() 
+fn void test_corpus__macros__mem_scoped_stack_pool()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7747,7 +7811,7 @@ macro void @stack_pool(usz $size; @body) @builtin
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__macros__mem_scoped_stack_pool DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7755,7 +7819,7 @@ macro void @stack_pool(usz $size; @body) @builtin
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__macros__ct_if_else_inside_other() 
+fn void test_corpus__macros__ct_if_else_inside_other()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7792,7 +7856,7 @@ macro @foo($x, #y)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__macros__ct_if_else_inside_other DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7800,7 +7864,7 @@ macro @foo($x, #y)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__macros__ct_foreach_in_other() 
+fn void test_corpus__macros__ct_foreach_in_other()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7838,7 +7902,7 @@ macro foo_enum($SomeEnum)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__macros__ct_foreach_in_other DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7846,7 +7910,7 @@ macro foo_enum($SomeEnum)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__macros__ct_switch_in_other() 
+fn void test_corpus__macros__ct_switch_in_other()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7899,7 +7963,7 @@ macro @foo($x, #y)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__macros__ct_switch_in_other DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7907,7 +7971,7 @@ macro @foo($x, #y)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__macros__matrix_component_mul() 
+fn void test_corpus__macros__matrix_component_mul()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7934,7 +7998,7 @@ macro matrix_component_mul(mat, val) @private
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__macros__matrix_component_mul DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7942,7 +8006,7 @@ macro matrix_component_mul(mat, val) @private
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__empty_lines__module_spacing() 
+fn void test_corpus__empty_lines__module_spacing()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -7972,7 +8036,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__empty_lines__module_spacing DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -7980,7 +8044,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__empty_lines__module_spacing_double_empty() 
+fn void test_corpus__empty_lines__module_spacing_double_empty()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -8011,7 +8075,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__empty_lines__module_spacing_double_empty DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -8019,7 +8083,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__empty_lines__module_spacing_tripple_empty() 
+fn void test_corpus__empty_lines__module_spacing_tripple_empty()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -8051,7 +8115,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__empty_lines__module_spacing_tripple_empty DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -8059,7 +8123,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__empty_lines__module_spacing_docstr() 
+fn void test_corpus__empty_lines__module_spacing_docstr()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -8092,7 +8156,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__empty_lines__module_spacing_docstr DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -8100,7 +8164,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__empty_lines__module_spacing_docstr_with_comment() 
+fn void test_corpus__empty_lines__module_spacing_docstr_with_comment()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -8137,15 +8201,17 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__empty_lines__module_spacing_docstr_with_comment DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__empty_lines__module_spacing_docstr_with_comment DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__casting__fn_with_lambda_arg() 
+fn void test_corpus__casting__fn_with_lambda_arg()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -8170,7 +8236,7 @@ fn void remove_using_test()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__casting__fn_with_lambda_arg DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -8178,7 +8244,7 @@ fn void remove_using_test()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__casting__casting_pointers() 
+fn void test_corpus__casting__casting_pointers()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -8297,7 +8363,7 @@ fn void* main(int* arg)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__casting__casting_pointers DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -8305,7 +8371,7 @@ fn void* main(int* arg)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__casting__fn_array_args_casting_ambiguity() 
+fn void test_corpus__casting__fn_array_args_casting_ambiguity()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -8328,7 +8394,7 @@ fn void remove_using_test(char* a, char[16]* boo)
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__casting__fn_array_args_casting_ambiguity DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -8336,7 +8402,7 @@ fn void remove_using_test(char* a, char[16]* boo)
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__docstrings__simple_enum_docs() 
+fn void test_corpus__docstrings__simple_enum_docs()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -8371,7 +8437,7 @@ enum State
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__docstrings__simple_enum_docs DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -8379,7 +8445,7 @@ enum State
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__docstrings__def_interface_with_docs() 
+fn void test_corpus__docstrings__def_interface_with_docs()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -8425,7 +8491,7 @@ interface Printable @if("sasda")
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__docstrings__def_interface_with_docs DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -8433,7 +8499,7 @@ interface Printable @if("sasda")
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__docstrings__simple_struct_doc_str() 
+fn void test_corpus__docstrings__simple_struct_doc_str()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -8464,7 +8530,7 @@ struct Person
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__docstrings__simple_struct_doc_str DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -8472,7 +8538,7 @@ struct Person
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__docstrings__param_space_in_contract() 
+fn void test_corpus__docstrings__param_space_in_contract()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -8505,7 +8571,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__docstrings__param_space_in_contract DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -8513,7 +8579,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__docstrings__simple_main_docstring_multi_contract() 
+fn void test_corpus__docstrings__simple_main_docstring_multi_contract()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -8588,15 +8654,17 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
-        io::printfn("\n__docstrings__simple_main_docstring_multi_contract DOUBLE formatted code\n```");
+    if (expected[1..] != formatted) {
+        io::printfn(
+            "\n__docstrings__simple_main_docstring_multi_contract DOUBLE formatted code\n```"
+        );
         io::print(formatted);
         io::printfn("```");
     }
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__docstrings__docstr_double_spaces() 
+fn void test_corpus__docstrings__docstr_double_spaces()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -8636,7 +8704,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__docstrings__docstr_double_spaces DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -8644,7 +8712,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__docstrings__docstr_code_block() 
+fn void test_corpus__docstrings__docstr_code_block()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -8699,7 +8767,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__docstrings__docstr_code_block DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -8707,7 +8775,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__docstrings__def_interface_indented_code() 
+fn void test_corpus__docstrings__def_interface_indented_code()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -8769,7 +8837,7 @@ interface Printable @if("sasda")
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__docstrings__def_interface_indented_code DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");
@@ -8777,7 +8845,7 @@ interface Printable @if("sasda")
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
-fn void test_corpus__docstrings__docstr_unicode() 
+fn void test_corpus__docstrings__docstr_unicode()
 {
     CodeFmt fmt = CodeFmt.new_init();
     defer fmt.free();
@@ -8817,7 +8885,7 @@ fn void main()
     defer fmt_out.free();
     formatted = fmt.format(fmt_out, print_lex: false)!!;
     assert(fmt_out.ptr != formatted.ptr);
-    if(expected[1..] != formatted) {
+    if (expected[1..] != formatted) {
         io::printfn("\n__docstrings__docstr_unicode DOUBLE formatted code\n```");
         io::print(formatted);
         io::printfn("```");

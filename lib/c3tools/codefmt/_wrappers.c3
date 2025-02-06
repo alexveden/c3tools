@@ -8,9 +8,8 @@ import std::collections::list;
 *                  CODE WRAP FUNCTIONS
 */
 
-
 <*
-Dumps and formats collected cache_statement_ array into code
+ Dumps and formats collected cache_statement_ array into code
 *>
 macro void! CodeFmt.cache_statement_dump(
     &self, TokenType wrap_rule = INVALID_TOKEN, bool no_split = false
@@ -130,7 +129,7 @@ macro void! CodeFmt.cache_statement_dump(
 }
 
 <*
-Struct initializers dump MyStruct s = {.foo = 1, .sub = {.bar = 0}}
+ Struct initializers dump MyStruct s = {.foo = 1, .sub = {.bar = 0}}
 *>
 macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, TokenType wrap_rule) @private
 {
@@ -144,6 +143,7 @@ macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, T
             case LBRACE:
                 if (is_multiline) {
                     if (tmpstate.last_token == COMMA) self.newline();
+                    if (tmpstate.last_token == LBRACE) self.newline();
                 }
                 self.write("%s", t.value);
                 self.indent();
@@ -201,7 +201,7 @@ macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, T
 }
 
 <*
-Generic statement dumper
+ Generic statement dumper
 *>
 macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, TokenType wrap_rule) @private
 {
@@ -779,7 +779,7 @@ fn bool CodeFmt._resolve__keyword_call_colon(&self, NodeParserState* state) @loc
 }
 
 <*
-Resolves if array access bracket contain expression [a:b] vs [a + 1 : b - 1]
+ Resolves if array access bracket contain expression [a:b] vs [a + 1 : b - 1]
 *>
 fn bool CodeFmt._resolve__bracket_is_complex_expr(&self) @local
 {

@@ -49,7 +49,7 @@ fn void! print_modules_list(FzfSettings* settings, AstProject* proj) @local
         io::printf("%s", m.value);
         // for(AstNode* node = m.attributes; node != null; node = node.next){
         //     io::printf(" %s", node.value);
-        // } 
+        // }
         io::print("\n");
     }
 }
