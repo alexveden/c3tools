@@ -892,6 +892,32 @@ fn void test_custom_type_callback_unknown_type()
     test::eq(agp.options[0]._is_present, true);
 }
 
+fn void test_custom_type_callback_null_value()
+{
+
+    char val = '\0';
+    ArgParseCallbackFn cbf = fn void! (ArgOpt* opt, String value) {
+        test::eq(value, "bar");
+        test::eq(opt.value, null);
+    };
+
+    argparse::ArgParse agp = {
+        .options = {{
+                .short_name = 'f', .long_name = "flt", .callback = cbf
+            },
+        }
+    };
+
+    String[] args = { "testprog", "--flt=bar" };
+    test::eq(val, '\0');
+    test::eq(agp.options[0]._is_present, false);
+
+    agp.parse(args)!!;
+
+    test::eq(val, '\0');
+    test::eq(agp.options[0]._is_present, true);
+}
+
 fn void test_custom_type_callback_str_type()
 {
 

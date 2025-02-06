@@ -358,35 +358,37 @@ fn void! ArgParse.options_check(&self) @local
             unreachable("option[%d] both long/short_name are not set", i);
         }
         if (!opt.value) {
-            unreachable(
-                "option[%d][-%c/--%s] has no valid .value= pointer set",
-                i,
-                opt.short_name,
-                opt.long_name
-            );
-        }
-
-        switch (opt.value.type) {
-            case bool.typeid:
-            case int.typeid:
-            case uint.typeid:
-            case long.typeid:
-            case ulong.typeid:
-            case float.typeid:
-            case double.typeid:
-            case String.typeid:
-                // resetting presence flag, it will be updated after all argument parsing
-                opt._is_present = false;
-            default:
-                if (!opt.callback) {
-                    unreachable(
-                        "option[%d][-%c/--%s] type[%s] is not supported (or pass .callback)",
-                        i,
-                        opt.short_name,
-                        opt.long_name,
-                        opt.value.type
-                    );
-                }
+            if (!opt.callback) {
+                unreachable(
+                    "option[%d][-%c/--%s] has no valid .value= pointer set",
+                    i,
+                    opt.short_name,
+                    opt.long_name
+                );
+            }
+        } else {
+            switch (opt.value.type) {
+                case bool.typeid:
+                case int.typeid:
+                case uint.typeid:
+                case long.typeid:
+                case ulong.typeid:
+                case float.typeid:
+                case double.typeid:
+                case String.typeid:
+                    // resetting presence flag, it will be updated after all argument parsing
+                    opt._is_present = false;
+                default:
+                    if (!opt.callback) {
+                        unreachable(
+                            "option[%d][-%c/--%s] type[%s] is not supported (or pass .callback)",
+                            i,
+                            opt.short_name,
+                            opt.long_name,
+                            opt.value.type
+                        );
+                    }
+            }
         }
     }
 }
@@ -428,18 +430,18 @@ fn void! ArgParse.parse_arg_val(&self, ArgOpt* opt, bool flag_unset = false) @lo
         io::printf("Error: duplicated option %s\n", self._ctx.argv[0]);
         return ArgError.INVALID_ARGUMENT?;
     }
-    assert(opt.value);
-    assert(opt.value.type == bool.typeid || !flag_unset, "flag_unset only for bool options");
     opt._is_present = true;
 
     if (opt.callback) {
-        if (opt.value.type == bool.typeid) {
+        if (opt.value && opt.value.type == bool.typeid) {
             return opt.callback(opt, (flag_unset) ? "0" : "1");
         } else {
             String aval = self.get_arg()!;
             return opt.callback(opt, aval);
         }
     }
+    assert(opt.value);
+    assert(opt.value.type == bool.typeid || !flag_unset, "flag_unset only for bool options");
 
     switch (opt.value.type) {
         case bool.typeid:
