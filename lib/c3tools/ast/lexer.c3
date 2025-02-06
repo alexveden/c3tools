@@ -527,7 +527,8 @@ fn void Lexer.extend_current_attribute(Lexer* lexer)
     Token* result = &lexer.token;
     assert(lexer.token.type == AT_IDENT);
     assert(
-        math::abs(lexer.current - lexer.token.value.ptr) < 64, "this must be called AT_IDENT parsed"
+        math::abs(lexer.current - lexer.token.value.ptr) < 64,
+        "this must be called AT_IDENT parsed"
     );
     assert(lexer.token.value);
     assert(lexer.token.value.ptr >= lexer.file_begin);

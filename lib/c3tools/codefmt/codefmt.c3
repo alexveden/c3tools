@@ -116,7 +116,7 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false)
             case COMMENT_MULTI:
             case COMMENT_SINGLE_INLINE:
             case COMMENT_MULTI_INLINE:
-            case EMPTY_LINE:  // disallow EMPTY_LINE inside existing statements! 
+            case EMPTY_LINE:  // disallow EMPTY_LINE inside existing statements!
             case EOF:
                 if (self.format_comment_or_empty(&globalstate, t)!) continue LOOP;
             case SPACE:
@@ -251,7 +251,7 @@ macro void CodeFmt.write(&self, String format, args...) @private
 *>
 macro void CodeFmt.newline(&self, bool is_empty = false, bool indent_only = false) @private
 {
-    if (self._skip_next_new_line){
+    if (self._skip_next_new_line) {
         self._skip_next_new_line = false;
         return;
     } else {

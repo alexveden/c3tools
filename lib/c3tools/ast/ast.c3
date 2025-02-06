@@ -368,8 +368,7 @@ fn void! AstProject.load_path(&self, String path) @local
         return IoError.FILE_NOT_DIR?;
     }
 
-    path::PathWalker fnwalk = fn bool! (Path p, bool is_dir, void* ctx)
-    {
+    path::PathWalker fnwalk = fn bool! (Path p, bool is_dir, void* ctx) {
         AstProject* self = (AstProject*)ctx;
         if (is_dir) return false;
         if (!p.has_extension("c3")) {

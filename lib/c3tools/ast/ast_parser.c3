@@ -321,7 +321,7 @@ fn bool Ast.parse_function(&ast, AstNode* node, Token* t, NodeParserState* state
                     ast.@allc_add(AstNode, &node_func.ftype, t);
             }
         case IDENT:
-            // function name 
+            // function name
             switch (t.type) {
                 case AT_IDENT:
                 case IDENT:
@@ -346,7 +346,7 @@ fn bool Ast.parse_function(&ast, AstNode* node, Token* t, NodeParserState* state
                 case AT_IDENT:
                     ast.lexer.extend_current_attribute();
                     ast.@allc_add(AstNode, &node_func.attributes, t);
-                case IMPLIES:  // => 
+                case IMPLIES:  // =>
                     nextcase STATE: state.transition(IMPLIES);
                 case LBRACE:  // {
                     if (state.scope_depth == 1) nextcase STATE: state.transition(SCOPE);
@@ -366,7 +366,7 @@ fn bool Ast.parse_function(&ast, AstNode* node, Token* t, NodeParserState* state
             }
         case IMPLIES:  // lambda function fn () => ... @attr;
             switch (t.type) {
-                case IMPLIES:  // => 
+                case IMPLIES:  // =>
                     node_func.iscope_start = t.offset;
                 case EOS:  // ending semicolon
                     if (state.scope_depth == 0) nextcase STATE: state.transition(EOF);
@@ -478,7 +478,9 @@ fn bool Ast.parse_enumerable(&ast, AstNode* node, Token* t, NodeParserState* sta
                     if (state.scope_depth == 0) nextcase STATE: state.transition(EOF);
                 case CONST_IDENT:
                     if (state.scope_depth == 1 && !state.sub_node) {
-                        state.sub_node = ast.@allc_add(AstNode, &node_enum.values, &ast.lexer.token);
+                        state.sub_node = ast.@allc_add(
+                            AstNode, &node_enum.values, &ast.lexer.token
+                        );
                     }
                 case COMMA:
                     // next iterm resetting state
@@ -636,7 +638,7 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
 
                 case UNION:
                 case STRUCT:
-                case BITSTRUCT:  // sub type member 
+                case BITSTRUCT:  // sub type member
                     if (state.scope_depth == 1) nextcase STATE: state.transition(FOREACH);
 
                 case INLINE:

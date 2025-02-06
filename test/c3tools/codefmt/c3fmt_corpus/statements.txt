@@ -1869,3 +1869,32 @@ fn void main()
     foreach (&c : s) if (c.is_upper() @pure) &c = null;
     foreach (&c : s) if (c.is_upper() @pure) return 0;
 }
+================================================================================
+array_inside_struct_1st_brace_new_line
+================================================================================
+fn void test_str_set_next_arg_missing_value_with_eqchar()
+{
+    argparse::ArgParse agp = {
+        .description = "test ArgParse program",
+        .options = {{
+                .short_name = 'f',
+                .long_name = "flt",
+                .value = &val
+            },
+        }
+    };
+}
+--------------------------------------------------------------------------------
+fn void test_str_set_next_arg_missing_value_with_eqchar()
+{
+    argparse::ArgParse agp = {
+        .description = "test ArgParse program",
+        .options = {
+            {
+                .short_name = 'f',
+                .long_name = "flt",
+                .value = &val
+            },
+        }
+    };
+}

@@ -3470,6 +3470,56 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
 }
 
+fn void test_corpus__statements__array_inside_struct_1st_brace_new_line() 
+{
+    CodeFmt fmt = CodeFmt.new_init();
+    defer fmt.free();
+    String input = `
+fn void test_str_set_next_arg_missing_value_with_eqchar()
+{
+    argparse::ArgParse agp = {
+        .description = "test ArgParse program",
+        .options = {{
+                .short_name = 'f',
+                .long_name = "flt",
+                .value = &val
+            },
+        }
+    };
+}
+`;
+    String formatted = fmt.format(input[1..], print_lex: false)!!;
+    io::printfn("\n__statements__array_inside_struct_1st_brace_new_line formatted code\n```");
+    io::print(formatted);
+    io::printfn("```");
+    String expected = `
+fn void test_str_set_next_arg_missing_value_with_eqchar()
+{
+    argparse::ArgParse agp = {
+        .description = "test ArgParse program",
+        .options = {
+            {
+                .short_name = 'f',
+                .long_name = "flt",
+                .value = &val
+            },
+        }
+    };
+}
+`;
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
+    String fmt_out = formatted.copy();
+    defer fmt_out.free();
+    formatted = fmt.format(fmt_out, print_lex: false)!!;
+    assert(fmt_out.ptr != formatted.ptr);
+    if(expected[1..] != formatted) {
+        io::printfn("\n__statements__array_inside_struct_1st_brace_new_line DOUBLE formatted code\n```");
+        io::print(formatted);
+        io::printfn("```");
+    }
+    test::@check(codecorpus::compare_output(expected[1..], formatted), `DOUBLE!! format mismatch`);
+}
+
 fn void test_corpus__expressions__expressions() 
 {
     CodeFmt fmt = CodeFmt.new_init();

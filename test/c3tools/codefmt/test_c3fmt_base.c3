@@ -5,8 +5,7 @@ import libc;
 import c3tools::codefmt::codecorpus @public;
 import c3tools::codefmt;
 
-
-fn void test_two_spaces() 
+fn void test_two_spaces()
 {
     CodeFmt fmt = CodeFmt.new_init(indent_type: '2');
     defer fmt.free();
@@ -32,7 +31,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
 }
 
-fn void test_eight_spaces() 
+fn void test_eight_spaces()
 {
     CodeFmt fmt = CodeFmt.new_init(indent_type: '8');
     defer fmt.free();
@@ -58,7 +57,7 @@ fn void main()
     test::@check(codecorpus::compare_output(expected[1..], formatted), `format mismatch`);
 }
 
-fn void test_tabs() 
+fn void test_tabs()
 {
     CodeFmt fmt = CodeFmt.new_init(indent_type: 't');
     defer fmt.free();

@@ -97,7 +97,7 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
         }
     }
 
-    // We have existing caches statements, let cache_statement_dump() handle this 
+    // We have existing caches statements, let cache_statement_dump() handle this
     if (
         !self._lexer.is_whitespace_mode &&
         self.state_stack.len() > 0 &&
@@ -241,7 +241,7 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                 // 'extern '
                 self.write(" ", t.value);
             }
-        case RETURN:  // return type 
+        case RETURN:  // return type
             self.trace("RETURN");
             switch (t.type) {
                 case AT_IDENT:
@@ -270,7 +270,7 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                 case RPAREN:
                     if (state.scope_depth != 0) self.@fail(t, "unfinished scope")!;
                     break;
-                case IMPLIES:  // => 
+                case IMPLIES:  // =>
                     nextcase STATE: state.transition(IMPLIES);
                 case EOS:
                     self.write(";");
@@ -286,7 +286,7 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                     self.write(" ");
                     self.write("%s", t.value);
                     break;
-                case IMPLIES:  // => 
+                case IMPLIES:  // =>
                     nextcase STATE: state.transition(IMPLIES);
                 case LBRACE:  // {
                     if (state.scope_depth == 1) nextcase STATE: state.transition(SCOPE);
@@ -500,15 +500,19 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                     nextcase LBRACE;
                 case DOT:
                     if (state.initial_token == STRUCT && state.last_token == COMMA) {
-                        self.cache_statement_dump_struct_init(is_multiline: true, wrap_rule: COMMA)!;
+                        self.cache_statement_dump_struct_init(
+                            is_multiline: true, wrap_rule: COMMA
+                        )!;
                         self.newline();
-                    } 
+                    }
                     nextcase default;
                 case DO:
                 case FN:
                     if (state.last_token == EQ && state.prev_scope(1) == LBRACE) {
                         // = {.my_func = fn void () ...}
-                        self.cache_statement_dump_struct_init(is_multiline: true, wrap_rule: COMMA)!;
+                        self.cache_statement_dump_struct_init(
+                            is_multiline: true, wrap_rule: COMMA
+                        )!;
                         state.initial_token = STRUCT;
                         self.write(" %s ", t.value);
                         break;
@@ -572,7 +576,9 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                             break;
                         case STRUCT:
                             if (self._is_cascade_call) break;
-                            self.cache_statement_dump_struct_init(is_multiline: true, wrap_rule: COMMA)!;
+                            self.cache_statement_dump_struct_init(
+                                is_multiline: true, wrap_rule: COMMA
+                            )!;
                             self.dedent()!;
                             self.newline();
                             self.write("%s", t.value);
@@ -1203,7 +1209,7 @@ fn bool! CodeFmt.asm_non_fmt_block(CodeFmt* self, Token* t, NodeParserState* sta
                     }
                 case RBRACE:
                     if (state.scope_depth == 0) {
-                        // enable formatting, unless there is // fmt: off 
+                        // enable formatting, unless there is // fmt: off
                         if (!self._is_paused) self._lexer.set_whitespace_mode(false);
                         // it's safe to write even we have inline comment
                         self._is_inline_comment = false;

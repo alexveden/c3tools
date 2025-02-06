@@ -87,8 +87,8 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token* t) 
             }
         case AT_IDENT:
             switch (prev_t) {
-                case AT_IDENT: // attributes @foo @bar("")
-                case RPAREN: // fn sig(int) @foo
+                case AT_IDENT:  // attributes @foo @bar("")
+                case RPAREN:  // fn sig(int) @foo
                     pre_space = true;
                 default:
                     nextcase TOP: IDENT;
@@ -106,7 +106,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token* t) 
                     pre_space = true;
                 case STAR:
                 case RPAREN:
-                case AMP:  // likely &var 
+                case AMP:  // likely &var
                     // if (t.type == AT_IDENT) pre_space = true;
                     if (self._resolve__prev_is_binexp()) pre_space = true;
                     break;
@@ -115,7 +115,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token* t) 
             }
         case TYPE_IDENT:
             switch (prev_t) {
-                case AMP:  // likely &Type.foo 
+                case AMP:  // likely &Type.foo
                     if (self._resolve__prev_is_binexp()) pre_space = true;
                 default:
                     nextcase TOP: default;
@@ -165,7 +165,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token* t) 
         case RVEC:
         case LGENPAR:
         case RGENPAR:
-            // No space for vectors and generic type 
+            // No space for vectors and generic type
             break;
         case LBRACKET:
             switch (prev_t) {
@@ -273,7 +273,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token* t) 
                         pre_space = true;
                     } else if (!self._resolve__keyword_call_colon(state)) {
                         pre_space = true;
-                    } else if (state.initial_token == BITSTRUCT){
+                    } else if (state.initial_token == BITSTRUCT) {
                         pre_space = true;
                     }
                 default:
@@ -294,7 +294,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token* t) 
                 case RVEC:
                 case RGENPAR:
                 case STAR:
-                case GREATER: // new generic syntax Foo<[bar]>
+                case GREATER:  // new generic syntax Foo<[bar]>
                 case QUESTION:
                     break;  // no space
                 default:
@@ -307,7 +307,7 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token* t) 
     bool never_space = {|
         // Contents of [] are always without space
         // starting [ and end ] - are managed separately above
-        // starting statement always without space 
+        // starting statement always without space
         if (cache_len == 0) return true;
 
         return false;
@@ -445,7 +445,7 @@ fn bool CodeFmt._resolve__keyword_call_colon(&self, NodeParserState* state) @loc
     assert(self.state_stack.len() > 0);
 
     usz start_len = self.state_stack[^1].token_cache_start;
-    // only 1 token, it's not a binary exp 
+    // only 1 token, it's not a binary exp
     if (self.__token_cache.len() - start_len == 1) return false;
 
     bool is_call_kwarg = true;
@@ -472,7 +472,7 @@ fn bool CodeFmt._resolve__bracket_is_complex_expr(&self) @local
     assert(self.state_stack.len() > 0);
 
     usz start_len = self.state_stack[^1].token_cache_start;
-    // only 1 token, it's not a binary exp 
+    // only 1 token, it's not a binary exp
     if (self.__token_cache.len() - start_len == 1) return false;
 
     int exp_count = 0;
@@ -565,7 +565,7 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @local
     assert(self.state_stack.len() > 0);
 
     usz start_len = self.state_stack[^1].token_cache_start;
-    // only 1 token, it's not a binary exp 
+    // only 1 token, it's not a binary exp
     if (self.__token_cache.len() - start_len == 1) return false;
 
     int scope = 0;
@@ -614,7 +614,7 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @local
             case PLUS:
             case MINUS:
             case AMP:
-            case AND:  // logical && or &&1 
+            case AND:  // logical && or &&1
                 has_expr = true;
                 switch (rhs_token) {
                     case PLUS:
@@ -627,7 +627,7 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @local
                 }
                 break;
             case SPACE:
-            case BANG:  // if(!* 
+            case BANG:  // if(!*
                 break;
             case QUESTION:  // for ternary
                 if (scope == 0) break LOOP;
@@ -707,7 +707,7 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @local
 
     bool is_cast = {|
         if (has_parens) {
-            // simple cast (void*) 
+            // simple cast (void*)
             // generic cast (Foo(<void>)*) / array cast (char[8]*)
             if (has_type) {
                 // return !has_idents || has_brackets;
@@ -851,7 +851,7 @@ fn TokenType CodeFmt._resolve__next_token(&self, usz current_idx) @local
 }
 
 <*
-Checks if we need a white space before ?
+ Checks if we need a white space before ?
 *>
 fn bool CodeFmt._resolve__next_question_is_error(&self, usz current_idx) @local
 {
@@ -934,7 +934,7 @@ macro void! CodeFmt.cache_statement_dump(
                 if (break_pos == -1) nextcase default;
                 if (tmpstate.scope_depth != 0) nextcase default;
                 if (last_non_space_tok == COMMA) has_magic_comma = true;
-                // NOTE: single line comments in statements forcing multi-line print 
+                // NOTE: single line comments in statements forcing multi-line print
             case COMMENT_SINGLE:
             case COMMENT_MULTI:
             case COMMENT_SINGLE_INLINE:
@@ -1270,7 +1270,7 @@ macro TokenType CodeFmt.cache_statement_wrap_rule(&self, TokenType initial_token
 <*
  Cache size for current formatter state
 *>
-macro usz CodeFmt.cache_statement_len(&self) @private 
+macro usz CodeFmt.cache_statement_len(&self) @private
 {
     if (self.state_stack.len() == 0) return 0;
 
@@ -1306,5 +1306,3 @@ macro void CodeFmt.cache_statement_clear(&self) @private
         self.__token_cache.remove_last()!!;
     }
 }
-
-

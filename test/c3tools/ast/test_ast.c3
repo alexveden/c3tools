@@ -5,9 +5,9 @@ import std::math;
 import std::collections::list;
 import std::io;
 
-
-fn void test_module(){
-   String code =  `module test::std::c3lang::ast  @test @if(env::NO_LIBC || $feature(C3_MATH));
+fn void test_module()
+{
+    String code = `module test::std::c3lang::ast  @test @if(env::NO_LIBC || $feature(C3_MATH));
 import std::c3lang::ast;
 
 fn void test_node() {
@@ -15,13 +15,11 @@ fn void test_node() {
 }
 `;
     DString contents = dstring::temp_new(code);
-    
-    
+
     String path = "foo.c3";
     Ast ast = ast::parse(contents.str_view(), path, print_lex: true);
     defer mem::free(ast._allocator);
     contents.clear();
-
 
     test::eq(ast.path, "foo.c3");
     test::@check(path.ptr != ast.path.ptr, "should be copied");
@@ -32,28 +30,31 @@ fn void test_node() {
 
     AstModule* m = ast.@node_at(ast.modules, 0);
     test::ne(m, null);
-    
+
     test::eq(m.value, "test::std::c3lang::ast");
     test::eq(m.type, TokenType.MODULE);
-    
+
     test::eq(ast.@node_join(m.name, contents, "::"), "test::std::c3lang::ast");
     test::eq(m.istart, 0);
-    test::eq(m.iend, code.len-1);
+    test::eq(m.iend, code.len - 1);
 
     test::ne(m.attributes, null);
     test::eq(m.attributes.value, "@test");
     test::eq(m.attributes.type, TokenType.AT_IDENT);
-    test::eq(ast.@node_join(m.attributes, contents, ","), "@test,@if(env::NO_LIBC || $feature(C3_MATH))");
+    test::eq(
+        ast.@node_join(m.attributes, contents, ","), "@test,@if(env::NO_LIBC || $feature(C3_MATH))"
+    );
     test::eq(m.attributes.istart, 31);
-    test::eq(m.attributes.iend, 31+5);
+    test::eq(m.attributes.iend, 31 + 5);
 
     // test::eq(0, 1);
 }
 
-fn void test_module_no_attr(){
-   String code =  `module test::std::c3lang::ast;`;
+fn void test_module_no_attr()
+{
+    String code = `module test::std::c3lang::ast;`;
     DString contents = dstring::temp_new(code);
-    
+
     String path = "foo.c3";
     Ast ast = ast::parse(contents.str_view(), path);
     defer mem::free(ast._allocator);
@@ -66,14 +67,15 @@ fn void test_module_no_attr(){
     // test::eq(0, 1);
 }
 
-fn void test_module_imports(){
-   String code =  `
+fn void test_module_imports()
+{
+    String code = `
    import std::io; // imports to emty module
 
    module test::std::c3lang::ast; // new module
    `;
     DString contents = dstring::temp_new(code);
-    
+
     String path = "foo.c3";
     Ast ast = ast::parse(contents.str_view(), path);
     defer mem::free(ast._allocator);
@@ -95,44 +97,43 @@ fn void test_module_imports(){
     // test::eq(0, 1);
 }
 
-
-
-fn void test_scope(){
+fn void test_scope()
+{
     NodeParserState state;
     TokenType t;
 
     t = TokenType.LBRACE;
     state.check_scope(t);
     test::eq(state.scope_depth, 1);
-    test::eq(state.scope_stack[state.scope_depth-1], t);
+    test::eq(state.scope_stack[state.scope_depth - 1], t);
 
     t = TokenType.LBRACKET;
     state.check_scope(t);
     test::eq(state.scope_depth, 2);
-    test::eq(state.scope_stack[state.scope_depth-1], t);
+    test::eq(state.scope_stack[state.scope_depth - 1], t);
 
     t = TokenType.LPAREN;
     state.check_scope(t);
     test::eq(state.scope_depth, 3);
-    test::eq(state.scope_stack[state.scope_depth-1], t);
+    test::eq(state.scope_stack[state.scope_depth - 1], t);
 
     t = TokenType.LBRAPIPE;
     state.check_scope(t);
     test::eq(state.scope_depth, 4);
-    test::eq(state.scope_stack[state.scope_depth-1], t);
+    test::eq(state.scope_stack[state.scope_depth - 1], t);
 
     t = TokenType.LGENPAR;
     state.check_scope(t);
     test::eq(state.scope_depth, 5);
-    test::eq(state.scope_stack[state.scope_depth-1], t);
+    test::eq(state.scope_stack[state.scope_depth - 1], t);
 
     t = TokenType.LVEC;
     state.check_scope(t);
     test::eq(state.scope_depth, 6);
-    test::eq(state.scope_stack[state.scope_depth-1], t);
-    
+    test::eq(state.scope_stack[state.scope_depth - 1], t);
+
     // EXIT SCOPE in reverse order
-    
+
     t = TokenType.RVEC;
     state.check_scope(t);
     test::eq(state.scope_depth, 5);
@@ -162,31 +163,33 @@ fn void test_scope(){
     state.check_scope(t);
     test::eq(state.scope_depth, 0);
 
-    foreach(tok: state.scope_stack) {
+    foreach (tok : state.scope_stack) {
         // all old tokens set to zero
         test::eq(tok, TokenType.INVALID_TOKEN);
     }
 }
 
-fn void test_scope_oveflow_protection(){
+fn void test_scope_oveflow_protection()
+{
     NodeParserState state;
 
     TokenType t = TokenType.LBRACE;
 
-    for(uint i = 0; i < state.scope_stack.len * 2; i++){
+    for (uint i = 0; i < state.scope_stack.len * 2; i++) {
         state.check_scope(t);
     }
 
     test::eq(state.scope_depth, state.scope_stack.len);
-    test::eq(state.scope_stack[state.scope_depth-1], t);
+    test::eq(state.scope_stack[state.scope_depth - 1], t);
 }
 
-fn void test_func(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_func()
+{
+    String code = `module test::std::c3lang::ast;
 fn void test_node() {
     return 1;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -204,21 +207,22 @@ fn void test_node() {
     test::eq(ast.@node_join(func.ftype, contents), "void");
     test::eq(func.params, null);
 
-    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    io::printf("\n\n``%s``", code[func.istart .. math::min((isz)func.iend, (isz)(code.len - 1))]);
     test::eq(func.istart, 31);
-    test::eq(func.iend, code.len-4);
+    test::eq(func.iend, code.len - 4);
     test::eq(code[func.iend], '}');
 
     test::gt(func.iscope_start, func.istart);
     test::eq(code[func.iscope_start], '{');
 }
 
-fn void test_func_generic_ret_type(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_func_generic_ret_type()
+{
+    String code = `module test::std::c3lang::ast;
 fn List(<int>) test_node() {
     return 1;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -236,18 +240,19 @@ fn List(<int>) test_node() {
     test::eq(ast.@node_join(func.ftype, contents), "List,(<,int,>)");
     test::eq(func.params, null);
 
-    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    io::printf("\n\n``%s``", code[func.istart .. math::min((isz)func.iend, (isz)(code.len - 1))]);
     test::eq(func.istart, 31);
-    test::eq(func.iend, code.len-4);
+    test::eq(func.iend, code.len - 4);
     test::eq(code[func.iend], '}');
 }
 
-fn void test_func_vector_ret_type(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_func_vector_ret_type()
+{
+    String code = `module test::std::c3lang::ast;
 fn int[<2>] test_node() {
     return 1;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -265,18 +270,19 @@ fn int[<2>] test_node() {
     test::eq(ast.@node_join(func.ftype, contents), "int,[<,2,>]");
     test::eq(func.params, null);
 
-    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    io::printf("\n\n``%s``", code[func.istart .. math::min((isz)func.iend, (isz)(code.len - 1))]);
     test::eq(func.istart, 31);
-    test::eq(func.iend, code.len-4);
+    test::eq(func.iend, code.len - 4);
     test::eq(code[func.iend], '}');
 }
 
-fn void test_func_struct_pointer_type(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_func_struct_pointer_type()
+{
+    String code = `module test::std::c3lang::ast;
 fn MyType* test_node() {
     return 1;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -294,18 +300,19 @@ fn MyType* test_node() {
     test::eq(ast.@node_join(func.ftype, contents), "MyType,*");
     test::eq(func.params, null);
 
-    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    io::printf("\n\n``%s``", code[func.istart .. math::min((isz)func.iend, (isz)(code.len - 1))]);
     test::eq(func.istart, 31);
-    test::eq(func.iend, code.len-4);
+    test::eq(func.iend, code.len - 4);
     test::eq(code[func.iend], '}');
 }
 
-fn void test_func_params(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_func_params()
+{
+    String code = `module test::std::c3lang::ast;
 fn void test_node(int a, List(<int>) b) @test @inline @if(env::LIBC) {
     return 1;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -340,20 +347,21 @@ fn void test_node(int a, List(<int>) b) @test @inline @if(env::LIBC) {
     test::eq(ast.@node_len(func.attributes), 3);
     test::eq(ast.@node_join(func.attributes, contents), "@test,@inline,@if(env::LIBC)");
 
-    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    io::printf("\n\n``%s``", code[func.istart .. math::min((isz)func.iend, (isz)(code.len - 1))]);
     test::eq(func.istart, 31);
-    test::eq(func.iend, code.len-4);
+    test::eq(func.iend, code.len - 4);
     test::eq(code[func.iend], '}');
 }
 
-fn void test_import(){
-   String code =  `
+fn void test_import()
+{
+    String code = `
    module test::std::c3lang::ast;
    import test::std::c3lang::ast::foo @test @if(env::FOO) ;
    import single_mod;
    `;
     DString contents = dstring::temp_new(code);
-    
+
     String path = "foo.c3";
     Ast ast = ast::parse(contents.str_view(), path);
     defer mem::free(ast._allocator);
@@ -381,14 +389,14 @@ fn void test_import(){
 
 }
 
-
-fn void test_docstring_module(){
-   String code =  `
+fn void test_docstring_module()
+{
+    String code = `
 <* My module *>
 module test::std::c3lang::ast;
    `;
     DString contents = dstring::temp_new(code);
-    
+
     String path = "foo.c3";
     Ast ast = ast::parse(contents.str_view(), path, true);
     defer mem::free(ast._allocator);
@@ -407,8 +415,9 @@ module test::std::c3lang::ast;
     // test::eq(1, 0);
 }
 
-fn void test_docstring_module_func(){
-   String code =  `
+fn void test_docstring_module_func()
+{
+    String code = `
 <* My module *>
 module test::std::c3lang::ast;
 
@@ -418,7 +427,7 @@ fn void test_node() {
 }
    `;
     DString contents = dstring::temp_new(code);
-    
+
     String path = "foo.c3";
     Ast ast = ast::parse(contents.str_view(), path, true);
     defer mem::free(ast._allocator);
@@ -438,8 +447,9 @@ fn void test_node() {
     test::@check(func.docs.value.contains("My func"));
 }
 
-fn void test_docstring_contracts(){
-   String code =  `
+fn void test_docstring_contracts()
+{
+    String code = `
 <* 
 My module 
 @param foo "some info"
@@ -452,7 +462,7 @@ My module
 module test::std::c3lang::ast;
    `;
     DString contents = dstring::temp_new(code);
-    
+
     String path = "foo.c3";
     Ast ast = ast::parse(contents.str_view(), path, true);
     defer mem::free(ast._allocator);
@@ -502,12 +512,13 @@ module test::std::c3lang::ast;
 
 }
 
-fn void test_func_default_params(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_func_default_params()
+{
+    String code = `module test::std::c3lang::ast;
 fn void test_node(int a, int b = 2) @test @inline @if(env::LIBC) {
     return 1;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -542,18 +553,19 @@ fn void test_node(int a, int b = 2) @test @inline @if(env::LIBC) {
     test::eq(ast.@node_len(func.attributes), 3);
     test::eq(ast.@node_join(func.attributes, contents), "@test,@inline,@if(env::LIBC)");
 
-    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    io::printf("\n\n``%s``", code[func.istart .. math::min((isz)func.iend, (isz)(code.len - 1))]);
     test::eq(func.istart, 31);
-    test::eq(func.iend, code.len-4);
+    test::eq(func.iend, code.len - 4);
     test::eq(code[func.iend], '}');
 }
 
-fn void test_func_type_method(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_func_type_method()
+{
+    String code = `module test::std::c3lang::ast;
 fn MyType* MyFoo.test_node(&self) {
     return 1;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -580,17 +592,17 @@ fn MyType* MyFoo.test_node(&self) {
     // test::eq(param.param_type, null);
     test::eq(ast.@node_join(param.param_type, contents), "MyFoo");
 
-    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    io::printf("\n\n``%s``", code[func.istart .. math::min((isz)func.iend, (isz)(code.len - 1))]);
     test::eq(func.istart, 31);
-    test::eq(func.iend, code.len-4);
+    test::eq(func.iend, code.len - 4);
     test::eq(code[func.iend], '}');
 }
 
-
-fn void test_one_linefunc(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_one_linefunc()
+{
+    String code = `module test::std::c3lang::ast;
 fn char! String.to_uchar(s, int base = 10) @inline @test => s.@to_integer(char, base) @foo;
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -623,19 +635,19 @@ fn char! String.to_uchar(s, int base = 10) @inline @test => s.@to_integer(char, 
     test::eq(param.value, "base");
     test::eq(ast.@node_join(param.param_type, contents), "int,=,10");
 
-
-    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    io::printf("\n\n``%s``", code[func.istart .. math::min((isz)func.iend, (isz)(code.len - 1))]);
     test::eq(func.istart, 31);
-    test::eq(func.iend, code.len-4);
+    test::eq(func.iend, code.len - 4);
     test::eq(code[func.iend], ';');
 }
 
-fn void test_macro_type(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_macro_type()
+{
+    String code = `module test::std::c3lang::ast;
 macro MyFoo.@test_macro(self) {
     return 1;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -661,18 +673,19 @@ macro MyFoo.@test_macro(self) {
     // test::eq(param.param_type, null);
     test::eq(ast.@node_join(param.param_type, contents), "MyFoo");
 
-    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    io::printf("\n\n``%s``", code[func.istart .. math::min((isz)func.iend, (isz)(code.len - 1))]);
     test::eq(func.istart, 31);
-    test::eq(func.iend, code.len-4);
+    test::eq(func.iend, code.len - 4);
     test::eq(code[func.iend], '}');
 }
 
-fn void test_macro_type_with_ret_type(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_macro_type_with_ret_type()
+{
+    String code = `module test::std::c3lang::ast;
 macro MyType(<$it>) MyFoo.@test_macro(self) {
     return 1;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -698,18 +711,19 @@ macro MyType(<$it>) MyFoo.@test_macro(self) {
     // test::eq(param.param_type, null);
     test::eq(ast.@node_join(param.param_type, contents), "MyFoo");
 
-    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    io::printf("\n\n``%s``", code[func.istart .. math::min((isz)func.iend, (isz)(code.len - 1))]);
     test::eq(func.istart, 31);
-    test::eq(func.iend, code.len-4);
+    test::eq(func.iend, code.len - 4);
     test::eq(code[func.iend], '}');
 }
 
-fn void test_macro_at_ident(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_macro_at_ident()
+{
+    String code = `module test::std::c3lang::ast;
 macro @test_macro(self) {
     return 1;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -736,18 +750,19 @@ macro @test_macro(self) {
     test::eq(param.param_type, null);
     test::eq(ast.@node_join(param.param_type, contents), "");
 
-    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    io::printf("\n\n``%s``", code[func.istart .. math::min((isz)func.iend, (isz)(code.len - 1))]);
     test::eq(func.istart, 31);
-    test::eq(func.iend, code.len-4);
+    test::eq(func.iend, code.len - 4);
     test::eq(code[func.iend], '}');
 }
 
-fn void test_macro_hash_argument(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_macro_hash_argument()
+{
+    String code = `module test::std::c3lang::ast;
 macro @test_macro(Type* #self, $bar) {
     return 1;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -779,19 +794,19 @@ macro @test_macro(Type* #self, $bar) {
     test::eq(param.value, "$bar");
     test::eq(ast.@node_join(param.param_type, contents), "");
 
-
-    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    io::printf("\n\n``%s``", code[func.istart .. math::min((isz)func.iend, (isz)(code.len - 1))]);
     test::eq(func.istart, 31);
-    test::eq(func.iend, code.len-4);
+    test::eq(func.iend, code.len - 4);
     test::eq(code[func.iend], '}');
 }
 
-fn void test_ellipsis(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_ellipsis()
+{
+    String code = `module test::std::c3lang::ast;
 macro @test_macro(double... a, ...args) {
     return 1;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -823,19 +838,19 @@ macro @test_macro(double... a, ...args) {
     test::eq(param.value, "args");
     test::eq(ast.@node_join(param.param_type, contents), "...");
 
-
-    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    io::printf("\n\n``%s``", code[func.istart .. math::min((isz)func.iend, (isz)(code.len - 1))]);
     test::eq(func.istart, 31);
-    test::eq(func.iend, code.len-4);
+    test::eq(func.iend, code.len - 4);
     test::eq(code[func.iend], '}');
 }
 
-fn void test_macro_parameter_attributes(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_macro_parameter_attributes()
+{
+    String code = `module test::std::c3lang::ast;
 macro @test_macro(Type* #self @unused, $bar @export("foo") @ok) {
     return 1;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -869,22 +884,22 @@ macro @test_macro(Type* #self @unused, $bar @export("foo") @ok) {
     test::eq(ast.@node_join(param.param_type, contents), "");
     test::eq(ast.@node_join(param.attributes, contents), `@export("foo"),@ok`);
 
-
-    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    io::printf("\n\n``%s``", code[func.istart .. math::min((isz)func.iend, (isz)(code.len - 1))]);
     test::eq(func.istart, 31);
-    test::eq(func.iend, code.len-4);
+    test::eq(func.iend, code.len - 4);
     test::eq(code[func.iend], '}');
 }
 
-fn void test_macro_with_body_scope(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_macro_with_body_scope()
+{
+    String code = `module test::std::c3lang::ast;
 macro @for_each(list; @body(it))
 {
     for ($typeof(list) x = list; x; x = x.next)
     {
         @body(x);
     }
-}//`; // NOTE: // - is sanity guard comment, don't delete it!
+}//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -918,21 +933,21 @@ macro @for_each(list; @body(it))
     test::eq(ast.@node_join(param.param_type, contents), "(,it,)");
     test::eq(ast.@node_join(param.attributes, contents), "");
 
-
-    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    io::printf("\n\n``%s``", code[func.istart .. math::min((isz)func.iend, (isz)(code.len - 1))]);
     test::eq(func.istart, 31);
     test::eq(code[func.iend], '}');
-    test::eq(func.iend, code.len-3);
+    test::eq(func.iend, code.len - 3);
 }
 
-fn void test_enum_simple(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_enum_simple()
+{
+    String code = `module test::std::c3lang::ast;
 enum Foo {
     A,
     RUNNING    = { OtherEnum.FAILING, true,  {12,22} },
     FOO = SOME_OTHER_CONST,
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -963,20 +978,23 @@ enum Foo {
     test::eq(eval.type, TokenType.CONST_IDENT);
     test::eq(eval.value, "FOO");
 
-    io::printf("\n\n``%s``", code[enum_type.istart..math::min((isz)enum_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``", code[enum_type.istart .. math::min((isz)enum_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(enum_type.istart, 31);
     test::eq(code[enum_type.iend], '}');
-    test::eq(enum_type.iend, code.len-4);
+    test::eq(enum_type.iend, code.len - 4);
 }
 
-fn void test_typed_enum_simple(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_typed_enum_simple()
+{
+    String code = `module test::std::c3lang::ast;
 enum Foo : int {
     A,
     RUNNING    = { OtherEnum.FAILING, true,  {12,22} },
     FOO = SOME_OTHER_CONST,
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -1007,20 +1025,23 @@ enum Foo : int {
     test::eq(eval.type, TokenType.CONST_IDENT);
     test::eq(eval.value, "FOO");
 
-    io::printf("\n\n``%s``", code[enum_type.istart..math::min((isz)enum_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``", code[enum_type.istart .. math::min((isz)enum_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(enum_type.istart, 31);
     test::eq(code[enum_type.iend], '}');
-    test::eq(enum_type.iend, code.len-4);
+    test::eq(enum_type.iend, code.len - 4);
 }
 
-fn void test_typed_enum_associated(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_typed_enum_associated()
+{
+    String code = `module test::std::c3lang::ast;
 enum Foo : int (String desc, bool active, Position pos) @test @if(env:FOO) {
     A,
     RUNNING    = { OtherEnum.FAILING, true,  {12,22} },
     FOO = SOME_OTHER_CONST,
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -1052,21 +1073,24 @@ enum Foo : int (String desc, bool active, Position pos) @test @if(env:FOO) {
     test::eq(eval.type, TokenType.CONST_IDENT);
     test::eq(eval.value, "FOO");
 
-    io::printf("\n\n``%s``", code[enum_type.istart..math::min((isz)enum_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``", code[enum_type.istart .. math::min((isz)enum_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(enum_type.istart, 31);
     test::eq(code[enum_type.iend], '}');
-    test::eq(enum_type.iend, code.len-4);
+    test::eq(enum_type.iend, code.len - 4);
 }
 
-fn void test_fault_type(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_fault_type()
+{
+    String code = `module test::std::c3lang::ast;
 fault SomeFault @local @if(env::FOO)
 {
     A,
     RUNNING    = { OtherEnum.FAILING, true,  {12,22} },
     FOO = SOME_OTHER_CONST,
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -1099,19 +1123,22 @@ fault SomeFault @local @if(env::FOO)
     test::eq(eval.type, TokenType.CONST_IDENT);
     test::eq(eval.value, "FOO");
 
-    io::printf("\n\n``%s``", code[enum_type.istart..math::min((isz)enum_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``", code[enum_type.istart .. math::min((isz)enum_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(enum_type.istart, 31);
     test::eq(code[enum_type.iend], '}');
-    test::eq(enum_type.iend, code.len-4);
+    test::eq(enum_type.iend, code.len - 4);
 }
 
-fn void test_interface_type(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_interface_type()
+{
+    String code = `module test::std::c3lang::ast;
 interface NodeI @local {
     fn bool foo(Ast* ast, AstNode* node, Token* t) @local;
     fn List(<int>) bar() @local;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -1157,26 +1184,27 @@ interface NodeI @local {
     test::eq(param.value, "t");
     test::eq(ast.@node_join(param.param_type, contents), "Token,*");
 
-
-
     func = (AstCallable*)ast.@node_at(ifc_type.functions, 1);
     test::ne(func, null);
 
     test::eq(func.type, TokenType.FN);
-    test::eq(ast.@node_join(func.ftype, contents),`List,(<,int,>)` );
+    test::eq(ast.@node_join(func.ftype, contents), `List,(<,int,>)`);
     test::eq(ast.@node_join(func.name, contents), "bar");
     test::eq(ast.@node_join(func.attributes, contents), "@local");
 
     test::eq(ast.@node_len(func.params), 0);
 
-    io::printf("\n\n``%s``", code[ifc_type.istart..math::min((isz)ifc_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``", code[ifc_type.istart .. math::min((isz)ifc_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(ifc_type.istart, 31);
     test::eq(code[ifc_type.iend], '}');
-    test::eq(ifc_type.iend, code.len-4);
+    test::eq(ifc_type.iend, code.len - 4);
 }
 
-fn void test_interface_type_with_docs(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_interface_type_with_docs()
+{
+    String code = `module test::std::c3lang::ast;
 interface NodeI @local {
     <* Doc string
     @param ast "some stuff"
@@ -1186,7 +1214,7 @@ interface NodeI @local {
     <* another doc string *>
     fn List(<int>) bar() @local;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -1233,34 +1261,34 @@ interface NodeI @local {
     test::eq(param.value, "t");
     test::eq(ast.@node_join(param.param_type, contents), "Token,*");
 
-
-
     func = (AstCallable*)ast.@node_at(ifc_type.functions, 1);
     test::ne(func, null);
 
     test::eq(func.type, TokenType.FN);
-    test::eq(ast.@node_join(func.ftype, contents),`List,(<,int,>)` );
+    test::eq(ast.@node_join(func.ftype, contents), `List,(<,int,>)`);
     test::eq(ast.@node_join(func.name, contents), "bar");
     test::eq(ast.@node_join(func.attributes, contents), "@local");
     test::eq(ast.@node_join(func.docs, contents), "<* another doc string ");
 
     test::eq(ast.@node_len(func.params), 0);
 
-    io::printf("\n\n``%s``", code[ifc_type.istart..math::min((isz)ifc_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``", code[ifc_type.istart .. math::min((isz)ifc_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(ifc_type.istart, 31);
     test::eq(code[ifc_type.iend], '}');
-    test::eq(ifc_type.iend, code.len-4);
+    test::eq(ifc_type.iend, code.len - 4);
 }
 
 fn void test_struct_typedef()
 {
-   String code =  `module test::std::c3lang::ast;
+    String code = `module test::std::c3lang::ast;
 <* docs *>
 struct MyStruct @local {
     int a;
     MyType b @test;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -1291,7 +1319,6 @@ struct MyStruct @local {
     test::eq(ast.@node_join(member.attributes, contents), "");
     test::eq(ast.@node_join(member.docs, contents), "");
 
-
     member = (AstTypeDefStructural*)ast.@node_at(struct_type.members, 1);
     test::ne(member, null);
     test::eq(member.type, TokenType.TYPE_IDENT);
@@ -1300,16 +1327,18 @@ struct MyStruct @local {
     test::eq(ast.@node_join(member.attributes, contents), "@test");
     test::eq(ast.@node_join(member.docs, contents), "");
 
-    io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``",
+        code[struct_type.istart .. math::min((isz)struct_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(struct_type.istart, 42);
     test::eq(code[struct_type.iend], '}');
-    test::eq(struct_type.iend, code.len-4);
+    test::eq(struct_type.iend, code.len - 4);
 }
-
 
 fn void test_struct_typedef_member_docs()
 {
-   String code =  `module test::std::c3lang::ast;
+    String code = `module test::std::c3lang::ast;
 <* docs *>
 struct MyStruct @local {
     <* some stuff *>
@@ -1317,7 +1346,7 @@ struct MyStruct @local {
     <* another doc *>
     List(<MyType>) b;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -1356,16 +1385,18 @@ struct MyStruct @local {
     test::eq(ast.@node_join(member.attributes, contents), "");
     test::eq(ast.@node_join(member.docs, contents), "<* another doc ");
 
-
-    io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``",
+        code[struct_type.istart .. math::min((isz)struct_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(struct_type.istart, 42);
     test::eq(code[struct_type.iend], '}');
-    test::eq(struct_type.iend, code.len-4);
+    test::eq(struct_type.iend, code.len - 4);
 }
 
 fn void test_struct_typedef_substructs()
 {
-   String code =  `module test::std::c3lang::ast;
+    String code = `module test::std::c3lang::ast;
 struct MyStruct @local {
     struct my_sub @test {
         int x;
@@ -1374,7 +1405,7 @@ struct MyStruct @local {
     }
     int b @test;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -1419,16 +1450,19 @@ struct MyStruct @local {
     test::eq(ast.@node_join(member.docs, contents), ``);
     test::eq(ast.@node_len(member.members), 0);
 
-    io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``",
+        code[struct_type.istart .. math::min((isz)struct_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(struct_type.istart, 31);
     test::eq(code[struct_type.iend], '}');
-    test::eq(struct_type.iend, code.len-4);
-    
+    test::eq(struct_type.iend, code.len - 4);
+
 }
 
 fn void test_struct_typedef_substructs_doc_strings()
 {
-   String code =  `module test::std::c3lang::ast;
+    String code = `module test::std::c3lang::ast;
 <*doc1*>
 struct MyStruct @local {
     <*doc2*>
@@ -1441,7 +1475,7 @@ struct MyStruct @local {
     <*doc4*>
     int b @test;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -1486,14 +1520,18 @@ struct MyStruct @local {
     test::eq(ast.@node_join(member.docs, contents), `<*doc4`);
     test::eq(ast.@node_len(member.members), 0);
 
-    io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``",
+        code[struct_type.istart .. math::min((isz)struct_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(struct_type.istart, 40);
     test::eq(code[struct_type.iend], '}');
-    test::eq(struct_type.iend, code.len-4);
+    test::eq(struct_type.iend, code.len - 4);
 }
+
 fn void test_struct_sub_sub()
 {
-   String code =  `module test::std::c3lang::ast;
+    String code = `module test::std::c3lang::ast;
 struct MyStruct @local {
     struct my_sub @test {
         int x;
@@ -1505,7 +1543,7 @@ struct MyStruct @local {
     }
     int b @test;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -1573,7 +1611,6 @@ struct MyStruct @local {
     test::eq(ast.@node_join(field2.attributes, contents), "");
     test::eq(ast.@node_join(field2.docs, contents), ``);
 
-
     // Main struct second field
     field2 = (AstTypeDefStructural*)ast.@node_at(struct_type.members, 1);
     test::ne(field2, null);
@@ -1585,16 +1622,19 @@ struct MyStruct @local {
     test::eq(ast.@node_join(field2.docs, contents), ``);
     test::eq(ast.@node_len(field2.members), 0);
 
-    io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``",
+        code[struct_type.istart .. math::min((isz)struct_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(struct_type.istart, 31);
     test::eq(code[struct_type.iend], '}');
-    test::eq(struct_type.iend, code.len-4);
-    
+    test::eq(struct_type.iend, code.len - 4);
+
 }
 
 fn void test_struct_anonymous()
 {
-   String code =  `module test::std::c3lang::ast;
+    String code = `module test::std::c3lang::ast;
 struct MyStruct @local {
     struct @test {
         int x;
@@ -1603,7 +1643,7 @@ struct MyStruct @local {
     }
     int b @test;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -1648,27 +1688,29 @@ struct MyStruct @local {
     test::eq(ast.@node_join(member.docs, contents), ``);
     test::eq(ast.@node_len(member.members), 0);
 
-    io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``",
+        code[struct_type.istart .. math::min((isz)struct_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(struct_type.istart, 31);
     test::eq(code[struct_type.iend], '}');
-    test::eq(struct_type.iend, code.len-4);
-    
+    test::eq(struct_type.iend, code.len - 4);
+
 }
 
 fn void test_struct_inline()
 {
-   String code =  `module test::std::c3lang::ast;
+    String code = `module test::std::c3lang::ast;
 struct MyStruct @local {
     <*inline doc*>
     inline List(<int>) base @test;
     int b @test;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
     contents.clear();
-
 
     test::ne(ast.modules, null);
     AstModule* m = ast.@node_at(ast.modules, 0);
@@ -1709,21 +1751,24 @@ struct MyStruct @local {
     test::eq(ast.@node_join(member.docs, contents), ``);
     test::eq(ast.@node_len(member.members), 0);
 
-    io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``",
+        code[struct_type.istart .. math::min((isz)struct_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(struct_type.istart, 31);
     test::eq(code[struct_type.iend], '}');
-    test::eq(struct_type.iend, code.len-4);
-    
+    test::eq(struct_type.iend, code.len - 4);
+
 }
 
 fn void test_union()
 {
-   String code =  `module test::std::c3lang::ast;
+    String code = `module test::std::c3lang::ast;
 union MyUnion @local {
     int a;
     int b @test;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -1754,7 +1799,6 @@ union MyUnion @local {
     test::eq(ast.@node_join(member.attributes, contents), "");
     test::eq(ast.@node_join(member.docs, contents), "");
 
-
     member = (AstTypeDefStructural*)ast.@node_at(struct_type.members, 1);
     test::ne(member, null);
     test::eq(member.type, TokenType.TYPE_IDENT);
@@ -1763,15 +1807,18 @@ union MyUnion @local {
     test::eq(ast.@node_join(member.attributes, contents), "@test");
     test::eq(ast.@node_join(member.docs, contents), "");
 
-    io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``",
+        code[struct_type.istart .. math::min((isz)struct_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(struct_type.istart, 31);
     test::eq(code[struct_type.iend], '}');
-    test::eq(struct_type.iend, code.len-4);
+    test::eq(struct_type.iend, code.len - 4);
 }
 
 fn void test_struct_with_unions()
 {
-   String code =  `module test::std::c3lang::ast;
+    String code = `module test::std::c3lang::ast;
 struct MyUnion @local {
     union {
         int a;
@@ -1782,7 +1829,7 @@ struct MyUnion @local {
         int z;
     }
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -1813,7 +1860,6 @@ struct MyUnion @local {
     test::eq(ast.@node_join(member.attributes, contents), "");
     test::eq(ast.@node_join(member.docs, contents), "");
 
-
     member = (AstTypeDefStructural*)ast.@node_at(struct_type.members, 1);
     test::ne(member, null);
     test::eq(member.type, TokenType.UNION);
@@ -1823,22 +1869,25 @@ struct MyUnion @local {
     test::eq(ast.@node_join(member.docs, contents), "");
     test::eq(ast.@node_join(member.members, contents), "x,z");
 
-    io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``",
+        code[struct_type.istart .. math::min((isz)struct_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(struct_type.istart, 31);
     test::eq(code[struct_type.iend], '}');
-    test::eq(struct_type.iend, code.len-4);
+    test::eq(struct_type.iend, code.len - 4);
 }
 
 fn void test_bitstruct()
 {
-   String code =  `module test::std::c3lang::ast;
+    String code = `module test::std::c3lang::ast;
 bitstruct MyBit @local : char
 {
     int a : 0..2;
     int b @test : 4..6;
     bool c : 7;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -1869,7 +1918,6 @@ bitstruct MyBit @local : char
     test::eq(ast.@node_join(member.attributes, contents), "");
     test::eq(ast.@node_join(member.docs, contents), "");
 
-
     member = (AstTypeDefStructural*)ast.@node_at(struct_type.members, 1);
     test::ne(member, null);
     test::eq(member.type, TokenType.TYPE_IDENT);
@@ -1878,15 +1926,18 @@ bitstruct MyBit @local : char
     test::eq(ast.@node_join(member.attributes, contents), "@test");
     test::eq(ast.@node_join(member.docs, contents), "");
 
-    io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``",
+        code[struct_type.istart .. math::min((isz)struct_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(struct_type.istart, 31);
     test::eq(code[struct_type.iend], '}');
-    test::eq(struct_type.iend, code.len-4);
+    test::eq(struct_type.iend, code.len - 4);
 }
 
 fn void test_sub_bitstruct()
 {
-   String code =  `module test::std::c3lang::ast;
+    String code = `module test::std::c3lang::ast;
 struct MyBit {
     bitstruct my_bit @local : char
     {
@@ -1895,7 +1946,7 @@ struct MyBit {
         bool c : 7;
     }
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -1927,19 +1978,21 @@ struct MyBit {
     test::eq(ast.@node_join(member.docs, contents), "");
     test::eq(ast.@node_join(member.members, contents), "a,b,c");
 
-
-    io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``",
+        code[struct_type.istart .. math::min((isz)struct_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(struct_type.istart, 31);
     test::eq(code[struct_type.iend], '}');
-    test::eq(struct_type.iend, code.len-4);
+    test::eq(struct_type.iend, code.len - 4);
 }
 
 fn void test_def()
 {
-   String code =  `module test::std::c3lang::ast;
+    String code = `module test::std::c3lang::ast;
 <*def doc*>
 def Int32 = int;
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -1959,18 +2012,21 @@ def Int32 = int;
     test::eq(ast.@node_join(struct_type.docs, contents), "<*def doc");
     test::eq(ast.@node_join(struct_type.ftype, contents), "int");
 
-    io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``",
+        code[struct_type.istart .. math::min((isz)struct_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(struct_type.istart, 43);
     test::eq(code[struct_type.iend], ';');
-    test::eq(struct_type.iend, code.len-4);
+    test::eq(struct_type.iend, code.len - 4);
 }
 
 fn void test_def_attr_type()
 {
-   String code =  `module test::std::c3lang::ast;
+    String code = `module test::std::c3lang::ast;
 <*def doc*>
 def @Int32 = { @foo @bar };
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -1990,18 +2046,21 @@ def @Int32 = { @foo @bar };
     test::eq(ast.@node_join(struct_type.docs, contents), "<*def doc");
     test::eq(ast.@node_join(struct_type.ftype, contents), "{,@foo,@bar,}");
 
-    io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``",
+        code[struct_type.istart .. math::min((isz)struct_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(struct_type.istart, 43);
     test::eq(code[struct_type.iend], ';');
-    test::eq(struct_type.iend, code.len-4);
+    test::eq(struct_type.iend, code.len - 4);
 }
 
 fn void test_def_inline_list()
 {
-   String code =  `module test::std::c3lang::ast;
+    String code = `module test::std::c3lang::ast;
 <*def doc*>
 def IntList32 @test @foo = inline List(<int>);
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -2022,18 +2081,21 @@ def IntList32 @test @foo = inline List(<int>);
     // NOTE: inline expected to be excluded from type fields
     test::eq(ast.@node_join(struct_type.ftype, contents), "List,(<,int,>)");
 
-    io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``",
+        code[struct_type.istart .. math::min((isz)struct_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(struct_type.istart, 43);
     test::eq(code[struct_type.iend], ';');
-    test::eq(struct_type.iend, code.len-4);
+    test::eq(struct_type.iend, code.len - 4);
 }
 
 fn void test_distinct()
 {
-   String code =  `module test::std::c3lang::ast;
+    String code = `module test::std::c3lang::ast;
 <*def doc*>
 distinct Int32 = int;
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -2053,18 +2115,21 @@ distinct Int32 = int;
     test::eq(ast.@node_join(struct_type.docs, contents), "<*def doc");
     test::eq(ast.@node_join(struct_type.ftype, contents), "int");
 
-    io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``",
+        code[struct_type.istart .. math::min((isz)struct_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(struct_type.istart, 43);
     test::eq(code[struct_type.iend], ';');
-    test::eq(struct_type.iend, code.len-4);
+    test::eq(struct_type.iend, code.len - 4);
 }
 
 fn void test_constant()
 {
-   String code =  `module test::std::c3lang::ast;
+    String code = `module test::std::c3lang::ast;
 <*def doc*>
 const Int32 A_FOO_BAR = 123;
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -2084,18 +2149,21 @@ const Int32 A_FOO_BAR = 123;
     test::eq(ast.@node_join(struct_type.docs, contents), "<*def doc");
     test::eq(ast.@node_join(struct_type.ftype, contents), "Int32");
 
-    io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``",
+        code[struct_type.istart .. math::min((isz)struct_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(struct_type.istart, 43);
     test::eq(code[struct_type.iend], ';');
-    test::eq(struct_type.iend, code.len-4);
+    test::eq(struct_type.iend, code.len - 4);
 }
 
 fn void test_def_fn_pointer()
 {
-   String code =  `module test::std::c3lang::ast;
+    String code = `module test::std::c3lang::ast;
 <*def doc*>
 def NodeParser = fn bool (Ast* ast, AstNode* node, Token* t, NodeParserState* state);
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -2113,22 +2181,29 @@ def NodeParser = fn bool (Ast* ast, AstNode* node, Token* t, NodeParserState* st
 
     test::eq(ast.@node_join(struct_type.attributes, contents), "");
     test::eq(ast.@node_join(struct_type.docs, contents), "<*def doc");
-    test::eq(ast.@node_join(struct_type.ftype, contents), "fn,bool,(,Ast,*,ast,,,AstNode,*,node,,,Token,*,t,,,NodeParserState,*,state,)");
+    test::eq(
+        ast.@node_join(struct_type.ftype, contents),
+        "fn,bool,(,Ast,*,ast,,,AstNode,*,node,,,Token,*,t,,,NodeParserState,*,state,)"
+    );
 
-    io::printf("\n\n``%s``", code[struct_type.istart..math::min((isz)struct_type.iend, (isz)(code.len-1))]);
+    io::printf(
+        "\n\n``%s``",
+        code[struct_type.istart .. math::min((isz)struct_type.iend, (isz)(code.len - 1))]
+    );
     test::eq(struct_type.istart, 43);
     test::eq(code[struct_type.iend], ';');
-    test::eq(struct_type.iend, code.len-4);
+    test::eq(struct_type.iend, code.len - 4);
 }
 
-fn void test_module_imports_comma_sep(){
-   String code =  `
+fn void test_module_imports_comma_sep()
+{
+    String code = `
    module test::std::c3lang::ast; 
    import std::io @test, test::math @foo;
 
    `;
     DString contents = dstring::temp_new(code);
-    
+
     String path = "foo.c3";
     Ast ast = ast::parse(contents.str_view(), path, true);
     defer mem::free(ast._allocator);
@@ -2136,7 +2211,7 @@ fn void test_module_imports_comma_sep(){
 
     test::eq(ast.@node_len(ast.modules), 1);
     test::eq(ast.@node_join(ast.modules, contents, ","), "test::std::c3lang::ast");
-    
+
     AstModule* m = ast.@node_at(ast.modules, 0);
     test::eq(ast.@node_join(m.name, contents, "::"), "test::std::c3lang::ast");
     test::eq(m.attributes, null);
@@ -2157,11 +2232,13 @@ fn void test_module_imports_comma_sep(){
     test::eq(ast.@node_join(imp.name, contents, "::"), "test::math");
     test::eq(ast.@node_join(imp.attributes, contents), "@foo");
 }
+
 /*
 
 */
-fn void test_macro_atomic_regression1(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_macro_atomic_regression1()
+{
+    String code = `module test::std::c3lang::ast;
 
 macro fetch_add(ptr, y, AtomicOrdering $ordering = SEQ_CONSISTENT, bool $volatile = false, usz $alignment = 0)
 {
@@ -2170,7 +2247,7 @@ macro fetch_add(ptr, y, AtomicOrdering $ordering = SEQ_CONSISTENT, bool $volatil
 	$endif
 	return $$atomic_fetch_add(ptr, y, $volatile, $ordering.ordinal, $alignment);
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -2190,15 +2267,15 @@ macro fetch_add(ptr, y, AtomicOrdering $ordering = SEQ_CONSISTENT, bool $volatil
 
     test::eq(ast.@node_join(func.params, contents), "ptr,y,$ordering,$volatile,$alignment");
 
-
-    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    io::printf("\n\n``%s``", code[func.istart .. math::min((isz)func.iend, (isz)(code.len - 1))]);
     test::eq(func.istart, 32);
-    test::eq(func.iend, code.len-4);
+    test::eq(func.iend, code.len - 4);
     test::eq(code[func.iend], '}');
 }
 
-fn void test_macro_type_based(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_macro_type_based()
+{
+    String code = `module test::std::c3lang::ast;
 
 macro MyType.fetch_add(ptr, y, AtomicOrdering $ordering = SEQ_CONSISTENT, bool $volatile = false, usz $alignment = 0)
 {
@@ -2207,7 +2284,7 @@ macro MyType.fetch_add(ptr, y, AtomicOrdering $ordering = SEQ_CONSISTENT, bool $
 	$endif
 	return $$atomic_fetch_add(ptr, y, $volatile, $ordering.ordinal, $alignment);
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -2227,15 +2304,15 @@ macro MyType.fetch_add(ptr, y, AtomicOrdering $ordering = SEQ_CONSISTENT, bool $
 
     test::eq(ast.@node_join(func.params, contents), "ptr,y,$ordering,$volatile,$alignment");
 
-
-    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    io::printf("\n\n``%s``", code[func.istart .. math::min((isz)func.iend, (isz)(code.len - 1))]);
     test::eq(func.istart, 32);
-    test::eq(func.iend, code.len-4);
+    test::eq(func.iend, code.len - 4);
     test::eq(code[func.iend], '}');
 }
 
-fn void test_func_with_c_docstring(){
-   String code =  `module test::std::c3lang::ast;
+fn void test_func_with_c_docstring()
+{
+    String code = `module test::std::c3lang::ast;
 /**
  * Allocate data for a token, including source location.
  * This call is doing the basic allocation, with other functions
@@ -2244,7 +2321,7 @@ fn void test_func_with_c_docstring(){
 fn MyType* MyFoo.test_node(&self) {
     return 1;
 }
-//`; // NOTE: // - is sanity guard comment, don't delete it!
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
     DString contents = dstring::temp_new(code);
     Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
     defer mem::free(ast._allocator);
@@ -2271,8 +2348,8 @@ fn MyType* MyFoo.test_node(&self) {
     // test::eq(param.param_type, null);
     test::eq(ast.@node_join(param.param_type, contents), "MyFoo");
 
-    io::printf("\n\n``%s``", code[func.istart..math::min((isz)func.iend, (isz)(code.len-1))]);
+    io::printf("\n\n``%s``", code[func.istart .. math::min((isz)func.iend, (isz)(code.len - 1))]);
     test::eq(func.istart, 200);
-    test::eq(func.iend, code.len-4);
+    test::eq(func.iend, code.len - 4);
     test::eq(code[func.iend], '}');
 }
