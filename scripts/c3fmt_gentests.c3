@@ -74,7 +74,7 @@ fn int main(String[] args)
 
 	code.@module("test::c3tools::c3fmt_corpus @test");
 	code.@import("c3tools::codefmt");
-	code.@import("c3tools::codefmt::codecorpus");
+	code.@import("c3tools::codefmt::codecorpus @public");
 	code.@import("std::io");
 
 	Path p = path::temp_cwd()!!;

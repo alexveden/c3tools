@@ -1,6 +1,6 @@
 module test::c3tools::c3fmt_corpus @test;
 import c3tools::codefmt;
-import c3tools::codefmt::codecorpus;
+import c3tools::codefmt::codecorpus @public;
 import std::io;
 
 fn void test_corpus__statements__generic_statements() 
