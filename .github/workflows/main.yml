@@ -133,6 +133,7 @@ jobs:
           find c3c/lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
           cd c3c/
           echo "Checking if any changes after formatting (must be the same!)"
+          git diff | head
           git diff --quiet
 
       - name: c3c stdlib unit tests formatted (double)
