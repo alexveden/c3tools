@@ -1266,3 +1266,23 @@ fn void test_simple_docstring_empty()
 
     test::eq(toks[2].type, TokenType.EOF);
 }
+
+fn void test_unicode_chars()
+{
+    String contents = `'謝';`;
+    Lexer lexer;
+    lexer::init(&lexer, contents);
+    List(<lexer::Token>) toks = lexer.new_parse_tokens();
+    defer toks.free();
+
+    // foreach(t: toks) t.print(new_line: true);
+    foreach (i, t : toks) io::printf("%d: %s", i, t);
+
+    // module IDENT[foo] ; EOF
+    test::eq(3, toks.len());
+    test::eq(toks[0].type, TokenType.CHAR_LITERAL);
+    test::eq(toks[0].value, `'謝'`);
+
+    test::eq(toks[1].type, TokenType.EOS);
+    test::eq(toks[2].type, TokenType.EOF);
+}

@@ -441,3 +441,27 @@ fn void main()
     bool r = foo ?!bar : !vrr;
     bool r = foo ? (!bar) : !vrr;
 }
+================================================================================
+literal_chars_unicode
+================================================================================
+module foo;
+
+int aa = 'ä';
+int x = 'ABCD';
+uint y = 'Helo';
+ushort z = '\x31\x32';
+int d = '\u0031';
+char b = '\x40';
+uint abc = '\U133222AB';
+uint foo = '謝';
+--------------------------------------------------------------------------------
+module foo;
+
+int aa = 'ä';
+int x = 'ABCD';
+uint y = 'Helo';
+ushort z = '\x31\x32';
+int d = '\u0031';
+char b = '\x40';
+uint abc = '\U133222AB';
+uint foo = '謝';

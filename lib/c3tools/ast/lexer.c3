@@ -924,8 +924,6 @@ fn bool scan_char(Lexer* lexer) @inline @local
         }
         width++;
     }
-    // next(lexer);
-    assert(width > 0 && width <= 8);
     return new_token(lexer, CHAR_LITERAL, (String)lexer.lexing_start[..width]);
 }
 
