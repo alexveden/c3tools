@@ -1,5 +1,4 @@
 build/
 .gdb_history
 scripts/c3fmt_gentests
-test/test_c3fmt_corpus.c3
 test/c3tools/codefmt/test_c3fmt_corpus.c3
