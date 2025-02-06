@@ -1,6 +1,6 @@
 module c3test;
 import std::io;
-import std::os::argparse;
+import c3lib::argparse;
 
 fn void! hello_comand(argparse::ArgParse* args)
 {

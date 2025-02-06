@@ -51,7 +51,7 @@ fn int main(String[] args)
 // Copyright (c) 2025 Alex Veden <i@alexveden.com>. All rights reserved.
 // Use of this source code is governed by the MIT license
 // a copy of which can be found in the LICENSE_STDLIB file.
-module std::os::argparse;
+module c3lib::argparse;
 import std::io;
 import std::io::path;
 
