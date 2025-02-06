@@ -1,8 +1,8 @@
 module c3lexer;
-import c3tools::lexer;
+import c3tools::ast::lexer;
 import c3tools::ast;
 import std::io;
-import std::os::argparse;
+import c3lib::argparse;
 import std::collections::list;
 
 fn void! process_file(String file_name)

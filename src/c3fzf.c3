@@ -1,8 +1,8 @@
 module c3symbols;
 import c3tools::ast @public;
-import c3tools::lexer;
+import c3tools::ast::lexer;
 import std::io;
-import std::os::argparse;
+import c3lib::argparse;
 import std::sort;
 import std::collections::list;
 

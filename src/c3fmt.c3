@@ -1,7 +1,7 @@
 module c3fmt;
 module c3tools::codefmt;
 import std::io;
-import std::os::argparse;
+import c3lib::argparse;
 
 fn void! format_file(
     String file_name, int max_line_width, bool force_mode, bool dry_mode, String indent_type
