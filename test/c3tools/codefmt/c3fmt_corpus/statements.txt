@@ -2015,3 +2015,38 @@ fn void main()
         do_something();
     };
 }
+================================================================================
+defer_in_defer
+================================================================================
+fn void test()
+{
+    defer
+    {
+        defer test1();
+        test2();
+        defer test3();
+    }
+    test4();
+}
+
+fn void test_line()
+{
+    defer { defer test1(); }
+}
+--------------------------------------------------------------------------------
+fn void test()
+{
+    defer {
+        defer test1();
+        test2();
+        defer test3();
+    }
+    test4();
+}
+
+fn void test_line()
+{
+    defer {
+        defer test1();
+    }
+}
