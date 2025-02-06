@@ -1204,7 +1204,7 @@ fn bool! CodeFmt.asm_non_fmt_block(CodeFmt* self, Token* t, NodeParserState* sta
                 case LBRACE:
                     if (state.scope_depth == 1) {
                         // { will be printed by raw printer
-                        self.write(" ");
+                        self.newline();
                         // print asm block as is without formatting
                         self._lexer.set_whitespace_mode(true);
                     }

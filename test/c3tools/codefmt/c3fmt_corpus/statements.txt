@@ -1160,7 +1160,8 @@ fn void main()
     int* xa = &a;
     usz asf = 1;
     asm("nop");
-    asm {
+    asm
+    {
             movl x, 4;                  // Move 4 into the variable x
             movl [gp], {x};             // Move the value of x into the address in gp
             movl x, 1;                  // Move 1 into x
