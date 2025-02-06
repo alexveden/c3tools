@@ -264,6 +264,7 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                     state.transition(VAR);
                     return self.push_run_state(&CodeFmt.format_fn_args, t);
                 case AT_IDENT:
+                case AT_TYPE_IDENT:
                     nextcase STATE: state.transition(AT_IDENT);
                 case LBRACE:
                     nextcase STATE: state.transition(SCOPE);
@@ -282,6 +283,7 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
             self.trace("AT_IDENT");
             switch (t.type) {
                 case AT_IDENT:
+                case AT_TYPE_IDENT:
                     self._lexer.extend_current_attribute();
                     self.write(" ");
                     self.write("%s", t.value);

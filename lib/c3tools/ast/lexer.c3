@@ -525,7 +525,7 @@ fn bool skip_whitespace(Lexer* lexer) @local
 fn void Lexer.extend_current_attribute(Lexer* lexer)
 {
     Token* result = &lexer.token;
-    assert(lexer.token.type == AT_IDENT);
+    assert(lexer.token.type == AT_IDENT || lexer.token.type == AT_TYPE_IDENT);
     assert(
         math::abs(lexer.current - lexer.token.value.ptr) < 64,
         "this must be called AT_IDENT parsed"

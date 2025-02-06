@@ -455,3 +455,65 @@ struct Person (Printable, Foo, Bar)
         int a : 0..2;
     }
 }
+================================================================================
+user_defined_attributes
+================================================================================
+module test;
+
+def @Foo = { @noreturn @weak };
+
+def @Align(y) = { @align(y) };
+def @Align16(x) = { @Align(8 * x) @align(1024) } @private;
+def @Test = { @noinline };
+def @TestZero = { };
+struct Foo
+{
+    int z;
+    int xy @Align16(8);
+}
+
+Foo f;
+
+fn void testme2() @Foo
+{}
+
+fn void testme() @Test
+{
+    int x;
+}
+
+fn void main() @TestZero
+{
+    testme();
+}
+
+--------------------------------------------------------------------------------
+module test;
+
+def @Foo = { @noreturn @weak };
+
+def @Align(y) = { @align(y) };
+def @Align16(x) = { @Align(8 * x) @align(1024) }@private;
+def @Test = { @noinline };
+def @TestZero = {};
+struct Foo
+{
+    int z;
+    int xy @Align16(8);
+}
+
+Foo f;
+
+fn void testme2() @Foo
+{
+}
+
+fn void testme() @Test
+{
+    int x;
+}
+
+fn void main() @TestZero
+{
+    testme();
+}
