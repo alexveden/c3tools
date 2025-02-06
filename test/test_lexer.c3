@@ -10,10 +10,10 @@ fn void test_row_col_offset() {
 	int cnt = 0;
 	while(lexer.next_token()) {
 	    if (cnt == 1) {
-	        test::equal(lexer.token.type, TokenType.IDENT);
-	        test::equal(lexer.token.value, "foo");
-	        test::equal(lexer.token.row, 1);
-	        test::equal(lexer.token.col, 8);
+	        test::eq(lexer.token.type, TokenType.IDENT);
+	        test::eq(lexer.token.value, "foo");
+	        test::eq(lexer.token.row, 1);
+	        test::eq(lexer.token.col, 8);
 	    }
 	    
 	    cnt++;
@@ -31,30 +31,30 @@ fn void test_simple_module() {
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
     // module IDENT[foo] ; EOF
-	test::equal(4, toks.len());
-	test::equal(toks[0].type, TokenType.MODULE);
-	test::equal(toks[0].value, "module");
-	test::equal(toks[0].row, 1);
-	test::equal(toks[0].col, 1);
-	test::equal(toks[0].offset, 0);
+	test::eq(4, toks.len());
+	test::eq(toks[0].type, TokenType.MODULE);
+	test::eq(toks[0].value, "module");
+	test::eq(toks[0].row, 1);
+	test::eq(toks[0].col, 1);
+	test::eq(toks[0].offset, 0);
 
-	test::equal(toks[1].type, TokenType.IDENT);
-	test::equal(toks[1].value, "foo");
-	test::equal(toks[1].offset, 7);
-	test::equal(toks[1].row, 1);
-	test::equal(toks[1].col, 8);
+	test::eq(toks[1].type, TokenType.IDENT);
+	test::eq(toks[1].value, "foo");
+	test::eq(toks[1].offset, 7);
+	test::eq(toks[1].row, 1);
+	test::eq(toks[1].col, 8);
 
-	test::equal(toks[2].type, TokenType.EOS);
-	test::equal(toks[2].value, ";");
-	test::equal(toks[2].offset, 10);
-	test::equal(toks[2].row, 1);
-	test::equal(toks[2].col, 11);
+	test::eq(toks[2].type, TokenType.EOS);
+	test::eq(toks[2].value, ";");
+	test::eq(toks[2].offset, 10);
+	test::eq(toks[2].row, 1);
+	test::eq(toks[2].col, 11);
 
-	test::equal(toks[3].type, TokenType.EOF);
-	test::equal(toks[3].value, "\n");
-	test::equal(toks[3].col, 12);
-	test::equal(toks[3].row, 1);
-	test::equal(toks[3].offset, 11);
+	test::eq(toks[3].type, TokenType.EOF);
+	test::eq(toks[3].value, "\n");
+	test::eq(toks[3].col, 12);
+	test::eq(toks[3].row, 1);
+	test::eq(toks[3].offset, 11);
 }
 
 fn void test_all_available_tokens() {
@@ -150,41 +150,41 @@ fn void test_all_available_tokens() {
 
 		// breakpoint();
 		String source = s.str_view();
-		test::equal(source.len, 8+token_value.len);
+		test::eq(source.len, 8+token_value.len);
 		Lexer lexer;
 		lexer::init(&lexer, s.str_view());
 		List(<lexer::Token>) toks = lexer.new_parse_tokens();
 		defer toks.free();
 
 		test::@check(4 == toks.len(), "\n%s", toks);
-		test::equal(toks[0].type, TokenType.MODULE);
-		test::equal(toks[0].value, "module");
-		test::equal(toks[0].row, 1);
-		test::equal(toks[0].col, 1);
-		test::equal(toks[0].offset, 0);
+		test::eq(toks[0].type, TokenType.MODULE);
+		test::eq(toks[0].value, "module");
+		test::eq(toks[0].row, 1);
+		test::eq(toks[0].col, 1);
+		test::eq(toks[0].offset, 0);
 
-		test::equal(toks[2].type, TokenType.EOS);
-		test::equal(toks[2].value, ";");
+		test::eq(toks[2].type, TokenType.EOS);
+		test::eq(toks[2].value, ";");
 		if (toks[2].row == 1) {
-			test::equal(toks[2].col, s.len());
-			test::equal(toks[2].row, 1);
-			test::equal(toks[2].offset, s.len()-1);
+			test::eq(toks[2].col, s.len());
+			test::eq(toks[2].row, 1);
+			test::eq(toks[2].offset, s.len()-1);
 
-			test::equal(toks[3].type, TokenType.EOF);
-			test::equal(toks[3].value, "\n");
-			test::equal(toks[3].col, s.len()+1);
-			test::equal(toks[3].row, 1);
-			test::equal(toks[3].offset, s.len());
+			test::eq(toks[3].type, TokenType.EOF);
+			test::eq(toks[3].value, "\n");
+			test::eq(toks[3].col, s.len()+1);
+			test::eq(toks[3].row, 1);
+			test::eq(toks[3].offset, s.len());
 		}
 
-		test::equal(toks[1].type, ttype);
+		test::eq(toks[1].type, ttype);
 		if (token_value_exp){
 			test::@check(toks[1].value == token_value_exp, "\nsource: %s\ntoken: %s\n", source, toks[1]);
 		} else {
 			test::@check(toks[1].value == token_value, "\nsource: %s\ntoken: %s\n", source, toks[1]);
 			test::@check(toks[1].col == 8, "\nsource: %s\ntoken: %s\n", source, toks[1]);
-			test::equal(toks[1].row, 1);
-			test::equal(toks[1].offset, 7);
+			test::eq(toks[1].row, 1);
+			test::eq(toks[1].offset, 7);
 		}
 	}
 }
@@ -200,12 +200,12 @@ fn void test_simple_comments_at_start_of_file() {
     // foreach(t: toks) t.print(new_line: true);
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(3, toks.len());
-	test::equal(toks[0].type, TokenType.COMMENT_SINGLE);
-	test::equal(toks[0].value, "// foo");
+	test::eq(3, toks.len());
+	test::eq(toks[0].type, TokenType.COMMENT_SINGLE);
+	test::eq(toks[0].value, "// foo");
 
-	test::equal(toks[1].type, TokenType.EOS);
-	test::equal(toks[2].type, TokenType.EOF);
+	test::eq(toks[1].type, TokenType.EOS);
+	test::eq(toks[2].type, TokenType.EOF);
 }
 
 fn void test_simple_comments_after_ident() {
@@ -216,16 +216,16 @@ fn void test_simple_comments_after_ident() {
 	List(<lexer::Token>) toks = lexer.new_parse_tokens();
 	defer toks.free();
 
-	test::equal(3, toks.len());
-	test::equal(toks[0].type, TokenType.MODULE);
+	test::eq(3, toks.len());
+	test::eq(toks[0].type, TokenType.MODULE);
 
-	test::equal(toks[1].type, TokenType.COMMENT_SINGLE_INLINE);
-	test::equal(toks[1].value, "// foo;");
-	test::equal(toks[1].col, 8);
-	test::equal(toks[1].row, 1);
-	test::equal(toks[1].offset, 7);
+	test::eq(toks[1].type, TokenType.COMMENT_SINGLE_INLINE);
+	test::eq(toks[1].value, "// foo;");
+	test::eq(toks[1].col, 8);
+	test::eq(toks[1].row, 1);
+	test::eq(toks[1].offset, 7);
 
-	test::equal(toks[2].type, TokenType.EOF);
+	test::eq(toks[2].type, TokenType.EOF);
 }
 
 fn void test_simple_comments_with_new_line() {
@@ -237,16 +237,16 @@ fn void test_simple_comments_with_new_line() {
     // foreach(t: toks) t.print(new_line: true);
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(3, toks.len());
-	test::equal(toks[0].type, TokenType.MODULE);
+	test::eq(3, toks.len());
+	test::eq(toks[0].type, TokenType.MODULE);
 
-	test::equal(toks[1].type, TokenType.COMMENT_SINGLE_INLINE);
-	test::equal(toks[1].value, "// foo;");
-	test::equal(toks[1].col, 8);
-	test::equal(toks[1].row, 1);
-	test::equal(toks[1].offset, 7);
+	test::eq(toks[1].type, TokenType.COMMENT_SINGLE_INLINE);
+	test::eq(toks[1].value, "// foo;");
+	test::eq(toks[1].col, 8);
+	test::eq(toks[1].row, 1);
+	test::eq(toks[1].offset, 7);
 
-	test::equal(toks[2].type, TokenType.EOF);
+	test::eq(toks[2].type, TokenType.EOF);
 }
 
 fn void test_simple_comments_with_new_line_prefix() {
@@ -258,13 +258,13 @@ fn void test_simple_comments_with_new_line_prefix() {
     // foreach(t: toks) t.print(new_line: true);
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(3, toks.len());
-	test::equal(toks[0].type, TokenType.MODULE);
+	test::eq(3, toks.len());
+	test::eq(toks[0].type, TokenType.MODULE);
 
-	test::equal(toks[1].type, TokenType.COMMENT_SINGLE);
-	test::equal(toks[1].value, "// foo;");
+	test::eq(toks[1].type, TokenType.COMMENT_SINGLE);
+	test::eq(toks[1].value, "// foo;");
 
-	test::equal(toks[2].type, TokenType.EOF);
+	test::eq(toks[2].type, TokenType.EOF);
 }
 
 
@@ -277,11 +277,11 @@ fn void test_simple_comments_with_new_line_prefix_inline() {
     // foreach(t: toks) t.print(new_line: true);
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(2, toks.len());
-	test::equal(toks[0].type, TokenType.COMMENT_SINGLE_INLINE);
-	test::equal(toks[0].value, "// foo;");
+	test::eq(2, toks.len());
+	test::eq(toks[0].type, TokenType.COMMENT_SINGLE_INLINE);
+	test::eq(toks[0].value, "// foo;");
 
-	test::equal(toks[1].type, TokenType.EOF);
+	test::eq(toks[1].type, TokenType.EOF);
 }
 
 fn void test_string_no_escape_codes() {
@@ -293,14 +293,14 @@ fn void test_string_no_escape_codes() {
     // foreach(t: toks) t.print(new_line: true);
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(4, toks.len());
-	test::equal(toks[0].type, TokenType.MODULE);
+	test::eq(4, toks.len());
+	test::eq(toks[0].type, TokenType.MODULE);
 
-	test::equal(toks[1].type, TokenType.STRING);
-	test::equal(toks[1].value, `"\n"`);
+	test::eq(toks[1].type, TokenType.STRING);
+	test::eq(toks[1].value, `"\n"`);
 
-	test::equal(toks[2].type, TokenType.EOS);
-	test::equal(toks[3].type, TokenType.EOF);
+	test::eq(toks[2].type, TokenType.EOS);
+	test::eq(toks[3].type, TokenType.EOF);
 }
 
 fn void test_multiline_comment() {
@@ -312,13 +312,13 @@ fn void test_multiline_comment() {
     // foreach(t: toks) t.print(new_line: true);
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(3, toks.len());
-	test::equal(toks[0].type, TokenType.MODULE);
+	test::eq(3, toks.len());
+	test::eq(toks[0].type, TokenType.MODULE);
 
-	test::equal(toks[1].type, TokenType.COMMENT_MULTI_INLINE);
-	test::equal(toks[1].value, `/* asda`);
+	test::eq(toks[1].type, TokenType.COMMENT_MULTI_INLINE);
+	test::eq(toks[1].value, `/* asda`);
 
-	test::equal(toks[2].type, TokenType.EOF);
+	test::eq(toks[2].type, TokenType.EOF);
 }
 
 fn void test_multiline_comment_at_start() {
@@ -330,11 +330,11 @@ fn void test_multiline_comment_at_start() {
     // foreach(t: toks) t.print(new_line: true);
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(2, toks.len());
-	test::equal(toks[0].type, TokenType.COMMENT_MULTI);
-	test::equal(toks[0].value, `/* asda */`);
+	test::eq(2, toks.len());
+	test::eq(toks[0].type, TokenType.COMMENT_MULTI);
+	test::eq(toks[0].value, `/* asda */`);
 
-	test::equal(toks[1].type, TokenType.EOF);
+	test::eq(toks[1].type, TokenType.EOF);
 }
 
 
@@ -347,13 +347,13 @@ fn void test_multiline_comment_with_end() {
     // foreach(t: toks) t.print(new_line: true);
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(3, toks.len());
-	test::equal(toks[0].type, TokenType.MODULE);
+	test::eq(3, toks.len());
+	test::eq(toks[0].type, TokenType.MODULE);
 
-	test::equal(toks[1].type, TokenType.COMMENT_MULTI_INLINE);
-	test::equal(toks[1].value, `/* asda */`);
+	test::eq(toks[1].type, TokenType.COMMENT_MULTI_INLINE);
+	test::eq(toks[1].value, `/* asda */`);
 
-	test::equal(toks[2].type, TokenType.EOF);
+	test::eq(toks[2].type, TokenType.EOF);
 }
 
 
@@ -366,13 +366,13 @@ fn void test_multiline_comment_with_nesting() {
     // foreach(t: toks) t.print(new_line: true);
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(3, toks.len());
-	test::equal(toks[0].type, TokenType.MODULE);
+	test::eq(3, toks.len());
+	test::eq(toks[0].type, TokenType.MODULE);
 
-	test::equal(toks[1].type, TokenType.COMMENT_MULTI_INLINE);
-	test::equal(toks[1].value, `/* asda /* with /* another */ */ */`);
+	test::eq(toks[1].type, TokenType.COMMENT_MULTI_INLINE);
+	test::eq(toks[1].value, `/* asda /* with /* another */ */ */`);
 
-	test::equal(toks[2].type, TokenType.EOF);
+	test::eq(toks[2].type, TokenType.EOF);
 }
 
 fn void test_multiline_comment_multiline_end() {
@@ -384,13 +384,13 @@ fn void test_multiline_comment_multiline_end() {
     // foreach(t: toks) t.print(new_line: true);
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(3, toks.len());
-	test::equal(toks[0].type, TokenType.MODULE);
+	test::eq(3, toks.len());
+	test::eq(toks[0].type, TokenType.MODULE);
 
-	test::equal(toks[1].type, TokenType.COMMENT_MULTI);
-	test::equal(toks[1].value, "/* foo \n asda */");
+	test::eq(toks[1].type, TokenType.COMMENT_MULTI);
+	test::eq(toks[1].value, "/* foo \n asda */");
 
-	test::equal(toks[2].type, TokenType.EOF);
+	test::eq(toks[2].type, TokenType.EOF);
 }
 
 fn void test_simple_module_multiline() {
@@ -404,30 +404,30 @@ fn void test_simple_module_multiline() {
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
     // module IDENT[foo] ; EOF
-	test::equal(4, toks.len());
-	test::equal(toks[0].type, TokenType.MODULE);
-	test::equal(toks[0].value, "module");
-	test::equal(toks[0].row, 1);
-	test::equal(toks[0].col, 1);
-	test::equal(toks[0].offset, 0);
+	test::eq(4, toks.len());
+	test::eq(toks[0].type, TokenType.MODULE);
+	test::eq(toks[0].value, "module");
+	test::eq(toks[0].row, 1);
+	test::eq(toks[0].col, 1);
+	test::eq(toks[0].offset, 0);
 
-	test::equal(toks[1].type, TokenType.IDENT);
-	test::equal(toks[1].value, "foo");
-	test::equal(toks[1].offset, 11);
-	test::equal(toks[1].row, 2);
-	test::equal(toks[1].col, 4);
+	test::eq(toks[1].type, TokenType.IDENT);
+	test::eq(toks[1].value, "foo");
+	test::eq(toks[1].offset, 11);
+	test::eq(toks[1].row, 2);
+	test::eq(toks[1].col, 4);
 
-	test::equal(toks[2].type, TokenType.EOS);
-	test::equal(toks[2].value, ";");
-	test::equal(toks[2].offset, 14);
-	test::equal(toks[2].row, 2);
-	test::equal(toks[2].col, 7);
+	test::eq(toks[2].type, TokenType.EOS);
+	test::eq(toks[2].value, ";");
+	test::eq(toks[2].offset, 14);
+	test::eq(toks[2].row, 2);
+	test::eq(toks[2].col, 7);
 
-	test::equal(toks[3].type, TokenType.EOF);
-	test::equal(toks[3].value, "\n");
-	test::equal(toks[3].col, 8);
-	test::equal(toks[3].row, 2);
-	test::equal(toks[3].offset, contents.len);
+	test::eq(toks[3].type, TokenType.EOF);
+	test::eq(toks[3].value, "\n");
+	test::eq(toks[3].col, 8);
+	test::eq(toks[3].row, 2);
+	test::eq(toks[3].offset, contents.len);
 }
 
 fn void test_simple_docstring() {
@@ -448,67 +448,67 @@ Some text
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
     // module IDENT[foo] ; EOF
-	test::equal(14, toks.len());
-	test::equal(toks[0].type, TokenType.DOCS_START);
-	test::equal(toks[0].value, "<*\nSome text\n");
-	test::equal(toks[0].row, 2);
-	test::equal(toks[0].col, 1);
-	test::equal(toks[0].offset, 1);
+	test::eq(14, toks.len());
+	test::eq(toks[0].type, TokenType.DOCS_START);
+	test::eq(toks[0].value, "<*\nSome text\n");
+	test::eq(toks[0].row, 2);
+	test::eq(toks[0].col, 1);
+	test::eq(toks[0].offset, 1);
 
-	test::equal(toks[1].type, TokenType.AT_IDENT);
-	test::equal(toks[1].value, "@param");
-	test::equal(toks[1].offset, 14);
-	test::equal(toks[1].row, 4);
-	test::equal(toks[1].col, 1);
+	test::eq(toks[1].type, TokenType.AT_IDENT);
+	test::eq(toks[1].value, "@param");
+	test::eq(toks[1].offset, 14);
+	test::eq(toks[1].row, 4);
+	test::eq(toks[1].col, 1);
 
-	test::equal(toks[2].type, TokenType.IDENT);
-	test::equal(toks[2].value, "foo");
-	test::equal(toks[2].offset, 21);
-	test::equal(toks[2].row, 4);
-	test::equal(toks[2].col, 8);
+	test::eq(toks[2].type, TokenType.IDENT);
+	test::eq(toks[2].value, "foo");
+	test::eq(toks[2].offset, 21);
+	test::eq(toks[2].row, 4);
+	test::eq(toks[2].col, 8);
 
-	test::equal(toks[3].type, TokenType.STRING);
-	test::equal(toks[3].value, `"asdlkj"`);
-	test::equal(toks[3].offset, 25);
-	test::equal(toks[3].row, 4);
-	test::equal(toks[3].col, 12);
+	test::eq(toks[3].type, TokenType.STRING);
+	test::eq(toks[3].value, `"asdlkj"`);
+	test::eq(toks[3].offset, 25);
+	test::eq(toks[3].row, 4);
+	test::eq(toks[3].col, 12);
 
-	test::equal(toks[4].type, TokenType.DOCS_EOL);
-	test::equal(toks[4].value, "\n");
-	test::equal(toks[4].offset, 33);
-	test::equal(toks[4].row, 4);
-	test::equal(toks[4].col, 20);
+	test::eq(toks[4].type, TokenType.DOCS_EOL);
+	test::eq(toks[4].value, "\n");
+	test::eq(toks[4].offset, 33);
+	test::eq(toks[4].row, 4);
+	test::eq(toks[4].col, 20);
 
-	test::equal(toks[5].type, TokenType.AT_IDENT);
-	test::equal(toks[5].value, "@pure");
-	test::equal(toks[5].offset, 34);
-	test::equal(toks[5].row, 5);
-	test::equal(toks[5].col, 1);
+	test::eq(toks[5].type, TokenType.AT_IDENT);
+	test::eq(toks[5].value, "@pure");
+	test::eq(toks[5].offset, 34);
+	test::eq(toks[5].row, 5);
+	test::eq(toks[5].col, 1);
 
-	test::equal(toks[6].type, TokenType.DOCS_EOL);
-	test::equal(toks[6].value, "\n");
-	test::equal(toks[6].offset, 39);
-	test::equal(toks[6].row, 5);
-	test::equal(toks[6].col, 6);
+	test::eq(toks[6].type, TokenType.DOCS_EOL);
+	test::eq(toks[6].value, "\n");
+	test::eq(toks[6].offset, 39);
+	test::eq(toks[6].row, 5);
+	test::eq(toks[6].col, 6);
 
-	test::equal(toks[7].type, TokenType.AT_IDENT);
-	test::equal(toks[7].value, "@require");
+	test::eq(toks[7].type, TokenType.AT_IDENT);
+	test::eq(toks[7].value, "@require");
 
-	test::equal(toks[8].type, TokenType.IDENT);
-	test::equal(toks[8].value, "foo");
+	test::eq(toks[8].type, TokenType.IDENT);
+	test::eq(toks[8].value, "foo");
 
-	test::equal(toks[9].type, TokenType.GREATER);
-	test::equal(toks[9].value, ">");
+	test::eq(toks[9].type, TokenType.GREATER);
+	test::eq(toks[9].value, ">");
 
-	test::equal(toks[10].type, TokenType.INTEGER);
-	test::equal(toks[10].value, "0");
+	test::eq(toks[10].type, TokenType.INTEGER);
+	test::eq(toks[10].value, "0");
 
-	test::equal(toks[11].type, TokenType.DOCS_EOL);
+	test::eq(toks[11].type, TokenType.DOCS_EOL);
 
-	test::equal(toks[12].type, TokenType.DOCS_END);
-	test::equal(toks[12].value, "*>");
+	test::eq(toks[12].type, TokenType.DOCS_END);
+	test::eq(toks[12].value, "*>");
 
-	test::equal(toks[13].type, TokenType.EOF);
+	test::eq(toks[13].type, TokenType.EOF);
 }
 
 fn void test_simple_docstring_inline() {
@@ -522,12 +522,12 @@ fn void test_simple_docstring_inline() {
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
     // module IDENT[foo] ; EOF
-	test::equal(3, toks.len());
-	test::equal(toks[0].type, TokenType.DOCS_START);
-	test::equal(toks[0].value, "<*some text");
-	test::equal(toks[1].type, TokenType.DOCS_END);
-	test::equal(toks[1].value, "*>");
-	test::equal(toks[2].type, TokenType.EOF);
+	test::eq(3, toks.len());
+	test::eq(toks[0].type, TokenType.DOCS_START);
+	test::eq(toks[0].value, "<*some text");
+	test::eq(toks[1].type, TokenType.DOCS_END);
+	test::eq(toks[1].value, "*>");
+	test::eq(toks[2].type, TokenType.EOF);
 }
 
 fn void test_simple_docstring_compound_statement() {
@@ -547,7 +547,7 @@ fn void test_simple_docstring_compound_statement() {
     TokenType[] expected = {DOCS_START,AT_IDENT,LBRAPIPE,TYPE_IDENT,STAR,IDENT,EQ,LPAREN,TYPE_IDENT,STAR,RPAREN,IDENT,EOS,RETURN,IDENT,DOT,IDENT,AND,IDENT,DOT,IDENT,EOS,RBRAPIPE,DOCS_EOL,DOCS_END,EOF};
 
     // module IDENT[foo] ; EOF
-	test::equal(expected.len, toks.len());
+	test::eq(expected.len, toks.len());
 	foreach(i, e: expected) {
 		test::@check(e == toks[i].type, "%s != %s at i:%d", e, toks[i], i);
 	}
@@ -565,26 +565,26 @@ fn void test_base64_bytes()
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
     // foreach(i, t: toks) io::printf(",%s", t.type);
 
-	test::equal(4, toks.len());
-	test::equal(toks[0].type, TokenType.MODULE);
-	test::equal(toks[0].value, "module");
-	test::equal(toks[0].row, 1);
-	test::equal(toks[0].col, 1);
-	test::equal(toks[0].offset, 0);
+	test::eq(4, toks.len());
+	test::eq(toks[0].type, TokenType.MODULE);
+	test::eq(toks[0].value, "module");
+	test::eq(toks[0].row, 1);
+	test::eq(toks[0].col, 1);
+	test::eq(toks[0].offset, 0);
 
-	test::equal(toks[1].type, TokenType.BYTES);
-	test::equal(toks[1].value, `b64"SGVsbG8gV29ybGQh"`);
-	test::equal(toks[1].row, 1);
-	test::equal(toks[1].col, 8);
-	test::equal(toks[1].offset, 7);
+	test::eq(toks[1].type, TokenType.BYTES);
+	test::eq(toks[1].value, `b64"SGVsbG8gV29ybGQh"`);
+	test::eq(toks[1].row, 1);
+	test::eq(toks[1].col, 8);
+	test::eq(toks[1].offset, 7);
 
-	test::equal(toks[2].type, TokenType.EOS);
-	test::equal(toks[2].value, `;`);
-	test::equal(toks[2].row, 1);
-	test::equal(toks[2].col, contents.len);
-	test::equal(toks[2].offset, contents.len-1);
+	test::eq(toks[2].type, TokenType.EOS);
+	test::eq(toks[2].value, `;`);
+	test::eq(toks[2].row, 1);
+	test::eq(toks[2].col, contents.len);
+	test::eq(toks[2].offset, contents.len-1);
 
-	test::equal(toks[3].type, TokenType.EOF);
+	test::eq(toks[3].type, TokenType.EOF);
 }
 
 fn void test_base64_bytes_long()
@@ -599,16 +599,16 @@ fn void test_base64_bytes_long()
     foreach(i, t: toks) io::printf("%d: %s", i, t);
     // foreach(i, t: toks) io::printf(",%s", t.type);
 
-	test::equal(3, toks.len());
+	test::eq(3, toks.len());
 
-	test::equal(toks[0].type, TokenType.BYTES);
+	test::eq(toks[0].type, TokenType.BYTES);
 	test::@check(toks[0].value.starts_with(`b64"cW9pZgAAAVQA`));
 	test::@check(toks[0].value.ends_with(`AAAAAAAAAAE="`));
 
-	test::equal(toks[1].type, TokenType.EOS);
-	test::equal(toks[1].value, `;`);
+	test::eq(toks[1].type, TokenType.EOS);
+	test::eq(toks[1].value, `;`);
 
-	test::equal(toks[2].type, TokenType.EOF);
+	test::eq(toks[2].type, TokenType.EOF);
 }
 
 fn void test_hex_bytes()
@@ -623,26 +623,26 @@ fn void test_hex_bytes()
     foreach(i, t: toks) io::printf("%d: %s", i, t);
     // foreach(i, t: toks) io::printf(",%s", t.type);
 
-	test::equal(4, toks.len());
-	test::equal(toks[0].type, TokenType.MODULE);
-	test::equal(toks[0].value, "module");
-	test::equal(toks[0].row, 1);
-	test::equal(toks[0].col, 1);
-	test::equal(toks[0].offset, 0);
+	test::eq(4, toks.len());
+	test::eq(toks[0].type, TokenType.MODULE);
+	test::eq(toks[0].value, "module");
+	test::eq(toks[0].row, 1);
+	test::eq(toks[0].col, 1);
+	test::eq(toks[0].offset, 0);
 
-	test::equal(toks[1].type, TokenType.BYTES);
-	test::equal(toks[1].value, `x"4865 6c6c"`);
-	test::equal(toks[1].row, 1);
-	test::equal(toks[1].col, 8);
-	test::equal(toks[1].offset, 7);
+	test::eq(toks[1].type, TokenType.BYTES);
+	test::eq(toks[1].value, `x"4865 6c6c"`);
+	test::eq(toks[1].row, 1);
+	test::eq(toks[1].col, 8);
+	test::eq(toks[1].offset, 7);
 
-	test::equal(toks[2].type, TokenType.EOS);
-	test::equal(toks[2].value, `;`);
-	test::equal(toks[2].row, 1);
-	test::equal(toks[2].col, contents.len);
-	test::equal(toks[2].offset, contents.len-1);
+	test::eq(toks[2].type, TokenType.EOS);
+	test::eq(toks[2].value, `;`);
+	test::eq(toks[2].row, 1);
+	test::eq(toks[2].col, contents.len);
+	test::eq(toks[2].offset, contents.len-1);
 
-	test::equal(toks[3].type, TokenType.EOF);
+	test::eq(toks[3].type, TokenType.EOF);
 }
 fn void test_hex_bytes_raw_str()
 {
@@ -672,16 +672,16 @@ x``ffffffffffffffffffffffffffffffff
     foreach(i, t: toks) io::printf("%d: %s", i, t);
     // foreach(i, t: toks) io::printf(",%s", t.type);
 
-	test::equal(3, toks.len());
+	test::eq(3, toks.len());
 
-	test::equal(toks[0].type, TokenType.BYTES);
+	test::eq(toks[0].type, TokenType.BYTES);
 	test::@check(toks[0].value.starts_with("x`"));
 	test::@check(toks[0].value.ends_with("cfffdff0`"));
 
-	test::equal(toks[1].type, TokenType.EOS);
-	test::equal(toks[1].value, `;`);
+	test::eq(toks[1].type, TokenType.EOS);
+	test::eq(toks[1].value, `;`);
 
-	test::equal(toks[2].type, TokenType.EOF);
+	test::eq(toks[2].type, TokenType.EOF);
 }
 
 fn void test_fn_decl()
@@ -699,7 +699,7 @@ fn void test_fn_decl()
     TokenType[] expected = {FN,TYPE_IDENT,BANG,IDENT,LPAREN,TYPE_IDENT,IDENT,RPAREN,EOF};
 
     // module IDENT[foo] ; EOF
-	test::equal(expected.len, toks.len());
+	test::eq(expected.len, toks.len());
 	foreach(i, e: expected) {
 		test::@check(e == toks[i].type, "%s != %s at i:%d", e, toks[i], i);
 	}
@@ -720,7 +720,7 @@ fn void test_fn_decl_bang_is_close()
     TokenType[] expected = {FN,TYPE_IDENT,BANG,IDENT,LPAREN,TYPE_IDENT,IDENT,RPAREN,EOF};
 
     // module IDENT[foo] ; EOF
-	test::equal(expected.len, toks.len());
+	test::eq(expected.len, toks.len());
 	foreach(i, e: expected) {
 		test::@check(e == toks[i].type, "%s != %s at i:%d", e, toks[i], i);
 	}
@@ -737,23 +737,23 @@ fn void test_simple_bultin() {
     // foreach(t: toks) t.print(new_line: true);
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(4, toks.len());
-	test::equal(toks[0].type, TokenType.MODULE);
-	test::equal(toks[0].value, "module");
+	test::eq(4, toks.len());
+	test::eq(toks[0].type, TokenType.MODULE);
+	test::eq(toks[0].value, "module");
 
-	test::equal(toks[1].type, TokenType.BUILTIN);
-	test::equal(toks[1].value, "$$bui_ltin123");
-	test::equal(toks[1].row, 1);
-	test::equal(toks[1].col, 8);
-	test::equal(toks[1].offset, 7);
+	test::eq(toks[1].type, TokenType.BUILTIN);
+	test::eq(toks[1].value, "$$bui_ltin123");
+	test::eq(toks[1].row, 1);
+	test::eq(toks[1].col, 8);
+	test::eq(toks[1].offset, 7);
 
-	test::equal(toks[2].type, TokenType.EOS);
-	test::equal(toks[2].value, `;`);
-	test::equal(toks[2].row, 1);
-	test::equal(toks[2].col, contents.len);
-	test::equal(toks[2].offset, contents.len-1);
+	test::eq(toks[2].type, TokenType.EOS);
+	test::eq(toks[2].value, `;`);
+	test::eq(toks[2].row, 1);
+	test::eq(toks[2].col, contents.len);
+	test::eq(toks[2].offset, contents.len-1);
 
-	test::equal(toks[3].type, TokenType.EOF);
+	test::eq(toks[3].type, TokenType.EOF);
 }
 
 fn void test_simple_bultin_type() {
@@ -767,23 +767,23 @@ fn void test_simple_bultin_type() {
     // foreach(t: toks) t.print(new_line: true);
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(4, toks.len());
-	test::equal(toks[0].type, TokenType.MODULE);
-	test::equal(toks[0].value, "module");
+	test::eq(4, toks.len());
+	test::eq(toks[0].type, TokenType.MODULE);
+	test::eq(toks[0].value, "module");
 
-	test::equal(toks[1].type, TokenType.BUILTIN);
-	test::equal(toks[1].value, "$$TypeBuiltin");
-	test::equal(toks[1].row, 1);
-	test::equal(toks[1].col, 8);
-	test::equal(toks[1].offset, 7);
+	test::eq(toks[1].type, TokenType.BUILTIN);
+	test::eq(toks[1].value, "$$TypeBuiltin");
+	test::eq(toks[1].row, 1);
+	test::eq(toks[1].col, 8);
+	test::eq(toks[1].offset, 7);
 
-	test::equal(toks[2].type, TokenType.EOS);
-	test::equal(toks[2].value, `;`);
-	test::equal(toks[2].row, 1);
-	test::equal(toks[2].col, contents.len);
-	test::equal(toks[2].offset, contents.len-1);
+	test::eq(toks[2].type, TokenType.EOS);
+	test::eq(toks[2].value, `;`);
+	test::eq(toks[2].row, 1);
+	test::eq(toks[2].col, contents.len);
+	test::eq(toks[2].offset, contents.len-1);
 
-	test::equal(toks[3].type, TokenType.EOF);
+	test::eq(toks[3].type, TokenType.EOF);
 }
 
 fn void test_simple_bultin_const() {
@@ -797,23 +797,23 @@ fn void test_simple_bultin_const() {
     // foreach(t: toks) t.print(new_line: true);
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(4, toks.len());
-	test::equal(toks[0].type, TokenType.MODULE);
-	test::equal(toks[0].value, "module");
+	test::eq(4, toks.len());
+	test::eq(toks[0].type, TokenType.MODULE);
+	test::eq(toks[0].value, "module");
 
-	test::equal(toks[1].type, TokenType.BUILTIN);
-	test::equal(toks[1].value, "$$BUILTIN_CONTS12");
-	test::equal(toks[1].row, 1);
-	test::equal(toks[1].col, 8);
-	test::equal(toks[1].offset, 7);
+	test::eq(toks[1].type, TokenType.BUILTIN);
+	test::eq(toks[1].value, "$$BUILTIN_CONTS12");
+	test::eq(toks[1].row, 1);
+	test::eq(toks[1].col, 8);
+	test::eq(toks[1].offset, 7);
 
-	test::equal(toks[2].type, TokenType.EOS);
-	test::equal(toks[2].value, `;`);
-	test::equal(toks[2].row, 1);
-	test::equal(toks[2].col, contents.len);
-	test::equal(toks[2].offset, contents.len-1);
+	test::eq(toks[2].type, TokenType.EOS);
+	test::eq(toks[2].value, `;`);
+	test::eq(toks[2].row, 1);
+	test::eq(toks[2].col, contents.len);
+	test::eq(toks[2].offset, contents.len-1);
 
-	test::equal(toks[3].type, TokenType.EOF);
+	test::eq(toks[3].type, TokenType.EOF);
 }
 
 fn void test_empty_string_token() {
@@ -826,23 +826,23 @@ fn void test_empty_string_token() {
     // foreach(t: toks) t.print(new_line: true);
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(4, toks.len());
-	test::equal(toks[0].type, TokenType.MODULE);
-	test::equal(toks[0].value, "module");
+	test::eq(4, toks.len());
+	test::eq(toks[0].type, TokenType.MODULE);
+	test::eq(toks[0].value, "module");
 
-	test::equal(toks[1].type, TokenType.EMPTY_LINE);
-	test::equal(toks[1].value, "\n");
-	test::equal(toks[1].row, 2);
-	test::equal(toks[1].col, 8);
-	test::equal(toks[1].offset, 15);
+	test::eq(toks[1].type, TokenType.EMPTY_LINE);
+	test::eq(toks[1].value, "\n");
+	test::eq(toks[1].row, 2);
+	test::eq(toks[1].col, 8);
+	test::eq(toks[1].offset, 15);
 
-	test::equal(toks[2].type, TokenType.EOS);
-	test::equal(toks[2].value, `;`);
-	test::equal(toks[2].row, 3);
-	test::equal(toks[2].col, 1);
-	test::equal(toks[2].offset, contents.len-1);
+	test::eq(toks[2].type, TokenType.EOS);
+	test::eq(toks[2].value, `;`);
+	test::eq(toks[2].row, 3);
+	test::eq(toks[2].col, 1);
+	test::eq(toks[2].offset, contents.len-1);
 
-	test::equal(toks[3].type, TokenType.EOF);
+	test::eq(toks[3].type, TokenType.EOF);
 }
 
 
@@ -861,20 +861,20 @@ fn void test_extending_atts_safety() {
 			lexer.extend_current_attribute();
 			switch(att_cnt){
 				case 0:
-					test::equal(t.type, TokenType.AT_IDENT);
-					test::equal(t.value, "@test");
+					test::eq(t.type, TokenType.AT_IDENT);
+					test::eq(t.value, "@test");
 				case 1:
-					test::equal(t.type, TokenType.AT_IDENT);
-					test::equal(t.value, `@export("sdf")`);
+					test::eq(t.type, TokenType.AT_IDENT);
+					test::eq(t.value, `@export("sdf")`);
 				case 2:
-					test::equal(t.type, TokenType.AT_IDENT);
-					test::equal(t.value, `@if($foo(@bar) || @test)`);
+					test::eq(t.type, TokenType.AT_IDENT);
+					test::eq(t.value, `@if($foo(@bar) || @test)`);
 				case 3:
-					test::equal(t.type, TokenType.AT_IDENT);
-					test::equal(t.value, `@export`);
+					test::eq(t.type, TokenType.AT_IDENT);
+					test::eq(t.value, `@export`);
 				case 4:
-					test::equal(t.type, TokenType.AT_IDENT);
-					test::equal(t.value, `@foo`);
+					test::eq(t.type, TokenType.AT_IDENT);
+					test::eq(t.value, `@foo`);
 				default: 
 					unreachable();
 			}
@@ -883,8 +883,8 @@ fn void test_extending_atts_safety() {
 		}
 	}
 
-	test::equal(t.type, TokenType.EOF);
-	test::equal(5, att_cnt);
+	test::eq(t.type, TokenType.EOF);
+	test::eq(5, att_cnt);
 }
 
 
@@ -904,14 +904,14 @@ fn void test_extending_atts() {
     		lexer.extend_current_attribute();
 			switch(att_cnt){
 				case 0:
-					test::equal(t.type, TokenType.AT_IDENT);
-					test::equal(t.value, "@test  (  ddd)");
+					test::eq(t.type, TokenType.AT_IDENT);
+					test::eq(t.value, "@test  (  ddd)");
 				case 1:
-					test::equal(t.type, TokenType.AT_IDENT);
-					test::equal(t.value, "@if($foo(@bar) || @test)");
+					test::eq(t.type, TokenType.AT_IDENT);
+					test::eq(t.value, "@if($foo(@bar) || @test)");
 				case 2:
-					test::equal(t.type, TokenType.AT_IDENT);
-					test::equal(t.value, `@export("@bar")`);
+					test::eq(t.type, TokenType.AT_IDENT);
+					test::eq(t.value, `@export("@bar")`);
 				default: 
 					unreachable();
 			}
@@ -921,8 +921,8 @@ fn void test_extending_atts() {
     	att_cnt++;
 	}
 
-	// test::equal(t.type, TokenType.EOF);
-	// test::equal(4, att_cnt);
+	// test::eq(t.type, TokenType.EOF);
+	// test::eq(4, att_cnt);
 }
 
 fn void test_escape_chars() {
@@ -936,9 +936,9 @@ fn void test_escape_chars() {
     foreach(i, t: toks) io::printf("%d: %s", i, t);
 
     // module IDENT[foo] ; EOF
-	test::equal(2, toks.len());
-	test::equal(toks[0].type, TokenType.CHAR_LITERAL);
-	test::equal(toks[0].value, `'\n'`);
+	test::eq(2, toks.len());
+	test::eq(toks[0].type, TokenType.CHAR_LITERAL);
+	test::eq(toks[0].value, `'\n'`);
 }
 
 fn void test_escape_chars_single_quote() {
@@ -951,9 +951,9 @@ fn void test_escape_chars_single_quote() {
     // foreach(t: toks) t.print(new_line: true);
     foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(2, toks.len());
-	test::equal(toks[0].type, TokenType.CHAR_LITERAL);
-	test::equal(toks[0].value, `'\''`);
+	test::eq(2, toks.len());
+	test::eq(toks[0].type, TokenType.CHAR_LITERAL);
+	test::eq(toks[0].value, `'\''`);
 }
 
 
@@ -967,9 +967,9 @@ fn void test_escape_chars_double_backslash() {
     // foreach(t: toks) t.print(new_line: true);
     foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(2, toks.len());
-	test::equal(toks[0].type, TokenType.CHAR_LITERAL);
-	test::equal(toks[0].value, `'\\'`);
+	test::eq(2, toks.len());
+	test::eq(toks[0].type, TokenType.CHAR_LITERAL);
+	test::eq(toks[0].value, `'\\'`);
 }
 
 fn void test_multiline_comment_with_many_stars() {
@@ -981,13 +981,13 @@ fn void test_multiline_comment_with_many_stars() {
     // foreach(t: toks) t.print(new_line: true);
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(3, toks.len());
-	test::equal(toks[0].type, TokenType.MODULE);
+	test::eq(3, toks.len());
+	test::eq(toks[0].type, TokenType.MODULE);
 
-	test::equal(toks[1].type, TokenType.COMMENT_MULTI_INLINE);
-	test::equal(toks[1].value, `/******** asda **********/`);
+	test::eq(toks[1].type, TokenType.COMMENT_MULTI_INLINE);
+	test::eq(toks[1].value, `/******** asda **********/`);
 
-	test::equal(toks[2].type, TokenType.EOF);
+	test::eq(toks[2].type, TokenType.EOF);
 }
 
 fn void test_multiline_comment_with_many_stars_multi_line() {
@@ -1002,16 +1002,16 @@ fn void test_multiline_comment_with_many_stars_multi_line() {
     // foreach(t: toks) t.print(new_line: true);
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(4, toks.len());
-	test::equal(toks[0].type, TokenType.MODULE);
+	test::eq(4, toks.len());
+	test::eq(toks[0].type, TokenType.MODULE);
 
-	test::equal(toks[1].type, TokenType.COMMENT_MULTI);
-	test::equal(toks[1].value, `/**
+	test::eq(toks[1].type, TokenType.COMMENT_MULTI);
+	test::eq(toks[1].value, `/**
     * asda 
     */`);
 
-	test::equal(toks[2].type, TokenType.EOS);
-	test::equal(toks[3].type, TokenType.EOF);
+	test::eq(toks[2].type, TokenType.EOS);
+	test::eq(toks[3].type, TokenType.EOF);
 }
 
 fn void test_multiline_comment_with_many_stars_multi_line_endof_line() {
@@ -1028,16 +1028,16 @@ fn void test_multiline_comment_with_many_stars_multi_line_endof_line() {
     // foreach(t: toks) t.print(new_line: true);
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(4, toks.len());
-	test::equal(toks[0].type, TokenType.MODULE);
+	test::eq(4, toks.len());
+	test::eq(toks[0].type, TokenType.MODULE);
 
-	test::equal(toks[1].type, TokenType.COMMENT_MULTI);
-	test::equal(toks[1].value, `/**
+	test::eq(toks[1].type, TokenType.COMMENT_MULTI);
+	test::eq(toks[1].value, `/**
     * asda 
     */`);
 
-	test::equal(toks[2].type, TokenType.EOS);
-	test::equal(toks[3].type, TokenType.EOF);
+	test::eq(toks[2].type, TokenType.EOS);
+	test::eq(toks[3].type, TokenType.EOF);
 }
 
 fn void test_whitespace_mode() {
@@ -1050,34 +1050,34 @@ fn void test_whitespace_mode() {
     // foreach(t: toks) t.print(new_line: true);
     foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(10, toks.len());
-	test::equal(toks[0].type, TokenType.SPACE);
-	test::equal(toks[0].value, " ");
+	test::eq(10, toks.len());
+	test::eq(toks[0].type, TokenType.SPACE);
+	test::eq(toks[0].value, " ");
 
-	test::equal(toks[1].type, TokenType.SPACE);
-	test::equal(toks[1].value, "\t");
+	test::eq(toks[1].type, TokenType.SPACE);
+	test::eq(toks[1].value, "\t");
 
-	test::equal(toks[2].type, TokenType.SPACE);
-	test::equal(toks[2].value, "\f");
+	test::eq(toks[2].type, TokenType.SPACE);
+	test::eq(toks[2].value, "\f");
 
-	test::equal(toks[3].type, TokenType.MODULE);
-	test::equal(toks[3].value, "module");
+	test::eq(toks[3].type, TokenType.MODULE);
+	test::eq(toks[3].value, "module");
 
-	test::equal(toks[4].type, TokenType.SPACE);
-	test::equal(toks[4].value, "\n");
+	test::eq(toks[4].type, TokenType.SPACE);
+	test::eq(toks[4].value, "\n");
 
-	test::equal(toks[5].type, TokenType.SPACE);
-	test::equal(toks[5].value, "\t");
+	test::eq(toks[5].type, TokenType.SPACE);
+	test::eq(toks[5].value, "\t");
 
-	test::equal(toks[6].type, TokenType.SPACE);
-	test::equal(toks[6].value, " ");
+	test::eq(toks[6].type, TokenType.SPACE);
+	test::eq(toks[6].value, " ");
 
-	test::equal(toks[7].type, TokenType.SPACE);
-	test::equal(toks[7].value, " ");
+	test::eq(toks[7].type, TokenType.SPACE);
+	test::eq(toks[7].value, " ");
 
 
-	test::equal(toks[8].type, TokenType.EOS);
-	test::equal(toks[9].type, TokenType.EOF);
+	test::eq(toks[8].type, TokenType.EOS);
+	test::eq(toks[9].type, TokenType.EOF);
 }
 
 fn void test_comments_with_whitespace_mode(){
@@ -1090,14 +1090,14 @@ fn void test_comments_with_whitespace_mode(){
     // foreach(t: toks) t.print(new_line: false);
     foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(7, toks.len());
-	test::equal(toks[0].type, TokenType.SPACE);
-	test::equal(toks[1].type, TokenType.SPACE);
-	test::equal(toks[2].type, TokenType.COMMENT_SINGLE);
-	test::equal(toks[3].type, TokenType.SPACE);
-	test::equal(toks[4].type, TokenType.RETURN);
-	test::equal(toks[5].type, TokenType.EOS);
-	test::equal(toks[6].type, TokenType.EOF);
+	test::eq(7, toks.len());
+	test::eq(toks[0].type, TokenType.SPACE);
+	test::eq(toks[1].type, TokenType.SPACE);
+	test::eq(toks[2].type, TokenType.COMMENT_SINGLE);
+	test::eq(toks[3].type, TokenType.SPACE);
+	test::eq(toks[4].type, TokenType.RETURN);
+	test::eq(toks[5].type, TokenType.EOS);
+	test::eq(toks[6].type, TokenType.EOF);
 }
 
 fn void test_comments_multiline_with_whitespace_mode(){
@@ -1110,18 +1110,18 @@ fn void test_comments_multiline_with_whitespace_mode(){
     // foreach(t: toks) t.print(new_line: false);
     foreach(i, t: toks) io::printf("%d: %s", i, t);
 
-	test::equal(5, toks.len());
-	test::equal(toks[0].type, TokenType.SPACE);
-	test::equal(toks[0].value, " ");
+	test::eq(5, toks.len());
+	test::eq(toks[0].type, TokenType.SPACE);
+	test::eq(toks[0].value, " ");
 
-	test::equal(toks[1].type, TokenType.COMMENT_MULTI_INLINE);
-	test::equal(toks[1].value, "/* foo;*/");
+	test::eq(toks[1].type, TokenType.COMMENT_MULTI_INLINE);
+	test::eq(toks[1].value, "/* foo;*/");
 
-	test::equal(toks[2].type, TokenType.SPACE);
-	test::equal(toks[2].value, "\n");
+	test::eq(toks[2].type, TokenType.SPACE);
+	test::eq(toks[2].value, "\n");
 
-	test::equal(toks[3].type, TokenType.EOS);
-	test::equal(toks[4].type, TokenType.EOF);
+	test::eq(toks[3].type, TokenType.EOS);
+	test::eq(toks[4].type, TokenType.EOF);
 }
 
 fn void test_simple_docstring_space_at_contr() {
@@ -1142,46 +1142,46 @@ Some text
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
     // module IDENT[foo] ; EOF
-	test::equal(14, toks.len());
-	test::equal(toks[0].type, TokenType.DOCS_START);
-	test::equal(toks[0].value, "<*\nSome text\n");
+	test::eq(14, toks.len());
+	test::eq(toks[0].type, TokenType.DOCS_START);
+	test::eq(toks[0].value, "<*\nSome text\n");
 
-	test::equal(toks[1].type, TokenType.AT_IDENT);
-	test::equal(toks[1].value, "@param");
+	test::eq(toks[1].type, TokenType.AT_IDENT);
+	test::eq(toks[1].value, "@param");
 
-	test::equal(toks[2].type, TokenType.IDENT);
-	test::equal(toks[2].value, "foo");
+	test::eq(toks[2].type, TokenType.IDENT);
+	test::eq(toks[2].value, "foo");
 
-	test::equal(toks[3].type, TokenType.STRING);
-	test::equal(toks[3].value, `"asdlkj"`);
+	test::eq(toks[3].type, TokenType.STRING);
+	test::eq(toks[3].value, `"asdlkj"`);
 
-	test::equal(toks[4].type, TokenType.DOCS_EOL);
-	test::equal(toks[4].value, "\n");
+	test::eq(toks[4].type, TokenType.DOCS_EOL);
+	test::eq(toks[4].value, "\n");
 
-	test::equal(toks[5].type, TokenType.AT_IDENT);
-	test::equal(toks[5].value, "@pure");
+	test::eq(toks[5].type, TokenType.AT_IDENT);
+	test::eq(toks[5].value, "@pure");
 
-	test::equal(toks[6].type, TokenType.DOCS_EOL);
-	test::equal(toks[6].value, "\n");
+	test::eq(toks[6].type, TokenType.DOCS_EOL);
+	test::eq(toks[6].value, "\n");
 
-	test::equal(toks[7].type, TokenType.AT_IDENT);
-	test::equal(toks[7].value, "@require");
+	test::eq(toks[7].type, TokenType.AT_IDENT);
+	test::eq(toks[7].value, "@require");
 
-	test::equal(toks[8].type, TokenType.IDENT);
-	test::equal(toks[8].value, "foo");
+	test::eq(toks[8].type, TokenType.IDENT);
+	test::eq(toks[8].value, "foo");
 
-	test::equal(toks[9].type, TokenType.GREATER);
-	test::equal(toks[9].value, ">");
+	test::eq(toks[9].type, TokenType.GREATER);
+	test::eq(toks[9].value, ">");
 
-	test::equal(toks[10].type, TokenType.INTEGER);
-	test::equal(toks[10].value, "0");
+	test::eq(toks[10].type, TokenType.INTEGER);
+	test::eq(toks[10].value, "0");
 
-	test::equal(toks[11].type, TokenType.DOCS_EOL);
+	test::eq(toks[11].type, TokenType.DOCS_EOL);
 
-	test::equal(toks[12].type, TokenType.DOCS_END);
-	test::equal(toks[12].value, "*>");
+	test::eq(toks[12].type, TokenType.DOCS_END);
+	test::eq(toks[12].value, "*>");
 
-	test::equal(toks[13].type, TokenType.EOF);
+	test::eq(toks[13].type, TokenType.EOF);
 }
 
 fn void test_simple_docstring_empty() {
@@ -1197,12 +1197,12 @@ fn void test_simple_docstring_empty() {
     // foreach(i, t: toks) io::printf("%d: %s", i, t);
 
     // module IDENT[foo] ; EOF
-	test::equal(3, toks.len());
-	test::equal(toks[0].type, TokenType.DOCS_START);
-	test::equal(toks[0].value, "<*");
+	test::eq(3, toks.len());
+	test::eq(toks[0].type, TokenType.DOCS_START);
+	test::eq(toks[0].value, "<*");
 
-	test::equal(toks[1].type, TokenType.DOCS_END);
-	test::equal(toks[1].value, "*>");
+	test::eq(toks[1].type, TokenType.DOCS_END);
+	test::eq(toks[1].value, "*>");
 
-	test::equal(toks[2].type, TokenType.EOF);
+	test::eq(toks[2].type, TokenType.EOF);
 }

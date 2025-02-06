@@ -14,11 +14,11 @@ fn double! divide(int a, int b)
 }
 
 fn void! test_div() @test {
-    test::equal(2, divide(6, 3)!);
-    test::not_equal(1, 2);
+    test::eq(2, divide(6, 3)!);
+    test::ne(1, 2);
     test::almost_equal(m::divide(1, 3)!, 0.333, places: 3);
-    test::greater_equal(3, 3);
-    test::greater(2, divide(3, 3)!);
+    test::gt_equal(3, 3);
+    test::gt(2, divide(3, 3)!);
     test::less(2, 3);
     test::less_equal(2, 3);
     test::@check(2 == 2, "divide: %d", divide(6, 3)!);
@@ -46,12 +46,12 @@ TestContext state @local  = {
 };
 
 fn void! test_with_setup_teardown() {
-    test::equal(0, state.n_runs);
+    test::eq(0, state.n_runs);
     test::setup(state.setup_fn, state.teardown_fn);
-    test::equal(777, state.n_runs);
+    test::eq(777, state.n_runs);
 
-    test::equal(2, m::divide(6, 3)!);
+    test::eq(2, m::divide(6, 3)!);
 
     // NOTE: next line will fail, but teardown_fn is triggered
-    // test::equal(1, 0); 
+    // test::eq(1, 0); 
 }
