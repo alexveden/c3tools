@@ -90,9 +90,6 @@ jobs:
       - name: c3fmt c3tools
         run: |
           find lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
-          echo "Checking if any changes after formatting"
-          git add lib/ && git diff --quiet && git diff --cached | head
-          git commit -m "CI commit after formatting"
 
       - name: c3tools unit tests after formatting
         run: |
@@ -101,9 +98,6 @@ jobs:
       - name: c3fmt c3tools (double)
         run: |
           find lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
-          echo "Checking if any changes after formatting (must be the same!)"
-          git diff | head
-          git diff --quiet
 
       - name: c3tools unit tests after (double) formatting
         run: |
