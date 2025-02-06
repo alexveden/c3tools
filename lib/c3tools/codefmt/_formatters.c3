@@ -1160,6 +1160,7 @@ fn bool! CodeFmt.format_comptime_code_flow(CodeFmt* self, Token* t, NodeParserSt
                 case CT_ENDIF:
                     if (state.initial_token == CT_IF) nextcase INVALID_TOKEN;
                 case INVALID_TOKEN:  // temp placeholder case
+                    if (self._is_cascade_call) break;
                     self.dedent()!;
                     self.newline();
                     self.write("%s", t.value);
