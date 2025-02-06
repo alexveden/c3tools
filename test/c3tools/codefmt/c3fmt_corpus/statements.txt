@@ -1980,3 +1980,38 @@ fn void main()
         return 34;
     |};
 }
+================================================================================
+while_with_body_macro_inline
+================================================================================
+fn void main()
+{
+    while (true) @thing()
+    {
+        do_something();
+        break;
+    };
+    for (;;) @thing()
+    {
+        do_something();
+        break;
+    };
+    if (true) @thing()
+    {
+        do_something();
+    };
+}
+--------------------------------------------------------------------------------
+fn void main()
+{
+    while (true) @thing() {
+        do_something();
+        break;
+    };
+    for (;;) @thing() {
+        do_something();
+        break;
+    };
+    if (true) @thing() {
+        do_something();
+    };
+}

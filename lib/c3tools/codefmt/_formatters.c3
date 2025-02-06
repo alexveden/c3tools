@@ -781,6 +781,7 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
                     return true;
                 case LBRAPIPE:
                 case DO:
+                case AT_IDENT: // if(true) @body_macro { @body_scope }
                     self.cache_statement_dump(no_split: true)!;
                     return self.push_run_state(&CodeFmt.format_generic_statement, t);
                 default:
