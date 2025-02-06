@@ -1944,6 +1944,11 @@ fn void main(){
         defer1();
     } while(0);
 
+    defer do {
+        if (a == 1) break;
+        defer1();
+    };
+
     defer (void){|
         defer printf("Hello!\n");
         defer printf("2\n");
@@ -1963,6 +1968,11 @@ fn void main()
         if (a == 1) break;
         defer1();
     } while(0);
+
+    defer do {
+        if (a == 1) break;
+        defer1();
+    };
 
     defer (void){|
         defer printf("Hello!\n");
