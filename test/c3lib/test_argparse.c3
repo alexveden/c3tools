@@ -871,50 +871,43 @@ fn void test_custom_type_callback_unknown_type()
 
     char val = '\0';
     ArgParseCallbackFn cbf = fn void! (ArgOpt* opt, String value) {
+        io::printfn("flt--callback");
         test::eq(value, "bar");
         *anycast(opt.value, char)! = value[0];
     };
+    // NOTE: pretends app struct
+    ArgParse my_app_state = {};
 
-    argparse::ArgParse agp = {
-        .options = {{
-                .short_name = 'f', .long_name = "flt", .value = &val, .callback = cbf
+    ArgParse agp = {
+        .options = {
+            {
+                .short_name = 'f',
+                .long_name = "flt",
+                .value = &val,
+                .callback = cbf
             },
+            {
+                .short_name = 'o',
+                .long_name = "other",
+                .value = &my_app_state,
+                .callback = fn void! (ArgOpt* opt, String value) {
+                    ArgParse* ctx = anycast(opt.value, ArgParse)!;
+                    io::printfn("other--callback");
+                    // NOTE: pretends to update important app struct
+                    ctx.usage = value;
+                }
+            }
         }
     };
 
-    String[] args = { "testprog", "--flt=bar" };
+    String[] args = { "testprog", "--flt=bar", "--other=my_callback" };
     test::eq(val, '\0');
     test::eq(agp.options[0]._is_present, false);
 
     agp.parse(args)!!;
 
     test::eq(val, 'b');
-    test::eq(agp.options[0]._is_present, true);
-}
-
-fn void test_custom_type_callback_null_value()
-{
-
-    char val = '\0';
-    ArgParseCallbackFn cbf = fn void! (ArgOpt* opt, String value) {
-        test::eq(value, "bar");
-        test::eq(opt.value, null);
-    };
-
-    argparse::ArgParse agp = {
-        .options = {{
-                .short_name = 'f', .long_name = "flt", .callback = cbf
-            },
-        }
-    };
-
-    String[] args = { "testprog", "--flt=bar" };
-    test::eq(val, '\0');
-    test::eq(agp.options[0]._is_present, false);
-
-    agp.parse(args)!!;
-
-    test::eq(val, '\0');
+    test::eq(my_app_state.usage, "my_callback");
     test::eq(agp.options[0]._is_present, true);
 }
 
@@ -1091,3 +1084,32 @@ fn void test_short_arguments()
     test::eq(agp.arguments[0], ".");
     test::eq(agp.arguments[1], "-");
 }
+
+// fn void test_custom_type_callback_int_accumulator()
+// {
+//
+//     int verbosity = 0;
+//
+//     argparse::ArgParse agp = {
+//         .options = {
+//             {
+//                 .short_name = 'f',
+//                 .long_name = "flag",
+//                 .value = &verbosity,
+//                 .callback = fn void! (ArgOpt* opt, String value) {
+//                     int* ctx = anycast(opt.value, int)!;
+//                     (*ctx)++;
+//                 }
+//             },
+//         }
+//     };
+//
+//     String[] args = { "testprog", "--flag", "--flag", "--flag", "--flag" };
+//     test::eq(verbosity, 0);
+//     test::eq(agp.options[0]._is_present, false);
+//
+//     agp.parse(args)!!;
+//
+//     test::eq(verbosity, 4);
+//     test::eq(agp.options[0]._is_present, true);
+// }

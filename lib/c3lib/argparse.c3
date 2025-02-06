@@ -20,31 +20,31 @@ import std::io;
 
 fn int main(String[] args)
 {
-	int val = 0;
-	bool flag = false;
-	String s;
-	float f = 0.0;
-	argparse::ArgParse agp = {
-		.description = "My program",
-		.usage = "[-a] [--string=<some>] arg1",
-		.epilog= "Footer message",
-		.options = { 
-			argparse::help_opt(),
-			argparse::group_opt("Basic options"),
-			{.short_name = 'a', .long_name = "all", .value = &val, .help = "This is a sample option"},
-			argparse::group_opt("Advanced options"),
-			{ .long_name = "string", .value = &s, .help = "Simple long_name string"},
-			{ .short_name = 'f', .value = &flag, .help = "short opt flag"},
-		}, 
-	};
+    int val = 0;
+    bool flag = false;
+    String s;
+    float f = 0.0;
+    argparse::ArgParse agp = {
+        .description = "My program",
+        .usage = "[-a] [--string=<some>] arg1",
+        .epilog= "Footer message",
+        .options = { 
+            argparse::help_opt(),
+            argparse::group_opt("Basic options"),
+            {.short_name = 'a', .long_name = "all", .value = &val, .help = "This is a sample option"},
+            argparse::group_opt("Advanced options"),
+            { .long_name = "string", .value = &s, .help = "Simple long_name string"},
+            { .short_name = 'f', .value = &flag, .help = "short opt flag"},
+        }, 
+    };
 
-	if(catch err = agp.parse(args)){
-		agp.print_usage()!!;
-		return 1;
-	}
+    if(catch err = agp.parse(args)){
+        agp.print_usage()!!;
+        return 1;
+    }
 
-	io::printf("My arguments: val=%s, s=%s, flag=%s\n", val, s, f);
-	return 0;
+    io::printf("My arguments: val=%s, s=%s, flag=%s\n", val, s, f);
+    return 0;
 }
 ```
 *>
@@ -310,6 +310,7 @@ fn void! ArgParse.print_usage(&self)
 /*
 *                  PRIVATE IMPLEMENTATION
 */
+
 fault ArgError @private
 {
     MISSING_ARGUMENT,
@@ -327,6 +328,7 @@ enum ArgType : int @private
 }
 
 $assert(ArgType.USER.ordinal == 0);  // USER must be first to support ZII behavior
+
 fn void! ArgParse.options_ensure_required(&self) @local
 {
     bool has_errors = false;
@@ -358,37 +360,35 @@ fn void! ArgParse.options_check(&self) @local
             unreachable("option[%d] both long/short_name are not set", i);
         }
         if (!opt.value) {
-            if (!opt.callback) {
-                unreachable(
-                    "option[%d][-%c/--%s] has no valid .value= pointer set",
-                    i,
-                    opt.short_name,
-                    opt.long_name
-                );
-            }
-        } else {
-            switch (opt.value.type) {
-                case bool.typeid:
-                case int.typeid:
-                case uint.typeid:
-                case long.typeid:
-                case ulong.typeid:
-                case float.typeid:
-                case double.typeid:
-                case String.typeid:
-                    // resetting presence flag, it will be updated after all argument parsing
-                    opt._is_present = false;
-                default:
-                    if (!opt.callback) {
-                        unreachable(
-                            "option[%d][-%c/--%s] type[%s] is not supported (or pass .callback)",
-                            i,
-                            opt.short_name,
-                            opt.long_name,
-                            opt.value.type
-                        );
-                    }
-            }
+            unreachable(
+                "option[%d][-%c/--%s] has no valid .value= pointer set",
+                i,
+                opt.short_name,
+                opt.long_name
+            );
+        }
+
+        switch (opt.value.type) {
+            case bool.typeid:
+            case int.typeid:
+            case uint.typeid:
+            case long.typeid:
+            case ulong.typeid:
+            case float.typeid:
+            case double.typeid:
+            case String.typeid:
+                // resetting presence flag, it will be updated after all argument parsing
+                opt._is_present = false;
+            default:
+                if (!opt.callback) {
+                    unreachable(
+                        "option[%d][-%c/--%s] type[%s] is not supported (or pass .callback)",
+                        i,
+                        opt.short_name,
+                        opt.long_name,
+                        opt.value.type
+                    );
+                }
         }
     }
 }
@@ -430,18 +430,18 @@ fn void! ArgParse.parse_arg_val(&self, ArgOpt* opt, bool flag_unset = false) @lo
         io::printf("Error: duplicated option %s\n", self._ctx.argv[0]);
         return ArgError.INVALID_ARGUMENT?;
     }
+    assert(opt.value);
+    assert(opt.value.type == bool.typeid || !flag_unset, "flag_unset only for bool options");
     opt._is_present = true;
 
     if (opt.callback) {
-        if (opt.value && opt.value.type == bool.typeid) {
+        if (opt.value.type == bool.typeid) {
             return opt.callback(opt, (flag_unset) ? "0" : "1");
         } else {
             String aval = self.get_arg()!;
             return opt.callback(opt, aval);
         }
     }
-    assert(opt.value);
-    assert(opt.value.type == bool.typeid || !flag_unset, "flag_unset only for bool options");
 
     switch (opt.value.type) {
         case bool.typeid:

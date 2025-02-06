@@ -328,9 +328,8 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token* t) 
     assert(t.type != EMPTY_LINE);
     assert(t.type != SPACE);
 
-
-    if (self.cache_statement_len() > 0){
-        if(self._resolve_current_token(state, t)) {
+    if (self.cache_statement_len() > 0) {
+        if (self._resolve_current_token(state, t)) {
             self.trace("ADD SPACE");
             self.__token_cache.push(TOKEN_SPACE);
         }
@@ -338,7 +337,6 @@ macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token* t) 
     self.trace("ADD");
     self.__token_cache.push(*t);
 }
-
 
 <*
  Check if previous token triggers multi-line split
