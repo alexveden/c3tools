@@ -29,9 +29,14 @@ process_file() {
     if grep -q "// #error" "$file"; then
         echo "[SKIP] $file (has #error)"
         return 0
-
     fi
+
     if grep -q "// #target: elf-riscv" "$file"; then
+        echo "[SKIP] $file (has #target: elf-riscv)"
+        return 0
+    fi
+
+    if grep -q "\$embed" "$file"; then
         echo "[SKIP] $file (has #target: elf-riscv)"
         return 0
     fi

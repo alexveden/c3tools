@@ -126,3 +126,23 @@ fn void remove_using_test(char* a, char[16]* boo)
 fn void remove_using_test(char* a, char[16]* boo)
 {
 }
+================================================================================
+cast_sub_array
+================================================================================
+fn void main()
+{
+    int*[] abc = {};
+    void*[] bcd = (void*[])abc;
+    int[] cde = {};
+    Foo[] xyz = (Foo[])cde;
+    Foo[] xyz2 = (Foo[])(int[]) { 1, 2 };
+}
+--------------------------------------------------------------------------------
+fn void main()
+{
+    int*[] abc = {};
+    void*[] bcd = (void*[])abc;
+    int[] cde = {};
+    Foo[] xyz = (Foo[])cde;
+    Foo[] xyz2 = (Foo[])(int[]){ 1, 2 };
+}

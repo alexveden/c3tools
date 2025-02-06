@@ -554,6 +554,7 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                                     nextcase FOR;
                                 } else {
                                     // looks like a cast
+                                    // Foo[] xyz2 = (Foo[])(int[]) { 1, 2 };
                                     // return $typeof(*mat) { .m = val * ($Type)mat.m };
                                     break;  // nextcase default
                                 }
