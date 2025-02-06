@@ -1,6 +1,6 @@
 module test::c3tools::ast @test;
 import c3tools::ast @public;
-import c3tools::lexer;
+import c3tools::ast::lexer;
 import std::math;
 import std::collections::list;
 import std::io;

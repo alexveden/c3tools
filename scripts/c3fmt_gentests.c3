@@ -1,8 +1,8 @@
 import std::io;
 import std::io::path;
 import std::collections::list;
-import c3tools::codegen;
-import c3tools::codecorpus @public;
+import c3lib::codegen;
+import c3tools::codefmt::codecorpus @public;
 
 
 fn void! load_corpus(CodeGen* code, String path) @local {
@@ -74,14 +74,14 @@ fn int main(String[] args)
 
 	code.@module("test::c3tools::c3fmt_corpus @test");
 	code.@import("c3tools::codefmt");
-	code.@import("c3tools::codecorpus");
+	code.@import("c3tools::codefmt::codecorpus");
 	code.@import("std::io");
 
 	Path p = path::temp_cwd()!!;
 	io::printfn("cwd: %s", p.str_view());
 
-	String cwd = "../test/c3fmt_corpus/";
-	String out_file = "../test/test_c3fmt_corpus.c3";
+	String cwd = "../test/c3tools/codefmt/c3fmt_corpus";
+	String out_file = "../test/c3tools/codefmt/test_c3fmt_corpus.c3";
 
 	if(catch err = load_corpus(code, cwd)) {
 		return 1;

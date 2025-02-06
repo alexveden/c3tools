@@ -1,5 +1,5 @@
 module c3tools::ast;
-import c3tools::lexer;
+import c3tools::ast::lexer;
 import std::io;
 import std::sort;
 import std::collections::list;

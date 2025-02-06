@@ -1,7 +1,7 @@
 <*
  Code test cases helper code (see test/c3fmt_corpus files)
 *>
-module c3tools::codecorpus;
+module c3tools::codefmt::codecorpus;
 import std::collections::list;
 import std::collections::map;
 import std::io;

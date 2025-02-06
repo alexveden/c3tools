@@ -1,5 +1,5 @@
-module c3tools::lexer;
-import c3tools::utils_port;
+module c3tools::ast::lexer;
+import c3tools::ast::utils_port;
 import std::io;
 import std::math;
 import std::collections::list;

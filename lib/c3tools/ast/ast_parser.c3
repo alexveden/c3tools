@@ -1,6 +1,6 @@
 module c3tools::ast;
 import std::io;
-import c3tools::lexer @public;
+import c3tools::ast::lexer @public;
 
 <*
  Returns TokenType of current scope 

@@ -29,7 +29,7 @@ c.@fn("void my_foo() @test"){
 io::printfn("%s", c.buf.str_view());
 ```
 *>
-module c3tools::codegen;
+module c3lib::codegen;
 
 struct CodeGen
 {

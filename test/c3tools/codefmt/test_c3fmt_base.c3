@@ -2,7 +2,7 @@ module test::c3tools::codefmt @test;
 import std::collections::list;
 import std::io;
 import libc;
-import c3tools::codecorpus @public;
+import c3tools::codefmt::codecorpus @public;
 import c3tools::codefmt;
 
 

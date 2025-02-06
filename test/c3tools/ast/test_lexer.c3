@@ -1,5 +1,5 @@
-module test::c3tools::lexer @test;
-import c3tools::lexer;
+module test::c3tools::ast::lexer @test;
+import c3tools::ast::lexer;
 import std::io;
 import std::collections::list;
 

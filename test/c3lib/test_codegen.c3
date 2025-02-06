@@ -1,5 +1,5 @@
-module test::c3tools::codegen @test;
-import c3tools::codegen;
+module test::c3lib::codegen @test;
+import c3lib::codegen;
 import std::io;
 
 

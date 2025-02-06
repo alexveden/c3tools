@@ -1,6 +1,5 @@
 module c3tools::codefmt;
-import c3tools::codegen;
-import c3tools::lexer;
+import c3tools::ast::lexer;
 import c3tools::ast;
 import std::io;
 import std::collections::list;
