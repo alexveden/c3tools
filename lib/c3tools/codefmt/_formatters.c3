@@ -773,13 +773,16 @@ fn bool! CodeFmt.format_statement_code_flow(CodeFmt* self, Token* t, NodeParserS
             self.trace("IMPLIES");
             switch (t.type) {
                 case EOS:
-                    if (state.scope_depth != 0) self.@fail(t, "invalid scope")!;
                     if (!self._is_cascade_call) {
                         self.cache_statement_add(state, t);
                         self.cache_statement_dump(no_split: true)!;
                         self.trace("EXIT");
                     }
                     return true;
+                case LBRAPIPE:
+                case DO:
+                    self.cache_statement_dump(no_split: true)!;
+                    return self.push_run_state(&CodeFmt.format_generic_statement, t);
                 default:
                     CodeFmtFn new_local_state = self.local_formatter_dispatch(t)!;
                     if (new_local_state == null) {

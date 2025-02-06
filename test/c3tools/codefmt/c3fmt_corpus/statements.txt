@@ -1929,3 +1929,44 @@ fn char[]! test()
         a++;
     |}, b, c);
 }
+================================================================================
+defer_do_while 
+================================================================================
+fn void main(){
+    defer if (free) libc::free(res);
+
+    defer (try err) libc::free(res);
+
+    defer (try err) (void)libc::free(res);
+
+    defer do {
+        if (a == 1) break;
+        defer1();
+    } while(0);
+
+    defer (void){|
+        defer printf("Hello!\n");
+        defer printf("2\n");
+        return 34;
+    |};
+}
+--------------------------------------------------------------------------------
+fn void main()
+{
+    defer if (free) libc::free(res);
+
+    defer (try err) libc::free(res);
+
+    defer (try err) (void)libc::free(res);
+
+    defer do {
+        if (a == 1) break;
+        defer1();
+    } while(0);
+
+    defer (void){|
+        defer printf("Hello!\n");
+        defer printf("2\n");
+        return 34;
+    |};
+}
