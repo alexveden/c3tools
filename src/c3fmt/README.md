@@ -21,7 +21,7 @@ c3c --trust=full build c3fmt
 ## Configuration
 
 `c3fmt` is designed to have a standard formatting style, with only two options:
-1. `-w, --width=<int>` - max line width (default: 88)
+1. `-w, --width=<int>` - max line width (default: 100)
 2. `-i, --indent=<str>` - indent type: 2,4,8 for spaces, t for tabs (default: 4 spaces)
 
 
@@ -35,6 +35,11 @@ c3c --trust=full build c3fmt
 5. Inline comments don't preserve right indentation, it will be prepended by 2 spaces: "  // comment"
 6. Dotted struct initializers will wrap recursively.
 7. c3fmt preserves empty lines, but no more that 2 consecutive empty lines (add a comment inside if you need more).
+
+### Code quality
+1. `c3fmt` is designed with safety in mind, it does syntax checking (braces/parentheses order) to ensure that formatted file is correct. It throws an error whenever it couldn't figure out if source file is valid or not.
+2. `c3fmt` runs hundreds of tests based on its own test corpus, but also formatting whole stdlib from `c3c` source code, c3c unit tests for stdlib, and full c3c tests suite. And after formatting the whole test suite of `c3c` is re-launched to make sure that formatting didn't change the logic of code. This is how CI/CD of the `c3fmt` project is working.
+3. `c3fmt` guarantees compatibility with latest c3 version from `master` branch. 
 
 
 ### Code wrapping
