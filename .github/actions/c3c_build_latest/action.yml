@@ -17,6 +17,7 @@ runs:
         path: c3c
 
     - name: Setup environment
+      shell: bash
       run: |
         echo "$PWD/c3c/build" >> "$GITHUB_PATH"
         echo "PATH: $PATH"
@@ -24,10 +25,12 @@ runs:
         git config --global user.name "c3tools CI"
 
     - name: Install common deps
+      shell: bash
       run: |
         sudo apt-get install zlib1g zlib1g-dev python3 ninja-build curl
 
     - name: Install Clang ${{inputs.llvm_version}}
+      shell: bash
       run: |
         wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
         sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${{inputs.llvm_version}} main"
@@ -37,6 +40,7 @@ runs:
           lld-${{inputs.llvm_version}} liblld-${{inputs.llvm_version}}-dev
 
     - name: CMake18
+      shell: bash
       if: inputs.llvm_version >= 18 && inputs.llvm_version != inputs.llvm_DEV_VERSION
       run: |
         cd c3c
@@ -53,12 +57,14 @@ runs:
         cmake --build build
 
     - name: c3c compile and run
+      shell: bash
       run: |
         cd c3c/resources
         ../build/c3c compile examples/base64.c3
         ../build/c3c compile-run examples/args.c3 -- foo -bar "baz baz"
 
     - name: c3c stdlib unit tests
+      shell: bash
       run: |
         cd c3c/test
         ../build/c3c compile-test unit
