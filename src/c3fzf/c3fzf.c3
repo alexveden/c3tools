@@ -32,8 +32,7 @@ fn int main(String[] args)
 {
     // Defaults
     FzfSettings settings = {
-        .stdlib_path = "/home/ubertrader/code/c3c/lib",
-        // .stdlib_path = "",
+        .stdlib_path = "",
         .project_path = ".",
         .module_filter = ".",
         .type_filter = "",
