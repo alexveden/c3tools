@@ -1,5 +1,6 @@
 module test::c3lib::argparse @test;
 import c3lib::argparse @public;
+import std::collections::list;
 import std::io;
 
 fn void test_simple_arg_init()
@@ -1085,31 +1086,280 @@ fn void test_short_arguments()
     test::eq(agp.arguments[1], "-");
 }
 
-// fn void test_custom_type_callback_int_accumulator()
-// {
-//
-//     int verbosity = 0;
-//
-//     argparse::ArgParse agp = {
-//         .options = {
-//             {
-//                 .short_name = 'f',
-//                 .long_name = "flag",
-//                 .value = &verbosity,
-//                 .callback = fn void! (ArgOpt* opt, String value) {
-//                     int* ctx = anycast(opt.value, int)!;
-//                     (*ctx)++;
-//                 }
-//             },
-//         }
-//     };
-//
-//     String[] args = { "testprog", "--flag", "--flag", "--flag", "--flag" };
-//     test::eq(verbosity, 0);
-//     test::eq(agp.options[0]._is_present, false);
-//
-//     agp.parse(args)!!;
-//
-//     test::eq(verbosity, 4);
-//     test::eq(agp.options[0]._is_present, true);
-// }
+fn void test_custom_type_callback_int_array()
+{
+
+    List(<int>) numbers;
+    numbers.new_init(); 
+    defer numbers.free();
+
+    argparse::ArgParse agp = {
+        .options = {
+            {
+                .short_name = 'n',
+                .long_name = "num",
+                .value = &numbers,
+                .allow_many = true,
+                .callback = fn void! (ArgOpt* opt, String value) {
+                    io::printfn("value: %s", value);
+                    List(<int>) * ctx = anycast(opt.value, List(<int>))!;
+                    int val = value.to_integer(int)!;
+                    ctx.push(val);
+                }
+            },
+        }
+    };
+
+    String[] args = { "testprog", "--num=1", "-n", "5", "--num", "2" };
+    test::eq(numbers.len(), 0);
+    test::eq(agp.options[0]._is_present, false);
+
+    agp.parse(args)!!;
+
+    io::printfn("%s", numbers);
+    test::eq(numbers.len(), 3);
+    test::eq(numbers[0], 1);
+    test::eq(numbers[1], 5);
+    test::eq(numbers[2], 2);
+    test::eq(agp.options[0]._is_present, true);
+}
+
+fn void test_custom_type_callback_without_allowing_many()
+{
+
+    List(<int>) numbers;
+    numbers.new_init(); 
+    defer numbers.free();
+
+    argparse::ArgParse agp = {
+        .options = {
+            {
+                .short_name = 'n',
+                .long_name = "num",
+                .value = &numbers,
+                .callback = fn void! (ArgOpt* opt, String value) {
+                    io::printfn("value: %s", value);
+                    List(<int>) * ctx = anycast(opt.value, List(<int>))!;
+                    int val = value.to_integer(int)!;
+                    ctx.push(val);
+                }
+            },
+        }
+    };
+
+    String[] args = { "testprog", "--num=1", "-n", "5", "--num", "2" };
+    test::eq(numbers.len(), 0);
+    test::eq(agp.options[0]._is_present, false);
+
+    test::@error(agp.parse(args), ArgError.INVALID_ARGUMENT);
+}
+
+fn void test_argparse_next_no_args()
+{
+
+    List(<String>) args;
+    args.new_init(); 
+    defer args.free();
+
+    argparse::ArgParse agp;
+
+    // String[] argv = { "testprog", "--num=1", "-n", "5", "--num", "2" };
+    String[] argv = { "testprog" };
+
+	while (String arg = agp.next(argv)!!) {
+        io::printfn("%s", arg);
+	    args.push(arg);
+	}
+    io::printfn("%s", args);
+    test::eq(args.len(), 0);
+}
+
+fn void test_argparse_next_short_arg()
+{
+
+    List(<String>) args;
+    args.new_init(); 
+    defer args.free();
+
+    argparse::ArgParse agp;
+
+    String[] argv = { "testprog", "-n", "5"};
+
+	while (String arg = agp.next(argv)!!) {
+	    args.push(arg);
+	}
+
+    io::printfn("%s", args);
+    test::eq(args.len(), 2);
+    test::eq(args[0], "-n");
+    test::eq(args[1], "5");
+}
+
+fn void test_argparse_next_short_and_long_arg()
+{
+
+    List(<String>) args;
+    args.new_init(); 
+    defer args.free();
+
+    argparse::ArgParse agp;
+
+    String[] argv = { "testprog", "-n", "5", "--num", "2"};
+
+	while (String arg = agp.next(argv)!!) {
+	    args.push(arg);
+	}
+
+    io::printfn("%s", args);
+    test::eq(args.len(), 4);
+    test::eq(args[0], "-n");
+    test::eq(args[1], "5");
+    test::eq(args[2], "--num");
+    test::eq(args[3], "2");
+}
+
+fn void test_argparse_next_short_and_long_arg_eq()
+{
+
+    List(<String>) args;
+    args.new_init(); 
+    defer args.free();
+
+    argparse::ArgParse agp;
+
+    String[] argv = { "testprog", "-n", "5", "--num=2"};
+
+	while (String arg = agp.next(argv)!!) {
+	    args.push(arg);
+	}
+
+    io::printfn("%s", args);
+    test::eq(args.len(), 4);
+    test::eq(args[0], "-n");
+    test::eq(args[1], "5");
+    test::eq(args[2], "--num");
+    test::eq(args[3], "2");
+}
+
+fn void test_argparse_next_empty_value()
+{
+    argparse::ArgParse agp;
+
+    String[] argv = { "testprog", ""};
+    test::@error(agp.next(argv), ArgError.INVALID_ARGUMENT);
+}
+
+fn void test_argparse_next__empty_eq()
+{
+    argparse::ArgParse agp;
+
+    String[] argv = { "testprog", "--fofo="};
+    test::@error(agp.next(argv), ArgError.INVALID_ARGUMENT);
+}
+
+fn void test_argparse_next_all_together()
+{
+
+    List(<String>) args;
+    args.new_init(); 
+    defer args.free();
+
+
+    String[] argv = { "testprog", "-n", "5", "--num", "2", "--foo=3", "--", "-fex", "-I./foo"};
+
+    ArgParse agp;
+	while (String arg = agp.next(argv)!!) {
+	    args.push(arg);
+	}
+
+    io::printfn("%s", args);
+    test::eq(args.len(), 0);
+    test::eq(args[0], "-n");
+    test::eq(args[1], "5");
+    test::eq(args[2], "--num");
+    test::eq(args[3], "2");
+    test::eq(args[4], "--foo");
+    test::eq(args[5], "3");
+    test::eq(args[6], "--");
+    test::eq(args[7], "-fex");
+    test::eq(args[8], "-I./foo");
+}
+
+fn void test_argparse_next_usage()
+{
+
+    List(<String>) args;
+    args.new_init(); 
+    defer args.free();
+
+
+    String[] argv = { "testprog", "-a", "--flag" };
+
+    ArgParse agp = {
+        .description = "test ArgParse program",
+        .options = {
+            {
+                .short_name = 'a',
+                .help = "a short name flag"
+            },
+            {
+                .long_name = "flag",
+                .help = "a long name flag"
+            },
+        }
+    };
+
+	while (String arg = agp.next(argv)!!) {
+	    args.push(arg);
+	}
+
+    io::printfn("%s", args);
+    agp.print_usage()!!;
+    test::eq(args.len(), 2);
+}
+
+fn void test_argparse_next_switch()
+{
+
+    List(<String>) args;
+    args.new_init(); 
+    defer args.free();
+
+    ArgParse agp = {
+        .description = "Test number sum program",
+        .options = {
+            {
+                .short_name = 'a',
+                .help = "a short name flag"
+            },
+            {
+                .long_name = "flag",
+                .help = "a long name flag"
+            },
+        }
+    };
+    String[] argv = { "testprog", "-n", "5", "--num", "2", "--num=3"};
+    int n_sum = 0;  // expected to be 5+2+3
+    while (String arg = agp.next(argv)!!) {
+        switch (arg) {
+            case "-n":
+            case "--num":
+                String value = agp.next(argv)!!;
+                n_sum += value.to_integer(int)!!;
+            default:
+                // you may use ArgParse options only for usage display as well
+                // OR make your own usage printout
+                agp.print_usage()!!;
+                test::eq(1, 0); // unexpected here
+        }
+        args.push(arg);
+    }
+
+    io::printfn("%s", args);
+    test::eq(args.len(), 3);
+    // NOTE: we skipped values in switch "--num" handler
+    test::eq(args[0], "-n");
+    test::eq(args[1], "--num");
+    test::eq(args[2], "--num");
+    test::eq(n_sum, 5+2+3);
+}
