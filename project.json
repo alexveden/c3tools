@@ -9,23 +9,14 @@
   "test-sources":  [ "test/**" ],
   "output": "build",
   "exec": ["c3c compile-run c3fmt_gentests.c3 ../lib/**"],
-  //  "exec": ["c3fmt_gentests.c3"],
   "targets": {
-    "c3test": {
-      "type": "executable",
-      "sources":  [ "src/c3test.c3" ]
-    },
-    "c3ast": {
-      "type": "executable",
-      "sources":  [ "src/c3ast.c3" ]
-    },
     "c3fmt": {
       "type": "executable",
-      "sources":  [ "src/c3fmt.c3" ]
+      "sources":  [ "src/c3fmt/c3fmt.c3" ]
     },
     "c3fzf": {
       "type": "executable",
-      "sources":  [ "src/c3fzf.c3" ]
+      "sources":  [ "src/c3fzf/c3fzf.c3" ]
     }
   },
   "cpu": "generic",
