@@ -14,6 +14,7 @@ struct FzfSettings
     String type_filter;
     String item_filter;
     bool preview;
+    int verbosity;
 }
 
 fault FzfFault
@@ -47,16 +48,19 @@ fn int main(String[] args)
             argparse::help_opt(),
             argparse::group_opt("Basic options"),
             {
-                .short_name = 's',
                 .long_name = "stdlib",
                 .value = &settings.stdlib_path,
                 .help = "includes stdlib symbols"
             },
             {
-                .short_name = 'p',
                 .long_name = "preview",
                 .value = &settings.preview,
                 .help = "preview symbols (require full module name)"
+            },
+            {
+                .long_name = "project",
+                .value = &settings.project_path,
+                .help = "project path"
             },
         },
     };

@@ -27,30 +27,30 @@ jobs:
       - name: c3fzf on c3tools
         run: |
           c3c --trust=full build c3fzf
-          ./build/c3fzf .
-          ./build/c3fzf . .
-          ./build/c3fzf c3tools::codefmt .
+          ./build/c3fzf --project=./lib/ .
+          ./build/c3fzf --project=./lib/ . .
+          ./build/c3fzf --project=./lib/ c3tools::codefmt .
 
       - name: c3fzf preview
         run: |
-          ./build/c3fzf --preview c3tools::codefmt CodeFmt
+          ./build/c3fzf  --project=./lib/ --preview c3tools::codefmt CodeFmt
 
       - name: c3fzf stdlib
         run: |
-          ./build/c3fzf --stdlib=./c3c/lib/std .
-          ./build/c3fzf --stdlib=./c3c/lib/std . .
+          ./build/c3fzf --stdlib=./c3c/lib/std --project=./lib/ .
+          ./build/c3fzf --stdlib=./c3c/lib/std --project=./lib/ . .
 
       - name: c3fzf stdlib symbols
         run: |
-          ./build/c3fzf --stdlib=./c3c/lib/std std::core::string .
+          ./build/c3fzf --stdlib=./c3c/lib/std --project=./lib/ std::core::string .
 
       - name: c3fzf stdlib preview
         run: |
-          ./build/c3fzf --preview --stdlib=./c3c/lib/std std::core::string .
+          ./build/c3fzf --preview --stdlib=./c3c/lib/std --project=./lib/ std::core::string .
 
       - name: c3fzf stdlib preview full stdlib
         run: |
-          ./build/c3fzf --stdlib=./c3c/lib/std . | xargs -I{} ./build/c3fzf --preview --stdlib=./c3c/lib/std {} .
+          ./build/c3fzf --project=./lib/ --stdlib=./c3c/lib/std . | xargs -I{} ./build/c3fzf --project=./lib/ --preview --stdlib=./c3c/lib/std {} .
 
   build-c3fmt:
     runs-on: ubuntu-22.04
