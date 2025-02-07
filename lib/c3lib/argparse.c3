@@ -183,6 +183,65 @@ macro group_opt(String group_name)
     };
 }
 
+<*
+Low-level argument parser, for fine-grained control of how arguments being parsed
+
+This method return argv items as is, and after getting option with '--some-opt' or '-s' 
+you can try to do another ArgParse.next() to fetch this argument value.
+
+Long names `--foo=bar` are split into 2 chunks: "--foo", "bar"
+
+Example:
+```c3
+fn void test_argparse_next_all_together()
+{
+    List(<String>) args;
+    args.new_init(); 
+    defer args.free();
+
+    String[] argv = { "testprog", "-n", "5", "--num", "2", "--foo=3", "--", "-fex", "-I./foo"};
+
+    ArgParse agp;
+    while (String arg = agp.next(argv)!!) {
+        args.push(arg);
+    }
+    io::printfn("%s", args);
+    // prints
+    // [-n, 5, --num, 2, --foo, 3, --, -fex, -I./foo]
+}
+```
+
+Switching over options:
+```c3
+int! sum_args(String argv[]) 
+{ 
+    ArgParse agp = {
+        .description = "Test number sum program",
+        .options = { 
+            {.short_name = 'n', .long_name="num", .help = "number to add"},
+        }
+    };
+    // String[] argv = { "testprog", "-n", "5", "--num", "2", "--num=3"};
+    int n_sum = 0;  // expected to be 5+2+3
+    while (String arg = agp.next(argv)!) {
+        switch (arg) {
+            case "-n":
+            case "--num":
+                // fetch next value of "--num", it may fail when no value "--num="
+                String value = agp.next(argv)!;
+                n_sum += value.to_integer(int)!;
+            default:
+                // you may use ArgParse options only for usage display as well
+                // OR make your own usage printout
+                agp.print_usage()!;
+
+                // maybe exit program here ...
+        }
+    }
+    return n_sum;
+}
+```
+*>
 fn String! ArgParse.next(&self, String[] argv) 
 {
     assert(self.arguments.len == 0, "ArgParse already initialized or double parse call");
