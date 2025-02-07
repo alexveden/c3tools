@@ -17,8 +17,8 @@ jobs:
       - name: Checkout c3tools 
         uses: actions/checkout@v4
 
-      - name: Build c3c compiler
-        uses: ./.github/actions/c3c_build_latest
+      - uses: ./.github/actions/c3c_build_latest
+        name: Build c3c compiler
 
   build-c3fmt:
     runs-on: ubuntu-22.04
