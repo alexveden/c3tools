@@ -147,3 +147,6 @@ jobs:
           cd c3c/test
           ../build/c3c compile-test unit
 
+      - name: c3fmt of all *.c3t files in test_suite
+        run: |
+          ./scripts/c3fmt_c3c_test_suite.sh c3c/test/test_suite/
