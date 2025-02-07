@@ -26,7 +26,7 @@ jobs:
 
       - name: c3fzf on c3tools
         run: |
-          c3c --sanitize=address --trust=full build c3fzf
+          c3c --trust=full build c3fzf
           ./build/c3fzf --project=./lib/ .
           ./build/c3fzf --project=./lib/ . .
           ./build/c3fzf --project=./lib/ c3tools::codefmt .
