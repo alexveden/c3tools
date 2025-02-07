@@ -27,8 +27,8 @@ jobs:
       - name: c3fzf on c3tools
         run: |
           c3c --trust=full build c3fzf
-          ./build/c3fzf --help
           ./build/c3fzf .
+          ./build/c3fzf . .
           ./build/c3fzf c3tools::codefmt .
 
       - name: c3fzf preview
@@ -38,6 +38,7 @@ jobs:
       - name: c3fzf stdlib
         run: |
           ./build/c3fzf --stdlib=./c3c/lib/std .
+          ./build/c3fzf --stdlib=./c3c/lib/std . .
 
       - name: c3fzf stdlib symbols
         run: |
