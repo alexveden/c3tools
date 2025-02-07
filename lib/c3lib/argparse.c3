@@ -564,13 +564,13 @@ fn void! ArgParse.options_check(&self) @local
 
         switch (opt.value.type) {
             case bool.typeid:
-            case int.typeid:
             case uint.typeid:
             case long.typeid:
             case ulong.typeid:
             case float.typeid:
             case double.typeid:
             case String.typeid:
+            case int.typeid:
                 // resetting presence flag, it will be updated after all argument parsing
                 opt._is_present = false;
             default:
@@ -626,10 +626,9 @@ fn void! ArgParse.parse_arg_val(&self, ArgOpt* opt, bool flag_unset = false) @lo
     }
 
     assert(opt.value);
-    assert(opt.value.type == bool.typeid || !flag_unset, "flag_unset only for bool options");
 
     if (opt.callback) {
-        if (opt.value.type == bool.typeid) {
+        if (opt.value.type == bool.typeid || (opt.allow_many && opt.value.type == int.typeid)) {
             opt.callback(opt, (flag_unset) ? "0" : "1")!;
         } else {
             String aval = self.get_arg()!;
@@ -638,6 +637,8 @@ fn void! ArgParse.parse_arg_val(&self, ArgOpt* opt, bool flag_unset = false) @lo
         opt._is_present = true;
         return;
     }
+
+    assert(opt.value.type == bool.typeid || !flag_unset, "flag_unset only for bool options");
 
     opt._is_present = true;
 
@@ -648,8 +649,13 @@ fn void! ArgParse.parse_arg_val(&self, ArgOpt* opt, bool flag_unset = false) @lo
         case String.typeid:
             *anycast(opt.value, String)! = self.get_arg()!;
         case int.typeid:
-            String aval = self.get_arg()!;
-            *anycast(opt.value, int)! = aval.to_integer(int)!;
+            if (opt.allow_many) {
+                // ints in allow_many acts as accumulator value
+                *anycast(opt.value, int)! += 1;
+            } else {
+                String aval = self.get_arg()!;
+                *anycast(opt.value, int)! = aval.to_integer(int)!;
+            }
         case uint.typeid:
             String aval = self.get_arg()!;
             *anycast(opt.value, uint)! = aval.to_integer(uint)!;

@@ -1166,10 +1166,10 @@ fn void test_argparse_next_no_args()
     // String[] argv = { "testprog", "--num=1", "-n", "5", "--num", "2" };
     String[] argv = { "testprog" };
 
-	while (String arg = agp.next(argv)!!) {
+    while (String arg = agp.next(argv)!!) {
         io::printfn("%s", arg);
-	    args.push(arg);
-	}
+        args.push(arg);
+    }
     io::printfn("%s", args);
     test::eq(args.len(), 0);
 }
@@ -1185,9 +1185,9 @@ fn void test_argparse_next_short_arg()
 
     String[] argv = { "testprog", "-n", "5"};
 
-	while (String arg = agp.next(argv)!!) {
-	    args.push(arg);
-	}
+    while (String arg = agp.next(argv)!!) {
+        args.push(arg);
+    }
 
     io::printfn("%s", args);
     test::eq(args.len(), 2);
@@ -1206,9 +1206,9 @@ fn void test_argparse_next_short_and_long_arg()
 
     String[] argv = { "testprog", "-n", "5", "--num", "2"};
 
-	while (String arg = agp.next(argv)!!) {
-	    args.push(arg);
-	}
+    while (String arg = agp.next(argv)!!) {
+        args.push(arg);
+    }
 
     io::printfn("%s", args);
     test::eq(args.len(), 4);
@@ -1229,9 +1229,9 @@ fn void test_argparse_next_short_and_long_arg_eq()
 
     String[] argv = { "testprog", "-n", "5", "--num=2"};
 
-	while (String arg = agp.next(argv)!!) {
-	    args.push(arg);
-	}
+    while (String arg = agp.next(argv)!!) {
+        args.push(arg);
+    }
 
     io::printfn("%s", args);
     test::eq(args.len(), 4);
@@ -1268,12 +1268,12 @@ fn void test_argparse_next_all_together()
     String[] argv = { "testprog", "-n", "5", "--num", "2", "--foo=3", "--", "-fex", "-I./foo"};
 
     ArgParse agp;
-	while (String arg = agp.next(argv)!!) {
-	    args.push(arg);
-	}
+    while (String arg = agp.next(argv)!!) {
+        args.push(arg);
+    }
 
     io::printfn("%s", args);
-    test::eq(args.len(), 0);
+    test::eq(args.len(), 9);
     test::eq(args[0], "-n");
     test::eq(args[1], "5");
     test::eq(args[2], "--num");
@@ -1309,9 +1309,9 @@ fn void test_argparse_next_usage()
         }
     };
 
-	while (String arg = agp.next(argv)!!) {
-	    args.push(arg);
-	}
+    while (String arg = agp.next(argv)!!) {
+        args.push(arg);
+    }
 
     io::printfn("%s", args);
     agp.print_usage()!!;
@@ -1362,4 +1362,85 @@ fn void test_argparse_next_switch()
     test::eq(args[1], "--num");
     test::eq(args[2], "--num");
     test::eq(n_sum, 5+2+3);
+}
+
+fn void test_number_accumulator()
+{
+
+    int accum = 0;
+    argparse::ArgParse agp = {
+        .options = {
+            {
+                .short_name = 'n',
+                .long_name = "num",
+                .value = &accum,
+                .allow_many = true,
+            },
+        }
+    };
+
+    String[] args = { "testprog", "-n", "--num" };
+    test::eq(agp.options[0]._is_present, false);
+
+    agp.parse(args)!!;
+
+    test::eq(accum, 2);
+    test::eq(agp.options[0]._is_present, true);
+}
+
+fn void test_number_accumulator_with_callback()
+{
+
+    int accum = 0;
+
+    argparse::ArgParse agp = {
+        .options = {
+            {
+                .short_name = 'n',
+                .long_name = "num",
+                .value = &accum,
+                .allow_many = true,
+                .callback = fn void! (ArgOpt* opt, String value) {
+                    io::printfn("value: %s", value);
+                    int * val = anycast(opt.value, int)!;
+                    if (!opt._is_present) {
+                        // NOTE: we have a chance to set default value here
+                        *val = 7;
+                    }
+                    *val += 1;
+                }
+            },
+        }
+    };
+
+    String[] args = { "testprog", "--num", "-n", "--num"};
+    test::eq(agp.options[0]._is_present, false);
+
+    agp.parse(args)!!;
+    test::eq(accum, 10);
+    test::eq(agp.options[0]._is_present, true);
+}
+
+fn void test_number_accumulator_short_args()
+{
+
+    int accum = 0;
+    argparse::ArgParse agp = {
+        .options = {
+            {
+                .short_name = 'n',
+                .long_name = "num",
+                .value = &accum,
+                .allow_many = true,
+            },
+        }
+    };
+
+    String[] args = { "testprog", "-nnn", "--num" };
+    test::eq(agp.options[0]._is_present, false);
+
+    agp.parse(args)!!;
+
+    test::eq(accum, 4);
+    test::eq(agp.options[0]._is_present, true);
 }
