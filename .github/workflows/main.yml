@@ -20,6 +20,37 @@ jobs:
       - uses: ./.github/actions/c3c_build_latest
         name: Build c3c compiler
 
+      - name: c3tools unit tests
+        run: |
+          c3c --trust=full test
+
+      - name: c3fzf on c3tools
+        run: |
+          c3c --trust=full build c3fzf
+          ./build/c3fzf --help
+          ./build/c3fzf .
+          ./build/c3fzf c3tools::codefmt .
+
+      - name: c3fzf preview
+        run: |
+          ./build/c3fzf --preview c3tools::codefmt CodeFmt
+
+      - name: c3fzf stdlib
+        run: |
+          ./build/c3fzf --stdlib=./c3c/lib/std .
+
+      - name: c3fzf stdlib symbols
+        run: |
+          ./build/c3fzf --stdlib=./c3c/lib/std std::core::string .
+
+      - name: c3fzf stdlib preview
+        run: |
+          ./build/c3fzf --preview --stdlib=./c3c/lib/std std::core::string .
+
+      - name: c3fzf stdlib preview full stdlib
+        run: |
+          ./build/c3fzf --stdlib=./c3c/lib/std . | xargs -I{} ./build/c3fzf --preview --stdlib=./c3c/lib/std {} .
+
   build-c3fmt:
     runs-on: ubuntu-22.04
     strategy:
@@ -64,7 +95,6 @@ jobs:
       #
       #   c3c formatting block
       #
-
       - name: c3c compiler tests (original)
         run: |
           cd c3c/test
