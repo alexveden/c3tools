@@ -1423,8 +1423,8 @@ fn void test_number_accumulator_with_callback()
 
 fn void test_number_accumulator_short_args()
 {
-
-    int accum = 0;
+    // default value remains the same, agp adds to it
+    int accum = 10;
     argparse::ArgParse agp = {
         .options = {
             {
@@ -1441,6 +1441,6 @@ fn void test_number_accumulator_short_args()
 
     agp.parse(args)!!;
 
-    test::eq(accum, 4);
+    test::eq(accum, 14);
     test::eq(agp.options[0]._is_present, true);
 }
