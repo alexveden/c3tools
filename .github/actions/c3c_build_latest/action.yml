@@ -1,0 +1,64 @@
+name: c3c compilation
+description: Compiles recent c3 from master
+inputs:
+  llvm_version:
+    description: 'LLVM version for c3c build'
+    required: false
+    default: '18'
+
+runs:
+  using: 'composite'
+
+  steps:
+    - name: Checkout c3c compiler source
+      uses: actions/checkout@v4
+      with:
+        repository: c3lang/c3c
+        path: c3c
+
+    - name: Setup environment
+      run: |
+        echo "$PWD/c3c/build" >> "$GITHUB_PATH"
+        echo "PATH: $PATH"
+        git config --global user.email "ci@c3tools.com"
+        git config --global user.name "c3tools CI"
+
+    - name: Install common deps
+      run: |
+        sudo apt-get install zlib1g zlib1g-dev python3 ninja-build curl
+
+    - name: Install Clang ${{inputs.llvm_version}}
+      run: |
+        wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+        sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal-${{inputs.llvm_version}} main"
+        sudo apt-get update
+        sudo apt-get install -y -t llvm-toolchain-focal-${{inputs.llvm_version}} libpolly-${{inputs.llvm_version}}-dev \
+          clang-${{inputs.llvm_version}} llvm-${{inputs.llvm_version}} llvm-${{inputs.llvm_version}}-dev \
+          lld-${{inputs.llvm_version}} liblld-${{inputs.llvm_version}}-dev
+
+    - name: CMake18
+      if: inputs.llvm_version >= 18 && inputs.llvm_version != inputs.llvm_DEV_VERSION
+      run: |
+        cd c3c
+        cmake -B build \
+              -G Ninja \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_C_COMPILER=clang-${{inputs.llvm_version}} \
+              -DCMAKE_CXX_COMPILER=clang++-${{inputs.llvm_version}} \
+              -DCMAKE_LINKER=lld-link-${{inputs.llvm_version}} \
+              -DCMAKE_OBJCOPY=llvm-objcopy-${{inputs.llvm_version}} \
+              -DCMAKE_STRIP=llvm-strip-${{inputs.llvm_version}} \
+              -DCMAKE_DLLTOOL=llvm-dlltool-${{inputs.llvm_version}} \
+              -DC3_LLVM_VERSION=${{inputs.llvm_version}}.1
+        cmake --build build
+
+    - name: c3c compile and run
+      run: |
+        cd c3c/resources
+        ../build/c3c compile examples/base64.c3
+        ../build/c3c compile-run examples/args.c3 -- foo -bar "baz baz"
+
+    - name: c3c stdlib unit tests
+      run: |
+        cd c3c/test
+        ../build/c3c compile-test unit

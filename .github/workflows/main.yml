@@ -10,8 +10,17 @@ env:
   llvm_version: 18
 
 jobs:
+  build-c3fzf:
+    runs-on: ubuntu-22.04
 
-  build-linux:
+    steps:
+      - name: Checkout c3tools 
+        uses: actions/checkout@v4
+
+      - name: Build c3c compiler
+        uses: ./.github/actions/c3c_build_latest
+
+  build-c3fmt:
     runs-on: ubuntu-22.04
     strategy:
       # Don't abort runners if a single one fails
