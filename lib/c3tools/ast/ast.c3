@@ -248,7 +248,6 @@ fn Ast parse(
                         // first `module` keyword, check if there is no decls/imports in default
                         // and remove it from modules list if it's completely empty
                         if (!self.modules.decls && !self.modules.imports) {
-                            assert(!self.modules.name);
                             self.modules = null;
                         }
                     }
