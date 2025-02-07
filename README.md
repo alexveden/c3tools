@@ -1,6 +1,6 @@
 # c3tools
 
-![testing](https://github.com/github/docs/actions/workflows/main.yml/badge.svg)
+![testing](https://github.com/alexveden/c3tools/actions/workflows/main.yml/badge.svg)
 
 A collection of tools and libs for C3 language
 
