@@ -43,7 +43,7 @@ There are only 2 ways of wrapping in c3fmt:
 
 1. Single line wrap occurs when wrapped text into line-width
 2. Multi-line wrap occurs when wrapped text doesn't fit, or there is a `magic comma` at the end or in-line comment in the expression.
-```c
+```zig
 // initial
 fn void foo(int a, int b, int c) {}
 
@@ -93,7 +93,7 @@ A list of what can be wrapped:
 
 
 #### Simple calls
-```c
+```zig
 
 // calls
 return foo(a, b, c,);
@@ -107,7 +107,7 @@ return foo(
 ```
 #### Logic
 
-```c
+```zig
 
 // initial
 if (foo || bar || baz) {
@@ -130,7 +130,7 @@ if (
 ```
 
 #### Arrays 
-```c
+```zig
 // initial
 int[][] arr = {{1}, {1, 2}, {3, 4}};
 
@@ -148,7 +148,7 @@ int[][] arr = {
 ```
 
 #### Structures
-```c
+```zig
 // initial
 Foo s = {.foo = 1, .bar = 2, .sub = {.baz = 3}};
 
@@ -168,7 +168,7 @@ Foo s = {
 ```
 
 #### Chained calls
-```c
+```zig
 // initial
 return foo(a).bar(b, z).baz(c, magic_comma,);
 
@@ -197,7 +197,7 @@ Some parts of the language intentionally don't wrap:
 Sometimes you will find weird chunks of code, which could be weirdly formatted, and before you fill an issue for this try to wrap it with `()`.
 
 Example:
-```c
+```zig
 
 // initial
 macro bool char_is_base64(char c)
@@ -241,7 +241,7 @@ macro bool char_is_base64(char c)
 ### Disabling c3fmt
 You can add a single line comment `// fmt: off` (must be exact match!) to temporarily disable formatting for code block of function. Use `// fmt: on` to re-enable it.
 
-```c
+```zig
 
 fn void main()
 {
@@ -263,7 +263,7 @@ You can force multi-line wrap any expression if you add `,` after the last item.
 
 ## c3fmt code style
 
-```c
+```zig
 <*
  Doc string
 *>

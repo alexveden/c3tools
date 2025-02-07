@@ -21,7 +21,7 @@
 
 ## Example:
 
-```c3
+```zig
 
 // Simple arguments
 import std::os::argparse;
@@ -60,7 +60,7 @@ fn int main(String[] args)
 
 ## Custom argument parsing via callbacks
 
-```c3
+```zig
 
 fn void test_custom_type_callback_unknown_type()
 {
@@ -111,7 +111,7 @@ fn void test_custom_type_callback_unknown_type()
 
 ## Low-level API using `ArgParse.next()`
 
-```c
+```zig
 
 fn void test_argparse_next_switch()
 {
