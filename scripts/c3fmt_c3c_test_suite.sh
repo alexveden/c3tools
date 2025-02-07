@@ -44,7 +44,7 @@ process_file() {
     echo "[    ] Processing: $file..."
 
     # Run the c3fmt command on the file (making maximally intrusive)
-    if ./build/c3fmt -w 80 -i 4 "$file"; then
+    if ./build/c3fmt --force -w 80 -i 4 "$file"; then
         if echo "$file"; then
         # c3c segfaults on defer in defer see #1936
         ## c3c segfaults on defer in defer see #1936

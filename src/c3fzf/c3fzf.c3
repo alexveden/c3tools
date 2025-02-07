@@ -28,6 +28,128 @@ struct ModuleDecl
     AstNode* decl;
 }
 
+fn int main(String[] args)
+{
+    // Defaults
+    FzfSettings settings = {
+        .stdlib_path = "/home/ubertrader/code/c3c/lib",
+        // .stdlib_path = "",
+        .project_path = ".",
+        .module_filter = ".",
+        .type_filter = "",
+        .item_filter = "",
+        .preview = false,
+    };
+
+    argparse::ArgParse agp = {
+        .description = "c3 symbols fuzzy finder",
+        .usage = "[options] [.|module_filter] [.|type_filter]",
+        .options = {
+            argparse::help_opt(),
+            argparse::group_opt("Basic options"),
+            {
+                .short_name = 's',
+                .long_name = "stdlib",
+                .value = &settings.stdlib_path,
+                .help = "includes stdlib symbols"
+            },
+            {
+                .short_name = 'p',
+                .long_name = "preview",
+                .value = &settings.preview,
+                .help = "preview symbols (require full module name)"
+            },
+        },
+    };
+
+    if (catch err = agp.parse(args)) {
+        agp.print_usage()!!;
+        return 1;
+    }
+
+    if (agp.arguments.len > 0) settings.module_filter = agp.arguments[0];
+    if (agp.arguments.len > 1) settings.type_filter = agp.arguments[1];
+
+    // if(catch err = process_file(agp.arguments[0])) {
+    // io::printfn("%s", stdlib_path);
+    if (catch err = find(&settings)) {
+        return 1;
+    }
+
+    return 0;
+}
+
+fn void! find(FzfSettings* settings) @local
+{
+    if (settings.preview && settings.module_filter == ".") {
+        io::printfn("You must pass full module name in a module filter argument, got .");
+        return FzfFault.BAD_ARGUMENT?;
+    }
+    AstProject proj = AstProject.new_init(settings.project_path, settings.stdlib_path);
+    defer proj.free();
+
+    if (catch err = proj.load()) {
+        io::printfn("c3 project load failed: %s", err);
+        return err?;
+    }
+
+    if (!settings.type_filter && !settings.preview) {
+        return print_modules_list(settings, &proj);
+    }
+
+    List(<ModuleDecl>) declarations;
+    declarations.temp_init(proj.modules.capacity);
+    foreach (m : proj.modules) {
+        if (settings.module_filter != ".") {
+            if (settings.preview) {
+                if (m.value != settings.module_filter) continue;
+            } else {
+                if (!m.value.contains(settings.module_filter)) continue;
+            }
+        }
+
+        if (settings.type_filter == ".") {
+            declarations.push(ModuleDecl {.mod = m, .decl = null});
+        }
+
+        for LOOP: (AstTypeDef* decl = m.decls; decl != null; decl = (AstTypeDef*)decl.next) {
+            if (settings.type_filter && settings.type_filter != ".") {
+                if (!decl.value.contains(settings.type_filter)) continue;
+            }
+
+            for (AstNode* attr = decl.attributes; attr != null; attr = attr.next) {
+                if (attr.value.starts_with("@local")) continue LOOP;
+                if (attr.value.starts_with("@test")) continue LOOP;
+            }
+
+            declarations.push(ModuleDecl {.mod = m, .decl = decl});
+        }
+
+    }
+    if (!declarations.len()) {
+        io::printfn(
+            "No declarations found with name: %s: %s", settings.module_filter, settings.type_filter
+        );
+        return FzfFault.MODULE_NOT_FOUND?;
+    }
+
+    sort::quicksort(declarations, &cmp_decl);
+    if (settings.preview) {
+        return print_preview(
+            settings, &proj, declarations, is_full_preview: settings.type_filter != ""
+        );
+    } else {
+        foreach (mdecl : declarations) {
+            io::printfn(
+                "%s %s %s",
+                mdecl.mod.value,
+                mdecl.decl == null ? "." : mdecl.decl.value,
+                mdecl.decl == null ? "" : lexer::token_type_to_string(mdecl.decl.type)
+            );
+        }
+    }
+}
+
 fn void! print_modules_list(FzfSettings* settings, AstProject* proj) @local
 {
     List(<AstModule*>) modules;
@@ -329,126 +451,4 @@ fn int cmp_decl(ModuleDecl a, ModuleDecl b) @private
         return a.decl.type - b.decl.type;
     }
 
-}
-
-fn void! find(FzfSettings* settings) @local
-{
-    if (settings.preview && settings.module_filter == ".") {
-        io::printfn("You must pass full module name in a module filter argument, got .");
-        return FzfFault.BAD_ARGUMENT?;
-    }
-    AstProject proj = AstProject.new_init(settings.project_path, settings.stdlib_path);
-    defer proj.free();
-
-    if (catch err = proj.load()) {
-        io::printfn("c3 project load failed: %s", err);
-        return err?;
-    }
-
-    if (!settings.type_filter && !settings.preview) {
-        return print_modules_list(settings, &proj);
-    }
-
-    List(<ModuleDecl>) declarations;
-    declarations.temp_init(proj.modules.capacity);
-    foreach (m : proj.modules) {
-        if (settings.module_filter != ".") {
-            if (settings.preview) {
-                if (m.value != settings.module_filter) continue;
-            } else {
-                if (!m.value.contains(settings.module_filter)) continue;
-            }
-        }
-
-        if (settings.type_filter == ".") {
-            declarations.push(ModuleDecl {.mod = m, .decl = null});
-        }
-
-        for LOOP: (AstTypeDef* decl = m.decls; decl != null; decl = (AstTypeDef*)decl.next) {
-            if (settings.type_filter && settings.type_filter != ".") {
-                if (!decl.value.contains(settings.type_filter)) continue;
-            }
-
-            for (AstNode* attr = decl.attributes; attr != null; attr = attr.next) {
-                if (attr.value.starts_with("@local")) continue LOOP;
-                if (attr.value.starts_with("@test")) continue LOOP;
-            }
-
-            declarations.push(ModuleDecl {.mod = m, .decl = decl});
-        }
-
-    }
-    if (!declarations.len()) {
-        io::printfn(
-            "No declarations found with name: %s: %s", settings.module_filter, settings.type_filter
-        );
-        return FzfFault.MODULE_NOT_FOUND?;
-    }
-
-    sort::quicksort(declarations, &cmp_decl);
-    if (settings.preview) {
-        return print_preview(
-            settings, &proj, declarations, is_full_preview: settings.type_filter != ""
-        );
-    } else {
-        foreach (mdecl : declarations) {
-            io::printfn(
-                "%s %s %s",
-                mdecl.mod.value,
-                mdecl.decl == null ? "." : mdecl.decl.value,
-                mdecl.decl == null ? "" : lexer::token_type_to_string(mdecl.decl.type)
-            );
-        }
-    }
-}
-
-fn int main(String[] args)
-{
-    // Defaults
-    FzfSettings settings = {
-        .stdlib_path = "/home/ubertrader/code/c3c/lib",
-        // .stdlib_path = "",
-        .project_path = ".",
-        .module_filter = ".",
-        .type_filter = "",
-        .item_filter = "",
-        .preview = false,
-    };
-
-    argparse::ArgParse agp = {
-        .description = "c3 symbols fuzzy finder",
-        .usage = "[options] [.|module_filter] [.|type_filter]",
-        .options = {
-            argparse::help_opt(),
-            argparse::group_opt("Basic options"),
-            {
-                .short_name = 's',
-                .long_name = "stdlib",
-                .value = &settings.stdlib_path,
-                .help = "includes stdlib symbols"
-            },
-            {
-                .short_name = 'p',
-                .long_name = "preview",
-                .value = &settings.preview,
-                .help = "preview symbols (require full module name)"
-            },
-        },
-    };
-
-    if (catch err = agp.parse(args)) {
-        agp.print_usage()!!;
-        return 1;
-    }
-
-    if (agp.arguments.len > 0) settings.module_filter = agp.arguments[0];
-    if (agp.arguments.len > 1) settings.type_filter = agp.arguments[1];
-
-    // if(catch err = process_file(agp.arguments[0])) {
-    // io::printfn("%s", stdlib_path);
-    if (catch err = find(&settings)) {
-        return 1;
-    }
-
-    return 0;
 }
