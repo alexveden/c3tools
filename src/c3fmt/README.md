@@ -246,6 +246,8 @@ macro bool char_is_base64(char c)
 ### Disabling c3fmt
 You can add a single line comment `// fmt: off` (must be exact match!) to temporarily disable formatting for code block of function. Use `// fmt: on` to re-enable it.
 
+**IMPORTANT**: You only allowed to place `// fmt: off/on` pair outside unclosed statements (i.e. function calls, or array/struct initializers).
+
 ```zig
 
 fn void main()

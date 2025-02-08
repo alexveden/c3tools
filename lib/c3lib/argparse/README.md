@@ -7,6 +7,7 @@
  - Support of `--long=value` and `--long value`
  - Support of `--` makes all following options as arguments
  - Generic option value to program value parsing
+ - Support of default values (set from initial value of option before parse)
  - Sub-commands support
  - ZII initialization, with sensible defaults
  - Builtin argument validation for simple types
@@ -16,7 +17,7 @@
  - Support of accumulated values: -vvvv will increase int value by 1 four times
  - Low-level parser via `ArgParse.next()` if you want customized behavior
  - Automatically detects value of option your program expects, and does sanity checks
- - Doesn't require crating special types for arg parse tasks, just use ArgParse instance 
+ - Doesn't require creating special types for arg parse tasks, just use ArgParse instance 
  - Does not allocate memory, it's just a static struct instance
 
 ## Example:
@@ -29,9 +30,11 @@ import std::io;
 
 fn int main(String[] args)
 {
-    int val = 0;
+    // variables for storing option values (also act as default)
+    // you may also use struct fields for config storage
+    int val = 7;
     bool flag = false;
-    String s;
+    String s = "my default";
     float f = 0.0;
     argparse::ArgParse agp = {
         .description = "My program",
