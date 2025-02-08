@@ -13,6 +13,13 @@ jobs:
   build-c3fzf:
     runs-on: ubuntu-22.04
 
+    strategy:
+      # Don't abort runners if a single one fails
+      fail-fast: false
+
+      matrix:
+        optimize: ["O0", "O5"]
+
     steps:
       - name: Checkout c3tools 
         uses: actions/checkout@v4
@@ -22,11 +29,11 @@ jobs:
 
       - name: c3tools unit tests
         run: |
-          c3c --trust=full test
+          c3c -${{ matrix.optimize }} --trust=full test
 
       - name: c3fzf on c3tools
         run: |
-          c3c --trust=full build c3fzf
+          c3c --trust=full -${{ matrix.optimize }} build c3fzf
           ./build/c3fzf --project=./lib/ .
           ./build/c3fzf --project=./lib/ . .
           ./build/c3fzf --project=./lib/ c3tools::codefmt .
@@ -61,6 +68,7 @@ jobs:
       matrix:
         line_width: [80, 100]
         indent: ["4", "t"]
+        optimize: ["O0", "O5"]
 
     steps:
       - name: Checkout c3tools 
@@ -74,8 +82,13 @@ jobs:
       #
       - name: c3tools unit tests
         run: |
-          c3c --sanitize=address --trust=full build c3fmt
-          c3c --sanitize=address --trust=full test
+          if [[ "${{matrix.optimize}}" == "O0" ]]; then
+            c3c --sanitize=address --trust=full build c3fmt
+            c3c --sanitize=address --trust=full test
+          else
+            c3c -${{ matrix.optimize }} --trust=full test
+            c3c -${{ matrix.optimize }} --trust=full build c3fmt
+          fi
 
       - name: c3fmt c3tools
         run: |

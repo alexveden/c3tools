@@ -45,10 +45,7 @@ process_file() {
 
     # Run the c3fmt command on the file (making maximally intrusive)
     if ./build/c3fmt --force -w 80 -i 4 "$file"; then
-        if echo "$file"; then
-        # c3c segfaults on defer in defer see #1936
-        ## c3c segfaults on defer in defer see #1936
-        # if c3c compile-only --obj-out ./build/c3c_test_suite "$file"; then 
+        if c3c compile-only --obj-out ./build/c3c_test_suite "$file"; then 
             echo "[OK  ] formatted + compiled"
             return 0
         else
