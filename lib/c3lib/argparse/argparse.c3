@@ -85,6 +85,8 @@ struct ArgParse
         /// Stops parsing when first non-option argument found, keeps all remaining arguments in 
         /// .arguments field of this struct. It can be used for cascading argparse for subcommands.  
         bool stop_at_non_option; 
+        /// It's mandatory to pass at least one argument
+        bool require_arguments;
     }
 
     // Internal state
@@ -304,6 +306,7 @@ Parses all arguments.
 
 @param argv "arguments list from system argv or from previous argparse.arguments for subcommands"
 @return! ArgError.INVALID_ARGUMENT
+@return! ArgError.MISSING_ARGUMENT
 *>
 fn void! ArgParse.parse(&self, String[] argv)
 {
@@ -382,6 +385,10 @@ fn void! ArgParse.parse(&self, String[] argv)
     self.options_ensure_required()!;
 
     self.arguments = argv[self._ctx.cpidx + 1 ..];  // excludes 1st argv[0], program_name
+    if (self.flags.require_arguments && self.arguments.len == 0) {
+        io::printf("Error: positional argument expected\n");
+        return ArgError.MISSING_ARGUMENT?;
+    }
 }
 
 <*
@@ -489,7 +496,24 @@ fn void! ArgParse.print_usage(&self)
         }
         io::printf("%*s%s", (int)pad + 2, "", opt.help);
         if (!opt.required) {
-            if (opt.value) io::printf(" [default: %s]", opt.value);
+            if (opt.value) {
+                switch (opt.value.type) {
+                    case bool.typeid:
+                    case short.typeid:
+                    case ushort.typeid:
+                    case int.typeid:
+                    case uint.typeid:
+                    case long.typeid:
+                    case ulong.typeid:
+                    case float.typeid:
+                    case double.typeid:
+                    case String.typeid:
+                        io::printf(" [default: %s]", opt.value);
+                    default:
+                        // custom value with callback 
+                        break;
+                }
+            } 
         } else {
             io::printf(" (required)");
         }
