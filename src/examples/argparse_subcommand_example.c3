@@ -1,5 +1,5 @@
 <*
-ArgParse subcommand implementation with custom callback function with parsing logic
+ ArgParse subcommand implementation with custom callback function with parsing logic
 *>
 module subcommand_example;
 import std::io;
@@ -27,13 +27,15 @@ fn void! command_compile(Config* config, ArgParse* agp)
     String output = "a.out";
 
     ArgParse sub_args = {
-        .description = "Compile command flags", 
-        // fmt: off
+        .description = "Compile command flags",
         .options = {
             argparse::help_opt(),
-            {.short_name = 'o', .value = &output, .help = "compilation output"}
+            {
+                .short_name = 'o',
+                .value = &output,
+                .help = "compilation output"
+            }
         },
-        // fmt: on
         .flags = {
             .require_arguments = true,
         }
@@ -60,18 +62,38 @@ fn int main(String[] args)
 {
 
     // Setting sensible defaults here
-    Config config = { .optimization = {.batch_ops = true, .zero_loop = true,}, };
+    Config config = {
+        .optimization = {
+            .batch_ops = true,
+            .zero_loop = true,
+        },
+    };
 
     ArgParse agp = {
-        .description = "Compiler test", 
-            .usage = "compiler [options] {compile,sub_cmd} arg1...argN",
-        // fmt: off
+        .description = "Compiler test",
+        .usage = "compiler [options] {compile,sub_cmd} arg1...argN",
         .options = {
             argparse::help_opt(),
-            {.value = &config.optimization.batch_ops, .long_name = "batch-ops", .help = "batch_ops"},
-            {.value = &config.optimization.zero_loop, .long_name = "zero-loop", .help = "zero_loop"},
-            {.value = &config.optimization.reduce_loops, .long_name = "reduce-loops", .help = "reduce_loops"},
-            {.value = &config.optimization.remove_dead, .long_name = "remove-dead", .help = "remove_dead"},
+            {
+                .value = &config.optimization.batch_ops,
+                .long_name = "batch-ops",
+                .help = "batch_ops"
+            },
+            {
+                .value = &config.optimization.zero_loop,
+                .long_name = "zero-loop",
+                .help = "zero_loop"
+            },
+            {
+                .value = &config.optimization.reduce_loops,
+                .long_name = "reduce-loops",
+                .help = "reduce_loops"
+            },
+            {
+                .value = &config.optimization.remove_dead,
+                .long_name = "remove-dead",
+                .help = "remove_dead"
+            },
             {
                 .short_name = 'O',
                 .value = &config,
@@ -80,7 +102,7 @@ fn int main(String[] args)
                     Config* ctx = anycast(opt.value, Config)!;
                     int level = value.to_integer(int)!;
                     io::printfn("optimization level arg callback: -O%s", value);
-                    switch(level) {
+                    switch (level) {
                         case 0:
                             // falling back to defaults
                             break;
@@ -89,7 +111,7 @@ fn int main(String[] args)
                             ctx.optimization.zero_loop = true;
                             ctx.optimization.reduce_loops = false;
                             ctx.optimization.remove_dead = false;
-                        default: // very high
+                        default:  // very high
                             ctx.optimization.batch_ops = false;
                             ctx.optimization.zero_loop = false;
                             ctx.optimization.reduce_loops = false;
@@ -98,7 +120,6 @@ fn int main(String[] args)
                 }
             }
         },
-        // fmt: on
         .flags = {
             // for subcommand
             .stop_at_non_option = true,
@@ -111,7 +132,7 @@ fn int main(String[] args)
         return 1;
     }
 
-    switch(agp.arguments[0]) {
+    switch (agp.arguments[0]) {
         case "compile":
             if (catch err = command_compile(&config, &agp)) return 1;
         default:
