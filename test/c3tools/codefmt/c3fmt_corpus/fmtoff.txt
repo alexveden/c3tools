@@ -73,11 +73,11 @@ off_inside_cache_statement_ugly
 fn void 
 main() {
               //this simple comment
+    // fmt: off
     if(   foo (far) &&
-            // fmt: off
             abs(saldj) || (soze) && afk
-        // fmt: on
     ) {
+        // fmt: on
           s = {.abs = 2, .zozo = 3,};
     // fmt: on
                 if (   abs(mode.to)) {
@@ -89,11 +89,11 @@ return;}
 fn void main()
 {
     //this simple comment
-    if (foo(far) &&
     // fmt: off
+    if(   foo (far) &&
             abs(saldj) || (soze) && afk
-        // fmt: on
     ) {
+        // fmt: on
         s = {
             .abs = 2,
             .zozo = 3,
@@ -104,4 +104,62 @@ fn void main()
         }
     }
     return;
+}
+================================================================================
+fmt_off_inside_struct_initializer
+================================================================================
+fn void! command_compile(Config* config, ArgParse* agp)
+{
+    // fmt: off
+    ArgParse sub_args = {
+        .description = "Compile command flags", 
+        .options = {
+            argparse::help_opt(),
+            {.short_name = 'o', .value = &output, .help = "compilation output"}
+        },
+        .flags = {
+            .require_arguments = true,
+        }
+    };
+    // fmt: on
+}
+--------------------------------------------------------------------------------
+fn void! command_compile(Config* config, ArgParse* agp)
+{
+    // fmt: off
+    ArgParse sub_args = {
+        .description = "Compile command flags", 
+        .options = {
+            argparse::help_opt(),
+            {.short_name = 'o', .value = &output, .help = "compilation output"}
+        },
+        .flags = {
+            .require_arguments = true,
+        }
+    };
+    // fmt: on
+}
+================================================================================
+fmt_off_inside_long_array
+================================================================================
+fn void! command_compile(Config* config, ArgParse* agp)
+{
+    // fmt: off
+    const Base64Alphabet STANDARD = {
+        {.foo = long, .bar = 12312312, .baz = "sdfffffffffffffffffffflksdjflgkjsd", .sif = 2123},
+        {.foo = long, .bar = 12312312, .baz = "sdfffffffffffffffffffflksdjflgkjsd", .sif = 2123},
+        {.foo = long, .bar = 12312312, .baz = "sdfffffffffffffffffffflksdjflgkjsd", .sif = 2123},
+    };
+    // fmt: on
+}
+--------------------------------------------------------------------------------
+fn void! command_compile(Config* config, ArgParse* agp)
+{
+    // fmt: off
+    const Base64Alphabet STANDARD = {
+        {.foo = long, .bar = 12312312, .baz = "sdfffffffffffffffffffflksdjflgkjsd", .sif = 2123},
+        {.foo = long, .bar = 12312312, .baz = "sdfffffffffffffffffffflksdjflgkjsd", .sif = 2123},
+        {.foo = long, .bar = 12312312, .baz = "sdfffffffffffffffffffflksdjflgkjsd", .sif = 2123},
+    };
+    // fmt: on
 }

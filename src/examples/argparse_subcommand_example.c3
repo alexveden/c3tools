@@ -64,7 +64,7 @@ fn int main(String[] args)
 
     ArgParse agp = {
         .description = "Compiler test", 
-        .usage = "compiler [options] {compile,sub_cmd} arg1...argN",
+            .usage = "compiler [options] {compile,sub_cmd} arg1...argN",
         // fmt: off
         .options = {
             argparse::help_opt(),

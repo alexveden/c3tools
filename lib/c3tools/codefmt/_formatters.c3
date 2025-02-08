@@ -75,7 +75,9 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
 {
     if (t.type == COMMENT_SINGLE) {
         if (t.value.starts_with("// fmt: off") && !self._is_paused) {
-            self.cache_statement_dump()!;
+            if(self.cache_statement_len() > 0) {
+                self.@fail(null, "It's not allowed to place //fmt: off in unclosed statement")!;
+            }
             if (!self._is_empty_line) self.newline();
             self.write("%s", t.value.trim_right());
 
@@ -89,10 +91,9 @@ fn bool! CodeFmt.format_comment_or_empty(&self, NodeParserState* state, Token* t
             self._is_empty_line = true;
             self.write("%s", t.value.trim_right());
             self._is_inline_comment = true;
-            if (self.state_stack.len() > 0) {
-                self.state_stack[^1].state.current_token = EMPTY_LINE;
+            if(self.cache_statement_len() > 0) {
+                self.@fail(null, "It's not allowed to place //fmt: off in unclosed statement")!;
             }
-            state.current_token = EMPTY_LINE;
             return true;
         }
     }

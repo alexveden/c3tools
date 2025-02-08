@@ -324,7 +324,6 @@ macro void! CodeFmt.cache_statement_dump_generic(&self, bool is_multiline, Token
 *>
 macro void CodeFmt.cache_statement_add(&self, NodeParserState* state, Token* t) @private
 {
-    if (self._lexer.is_whitespace_mode) return;
     assert(t.type != EMPTY_LINE);
     assert(t.type != SPACE);
 

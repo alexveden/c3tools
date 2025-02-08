@@ -138,10 +138,6 @@ fn String! CodeFmt.format(&self, String contents, bool print_lex = false)
 
         if (self._lexer.is_whitespace_mode && t.type != EOF) {
             // NOTE: Printing raw when // fmt: off
-            assert(
-                self.cache_statement_len() == 0,
-                "cache_statement_dump must be called befor fmt: off"
-            );
             assert(t.value.len > 0);
             self.buf.append(t.value);
         }
@@ -205,16 +201,20 @@ fn bool! CodeFmt.run_state(&self, Token* t) @private
 *>
 macro bool! CodeFmt.@fail(&self, Token* t, String msg) @private
 {
-    io::eprintfn("Patially formatted code:\n```\n%s```", self.buf.str_view());
-    io::eprintfn(
-        "Error (%s:%d) at [Token: %s] line:col %d:%d - %s",
-        $$FILE,
-        $$LINE,
-        t.type,
-        t.row,
-        t.col,
-        msg
-    );
+    if (t != null) {
+        io::eprintfn("Patially formatted code:\n```\n%s```", self.buf.str_view());
+        io::eprintfn("Error at line:%s - %s", self._lexer.current_row, msg);
+        io::eprintfn(
+            "    (%s:%d) at [Token: %s] line:col %d:%d",
+            $$FILE,
+            $$LINE,
+            t.type,
+            t.row,
+            t.col,
+        );
+    } else {
+        io::eprintfn("Error at line %s - %s", self._lexer.current_row, msg);
+    }
     return IoError.GENERAL_ERROR?;
 }
 
