@@ -2050,3 +2050,109 @@ fn void test_line()
         defer test1();
     }
 }
+================================================================================
+function_pointer_in_array
+================================================================================
+fn void test()
+{
+    ArgParse agp = {
+        .options = {
+            {
+                .short_name = 1,
+                .callback = fn void! (int a) {
+                    return 0;
+                },
+            }
+        },
+    };
+}
+--------------------------------------------------------------------------------
+fn void test()
+{
+    ArgParse agp = {
+        .options = {
+            {
+                .short_name = 1,
+                .callback = fn void! (int a) {
+                    return 0;
+                },
+            }
+        },
+    };
+}
+================================================================================
+function_pointer_in_array_2
+================================================================================
+fn void test()
+{
+    ArgParse agp = {
+        .options = {
+            {
+                .short_name = 'R',
+                .value = &config,
+                .help = "optimization level [default: O0]",
+                .callback = fn void! (ArgOpt* opt, String value) {
+                    int level = value.to_integer(int)!;
+                    if (level ) {
+                        return 0;
+                    }
+                },
+            },
+            {.short_name = 'F'},
+            {
+                .short_name = 'O',
+                .value = &config,
+                .help = "optimization level [default: O0]",
+                .callback = fn void! (ArgOpt* opt, String value) {
+                    int level = value.to_integer(int)!;
+                    if (level ) {
+                        return 0;
+                    }
+                }
+            },
+            {.short_name = 'F'}
+        },
+        .flags = {},
+        .other = {.boo = 2},
+    };
+}
+--------------------------------------------------------------------------------
+fn void test()
+{
+    ArgParse agp = {
+        .options = {
+            {
+                .short_name = 'R',
+                .value = &config,
+                .help = "optimization level [default: O0]",
+                .callback = fn void! (ArgOpt* opt, String value) {
+                    int level = value.to_integer(int)!;
+                    if (level) {
+                        return 0;
+                    }
+                },
+            },
+            {
+                .short_name = 'F'
+            },
+            {
+                .short_name = 'O',
+                .value = &config,
+                .help = "optimization level [default: O0]",
+                .callback = fn void! (ArgOpt* opt, String value) {
+                    int level = value.to_integer(int)!;
+                    if (level) {
+                        return 0;
+                    }
+                }
+            },
+            {
+                .short_name = 'F'
+            }
+        },
+        .flags = {},
+        .other = {
+            .boo = 2
+        },
+    };
+}

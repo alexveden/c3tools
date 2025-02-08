@@ -225,7 +225,7 @@ macro CodeFmt.trace(&self, $msg, args...) @private
 {
     if (!self._print_lex) return;
 
-    io::eprintf("\t\t%s (%s:%d): ", $$FUNC, $$FILE, $$LINE);
+    io::eprintf("\t\t%s[#%s] (%s:%d): ", $$FUNC, self.state_stack.len(), $$FILE, $$LINE);
     io::eprintfn($msg, ...args);
 }
 

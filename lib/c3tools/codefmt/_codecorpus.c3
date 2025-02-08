@@ -207,7 +207,7 @@ fn List(<CodeCorpus>)! new_parse(String file_name)
                 if (!l) {
                     assert(l.ptr != null);
                     current.case_output = (String)(l.ptr)[..0];
-                    assert(current.case_output == "\n");
+                    assert(current.case_output == "\n", "empty expected output?");
                 } else {
                     current.case_output = l;
                 }

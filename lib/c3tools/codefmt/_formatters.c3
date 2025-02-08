@@ -501,7 +501,10 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                     }
                     nextcase LBRACE;
                 case DOT:
-                    if (state.initial_token == STRUCT && state.last_token == COMMA) {
+                    if (
+                        (state.initial_token == DOT || state.initial_token == STRUCT) &&
+                        state.last_token == COMMA
+                    ) {
                         self.cache_statement_dump_struct_init(
                             is_multiline: true, wrap_rule: COMMA
                         )!;
@@ -524,27 +527,43 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                     nextcase default;
                 case LBRACE:
                     switch (state.initial_token) {
+                        case DOT:
+                            self.cache_statement_dump()!;
+                            switch(state.last_token){
+                                case COMMA:
+                                    self.newline();
+                                case EQ:
+                                    self.write(" ");
+                                default:
+                                    break;
+                            }
+                            nextcase default;
+                            // break;
                         case AT_IDENT:
                             // distinguish @some_macro({ <-- and @some_macro() { <--
                             if (state.scope_depth != 1) break;
+                            self.trace("@some_macro() { inline enter");
                             self.cache_statement_dump()!;
                             self.write(" ");
                             return self.push_run_state(&CodeFmt.format_code_scope, t);
                         case STRUCT:
-                            // self.cache_statement_dump_struct_init(is_multiline: true, wrap_rule: COMMA)!;
+                            self.trace("struct with fn inline enter");
                             self.cache_statement_dump()!;
                             self.write(" ");
                             return self.push_run_state(&CodeFmt.format_code_scope, t);
                         case FN:
+                            self.trace("fn foo() { inline enter");
                             self.cache_statement_dump()!;
                             self.write(" ");
                             return self.push_run_state(&CodeFmt.format_code_scope, t);
                         case FOR:
                         case DO:
+                            self.trace("do/@body { inline enter");
                             self.cache_statement_dump()!;
                             self.write(" ");
                             return self.push_run_state(&CodeFmt.format_code_scope, t);
                         case LBRAPIPE:
+                            self.trace("{| inline enter");
                             self.cache_statement_dump()!;
                             return self.push_run_state(&CodeFmt.format_code_scope, t);
                         default:
@@ -552,9 +571,11 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                                 if (!self._resolve__prev_is_cast()) {
                                     // Not a cast
                                     // mem::@scoped(&allocator){ @body(); };
+                                    self.trace("MACRO @body");
                                     state.initial_token = FOR;
                                     nextcase FOR;
                                 } else {
+                                    self.trace("struct/array cast {}");
                                     // looks like a cast
                                     // Foo[] xyz2 = (Foo[])(int[]) { 1, 2 };
                                     // return $typeof(*mat) { .m = val * ($Type)mat.m };
@@ -574,20 +595,28 @@ fn bool! CodeFmt.format_generic_statement(CodeFmt* self, Token* t, NodeParserSta
                     switch (state.initial_token) {
                         case AT_IDENT:
                             if (state.scope_depth != 0) nextcase default;
+                            self.trace("@body macro scope inline exit");
                         case FN:
                         case DO:
+                            self.trace("fn/do scope inline exit");
                             break;
+                        case DOT:
                         case STRUCT:
                             if (self._is_cascade_call) break;
+                            self.trace("struct with fn {} scope inline exit");
                             self.cache_statement_dump_struct_init(
                                 is_multiline: true, wrap_rule: COMMA
                             )!;
                             self.dedent()!;
-                            self.newline();
+                            if (state.last_token != LBRACE) self.newline();
                             self.write("%s", t.value);
+                            // NOTE: we ended with fn, but following {.name = 1}, must be expanded
+                            // so we set initial_token to DOT, to force following expansion
+                            state.initial_token = DOT;
                         case FOR:
                         case LBRAPIPE:
                             if (self._is_cascade_call) break;
+                            self.trace("@body{}/{| |} scope inline exit");
                             nextcase default;
                         default:
                             self.cache_statement_add(state, t);

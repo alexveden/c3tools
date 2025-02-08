@@ -136,7 +136,7 @@ macro void! CodeFmt.cache_statement_dump_struct_init(&self, bool is_multiline, T
     NodeParserState tmpstate = NodeParserState {};
     TokenType brake_type = INVALID_TOKEN;
     self.@cache_statement_iter(; usz i, Token* t) {
-        if (self._print_lex) io::eprintf("%s ", t.type);
+        // if (self._print_lex) io::eprintf("%s ", t.type);
         tmpstate.check(t);  // this is used only for current scope_depth
 
         switch TOP: (t.type) {
