@@ -17,6 +17,10 @@
     "c3fzf": {
       "type": "executable",
       "sources":  [ "src/c3fzf/c3fzf.c3" ]
+    },
+    "c3test": {
+      "type": "executable",
+      "sources":  [ "src/examples/c3test.c3" ]
     }
   },
   "cpu": "generic",

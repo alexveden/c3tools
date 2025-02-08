@@ -1,6 +1,3 @@
-<*
-ArgParse subcommand implementation with custom callback function with parsing logic
-*>
 import std::io;
 import c3lib::argparse;
 
