@@ -320,6 +320,14 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
                 case IMPLIES:
                     self.write(" %s ", t.value);
                     break;
+                case LBRACE: 
+                    // fn int foo(int x) => @pool() { ... } 
+                    if (state.scope_depth == 1) {
+                        self.cache_statement_dump(no_split: true)!;
+                        nextcase STATE: state.transition(SCOPE);
+                    } else {
+                        nextcase default;
+                    }
                 case EOS:
                     self.cache_statement_add(state, t);
                     self.cache_statement_dump(no_split: true)!;
