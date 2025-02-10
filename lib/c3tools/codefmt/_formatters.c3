@@ -318,17 +318,23 @@ fn bool! CodeFmt.format_fn(CodeFmt* self, Token* t, NodeParserState* state) @pri
             self.trace("IMPLIES");
             switch (t.type) {
                 case IMPLIES:
-                    self.write(" %s ", t.value);
+                    self.cache_statement_add(state, t);
                     break;
+                case AT_IDENT:
+                    // mark as => @call() {}
+                    state.initial_token = AT_IDENT;
+                    nextcase default;
                 case LBRACE: 
                     // fn int foo(int x) => @pool() { ... } 
-                    if (state.scope_depth == 1) {
+                    if (state.initial_token == AT_IDENT) {
+                        self.newline();
                         self.cache_statement_dump(no_split: true)!;
                         nextcase STATE: state.transition(SCOPE);
                     } else {
                         nextcase default;
                     }
                 case EOS:
+                    self.write(" "); // before =>
                     self.cache_statement_add(state, t);
                     self.cache_statement_dump(no_split: true)!;
                     return true;
