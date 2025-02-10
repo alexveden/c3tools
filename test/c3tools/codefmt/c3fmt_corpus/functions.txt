@@ -527,3 +527,16 @@ fn int foo(int x) => {1, 2, 3};
 --------------------------------------------------------------------------------
 // ok
 fn int foo(int x) => { 1, 2, 3 };
+================================================================================
+fn_lambda_scope_with_params
+================================================================================
+fn void shared_mutex() @test => mem::@scoped(&allocator::LIBC_ALLOCATOR)
+{
+    return string::tformat("%d", x).len;
+}
+--------------------------------------------------------------------------------
+fn void shared_mutex() @test
+=> mem::@scoped(&allocator::LIBC_ALLOCATOR)
+{
+    return string::tformat("%d", x).len;
+}
