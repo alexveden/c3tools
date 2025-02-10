@@ -492,7 +492,7 @@ macro parse_callable_params()
 ================================================================================
 fn_trailing_body
 ================================================================================
-fn int foo(int x) => @pool()
+fn int foo(int x) => @pool(a, b)
 {
     String s = string::tformat("%d", x);
     io::printn(s);
@@ -500,7 +500,7 @@ fn int foo(int x) => @pool()
 }
 --------------------------------------------------------------------------------
 fn int foo(int x)
-=> @pool()
+=> @pool(a, b)
 {
     String s = string::tformat("%d", x);
     io::printn(s);
