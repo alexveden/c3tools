@@ -83,9 +83,11 @@ jobs:
       - name: c3tools unit tests
         run: |
           if [[ "${{matrix.optimize}}" == "O0" ]]; then
+            echo "Running tests with sanitizer"
             c3c --sanitize=address --trust=full build c3fmt
             c3c --sanitize=address --trust=full test
           else
+            echo "Running optimized tests"
             c3c -${{ matrix.optimize }} --trust=full test
             c3c -${{ matrix.optimize }} --trust=full build c3fmt
           fi
