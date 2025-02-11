@@ -60,6 +60,7 @@ struct AstModule
 struct AstTypeDef
 {
     inline AstNode node;
+    AstModule* mod;  // module which owns the type def
     AstNode* attributes;
     AstDoc* docs;
     AstNode* ftype;  // field or function return type
