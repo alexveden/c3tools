@@ -70,7 +70,6 @@ struct Symbol
     // Symbol position in the module
     Position position;
 
-
     // item type (struct, variable, call, type, etc)
     // item parent type (module, or instance, or something)
     // local scope (what else is available at current scope)
@@ -89,7 +88,6 @@ fn Document Document.new_open(String uri, String full_source, AstProject* proj) 
     // Allocate AST first, it will fill the arena with local metadata
     self.ast = ast::parse(full_source, file_path: uri, allc: &self._allocator);
 
-
     // append uri, because uri arg might be a short-lived object from json request
     self.uri = uri.copy(&self._allocator);
 
@@ -100,8 +98,30 @@ fn Document Document.new_open(String uri, String full_source, AstProject* proj) 
 
     // NOTE: source is allocated in heap, not in arena + add extra space for editing
     self.source.new_init(capacity: full_source.len * 2, allocator: allocator::heap());
+    self.source.append(full_source);
 
     return self;
+}
+
+fn void! Document._load_file_symbols(&self) @private
+{
+    log::debug("Loading file_symbols: %s", self.uri);
+    DString buf;
+    defer buf.free();
+
+    for (AstModule* mod = self.ast.modules; mod != null; mod = (AstModule*)mod.next) {
+        log::debug("    module: %s", self.ast.@node_join(mod.name, buf, "::"));
+        for (AstTypeDef* type = mod.decls; type != null; type = (AstTypeDef*)type.next) {
+            log::debug(
+                "        type: %s %s (%s)",
+                type.type,
+                type.value,
+                self.ast.@node_join(type.attributes, buf, " "),
+            );
+
+        }
+    }
+
 }
 
 fn void! Document.save(&self, String full_sourse)
