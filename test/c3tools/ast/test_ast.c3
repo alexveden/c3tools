@@ -2353,3 +2353,173 @@ fn MyType* MyFoo.test_node(&self) {
     test::eq(func.iend, code.len - 4);
     test::eq(code[func.iend], '}');
 }
+
+fn void test_module_variable()
+{
+    String code = `module test::std::c3lang::ast;
+<*def doc*>
+int global_int @local @bar("foo") = 2;
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer mem::free(ast._allocator);
+    contents.clear();
+
+    test::ne(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 0);
+    test::ne(m, null);
+
+    AstTypeDef* var_type = (AstTypeDef*)ast.@node_at(m.decls, 0);
+    test::ne(var_type, null);
+
+    test::eq(var_type.type, TokenType.TYPE_IDENT);
+    test::eq(var_type.value, "global_int");
+
+    test::eq(ast.@node_join(var_type.attributes, contents), `@local,@bar("foo")`);
+    test::eq(ast.@node_join(var_type.docs, contents), "<*def doc");
+    test::eq(ast.@node_join(var_type.ftype, contents), "int");
+
+    io::printf(
+        "\n\n``%s``",
+        code[var_type.istart .. math::min((isz)var_type.iend, (isz)(code.len - 1))]
+    );
+    test::eq(var_type.istart, 43);
+    test::eq(code[var_type.iend], ';');
+    test::eq(var_type.iend, code.len - 4);
+}
+
+fn void test_module_variable_tlocal()
+{
+    String code = `module test::std::c3lang::ast;
+<*def doc*>
+tlocal int global_int @local @bar("foo") = 2;
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer mem::free(ast._allocator);
+    contents.clear();
+
+    test::ne(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 0);
+    test::ne(m, null);
+
+    AstTypeDef* var_type = (AstTypeDef*)ast.@node_at(m.decls, 0);
+    test::ne(var_type, null);
+
+    test::eq(var_type.type, TokenType.TYPE_IDENT);
+    test::eq(var_type.value, "global_int");
+
+    test::eq(ast.@node_join(var_type.attributes, contents), `@local,@bar("foo")`);
+    test::eq(ast.@node_join(var_type.docs, contents), "<*def doc");
+    test::eq(ast.@node_join(var_type.ftype, contents), "int");
+
+    io::printf(
+        "\n\n``%s``",
+        code[var_type.istart .. math::min((isz)var_type.iend, (isz)(code.len - 1))]
+    );
+    test::eq(var_type.istart, 43);
+    test::eq(code[var_type.iend], ';');
+    test::eq(var_type.iend, code.len - 4);
+}
+
+fn void test_module_variable_custom_type()
+{
+    String code = `module test::std::c3lang::ast;
+<*def doc*>
+MyType global_int @local @bar("foo");
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer mem::free(ast._allocator);
+    contents.clear();
+
+    test::ne(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 0);
+    test::ne(m, null);
+
+    AstTypeDef* var_type = (AstTypeDef*)ast.@node_at(m.decls, 0);
+    test::ne(var_type, null);
+
+    test::eq(var_type.type, TokenType.TYPE_IDENT);
+    test::eq(var_type.value, "global_int");
+
+    test::eq(ast.@node_join(var_type.attributes, contents), `@local,@bar("foo")`);
+    test::eq(ast.@node_join(var_type.docs, contents), "<*def doc");
+    test::eq(ast.@node_join(var_type.ftype, contents), "MyType");
+
+    io::printf(
+        "\n\n``%s``",
+        code[var_type.istart .. math::min((isz)var_type.iend, (isz)(code.len - 1))]
+    );
+    test::eq(var_type.istart, 43);
+    test::eq(code[var_type.iend], ';');
+    test::eq(var_type.iend, code.len - 4);
+}
+
+fn void test_module_variable_array()
+{
+    String code = `module test::std::c3lang::ast;
+<*def doc*>
+char[10] global_int @local @bar("foo");
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer mem::free(ast._allocator);
+    contents.clear();
+
+    test::ne(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 0);
+    test::ne(m, null);
+
+    AstTypeDef* var_type = (AstTypeDef*)ast.@node_at(m.decls, 0);
+    test::ne(var_type, null);
+
+    test::eq(var_type.type, TokenType.TYPE_IDENT);
+    test::eq(var_type.value, "global_int");
+
+    test::eq(ast.@node_join(var_type.attributes, contents), `@local,@bar("foo")`);
+    test::eq(ast.@node_join(var_type.docs, contents), "<*def doc");
+    test::eq(ast.@node_join(var_type.ftype, contents), "char,[,10,]");
+
+    io::printf(
+        "\n\n``%s``",
+        code[var_type.istart .. math::min((isz)var_type.iend, (isz)(code.len - 1))]
+    );
+    test::eq(var_type.istart, 43);
+    test::eq(code[var_type.iend], ';');
+    test::eq(var_type.iend, code.len - 4);
+}
+
+fn void test_module_variable_generic()
+{
+    String code = `module test::std::c3lang::ast;
+<*def doc*>
+List(<MyType>) global_int @local @bar("foo");
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer mem::free(ast._allocator);
+    contents.clear();
+
+    test::ne(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 0);
+    test::ne(m, null);
+
+    AstTypeDef* var_type = (AstTypeDef*)ast.@node_at(m.decls, 0);
+    test::ne(var_type, null);
+
+    test::eq(var_type.type, TokenType.TYPE_IDENT);
+    test::eq(var_type.value, "global_int");
+
+    test::eq(ast.@node_join(var_type.attributes, contents), `@local,@bar("foo")`);
+    test::eq(ast.@node_join(var_type.docs, contents), "<*def doc");
+    test::eq(ast.@node_join(var_type.ftype, contents), "List,(<,MyType,>)");
+
+    io::printf(
+        "\n\n``%s``",
+        code[var_type.istart .. math::min((isz)var_type.iend, (isz)(code.len - 1))]
+    );
+    test::eq(var_type.istart, 43);
+    test::eq(code[var_type.iend], ';');
+    test::eq(var_type.iend, code.len - 4);
+}

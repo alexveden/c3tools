@@ -300,6 +300,11 @@ fn Ast parse(
                     node_fn = &Ast.parse_constants;
                     node = self.@allc_add(AstTypeDef, &current_module.decls, &self.lexer.token);
                     ((AstTypeDef*)node).docs = docstring;
+                case TYPE_IDENT:
+                case TLOCAL:
+                    node_fn = &Ast.parse_global_var;
+                    node = self.@allc_add(AstTypeDef, &current_module.decls, &self.lexer.token);
+                    ((AstTypeDef*)node).docs = docstring;
                 default:
                     continue LOOP;
             }
@@ -425,6 +430,7 @@ fn void! AstProject.load(&self)
 
 fn void AstProject.free(&self)
 {
+    self.mod_index.free();
     self.modules.free();
     self._allocator.free();
 }

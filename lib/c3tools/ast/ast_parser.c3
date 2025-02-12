@@ -748,6 +748,54 @@ fn bool Ast.parse_structural(&ast, AstNode* node, Token* t, NodeParserState* sta
     return false;
 }
 
+fn bool Ast.parse_global_var(&ast, AstNode* node, Token* t, NodeParserState* state)
+{
+    assert(node.type == TYPE_IDENT || node.type == TLOCAL);
+    AstTypeDef* node_typedef = (AstTypeDef*)node;
+
+    switch STATE: (state.check(t)) {
+        case INVALID_TOKEN:
+            node_typedef.value = "";
+            nextcase STATE: state.transition(IDENT);
+        case IDENT:
+            switch (t.type) {
+                case TLOCAL:
+                    // valid but skip to type
+                    node_typedef.type = TYPE_IDENT;
+                    break;
+                case IDENT:
+                    if (!node_typedef.value) node_typedef.value = ast.@allc_str(t.value);
+                case AT_IDENT:
+                    ast.lexer.extend_current_attribute();
+                    ast.@allc_add(AstNode, &node_typedef.attributes, t);
+                case EQ:
+                    nextcase STATE: state.transition(EQ);
+                case EOS:
+                    nextcase STATE: state.transition(EOF);
+                case TYPE_IDENT:
+                default:
+                    ast.@allc_add(AstNode, &node_typedef.ftype, t);
+                    break;
+            }
+        case EQ:
+            switch (t.type) {
+                case EOS:
+                    nextcase STATE: state.transition(EOF);
+                default:
+                    break;
+            }
+
+        case EOF:
+            ast.state_stack.remove_last();
+            node_typedef.iend = t.offset + t.value.len - 1;
+            return true;
+        default:
+            break;
+    }
+
+    return false;
+}
+
 fn bool Ast.parse_typedef(&ast, AstNode* node, Token* t, NodeParserState* state)
 {
     assert(node.type == DEF || node.type == DISTINCT);
