@@ -182,7 +182,6 @@ fn SymbolCache* SymbolCache.grow(&self, uint new_capacity)
     assert(((char*)self)[old_data_size - 1] == 0xF0, "malformed sentinel data");
 
     // reorganize data and expand
-    items[old_items_capacity] = SymbolItem {};
     ((char*)self)[old_data_size - 1] = 0;
 
     usz move_size = (new_capacity - old_items_capacity) * SymbolItem.sizeof;
@@ -191,6 +190,11 @@ fn SymbolCache* SymbolCache.grow(&self, uint new_capacity)
 
     self.items_capacity = new_capacity;
     self.names_capacity = CHARS_PER_SYMBOL * new_capacity;
+
+    // Force clean memory region which was previously allocated by names, and now it's for items
+    for(usz i = old_items_capacity; i < self.items_capacity; i++){
+        items[old_items_capacity] = SymbolItem {};
+    }
 
     // Restoring sentinel data for after growing
     mem::set(&items[new_capacity], 0xFF, SymbolItem.sizeof, SymbolItem.alignof);

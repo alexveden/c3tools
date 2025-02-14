@@ -112,6 +112,13 @@ fn void test_find_insert_at_random()
             if (!cache.has_capacity("foo")) {
                 cache = cache.grow(cache.items_capacity + 100);
                 test::eq(cache.items()[cache.items_capacity].hash, (Fnv32a)ulong.max);
+                for (uint z = cache.items_len; z < cache.items_capacity; z++){
+                    // ensure everything is clean after resize
+                    test::eq(cache.items()[z].hash, (Fnv32a)0);
+                    test::eq(cache.items()[z].ptr.mod, null);
+                    test::eq(cache.items()[z].name_offset, 0);
+                    test::eq(cache.items()[z].kind, SymbolKind.NA);
+                }
             }
             uint pos = cache._find_insert_position(hash);
             SymbolItem* it = cache._insert_item(hash, pos);
