@@ -122,6 +122,9 @@ fn void test_find_insert_at_random()
             test::eq(it.ptr.module_hash, (Fnv32a)0);
             test::eq(it.ptr.mod, null);
             test::eq(it.ptr.type, null);
+
+            // always return first item of a hash bucket
+            test::eq(it, cache.find(hash));
         }
         // Check if sorted in ascending order
         for (uint j = 1; j < cache.items_capacity; j++) {
@@ -159,12 +162,12 @@ fn void test_item_add()
     char* names = cache.strings();
     SymbolItem* items = cache.items();
 
-    SymbolItem* it_bar = cache.item_add("bar");
-    test::eq(cache.item_name(it_bar), "bar");
+    SymbolItem* it_bar = cache.add("bar");
+    test::eq(cache.get_name(it_bar), "bar");
     test::ne(it_bar.hash, (Fnv32a)0);
 
-    SymbolItem* it_foo = cache.item_add("foo");
-    test::eq(cache.item_name(it_foo), "foo");
+    SymbolItem* it_foo = cache.add("foo");
+    test::eq(cache.get_name(it_foo), "foo");
     test::ne(it_foo.hash, (Fnv32a)0);
 
     test::@check(it_bar.hash < it_foo.hash, "check if it sorted bar->foo");
@@ -179,17 +182,51 @@ fn void test_item_add()
     test::eq(names[9], '\0');  // null term
 
     // Adding duplicate index
-    SymbolItem* it_foo2 = cache.item_add("foo");
-    test::eq(cache.item_name(it_foo2), "foo");
+    SymbolItem* it_foo2 = cache.add("foo");
+    test::eq(cache.get_name(it_foo2), "foo");
     test::eq(it_foo2.hash, it_foo.hash);
 
     test::eq(cache.items_len, 3);
-    test::eq(cache.item_name(&items[0]), "bar");
-    test::eq(cache.item_name(&items[1]), "foo");
-    test::eq(cache.item_name(&items[2]), "foo");
+    test::eq(cache.get_name(&items[0]), "bar");
+    test::eq(cache.get_name(&items[1]), "foo");
+    test::eq(cache.get_name(&items[2]), "foo");
 
     // name of foo should be reused
     test::eq(cache.names_len, 10);
     test::eq(items[1].name_offset, items[2].name_offset);
 
+}
+
+fn void test_item_find()
+{
+    SymbolCache* cache = SymbolCache.new_init(10);
+    defer cache.free();
+
+    SymbolItem* items = cache.items();
+    test::eq(null, cache.find("fooa"));
+
+    cache.add("foo");
+    test::eq(null, cache.find("fooa"));
+    test::ne(null, cache.find("foo"));
+    cache.add("foo");
+    test::eq(null, cache.find("fooa"));
+    test::ne(null, cache.find("foo"));
+    cache.add("bar");
+    test::ne(null, cache.find("bar"));
+    cache.add("baz");
+    test::ne(null, cache.find("baz"));
+    cache.add("foo");
+    cache.add("baz");
+    cache.add("baz");
+    cache.add("bar");
+    test::eq(null, cache.find("fooa"));
+    test::eq(cache.items_len, 8);
+
+    // test::eq(items[0].hash, (Fnv32a)1);
+    // test::eq(items[1].hash, (Fnv32a)2);
+    // test::eq(items[2].hash, (Fnv32a)3);
+    // test::eq(items[3].hash, (Fnv32a)5);
+    // test::eq(items[4].hash, (Fnv32a)6);
+
+    // test::eq(&items[1], cache.item_find((Fnv32a)2));
 }

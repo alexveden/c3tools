@@ -1,4 +1,5 @@
 module c3tools::lsp::symbols;
+import std::io;
 import std::hash::fnv32a;
 import std::math;
 import c3tools::ast;
@@ -51,25 +52,8 @@ struct SymbolItem @align(16)
 // 1/4 of cacheline!
 $assert(SymbolItem.sizeof == 16);
 
-fn int cmp_symbol(SymbolItem* a, SymbolItem* b) @private
-{
-    assert(a.hash != 0);
-    assert(b.hash != 0);
-    if (a.hash < b.hash) return -1;
-    if (a.hash > b.hash) return 1;
-    return 0;
-}
-
-macro usz calc_data_size(uint capacity) @local
-{
-    return (SymbolCache.sizeof + SymbolItem.sizeof * (usz)capacity + CHARS_PER_SYMBOL * capacity);
-}
-
 fn SymbolCache* SymbolCache.new_init(uint capacity) @operator(construct)
 {
-    assert(capacity > 0);
-    assert(capacity < 1000000);
-
     // NOTE: adding extra +1 to capacity for sentinel record
     SymbolCache* self = mem::calloc_aligned(calc_data_size(capacity + 1), SymbolCache.alignof);
 
@@ -85,16 +69,42 @@ fn SymbolCache* SymbolCache.new_init(uint capacity) @operator(construct)
     return self;
 }
 
-macro String SymbolCache.item_name(&self, SymbolItem* item)
+fn SymbolCache* SymbolCache.free(&self)
 {
-    assert(item.name_offset > 0, "not intialized name?");
-
-    char* name = self.strings() + item.name_offset;
-    char len = *(name - 1);
-    return (String)name[:len];
+    mem::free_aligned(self);
+    return null;
 }
 
-fn SymbolItem* SymbolCache.item_add(&self, String name)
+<*
+ Finds first SymbolItem* in SymbolCache with the same hash as name_or_hash 
+
+ @param name_or_hash "Fnv32a hash or String name"
+*>
+macro SymbolItem* SymbolCache.find(&self, name_or_hash)
+{
+    Fnv32a hash;
+    $switch ($typeof(name_or_hash))
+        $case String:
+            hash.init();
+            hash.update(name_or_hash);
+        $case Fnv32a:
+            hash = name_or_hash;
+        $default:
+            $error("expected String name or Fnv32a hash");
+    $endswitch
+
+    SymbolItem* items = self.items();
+    uint pos = self._find_insert_position(hash);
+    if (pos == self.items_len || items[pos].hash != hash) return null;
+
+    return &items[pos];
+}
+
+<*
+ Adds new SymbolItem* by name and return its pointer for further initialization 
+ NOTE: hash and name will be set, you should take care of other fields
+*>
+fn SymbolItem* SymbolCache.add(&self, String name)
 {
     assert(self.items_len < self.items_capacity, "overflow, you must grow SymbolCache");
 
@@ -109,11 +119,11 @@ fn SymbolItem* SymbolCache.item_add(&self, String name)
 
     uint name_offset = 0;
 
-    // try to reuse existing name
+    // try to reuse existing name (this also maintains unique records of names)
     for (uint i = pos; i < self.items_len && items[i].hash == hash; i++) {
         if (&items[i] == it) continue;
 
-        if (self.item_name(&items[i]) == name) {
+        if (self.get_name(&items[i]) == name) {
             name_offset = items[i].name_offset;
             break;
         }
@@ -128,6 +138,43 @@ fn SymbolItem* SymbolCache.item_add(&self, String name)
     it.name_offset = name_offset;
 
     return it;
+}
+
+<*
+ Returns a SymbolItem string name
+*>
+macro String SymbolCache.get_name(&self, SymbolItem* item)
+{
+    assert(item.name_offset > 0, "not intialized name?");
+
+    char* name = self.strings() + item.name_offset;
+    char len = *(name - 1);
+    return (String)name[:len];
+}
+
+/*
+*
+*                  PRIVATE METHODS
+*
+*/
+
+macro usz calc_data_size(uint capacity) @local
+{
+    assert(capacity > 0);
+    assert(capacity < 1000000);
+    assert(capacity * CHARS_PER_SYMBOL < 16777216);  // 2**24 - max bitstruct size for name_offset
+
+    return (SymbolCache.sizeof + SymbolItem.sizeof * (usz)capacity + CHARS_PER_SYMBOL * capacity);
+}
+
+macro SymbolItem* SymbolCache.items(&self) @private
+{
+    return (SymbolItem*)((char*)self + SymbolCache.sizeof);
+}
+
+macro char* SymbolCache.strings(&self) @private
+{
+    return ((char*)self)+SymbolCache.sizeof + SymbolItem.sizeof * (usz)(self.items_capacity + 1);
 }
 
 macro uint SymbolCache._insert_name(&self, String name)
@@ -168,12 +215,11 @@ macro SymbolItem* SymbolCache._insert_item(&self, Fnv32a hash, uint insert_at) @
 
 fn uint SymbolCache._find_insert_position(&self, Fnv32a hash) @private
 {
-    if (self.items_len == 0) return 0;
-
     SymbolItem* items = self.items();
 
+    if (self.items_len == 0) return 0;
     if (hash <= items[0].hash) return 0;
-    if (hash > items[self.items_len -1].hash) return self.items_len;
+    if (hash > items[self.items_len - 1].hash) return self.items_len;
 
     // finding insert position
     uint lo = 0;
@@ -198,20 +244,4 @@ fn uint SymbolCache._find_insert_position(&self, Fnv32a hash) @private
     assert(pos == 0 || items[pos - 1].hash < hash, "we must be at the start of hash cluster");
 
     return pos;
-}
-
-fn SymbolCache* SymbolCache.free(&self)
-{
-    mem::free_aligned(self);
-    return null;
-}
-
-macro SymbolItem* SymbolCache.items(&self)
-{
-    return (SymbolItem*)((char*)self + SymbolCache.sizeof);
-}
-
-macro char* SymbolCache.strings(&self)
-{
-    return ((char*)self)+SymbolCache.sizeof + SymbolItem.sizeof * (usz)(self.items_capacity + 1);
 }
