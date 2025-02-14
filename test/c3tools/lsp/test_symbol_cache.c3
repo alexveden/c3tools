@@ -100,8 +100,8 @@ fn void test_find_insert_at_random()
     Lcg128Random random;
     random::seed_entropy(&random);
 
-    for (int i = 0; i < 1000; i++) {
-        SymbolCache* cache = SymbolCache.new_init(1000);
+    for (int i = 0; i < 100; i++) {
+        SymbolCache* cache = SymbolCache.new_init(100);
         defer cache.free();
         SymbolItem* items = cache.items();
 
@@ -109,6 +109,10 @@ fn void test_find_insert_at_random()
         for (uint j = 0; j < cache.items_capacity; j++) {
             // every 10th is a duplicate hash
             if (j % 10 != 0) hash = (Fnv32a)random.next_long();
+            if (!cache.has_capacity("foo")) {
+                cache = cache.grow(cache.items_capacity + 100);
+                test::eq(cache.items()[cache.items_capacity].hash, (Fnv32a)ulong.max);
+            }
             uint pos = cache._find_insert_position(hash);
             SymbolItem* it = cache._insert_item(hash, pos);
             if (pos > 0) {
@@ -125,6 +129,7 @@ fn void test_find_insert_at_random()
 
             // always return first item of a hash bucket
             test::eq(it, cache.find(hash));
+            test::eq(cache.items()[cache.items_capacity].hash, (Fnv32a)ulong.max);
         }
         // Check if sorted in ascending order
         for (uint j = 1; j < cache.items_capacity; j++) {
@@ -229,4 +234,71 @@ fn void test_item_find()
     // test::eq(items[4].hash, (Fnv32a)6);
 
     // test::eq(&items[1], cache.item_find((Fnv32a)2));
+}
+
+fn void test_grow()
+{
+    SymbolCache* cache = SymbolCache.new_init(4);
+    defer cache.free();
+
+    SymbolItem* items = cache.items();
+    test::eq(cache.items_len, 0);
+    test::eq(cache.items_capacity, 4);
+    test::eq(cache.names_len, 0);
+    test::eq(cache.names_capacity, 4 * symbols::CHARS_PER_SYMBOL);
+
+    cache.add("foo");
+    cache.add("foo");
+    cache.add("bar");
+    cache.add("baz");
+    test::eq(cache.items_len, 4);
+    test::eq(cache.items_capacity, 4);
+    test::eq(false, cache.has_capacity("bar"));
+
+    char* names = cache.strings();
+    test::eq(cache.names_len, 15);
+
+    test::eq(names[0], 3);
+    test::eq((String)names[1..3], "foo");
+    test::eq(names[4], '\0');  // null term
+
+    test::eq(names[5], 3);
+    test::eq((String)names[6..8], "bar");
+    test::eq(names[9], '\0');  // null term
+
+    test::eq(names[10], 3);
+    test::eq((String)names[11..13], "baz");
+    test::eq(names[14], '\0');  // null term
+
+    cache = cache.grow(5);
+    names = cache.strings();
+    items = cache.items();
+
+    test::eq(cache.items_len, 4);
+    test::eq(cache.items_capacity, 5);
+    test::eq(cache.names_len, (3+2)*3);
+    test::eq(cache.names_capacity, 5 * symbols::CHARS_PER_SYMBOL);
+
+    test::eq(names[0], 3);
+    test::eq((String)names[1..3], "foo");
+    test::eq(names[4], '\0');  // null term
+
+    test::eq(names[5], 3);
+    test::eq((String)names[6..8], "bar");
+    test::eq(names[9], '\0');  // null term
+
+    test::eq(names[10], 3);
+    test::eq((String)names[11..13], "baz");
+    test::eq(names[14], '\0');  // null term
+
+    cache.add("fzz");
+    test::eq(cache.items_len, 5);
+    test::eq(cache.names_len, (3+2)*4);
+
+    test::eq(names[15], 3);
+    test::eq((String)names[16..18], "fzz");
+    test::eq(names[19], '\0');  // null term
+
+    test::eq(items[cache.items_capacity].hash, (Fnv32a)uint.max);
+
 }

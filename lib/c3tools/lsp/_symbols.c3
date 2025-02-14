@@ -55,7 +55,8 @@ $assert(SymbolItem.sizeof == 16);
 fn SymbolCache* SymbolCache.new_init(uint capacity) @operator(construct)
 {
     // NOTE: adding extra +1 to capacity for sentinel record
-    SymbolCache* self = mem::calloc_aligned(calc_data_size(capacity + 1), SymbolCache.alignof);
+    usz data_size = calc_data_size(capacity + 1);
+    SymbolCache* self = mem::calloc_aligned(data_size, SymbolCache.alignof);
 
     self.names_capacity = CHARS_PER_SYMBOL * capacity;
     self.items_capacity = capacity;
@@ -65,6 +66,9 @@ fn SymbolCache* SymbolCache.new_init(uint capacity) @operator(construct)
 
     // Sentinel record will have largest hash
     mem::set(&items[capacity], 0xFF, SymbolItem.sizeof, SymbolItem.alignof);
+
+    // guard byte for strings
+    ((char*)self)[data_size - 1] = 0xF0;
 
     return self;
 }
@@ -150,6 +154,60 @@ macro String SymbolCache.get_name(&self, SymbolItem* item)
     char* name = self.strings() + item.name_offset;
     char len = *(name - 1);
     return (String)name[:len];
+}
+
+<*
+ Growing SymbolCache to a new_capacity size.
+ IMPORTANT: you must always replace your SymbolCache* pointer by return value of this function
+
+ @require new_capacity > self.items_capacity
+*>
+fn SymbolCache* SymbolCache.grow(&self, uint new_capacity)
+{
+    usz old_data_size = calc_data_size(self.items_capacity + 1);
+    usz old_names_capacity = self.names_capacity;
+    usz old_items_capacity = self.items_capacity;
+
+    // --- deal with new self / memory ---
+    usz new_data_size = calc_data_size(new_capacity + 1);
+    self = mem::realloc_aligned(self, new_data_size, SymbolCache.alignof);
+
+    // cleanup newly allocated data
+    mem::set((void*)self + old_data_size, 0, new_data_size - old_data_size);
+
+    SymbolItem* items = self.items();
+
+    // ensure sentinels are untouched
+    assert(items[self.items_capacity].hash == (Fnv32a)uint.max, "malformed sentinel data");
+    assert(((char*)self)[old_data_size - 1] == 0xF0, "malformed sentinel data");
+
+    // reorganize data and expand
+    items[old_items_capacity] = SymbolItem {};
+    ((char*)self)[old_data_size - 1] = 0;
+
+    usz move_size = (new_capacity - old_items_capacity) * SymbolItem.sizeof;
+    char* names = self.strings();
+    mem::move(names + move_size, names, move_size);
+
+    self.items_capacity = new_capacity;
+    self.names_capacity = CHARS_PER_SYMBOL * new_capacity;
+
+    // Restoring sentinel data for after growing
+    mem::set(&items[new_capacity], 0xFF, SymbolItem.sizeof, SymbolItem.alignof);
+    ((char*)self)[new_data_size - 1] = 0xF0;
+
+    // IMPORTANT: realloc_aligned() may return new memory address (self may change!)
+    return self;
+}
+
+<*
+ Checks if SymbolCache has space for adding a new symbol
+*>
+macro bool SymbolCache.has_capacity(&self, String symbol)
+{
+    assert(symbol.len > 0);
+    assert(symbol.len < 255);
+    return symbol.len + 3 < self.names_capacity && self.items_len < self.items_capacity;
 }
 
 /*
