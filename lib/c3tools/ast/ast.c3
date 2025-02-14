@@ -1,6 +1,7 @@
 module c3tools::ast;
 import c3tools::ast::lexer;
 import std::io;
+import std::hash::fnv64a;
 import std::sort;
 import std::collections::list;
 import std::collections::map;
@@ -40,6 +41,7 @@ struct AstNode
 struct AstModule
 {
     inline AstNode node;
+    Fnv64a hash;
     AstNode* name;
     AstNode* attributes;
     AstImport* imports;
@@ -312,6 +314,8 @@ fn Ast parse(
                     assert(node == current_module);
                     DString mname = dstring::temp_new();
                     node.value = self.@allc_str(self.@node_join(current_module.name, mname, "::"));
+                    current_module.hash.init();
+                    current_module.hash.update(node.value);
                     nextcase default;
                 case DOCS_START:
                     break;

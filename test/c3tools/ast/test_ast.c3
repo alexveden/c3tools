@@ -1,4 +1,5 @@
 module test::c3tools::ast @test;
+import std::hash::fnv64a;
 import c3tools::ast @public;
 import c3tools::ast::lexer;
 import std::math;
@@ -2522,4 +2523,39 @@ List(<MyType>) global_int @local @bar("foo");
     test::eq(var_type.istart, 43);
     test::eq(code[var_type.iend], ';');
     test::eq(var_type.iend, code.len - 4);
+}
+
+fn void test_module_hash()
+{
+    String code = `
+
+module test::std::c3lang::ast;
+fn void test1(int a) => a * 2;
+fn void test2(int a) => a * 2;
+
+module test::std::c3lang::best;
+fn void test3(int a) => a * 2;
+fn void test4(int a) => a * 2;
+
+module test::std::c3lang::cest;
+fn void test5(int a) => a * 2;
+fn void test6(int a) => a * 2;
+
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer mem::free(ast._allocator);
+    contents.clear();
+
+    test::ne(ast.modules, null);
+    test::eq(3, ast.@node_len(ast.modules));
+
+    AstModule* m = ast.@node_at(ast.modules, 0);
+    test::eq(m.hash, (Fnv64a)fnv64a::encode("test::std::c3lang::ast"));
+
+    m = ast.@node_at(ast.modules, 1);
+    test::eq(m.hash, (Fnv64a)fnv64a::encode("test::std::c3lang::best"));
+
+    m = ast.@node_at(ast.modules, 2);
+    test::eq(m.hash, (Fnv64a)fnv64a::encode("test::std::c3lang::cest"));
 }

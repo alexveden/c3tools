@@ -8,7 +8,7 @@
   "sources":  [ "lib/**" ],
   "test-sources":  [ "test/**" ],
   "output": "build",
-  "exec": ["c3c compile-run c3fmt_gentests.c3 ../lib/**"],
+  //"exec": ["c3c compile-run c3fmt_gentests.c3 ../lib/**"],
   "targets": {
     "c3fmt": {
       "type": "executable",
