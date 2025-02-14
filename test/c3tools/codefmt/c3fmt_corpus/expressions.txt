@@ -70,6 +70,7 @@ b = { .work = 1, .work=2 };
  (  void) free(data);
     (void * * )free(data);
     int* bin = &&1;
+    self.data = ((char*)self)+SymbolCache.sizeof + SymbolItem.sizeof * capacity;
 return;
 }
 
@@ -84,6 +85,7 @@ fn void main()
     (void)free(data);
     (void**)free(data);
     int* bin = &&1;
+    self.data = ((char*)self) + SymbolCache.sizeof + SymbolItem.sizeof * capacity;
     return;
 }
 ================================================================================
