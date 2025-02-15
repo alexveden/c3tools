@@ -79,6 +79,8 @@ fn SymbolCache* SymbolCache.free(&self)
     return null;
 }
 
+macro uint SymbolCache.len(&self) => self.items_len;
+
 <*
  Finds first SymbolItem* in SymbolCache with the same hash as name_or_hash 
 
@@ -107,6 +109,8 @@ macro SymbolItem* SymbolCache.find(&self, name_or_hash)
 <*
  Adds new SymbolItem* by name and return its pointer for further initialization 
  NOTE: hash and name will be set, you should take care of other fields
+
+ @ensure return != null
 *>
 fn SymbolItem* SymbolCache.add(&self, String name)
 {
@@ -138,6 +142,7 @@ fn SymbolItem* SymbolCache.add(&self, String name)
         name_offset = self._insert_name(name);
     }
     assert(name_offset > 0);
+    assert(name_offset < self.names_capacity);
 
     it.name_offset = name_offset;
 
@@ -186,14 +191,14 @@ fn SymbolCache* SymbolCache.grow(&self, uint new_capacity)
 
     usz move_size = (new_capacity - old_items_capacity) * SymbolItem.sizeof;
     char* names = self.strings();
-    mem::move(names + move_size, names, move_size);
+    mem::move(names + move_size, names, old_names_capacity);
 
     self.items_capacity = new_capacity;
     self.names_capacity = CHARS_PER_SYMBOL * new_capacity;
 
     // Force clean memory region which was previously allocated by names, and now it's for items
-    for(usz i = old_items_capacity; i < self.items_capacity; i++){
-        items[old_items_capacity] = SymbolItem {};
+    for (usz i = old_items_capacity; i < self.items_capacity; i++) {
+        items[i] = SymbolItem {};
     }
 
     // Restoring sentinel data for after growing
@@ -214,6 +219,16 @@ macro bool SymbolCache.has_capacity(&self, String symbol)
     return symbol.len + 3 < self.names_capacity && self.items_len < self.items_capacity;
 }
 
+macro SymbolItem* SymbolCache.items(&self)
+{
+    return (SymbolItem*)((char*)self + SymbolCache.sizeof);
+}
+
+macro char* SymbolCache.strings(&self)
+{
+    return ((char*)self)+SymbolCache.sizeof + SymbolItem.sizeof * (usz)(self.items_capacity + 1);
+}
+
 /*
 *
 *                  PRIVATE METHODS
@@ -229,16 +244,10 @@ macro usz calc_data_size(uint capacity) @local
     return (SymbolCache.sizeof + SymbolItem.sizeof * (usz)capacity + CHARS_PER_SYMBOL * capacity);
 }
 
-macro SymbolItem* SymbolCache.items(&self) @private
-{
-    return (SymbolItem*)((char*)self + SymbolCache.sizeof);
-}
-
-macro char* SymbolCache.strings(&self) @private
-{
-    return ((char*)self)+SymbolCache.sizeof + SymbolItem.sizeof * (usz)(self.items_capacity + 1);
-}
-
+<*
+@ensure result < self.names_capacity
+@ensure result > 0
+*>
 macro uint SymbolCache._insert_name(&self, String name)
 {
     assert(name.len > 0, "empty name not allowed");
@@ -246,8 +255,11 @@ macro uint SymbolCache._insert_name(&self, String name)
 
     char* names = self.strings();
 
+    assert(name[name.len-1] != '\0');
+
     assert(name.len + 2 < self.names_capacity, "symbol name overflow");
     char* current = names + self.names_len;
+    assert(current[0] == '\0');
     //L<string>\0
     //L - length of <string> (1 byte)
     //<string> - contents of name

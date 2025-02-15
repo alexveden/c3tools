@@ -112,13 +112,6 @@ fn void test_find_insert_at_random()
             if (!cache.has_capacity("foo")) {
                 cache = cache.grow(cache.items_capacity + 100);
                 test::eq(cache.items()[cache.items_capacity].hash, (Fnv32a)ulong.max);
-                for (uint z = cache.items_len; z < cache.items_capacity; z++){
-                    // ensure everything is clean after resize
-                    test::eq(cache.items()[z].hash, (Fnv32a)0);
-                    test::eq(cache.items()[z].ptr.mod, null);
-                    test::eq(cache.items()[z].name_offset, 0);
-                    test::eq(cache.items()[z].kind, SymbolKind.NA);
-                }
             }
             uint pos = cache._find_insert_position(hash);
             SymbolItem* it = cache._insert_item(hash, pos);
@@ -283,7 +276,7 @@ fn void test_grow()
 
     test::eq(cache.items_len, 4);
     test::eq(cache.items_capacity, 5);
-    test::eq(cache.names_len, (3+2)*3);
+    test::eq(cache.names_len, (3 + 2) * 3);
     test::eq(cache.names_capacity, 5 * symbols::CHARS_PER_SYMBOL);
 
     test::eq(names[0], 3);
@@ -300,12 +293,123 @@ fn void test_grow()
 
     cache.add("fzz");
     test::eq(cache.items_len, 5);
-    test::eq(cache.names_len, (3+2)*4);
+    test::eq(cache.names_len, (3 + 2) * 4);
 
     test::eq(names[15], 3);
     test::eq((String)names[16..18], "fzz");
     test::eq(names[19], '\0');  // null term
 
     test::eq(items[cache.items_capacity].hash, (Fnv32a)uint.max);
+
+}
+
+fn void test_add_with_resize_and_validate()
+{
+    Lcg128Random random;
+    random::seed_entropy(&random);
+
+    SymbolCache* cache = SymbolCache.new_init(100);
+    DString buf;
+    defer buf.free();
+    defer cache.free();
+    for (int i = 0; i < 1000; i++) {
+        SymbolItem* items = cache.items();
+
+        if (!cache.has_capacity("my_symbol_long_name0000")) {
+            // Validate all records before resize
+            for (int k = 0; k < i; k++) {
+                items = cache.items();
+                buf.clear();
+                buf.appendf("my_symbol_long_name%04d", k);
+
+                Fnv32a hash;
+                hash.init();
+                hash.update(buf.str_view());
+
+                SymbolItem* it = cache.find(buf.str_view());
+                test::ne(it, null);
+                test::eq(it.hash, hash);
+                test::eq(cache.get_name(it), buf.str_view());
+            }
+            cache = cache.grow(cache.items_capacity + 100);
+            items = cache.items();
+            test::eq(cache.items()[cache.items_capacity].hash, (Fnv32a)ulong.max);
+            io::printfn("resize");
+            // Validate all records after resize
+            for (int k = 0; k < cache.items_capacity; k++) {
+                if (k < i) {
+                    // ensure old data is in place
+                    buf.clear();
+                    buf.appendf("my_symbol_long_name%04d", k);
+
+                    Fnv32a hash;
+                    hash.init();
+                    hash.update(buf.str_view());
+
+                    SymbolItem* it = cache.find(buf.str_view());
+                    test::ne(it, null);
+                    test::eq(it.hash, hash);
+                    test::eq(cache.get_name(it), buf.str_view());
+                } else {
+                    // ensure everything is clean after resize
+                    test::eq(cache.items()[k].hash, (Fnv32a)0);
+                    test::eq(cache.items()[k].ptr.mod, null);
+                    test::eq(cache.items()[k].name_offset, 0);
+                    test::eq(cache.items()[k].kind, SymbolKind.NA);
+                }
+            }
+        } else {
+
+            // Validate all records
+            for (int k = 0; k < i; k++) {
+                items = cache.items();
+                buf.clear();
+                buf.appendf("my_symbol_long_name%04d", k);
+
+                Fnv32a hash;
+                hash.init();
+                hash.update(buf.str_view());
+
+                SymbolItem* it = cache.find(buf.str_view());
+                test::ne(it, null);
+                test::eq(it.hash, hash);
+                test::eq(cache.get_name(it), buf.str_view());
+            }
+        }
+
+        buf.clear();
+        buf.appendf("my_symbol_long_name%04d", i);
+
+        items = cache.items();
+
+        Fnv32a hash;
+        hash.init();
+        hash.update(buf.str_view());
+
+        uint pos = cache._find_insert_position(hash);
+        SymbolItem* it = cache.add(buf.str_view());
+
+        test::eq(it, &items[pos]);
+        test::eq(cache.get_name(it), buf.str_view());
+
+        // always return first item of a hash bucket
+        test::eq(it, cache.find(it.hash));
+        test::eq(cache.items()[cache.items_capacity].hash, (Fnv32a)ulong.max);
+    }
+    // Validate all records
+    for (int i = 0; i < 1000; i++) {
+        SymbolItem* items = cache.items();
+        buf.clear();
+        buf.appendf("my_symbol_long_name%04d", i);
+
+        Fnv32a hash;
+        hash.init();
+        hash.update(buf.str_view());
+
+        SymbolItem* it = cache.find(buf.str_view());
+        test::ne(it, null);
+        test::eq(it.hash, hash);
+        test::eq(cache.get_name(it), buf.str_view());
+    }
 
 }
