@@ -59,6 +59,7 @@ fn void! LspProject.module_add(&self, AstModule* m) @private
     assert(m.hash != 0, "module hash is zero");
     SymbolItem* it = self.modules.add(m.value);
     it.kind = SymbolKind.MODULE;
+    it.module_hash = m.hash;
     it.ptr.mod = m;
 }
 
@@ -70,9 +71,12 @@ fn void! LspProject.load_symbols(&self)
     for (uint i = 0; i < self.modules.len(); i++) {
         SymbolItem* it = &items[i];
         assert(it.kind == SymbolKind.MODULE);
+        assert(it.module_hash != (Fnv32a)0);
 
         if (self.modules.get_name(it).starts_with("std::")) {
             self._load_module_symbols(&self.sym_std, it.ptr.mod)!;
+        } else {
+            self._load_module_symbols(&self.sym_proj, it.ptr.mod)!;
         }
     }
     io::printfn(

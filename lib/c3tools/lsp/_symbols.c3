@@ -111,6 +111,27 @@ macro SymbolItem* SymbolCache.find(&self, name_or_hash)
 }
 
 <*
+ Returns next item with hash collission (if any)
+ @param [in] item "Item returned by previous SymbolCache.find()"
+ @return "next item or null if not exist"
+ @require item != null
+*>
+macro SymbolItem* SymbolCache.next(&self, SymbolItem* item)
+{
+    SymbolItem* next = item + 1;
+
+    while (item.hash == next.hash) {
+        // We have collision in hash
+        if (next.module_hash == item.hash) {
+            return next;
+        }
+        next++;
+    }
+
+    return null;
+}
+
+<*
  Adds new SymbolItem* by name and return its pointer for further initialization 
  NOTE: hash and name will be set, you should take care of other fields
 
