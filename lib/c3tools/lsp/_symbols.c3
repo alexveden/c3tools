@@ -4,7 +4,7 @@ import std::hash::fnv32a;
 import std::math;
 import c3tools::ast;
 
-const usz CHARS_PER_SYMBOL = 32;
+const usz CHARS_PER_SYMBOL = 20;
 
 //    SymbolCache memory alignment
 //  [SymbolCache struct (header)]
@@ -23,6 +23,7 @@ struct SymbolCache @align(32)
     uint items_len;
     uint items_capacity;
     uint names_len;
+    uint names_cnt;
     uint names_capacity;
     // we have about 32-4-4-4-4=16 bytes here for other stuff
 }
@@ -30,27 +31,30 @@ struct SymbolCache @align(32)
 // cacheline aligned
 $assert(SymbolCache.sizeof == 32);
 
-struct SymbolItem @align(16)
+struct SymbolItem @align(32)
 {
     Fnv32a hash;  // item hash, based on its name
+    Fnv32a module_hash;  // module hash where symbol is defined
 
-    bitstruct : uint
+    bitstruct : ulong
     {
-        SymbolKind kind : 0..7;  // kind of the symbol
-        uint name_offset : 8..31;  // from the beginning of SymbolCache.data
+        uint name_offset : 0..31;  // from the beginning of SymbolCache.data
+        SymbolKind kind : 32..39;  // kind of the symbol
+        bool is_private: 40..40;      // symbol contains @private attribute
+        bool is_conditional: 41..41;  // symbol contains @if() attribute
     }
 
     union ptr
     {
         AstTypeDef* type;  // can be used for keywords/builtins
         AstModule* mod;  // used for global module index
-        Fnv32a module_hash;  // module hash of parent of the symbol
     }
 
+    // next child of the base type (e.g. struct members implementation)
+    SymbolItem* next;
 }
 
-// 1/4 of cacheline!
-$assert(SymbolItem.sizeof == 16);
+$assert(SymbolItem.sizeof == 32);
 
 fn SymbolCache* SymbolCache.new_init(uint capacity) @operator(construct)
 {
@@ -209,6 +213,47 @@ fn SymbolCache* SymbolCache.grow(&self, uint new_capacity)
     return self;
 }
 
+struct SymbolIterator
+{
+    SymbolCache* cache;
+    uint cursor;
+    uint next_idx;
+}
+macro SymbolIterator SymbolCache.iter_symbols(&self) => SymbolIterator {.cache = self};
+
+macro usz SymbolIterator.len(self) @operator(len) => self.cache.names_cnt;
+
+macro String SymbolIterator.get(&self, usz idx) @operator([])
+{
+    assert(idx == self.next_idx);
+
+    char* names = self.cache.strings();
+    uint i = self.cursor;
+    uint cnt = names[i];
+
+    assert(cnt, "expected string len > 0");
+    assert(names[i+1+cnt] == '\0', "no null terminator");
+
+    self.cursor += cnt + 2;  // 2 extra bytes for len and \0
+    self.next_idx++;
+    return (String)(&names[i + 1])[:cnt];
+}
+
+// Alternative implementation for `while(String name = it.next())`
+macro String SymbolIterator.next(&self)
+{
+    if (self.cursor < self.cache.names_len) {
+        char* names = self.cache.strings();
+        uint i = self.cursor;
+        uint cnt = names[i];
+        if (names[i]) {
+            self.cursor += cnt + 2;  // 2 extra bytes for len and \0
+            return (String)(&names[i + 1])[:cnt];
+        }
+    }
+    return "";
+}
+
 <*
  Checks if SymbolCache has space for adding a new symbol
 *>
@@ -245,8 +290,8 @@ macro usz calc_data_size(uint capacity) @local
 }
 
 <*
-@ensure result < self.names_capacity
-@ensure result > 0
+ @ensure result < self.names_capacity
+ @ensure result > 0
 *>
 macro uint SymbolCache._insert_name(&self, String name)
 {
@@ -255,7 +300,7 @@ macro uint SymbolCache._insert_name(&self, String name)
 
     char* names = self.strings();
 
-    assert(name[name.len-1] != '\0');
+    assert(name[name.len - 1] != '\0');
 
     assert(name.len + 2 < self.names_capacity, "symbol name overflow");
     char* current = names + self.names_len;
@@ -268,6 +313,7 @@ macro uint SymbolCache._insert_name(&self, String name)
     mem::copy(&current[1], name.ptr, name.len);
     current[name.len + 1] = '\0';
     self.names_len += name.len + 2;
+    self.names_cnt++;
     return (uint)(&current[1] - names);
 }
 

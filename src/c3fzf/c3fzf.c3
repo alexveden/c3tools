@@ -1,5 +1,6 @@
 module c3symbols;
 import c3tools::ast @public;
+import c3tools::lsp @public;
 import c3tools::ast::lexer;
 import std::io;
 import c3lib::argparse;
@@ -88,7 +89,7 @@ fn void! find(FzfSettings* settings) @local
         io::printfn("You must pass full module name in a module filter argument, got .");
         return FzfFault.BAD_ARGUMENT?;
     }
-    AstProject proj = AstProject.new_init(settings.project_path, settings.stdlib_path);
+    LspProject proj = LspProject.new_init(settings.project_path, settings.stdlib_path);
     defer proj.free();
 
     if (catch err = proj.load()) {
@@ -96,64 +97,67 @@ fn void! find(FzfSettings* settings) @local
         return err?;
     }
 
-    if (!settings.type_filter && !settings.preview) {
-        return print_modules_list(settings, &proj);
-    }
+    proj.load_symbols()!;
 
-    List(<ModuleDecl>) declarations;
-    declarations.temp_init(proj.modules.capacity);
-    foreach (m : proj.modules) {
-        if (settings.module_filter != ".") {
-            if (settings.preview) {
-                if (m.value != settings.module_filter) continue;
-            } else {
-                if (!m.value.contains(settings.module_filter)) continue;
-            }
-        }
-
-        if (settings.type_filter == ".") {
-            declarations.push(ModuleDecl {.mod = m, .decl = null});
-        }
-
-        for LOOP: (AstTypeDef* decl = m.decls; decl != null; decl = (AstTypeDef*)decl.next) {
-            if (settings.type_filter && settings.type_filter != ".") {
-                if (!decl.value.contains(settings.type_filter)) continue;
-            }
-
-            for (AstNode* attr = decl.attributes; attr != null; attr = attr.next) {
-                if (attr.value.starts_with("@local")) continue LOOP;
-                if (attr.value.starts_with("@test")) continue LOOP;
-            }
-
-            declarations.push(ModuleDecl {.mod = m, .decl = decl});
-        }
-
-    }
-    if (!declarations.len()) {
-        io::printfn(
-            "No declarations found with name: %s: %s", settings.module_filter, settings.type_filter
-        );
-        return FzfFault.MODULE_NOT_FOUND?;
-    }
-
-    sort::quicksort(declarations, &cmp_decl);
-    if (settings.preview) {
-        return print_preview(
-            settings, &proj, declarations, is_full_preview: settings.type_filter != ""
-        );
-    } else {
-        foreach (mdecl : declarations) {
-            io::printfn(
-                "%s %s %s",
-                mdecl.mod.value,
-                mdecl.decl == null ? "." : mdecl.decl.value,
-                mdecl.decl == null ? "" : lexer::token_type_to_string(mdecl.decl.type)
-            );
-        }
-    }
+    // if (!settings.type_filter && !settings.preview) {
+    //     return print_modules_list(settings, &proj);
+    // }
+    //
+    // List(<ModuleDecl>) declarations;
+    // declarations.temp_init(proj.modules.capacity);
+    // foreach (m : proj.modules) {
+    //     if (settings.module_filter != ".") {
+    //         if (settings.preview) {
+    //             if (m.value != settings.module_filter) continue;
+    //         } else {
+    //             if (!m.value.contains(settings.module_filter)) continue;
+    //         }
+    //     }
+    //
+    //     if (settings.type_filter == ".") {
+    //         declarations.push(ModuleDecl {.mod = m, .decl = null});
+    //     }
+    //
+    //     for LOOP: (AstTypeDef* decl = m.decls; decl != null; decl = (AstTypeDef*)decl.next) {
+    //         if (settings.type_filter && settings.type_filter != ".") {
+    //             if (!decl.value.contains(settings.type_filter)) continue;
+    //         }
+    //
+    //         for (AstNode* attr = decl.attributes; attr != null; attr = attr.next) {
+    //             if (attr.value.starts_with("@local")) continue LOOP;
+    //             if (attr.value.starts_with("@test")) continue LOOP;
+    //         }
+    //
+    //         declarations.push(ModuleDecl {.mod = m, .decl = decl});
+    //     }
+    //
+    // }
+    // if (!declarations.len()) {
+    //     io::printfn(
+    //         "No declarations found with name: %s: %s", settings.module_filter, settings.type_filter
+    //     );
+    //     return FzfFault.MODULE_NOT_FOUND?;
+    // }
+    //
+    // sort::quicksort(declarations, &cmp_decl);
+    // if (settings.preview) {
+    //     return print_preview(
+    //         settings, &proj, declarations, is_full_preview: settings.type_filter != ""
+    //     );
+    // } else {
+    //     foreach (mdecl : declarations) {
+    //         io::printfn(
+    //             "%s %s %s",
+    //             mdecl.mod.value,
+    //             mdecl.decl == null ? "." : mdecl.decl.value,
+    //             mdecl.decl == null ? "" : lexer::token_type_to_string(mdecl.decl.type)
+    //         );
+    //     }
+    // }
 }
+/*
 
-fn void! print_modules_list(FzfSettings* settings, AstProject* proj) @local
+fn void! print_modules_list(FzfSettings* settings, LspProject* proj) @local
 {
     List(<AstModule*>) modules;
     modules.temp_init(proj.modules.capacity);
@@ -341,7 +345,7 @@ fn void print_decl_callable(AstCallable* d, bool is_full_preview)
 }
 
 fn void! print_preview(
-    FzfSettings* settings, AstProject* proj, List(<ModuleDecl>) declarations, bool is_full_preview
+    FzfSettings* settings, LspProject* proj, List(<ModuleDecl>) declarations, bool is_full_preview
 ) @local
 {
 

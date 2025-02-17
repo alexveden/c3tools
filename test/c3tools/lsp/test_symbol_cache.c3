@@ -123,7 +123,7 @@ fn void test_find_insert_at_random()
             test::eq(it.hash, hash);
             test::eq(it.name_offset, 0);
             test::eq(it.kind, SymbolKind.NA);
-            test::eq(it.ptr.module_hash, (Fnv32a)0);
+            test::eq(it.module_hash, (Fnv32a)0);
             test::eq(it.ptr.mod, null);
             test::eq(it.ptr.type, null);
 
@@ -315,12 +315,12 @@ fn void test_add_with_resize_and_validate()
     for (int i = 0; i < 1000; i++) {
         SymbolItem* items = cache.items();
 
-        if (!cache.has_capacity("my_symbol_long_name0000")) {
+        if (!cache.has_capacity("my_symbol_name0000")) {
             // Validate all records before resize
             for (int k = 0; k < i; k++) {
                 items = cache.items();
                 buf.clear();
-                buf.appendf("my_symbol_long_name%04d", k);
+                buf.appendf("my_symbol_name%04d", k);
 
                 Fnv32a hash;
                 hash.init();
@@ -340,7 +340,7 @@ fn void test_add_with_resize_and_validate()
                 if (k < i) {
                     // ensure old data is in place
                     buf.clear();
-                    buf.appendf("my_symbol_long_name%04d", k);
+                    buf.appendf("my_symbol_name%04d", k);
 
                     Fnv32a hash;
                     hash.init();
@@ -364,7 +364,7 @@ fn void test_add_with_resize_and_validate()
             for (int k = 0; k < i; k++) {
                 items = cache.items();
                 buf.clear();
-                buf.appendf("my_symbol_long_name%04d", k);
+                buf.appendf("my_symbol_name%04d", k);
 
                 Fnv32a hash;
                 hash.init();
@@ -378,7 +378,7 @@ fn void test_add_with_resize_and_validate()
         }
 
         buf.clear();
-        buf.appendf("my_symbol_long_name%04d", i);
+        buf.appendf("my_symbol_name%04d", i);
 
         items = cache.items();
 
@@ -400,7 +400,7 @@ fn void test_add_with_resize_and_validate()
     for (int i = 0; i < 1000; i++) {
         SymbolItem* items = cache.items();
         buf.clear();
-        buf.appendf("my_symbol_long_name%04d", i);
+        buf.appendf("my_symbol_name%04d", i);
 
         Fnv32a hash;
         hash.init();

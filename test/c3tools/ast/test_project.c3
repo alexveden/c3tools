@@ -1,7 +1,8 @@
 module test::c3tools::ast::project @test;
 import c3tools::ast @public;
+import c3tools::lsp @public;
 import std::math;
-import std::hash::fnv64a;
+import std::hash::fnv32a;
 import std::collections::list;
 import std::io;
 
@@ -35,21 +36,21 @@ fn void test6(int a) => a * 2;
 
     AstModule* m = ast.@node_at(ast.modules, 0);
     io::printfn("'%s' hash: %s", m.node.value, m.hash);
-    test::eq(m.hash, (Fnv64a)0);
+    test::eq(m.hash, (Fnv32a)0);
 
     m = ast.@node_at(ast.modules, 1);
     io::printfn("'%s' hash: %s", m.node.value, m.hash);
-    test::ne(m.hash, (Fnv64a)0);
+    test::ne(m.hash, (Fnv32a)0);
 
     m = ast.@node_at(ast.modules, 2);
     io::printfn("'%s' hash: %s", m.node.value, m.hash);
-    test::ne(m.hash, (Fnv64a)0);
+    test::ne(m.hash, (Fnv32a)0);
 
     m = ast.@node_at(ast.modules, 3);
     io::printfn("'%s' hash: %s", m.node.value, m.hash);
-    test::ne(m.hash, (Fnv64a)0);
+    test::ne(m.hash, (Fnv32a)0);
 
-    AstProject proj = AstProject.new_init("", "");
+    LspProject proj = LspProject.new_init("", "");
     defer proj.free();
 
     proj.load_source(code, "foo.c3")!!;

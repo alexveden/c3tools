@@ -4,13 +4,13 @@ import std::collections::map;
 
 struct Lsp
 {
-    AstProject proj;
+    LspProject proj;
     HashMap(<String, Document>) documents;
 }
 
 fn void! Lsp.new_init(&self, String project_root, String stdlib_path)
 {
-    self.proj = AstProject.new_init(project_root, stdlib_path);
+    self.proj = LspProject.new_init(project_root, stdlib_path);
 
     if (catch err = self.proj.load()) {
         log::error("c3 project load failed: %s", err);

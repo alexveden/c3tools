@@ -72,7 +72,7 @@ fn void! LspProject.load_symbols(&self)
         assert(it.kind == SymbolKind.MODULE);
 
         if (self.modules.get_name(it).starts_with("std::")) {
-            self._load_module_symbols(self.sym_std, it.ptr.mod)!;
+            self._load_module_symbols(&self.sym_std, it.ptr.mod)!;
         }
     }
     io::printfn(
@@ -84,38 +84,42 @@ fn void! LspProject.load_symbols(&self)
     );
 }
 
-fn void! LspProject._load_module_symbols(&self, SymbolCache* dest, AstModule* src)
+fn void! LspProject._load_module_symbols(&self, SymbolCache** dest, AstModule* src) @private
 {
     assert(src.hash, "no module hash");
     io::printfn("adding module symbols: %s", src.value);
 
     for LOOP: (AstTypeDef* decl = src.decls; decl != null; decl = (AstTypeDef*)decl.next) {
-        for (AstNode* attr = decl.attributes; attr != null; attr = attr.next) {
-            if (attr.value.starts_with("@local")) continue LOOP;
-            if (attr.value.starts_with("@test")) continue LOOP;
-            if (attr.value.starts_with("@benchmark")) continue LOOP;
-        }
-        if (!decl.value){
+        if (!decl.value) {
             io::printfn("    %s -> %s: zero length symbol!", src.value, decl.type);
             continue LOOP;
         }
         io::printfn("    %s: %s", decl.type, decl.value);
 
-        if (!self.sym_std.has_capacity(decl.value)) {
-            self.sym_std = self.sym_std.grow(self.sym_std.items_capacity + 100);
+        if (!(*dest).has_capacity(decl.value)) {
+            *dest = (*dest).grow((*dest).items_capacity + 512);
             io::printfn("    %s -> grow!", decl.value);
         }
 
-        if (decl.value.contains("wasmsive")){
-            unreachable();
-        }
-
-        SymbolItem* it = self.sym_std.add(decl.value);
-        it.kind = SymbolKind.NA; 
-        it.ptr.module_hash = src.hash;
-        // declarations.push(ModuleDecl {.mod = m, .decl = decl});
+        self._add_symbol(*dest, src, decl)!;
     }
+}
 
+fn void! LspProject._add_symbol(&self, SymbolCache* dest, AstModule* src, AstTypeDef* decl) @private
+{
+    bool is_private = false;
+    bool is_conditional = false;
+    for (AstNode* attr = decl.attributes; attr != null; attr = attr.next) {
+        if (attr.value.starts_with("@local")) return;
+        if (attr.value.starts_with("@test")) return;
+        if (attr.value.starts_with("@benchmark")) return;
+        if (attr.value.starts_with("@private")) is_private = true;
+        if (attr.value.starts_with("@if")) is_conditional = true;
+    }
+    SymbolItem* it = dest.add(decl.value);
+    it.kind = SymbolKind.NA;
+    it.module_hash = src.hash;
+    // declarations.push(ModuleDecl {.mod = m, .decl = decl});
 }
 
 fn void! LspProject.load_source(&self, String full_source, String file_path)

@@ -78,7 +78,7 @@ struct Symbol
     Symbol* collision;
 }
 
-fn Document Document.new_open(String uri, String full_source, AstProject* proj) @operator(construct)
+fn Document Document.new_open(String uri, String full_source, LspProject* proj) @operator(construct)
 {
     Document self = {};
 
@@ -127,7 +127,7 @@ fn void! Document._load_file_symbols(&self) @private
 fn void! Document.save(&self, String full_sourse)
 {
     // update full document structure?
-    // trigger AstProject* document decls updates?
+    // trigger LspProject* document decls updates?
 
 }
 

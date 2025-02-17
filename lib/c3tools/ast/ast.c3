@@ -1,7 +1,7 @@
 module c3tools::ast;
 import c3tools::ast::lexer;
 import std::io;
-import std::hash::fnv64a;
+import std::hash::fnv32a;
 import std::sort;
 import std::collections::list;
 import std::collections::map;
@@ -41,7 +41,7 @@ struct AstNode
 struct AstModule
 {
     inline AstNode node;
-    Fnv64a hash;
+    Fnv32a hash;
     AstNode* name;
     AstNode* attributes;
     AstImport* imports;

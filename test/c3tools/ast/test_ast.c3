@@ -1,5 +1,5 @@
 module test::c3tools::ast @test;
-import std::hash::fnv64a;
+import std::hash::fnv32a;
 import c3tools::ast @public;
 import c3tools::ast::lexer;
 import std::math;
@@ -2551,11 +2551,11 @@ fn void test6(int a) => a * 2;
     test::eq(3, ast.@node_len(ast.modules));
 
     AstModule* m = ast.@node_at(ast.modules, 0);
-    test::eq(m.hash, (Fnv64a)fnv64a::encode("test::std::c3lang::ast"));
+    test::eq(m.hash, (Fnv32a)fnv32a::encode("test::std::c3lang::ast"));
 
     m = ast.@node_at(ast.modules, 1);
-    test::eq(m.hash, (Fnv64a)fnv64a::encode("test::std::c3lang::best"));
+    test::eq(m.hash, (Fnv32a)fnv32a::encode("test::std::c3lang::best"));
 
     m = ast.@node_at(ast.modules, 2);
-    test::eq(m.hash, (Fnv64a)fnv64a::encode("test::std::c3lang::cest"));
+    test::eq(m.hash, (Fnv32a)fnv32a::encode("test::std::c3lang::cest"));
 }
