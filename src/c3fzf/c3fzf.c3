@@ -99,9 +99,9 @@ fn void! find(FzfSettings* settings) @local
 
     proj.load_symbols()!;
 
-    // if (!settings.type_filter && !settings.preview) {
-    //     return print_modules_list(settings, &proj);
-    // }
+    if (!settings.type_filter && !settings.preview) {
+        return print_modules_list(settings, &proj);
+    }
     //
     // List(<ModuleDecl>) declarations;
     // declarations.temp_init(proj.modules.capacity);
@@ -155,34 +155,48 @@ fn void! find(FzfSettings* settings) @local
     //     }
     // }
 }
-/*
+
+// Sort the tests by their name in ascending order.
+fn int cmp_str(String a, String b)
+{
+	usz an = a.len;
+	usz bn = b.len;
+	if (an > bn) @swap(a, b);
+	foreach (i, ac : a)
+	{
+		char bc = b[i];
+		if (ac != bc) return an > bn ? bc - ac : ac - bc;
+	}
+	return (int)(an - bn);
+}
 
 fn void! print_modules_list(FzfSettings* settings, LspProject* proj) @local
 {
-    List(<AstModule*>) modules;
-    modules.temp_init(proj.modules.capacity);
-    foreach (idx : proj.mod_index.iter()) {
+    List(<String>) modules;
+    modules.new_init(proj.modules.len());
+    defer modules.free();
+
+    foreach (mod: proj.modules.iter_symbols()) {
         if (settings.module_filter != ".") {
-            if (!idx.key.contains(settings.module_filter)) continue;
+            if (!mod.contains(settings.module_filter)) continue;
         }
 
-        modules.push(proj.modules[idx.value]);
+        modules.push(mod);
     }
     if (!modules.len()) {
         io::printfn("No modules found with name: %s", settings.module_filter);
         return FzfFault.MODULE_NOT_FOUND?;
     }
 
-    sort::quicksort(modules, &ast::cmp_module);
+    sort::quicksort(modules, &cmp_str);
+
     foreach (i, m : modules) {
-        io::printf("%s", m.value);
-        // for(AstNode* node = m.attributes; node != null; node = node.next){
-        //     io::printf(" %s", node.value);
-        // }
+        io::printf("%s", m);
         io::print("\n");
     }
 }
 
+/*
 macro print_nodes(format, ast_nodes, String sep = "")
 {
     for (AstNode* node = ast_nodes; node != null; node = node.next) {

@@ -4,7 +4,7 @@ import std::hash::fnv32a;
 import std::math;
 import c3tools::ast;
 
-const usz CHARS_PER_SYMBOL = 20;
+const usz CHARS_PER_SYMBOL = 32;
 
 //    SymbolCache memory alignment
 //  [SymbolCache struct (header)]
@@ -86,11 +86,12 @@ fn SymbolCache* SymbolCache.free(&self)
 macro uint SymbolCache.len(&self) => self.items_len;
 
 <*
- Finds first SymbolItem* in SymbolCache with the same hash as name_or_hash 
+ Finds first SymbolItem* in SymbolCache with the same hash as name_or_hash,
+ this method is expected to be used in a loop with SymbolCache.next() for checking all collisions.
 
  @param name_or_hash "Fnv32a hash or String name"
 *>
-macro SymbolItem* SymbolCache.find(&self, name_or_hash)
+macro SymbolItem* SymbolCache.first(&self, name_or_hash)
 {
     Fnv32a hash;
     $switch ($typeof(name_or_hash))
@@ -111,7 +112,7 @@ macro SymbolItem* SymbolCache.find(&self, name_or_hash)
 }
 
 <*
- Returns next item with hash collission (if any)
+ Returns next item with hash collision (if any)
  @param [in] item "Item returned by previous SymbolCache.find()"
  @return "next item or null if not exist"
  @require item != null
@@ -119,16 +120,7 @@ macro SymbolItem* SymbolCache.find(&self, name_or_hash)
 macro SymbolItem* SymbolCache.next(&self, SymbolItem* item)
 {
     SymbolItem* next = item + 1;
-
-    while (item.hash == next.hash) {
-        // We have collision in hash
-        if (next.module_hash == item.hash) {
-            return next;
-        }
-        next++;
-    }
-
-    return null;
+    return (item.hash == next.hash) ? next : null;
 }
 
 <*

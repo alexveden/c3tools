@@ -85,23 +85,23 @@ fn void test6(int a) => a * 2;
     proj.load_source(code, "foo.c3")!!;
     test::eq(proj.modules.len(), 3);
 
-    test::ne(null, proj.modules.find("test::std::c3lang::ast"));
-    test::ne(null, proj.modules.find("test::std::c3lang::best"));
-    test::ne(null, proj.modules.find("test::std::c3lang::cest"));
+    test::ne(null, proj.modules.first("test::std::c3lang::ast"));
+    test::ne(null, proj.modules.first("test::std::c3lang::best"));
+    test::ne(null, proj.modules.first("test::std::c3lang::cest"));
 
-    SymbolItem* m = proj.modules.find("test::std::c3lang::ast");
+    SymbolItem* m = proj.modules.first("test::std::c3lang::ast");
     test::eq(proj.modules.get_name(m), "test::std::c3lang::ast");
     test::eq(m.kind, SymbolKind.MODULE);
     test::eq(m.module_hash, (Fnv32a)fnv32a::encode("test::std::c3lang::ast"));
     test::eq(m.hash, (Fnv32a)fnv32a::encode("test::std::c3lang::ast"));
 
-    m = proj.modules.find("test::std::c3lang::best");
+    m = proj.modules.first("test::std::c3lang::best");
     test::eq(proj.modules.get_name(m), "test::std::c3lang::best");
     test::eq(m.kind, SymbolKind.MODULE);
     test::eq(m.module_hash, (Fnv32a)fnv32a::encode("test::std::c3lang::best"));
     test::eq(m.hash, (Fnv32a)fnv32a::encode("test::std::c3lang::best"));
 
-    m = proj.modules.find("test::std::c3lang::cest");
+    m = proj.modules.first("test::std::c3lang::cest");
     test::eq(proj.modules.get_name(m), "test::std::c3lang::cest");
     test::eq(m.kind, SymbolKind.MODULE);
     test::eq(m.module_hash, (Fnv32a)fnv32a::encode("test::std::c3lang::cest"));
@@ -135,14 +135,14 @@ fn void test6(int a) => a * 2;
     proj.load_source(code, "foo.c3")!!;
     test::eq(proj.modules.len(), 3);
 
-    test::ne(null, proj.modules.find("test::std::c3lang::ast"));
-    test::eq(null, proj.modules.find("test::std::c3lang::best"));
-    test::ne(null, proj.modules.find("test::std::c3lang::cest"));
+    test::ne(null, proj.modules.first("test::std::c3lang::ast"));
+    test::eq(null, proj.modules.first("test::std::c3lang::best"));
+    test::ne(null, proj.modules.first("test::std::c3lang::cest"));
 
 
     int n_collision = 0;
     for (
-        SymbolItem* m = proj.modules.find("test::std::c3lang::ast");
+        SymbolItem* m = proj.modules.first("test::std::c3lang::ast");
         m != null;
         m = proj.modules.next(m)
     ) {

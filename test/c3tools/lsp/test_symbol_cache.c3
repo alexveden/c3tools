@@ -128,7 +128,7 @@ fn void test_find_insert_at_random()
             test::eq(it.ptr.type, null);
 
             // always return first item of a hash bucket
-            test::eq(it, cache.find(hash));
+            test::eq(it, cache.first(hash));
             test::eq(cache.items()[cache.items_capacity].hash, (Fnv32a)ulong.max);
         }
         // Check if sorted in ascending order
@@ -208,23 +208,23 @@ fn void test_item_find()
     defer cache.free();
 
     SymbolItem* items = cache.items();
-    test::eq(null, cache.find("fooa"));
+    test::eq(null, cache.first("fooa"));
 
     cache.add("foo");
-    test::eq(null, cache.find("fooa"));
-    test::ne(null, cache.find("foo"));
+    test::eq(null, cache.first("fooa"));
+    test::ne(null, cache.first("foo"));
     cache.add("foo");
-    test::eq(null, cache.find("fooa"));
-    test::ne(null, cache.find("foo"));
+    test::eq(null, cache.first("fooa"));
+    test::ne(null, cache.first("foo"));
     cache.add("bar");
-    test::ne(null, cache.find("bar"));
+    test::ne(null, cache.first("bar"));
     cache.add("baz");
-    test::ne(null, cache.find("baz"));
+    test::ne(null, cache.first("baz"));
     cache.add("foo");
     cache.add("baz");
     cache.add("baz");
     cache.add("bar");
-    test::eq(null, cache.find("fooa"));
+    test::eq(null, cache.first("fooa"));
     test::eq(cache.items_len, 8);
 
     // test::eq(items[0].hash, (Fnv32a)1);
@@ -326,7 +326,7 @@ fn void test_add_with_resize_and_validate()
                 hash.init();
                 hash.update(buf.str_view());
 
-                SymbolItem* it = cache.find(buf.str_view());
+                SymbolItem* it = cache.first(buf.str_view());
                 test::ne(it, null);
                 test::eq(it.hash, hash);
                 test::eq(cache.get_name(it), buf.str_view());
@@ -346,7 +346,7 @@ fn void test_add_with_resize_and_validate()
                     hash.init();
                     hash.update(buf.str_view());
 
-                    SymbolItem* it = cache.find(buf.str_view());
+                    SymbolItem* it = cache.first(buf.str_view());
                     test::ne(it, null);
                     test::eq(it.hash, hash);
                     test::eq(cache.get_name(it), buf.str_view());
@@ -370,7 +370,7 @@ fn void test_add_with_resize_and_validate()
                 hash.init();
                 hash.update(buf.str_view());
 
-                SymbolItem* it = cache.find(buf.str_view());
+                SymbolItem* it = cache.first(buf.str_view());
                 test::ne(it, null);
                 test::eq(it.hash, hash);
                 test::eq(cache.get_name(it), buf.str_view());
@@ -393,7 +393,7 @@ fn void test_add_with_resize_and_validate()
         test::eq(cache.get_name(it), buf.str_view());
 
         // always return first item of a hash bucket
-        test::eq(it, cache.find(it.hash));
+        test::eq(it, cache.first(it.hash));
         test::eq(cache.items()[cache.items_capacity].hash, (Fnv32a)ulong.max);
     }
     // Validate all records
@@ -406,7 +406,7 @@ fn void test_add_with_resize_and_validate()
         hash.init();
         hash.update(buf.str_view());
 
-        SymbolItem* it = cache.find(buf.str_view());
+        SymbolItem* it = cache.first(buf.str_view());
         test::ne(it, null);
         test::eq(it.hash, hash);
         test::eq(cache.get_name(it), buf.str_view());
