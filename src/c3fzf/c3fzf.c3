@@ -89,6 +89,27 @@ fn void! find(FzfSettings* settings) @local
         io::printfn("You must pass full module name in a module filter argument, got .");
         return FzfFault.BAD_ARGUMENT?;
     }
+    if (!settings.project_path) {
+        io::printfn("project_path is not set");
+        return FzfFault.BAD_ARGUMENT?;
+    }
+
+    Path proj_abs = path::temp_new(settings.project_path).new_absolute()!;
+    settings.project_path = proj_abs.str_view();
+    defer proj_abs.free();
+    
+    Path! std_abs = path::temp_new(settings.stdlib_path).new_absolute();
+    defer {
+        if(try std_abs) std_abs.free();
+    }
+    
+    if (try std_abs){
+        settings.stdlib_path = std_abs.str_view();
+    }
+    
+    // io::eprintfn("proj_abs: %s", settings.project_path);
+    // io::eprintfn("std_abs: %s", settings.stdlib_path);
+    
     LspProject proj = LspProject.new_init(settings.project_path, settings.stdlib_path);
     defer proj.free();
 
@@ -102,72 +123,74 @@ fn void! find(FzfSettings* settings) @local
     if (!settings.type_filter && !settings.preview) {
         return print_modules_list(settings, &proj);
     }
-    //
-    // List(<ModuleDecl>) declarations;
-    // declarations.temp_init(proj.modules.capacity);
-    // foreach (m : proj.modules) {
-    //     if (settings.module_filter != ".") {
-    //         if (settings.preview) {
-    //             if (m.value != settings.module_filter) continue;
-    //         } else {
-    //             if (!m.value.contains(settings.module_filter)) continue;
-    //         }
-    //     }
-    //
-    //     if (settings.type_filter == ".") {
-    //         declarations.push(ModuleDecl {.mod = m, .decl = null});
-    //     }
-    //
-    //     for LOOP: (AstTypeDef* decl = m.decls; decl != null; decl = (AstTypeDef*)decl.next) {
-    //         if (settings.type_filter && settings.type_filter != ".") {
-    //             if (!decl.value.contains(settings.type_filter)) continue;
-    //         }
-    //
-    //         for (AstNode* attr = decl.attributes; attr != null; attr = attr.next) {
-    //             if (attr.value.starts_with("@local")) continue LOOP;
-    //             if (attr.value.starts_with("@test")) continue LOOP;
-    //         }
-    //
-    //         declarations.push(ModuleDecl {.mod = m, .decl = decl});
-    //     }
-    //
-    // }
-    // if (!declarations.len()) {
-    //     io::printfn(
-    //         "No declarations found with name: %s: %s", settings.module_filter, settings.type_filter
-    //     );
-    //     return FzfFault.MODULE_NOT_FOUND?;
-    // }
-    //
-    // sort::quicksort(declarations, &cmp_decl);
-    // if (settings.preview) {
-    //     return print_preview(
-    //         settings, &proj, declarations, is_full_preview: settings.type_filter != ""
-    //     );
-    // } else {
-    //     foreach (mdecl : declarations) {
-    //         io::printfn(
-    //             "%s %s %s",
-    //             mdecl.mod.value,
-    //             mdecl.decl == null ? "." : mdecl.decl.value,
-    //             mdecl.decl == null ? "" : lexer::token_type_to_string(mdecl.decl.type)
-    //         );
-    //     }
-    // }
+
+    List(<ModuleDecl>) declarations;
+    declarations.temp_init(proj.modules.items_len);
+
+    foreach (&sym : proj.modules.iter_items()) {
+        AstModule* m = sym.ptr.mod;
+
+        if (settings.module_filter != ".") {
+            if (settings.preview) {
+                if (m.value != settings.module_filter) continue;
+            } else {
+                if (!m.value.contains(settings.module_filter)) continue;
+            }
+        }
+
+        if (settings.type_filter == ".") {
+            declarations.push(ModuleDecl {.mod = m, .decl = null});
+        }
+
+        for LOOP: (AstTypeDef* decl = m.decls; decl != null; decl = (AstTypeDef*)decl.next) {
+            if (settings.type_filter && settings.type_filter != ".") {
+                if (!decl.value.contains(settings.type_filter)) continue;
+            }
+
+            for (AstNode* attr = decl.attributes; attr != null; attr = attr.next) {
+                if (attr.value.starts_with("@local")) continue LOOP;
+                if (attr.value.starts_with("@test")) continue LOOP;
+            }
+
+            declarations.push(ModuleDecl {.mod = m, .decl = decl});
+        }
+
+    }
+    if (!declarations.len()) {
+        io::printfn(
+            "No declarations found with name: %s: %s", settings.module_filter, settings.type_filter
+        );
+        return FzfFault.MODULE_NOT_FOUND?;
+    }
+
+    sort::quicksort(declarations, &cmp_decl);
+    if (settings.preview) {
+        return print_preview(
+            settings, &proj, declarations, is_full_preview: settings.type_filter != ""
+        );
+    } else {
+        foreach (mdecl : declarations) {
+            io::printfn(
+                "%s %s %s",
+                mdecl.mod.value,
+                mdecl.decl == null ? "." : mdecl.decl.value,
+                mdecl.decl == null ? "" : lexer::token_type_to_string(mdecl.decl.type)
+            );
+        }
+    }
 }
 
 // Sort the tests by their name in ascending order.
 fn int cmp_str(String a, String b)
 {
-	usz an = a.len;
-	usz bn = b.len;
-	if (an > bn) @swap(a, b);
-	foreach (i, ac : a)
-	{
-		char bc = b[i];
-		if (ac != bc) return an > bn ? bc - ac : ac - bc;
-	}
-	return (int)(an - bn);
+    usz an = a.len;
+    usz bn = b.len;
+    if (an > bn) @swap(a, b);
+    foreach (i, ac : a) {
+        char bc = b[i];
+        if (ac != bc) return an > bn ? bc - ac : ac - bc;
+    }
+    return (int)(an - bn);
 }
 
 fn void! print_modules_list(FzfSettings* settings, LspProject* proj) @local
@@ -176,7 +199,7 @@ fn void! print_modules_list(FzfSettings* settings, LspProject* proj) @local
     modules.new_init(proj.modules.len());
     defer modules.free();
 
-    foreach (mod: proj.modules.iter_symbols()) {
+    foreach (mod : proj.modules.iter_names()) {
         if (settings.module_filter != ".") {
             if (!mod.contains(settings.module_filter)) continue;
         }
@@ -196,7 +219,6 @@ fn void! print_modules_list(FzfSettings* settings, LspProject* proj) @local
     }
 }
 
-/*
 macro print_nodes(format, ast_nodes, String sep = "")
 {
     for (AstNode* node = ast_nodes; node != null; node = node.next) {
@@ -358,29 +380,48 @@ fn void print_decl_callable(AstCallable* d, bool is_full_preview)
     io::printfn(" {} ");
 }
 
+fn String strip_path(FzfSettings* settings, String path) {
+    String result = path;
+    if (settings.project_path && path.starts_with(settings.project_path)) {
+        result = path[settings.project_path.len..];
+    }
+
+    if (settings.stdlib_path && path.starts_with(settings.stdlib_path)) {
+        result = path[settings.stdlib_path.len..];
+    }
+
+    if (result && result[0] == '/') result = result[1..];
+
+    return result;
+}
+
 fn void! print_preview(
     FzfSettings* settings, LspProject* proj, List(<ModuleDecl>) declarations, bool is_full_preview
 ) @local
 {
 
-    uint mod_idx = proj.mod_index[settings.module_filter]!!;
-    AstModule* mod = proj.modules[mod_idx];
-    io::printfn("module %s;\n", mod.value);
-    if (mod.docs) {
-        io::printf(mod.docs.value);
+    SymbolItem* sym = proj.modules.first(settings.module_filter);
+    if (sym == null) {
+        io::printfn("module not found: %s", settings.module_filter);
+        return;
+    }
+
+    io::printfn("module %s;\n", sym.ptr.mod.value);
+    if (sym.ptr.mod.docs) {
+        io::printf(sym.ptr.mod.docs.value);
         io::printfn("*>");
     }
     io::printfn("/*             FILES           */");
-    for (mod_idx; mod_idx < proj.modules.len(); mod_idx++) {
-        if (mod.value != proj.modules[mod_idx].value) break;  // got another module
-        mod = proj.modules[mod_idx];
+
+    for(sym = proj.modules.first(settings.module_filter); sym; sym = proj.modules.next(sym)) {
+        AstModule* mod = sym.ptr.mod;
 
         io::printf("// %s", mod.value);
         for (AstNode* node = mod.attributes; node != null; node = node.next) {
             io::printf(" %s", node.value);
         }
 
-        io::printf(" at: %s:%d\n", mod.file_path, mod.src_line);
+        io::printf(" at: %s:%d\n", strip_path(settings, mod.file_path), mod.src_line);
     }
 
     io::printfn("\n\n/*             TYPES           */");
@@ -437,7 +478,7 @@ fn int cmp_decl(ModuleDecl a, ModuleDecl b) @private
         return 0;
     }
     if (a.decl.type == b.decl.type) {
-        return ast::cmp_str(a.decl.value, b.decl.value);
+        return cmp_str(a.decl.value, b.decl.value);
     }
     bool is_comparable_type = {|
         switch (a.decl.type) {
@@ -467,7 +508,7 @@ fn int cmp_decl(ModuleDecl a, ModuleDecl b) @private
     |};
 
     if (is_comparable_type) {
-        return ast::cmp_str(a.decl.value, b.decl.value);
+        return cmp_str(a.decl.value, b.decl.value);
     } else {
         return a.decl.type - b.decl.type;
     }

@@ -226,17 +226,26 @@ fn SymbolCache* SymbolCache.grow(&self, uint new_capacity)
     return self;
 }
 
-struct SymbolIterator
+struct SymbolNameIterator
 {
     SymbolCache* cache;
     uint cursor;
     uint next_idx;
 }
-macro SymbolIterator SymbolCache.iter_symbols(&self) => SymbolIterator {.cache = self};
 
-macro usz SymbolIterator.len(self) @operator(len) => self.cache.names_cnt;
+struct SymbolItemIterator
+{
+    SymbolCache* cache;
+    uint cursor;
+    uint next_idx;
+}
+macro SymbolNameIterator SymbolCache.iter_names(&self) => SymbolNameIterator {.cache = self};
+macro SymbolItemIterator SymbolCache.iter_items(&self) => SymbolItemIterator {.cache = self};
 
-macro String SymbolIterator.get(&self, usz idx) @operator([])
+macro usz SymbolNameIterator.len(self) @operator(len) => self.cache.names_cnt;
+macro usz SymbolItemIterator.len(self) @operator(len) => self.cache.items_len;
+
+macro String SymbolNameIterator.get(&self, usz idx) @operator([])
 {
     assert(idx == self.next_idx);
 
@@ -252,20 +261,14 @@ macro String SymbolIterator.get(&self, usz idx) @operator([])
     return (String)(&names[i + 1])[:cnt];
 }
 
-// Alternative implementation for `while(String name = it.next())`
-macro String SymbolIterator.next(&self)
+macro SymbolItem* SymbolItemIterator.get(&self, usz idx) @operator(&[])
 {
-    if (self.cursor < self.cache.names_len) {
-        char* names = self.cache.strings();
-        uint i = self.cursor;
-        uint cnt = names[i];
-        if (names[i]) {
-            self.cursor += cnt + 2;  // 2 extra bytes for len and \0
-            return (String)(&names[i + 1])[:cnt];
-        }
-    }
-    return "";
+    assert(idx == self.next_idx);
+    SymbolItem* items = self.cache.items();
+    self.next_idx++;
+    return &items[idx];
 }
+
 
 <*
  Checks if SymbolCache has space for adding a new symbol

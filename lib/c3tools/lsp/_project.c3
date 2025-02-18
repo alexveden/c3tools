@@ -79,30 +79,30 @@ fn void! LspProject.load_symbols(&self)
             self._load_module_symbols(&self.sym_proj, it.ptr.mod)!;
         }
     }
-    io::eprintfn(
-        "Modules: #%s,Symbols stdlib: #%s, proj: #%s, core #%s",
-        self.modules.len(),
-        self.sym_std.len(),
-        self.sym_proj.len(),
-        self.sym_core.len(),
-    );
+    // io::eprintfn(
+    //     "Modules: #%s,Symbols stdlib: #%s, proj: #%s, core #%s",
+    //     self.modules.len(),
+    //     self.sym_std.len(),
+    //     self.sym_proj.len(),
+    //     self.sym_core.len(),
+    // );
 }
 
 fn void! LspProject._load_module_symbols(&self, SymbolCache** dest, AstModule* src) @private
 {
     assert(src.hash, "no module hash");
-    io::eprintfn("adding module symbols: %s", src.value);
+    // io::eprintfn("adding module symbols: %s", src.value);
 
     for LOOP: (AstTypeDef* decl = src.decls; decl != null; decl = (AstTypeDef*)decl.next) {
         if (!decl.value) {
             io::eprintfn("    %s -> %s: zero length symbol!", src.value, decl.type);
             continue LOOP;
         }
-        io::eprintfn("    %s: %s", decl.type, decl.value);
+        // io::eprintfn("    %s: %s", decl.type, decl.value);
 
         if (!(*dest).has_capacity(decl.value)) {
             *dest = (*dest).grow((*dest).items_capacity + 512);
-            io::eprintfn("    %s -> grow!", decl.value);
+            // io::eprintfn("    %s -> grow!", decl.value);
         }
 
         self._add_symbol(*dest, src, decl)!;
