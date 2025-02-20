@@ -24,7 +24,6 @@ runs:
       run: |
         touch /var/cores/test
         ls /var/cores
-        #rm /var/cores/test
 
     - name: test enabling cores
       shell: bash
@@ -54,4 +53,5 @@ runs:
         gcc coredump.c
         ./a.out || echo "core dumped?"
         ls -la /var/cores
+        rm -r /var/cores/*
 
