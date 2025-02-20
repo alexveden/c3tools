@@ -29,6 +29,7 @@ jobs:
 
       - name: c3tools unit tests
         run: |
+          ulimit -c unlimited 
           if [[ "${{matrix.optimize}}" == "O0" ]]; then
             echo "Running tests with sanitizer"
             c3c --sanitize=address --trust=full build c3fzf
@@ -41,30 +42,41 @@ jobs:
 
       - name: c3fzf on c3tools
         run: |
+          ulimit -c unlimited
           ./build/c3fzf --project=./lib/ .
           ./build/c3fzf --project=./lib/ . .
           ./build/c3fzf --project=./lib/ c3tools::codefmt .
 
       - name: c3fzf preview
         run: |
+          ulimit -c unlimited
           ./build/c3fzf  --project=./lib/ --preview c3tools::codefmt CodeFmt
 
       - name: c3fzf stdlib
         run: |
+          ulimit -c unlimited
           ./build/c3fzf --stdlib=./c3c/lib/std --project=./lib/ .
           ./build/c3fzf --stdlib=./c3c/lib/std --project=./lib/ . .
 
       - name: c3fzf stdlib symbols
         run: |
+          ulimit -c unlimited
           ./build/c3fzf --stdlib=./c3c/lib/std --project=./lib/ std::core::string .
 
       - name: c3fzf stdlib preview
         run: |
+          ulimit -c unlimited
           ./build/c3fzf --preview --stdlib=./c3c/lib/std --project=./lib/ std::core::string .
 
       - name: c3fzf stdlib preview full stdlib
         run: |
+          ulimit -c unlimited
           ./build/c3fzf --project=./lib/ --stdlib=./c3c/lib/std . | xargs -I{} ./build/c3fzf --project=./lib/ --preview --stdlib=./c3c/lib/std {} .
+
+      - uses: actions/upload-artifact@master # capture all crashes as build artifacts
+        with:
+          name: crashes
+          path: /var/cores
 
   build-c3fmt:
     runs-on: ubuntu-22.04
@@ -89,6 +101,7 @@ jobs:
       #
       - name: c3tools unit tests
         run: |
+          ulimit -c unlimited
           if [[ "${{matrix.optimize}}" == "O0" ]]; then
             echo "Running tests with sanitizer"
             c3c --sanitize=address --trust=full build c3fmt
@@ -101,18 +114,22 @@ jobs:
 
       - name: c3fmt c3tools
         run: |
+          ulimit -c unlimited
           find lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
 
       - name: c3tools unit tests after formatting
         run: |
+          ulimit -c unlimited
           c3c --trust=full test
 
       - name: c3fmt c3tools (double)
         run: |
+          ulimit -c unlimited
           find lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
 
       - name: c3tools unit tests after (double) formatting
         run: |
+          ulimit -c unlimited
           c3c --trust=full test
 
       #
@@ -120,11 +137,13 @@ jobs:
       #
       - name: c3c compiler tests (original)
         run: |
+          ulimit -c unlimited
           cd c3c/test
           python3 src/tester.py ../build/c3c test_suite/
 
       - name: c3fmt stdlib
         run: |
+          ulimit -c unlimited
           find c3c/lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
           cd c3c/
           echo "Checking if any changes in files"
@@ -133,11 +152,13 @@ jobs:
 
       - name: c3c stdlib unit tests formatted
         run: |
+          ulimit -c unlimited
           cd c3c/test
           ../build/c3c compile-test unit
 
       - name: c3fmt stdlib (double)
         run: |
+          ulimit -c unlimited
           find c3c/lib/ | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
           cd c3c/
           echo "Checking if any changes after formatting (must be the same!)"
@@ -146,18 +167,27 @@ jobs:
 
       - name: c3c stdlib unit tests formatted (double)
         run: |
+          ulimit -c unlimited
           cd c3c/test
           ../build/c3c compile-test unit
 
       - name: c3fmt c3c/test/unit
         run: |
+          ulimit -c unlimited
           find c3c/test/unit | grep ".c3$" | xargs -I{} ./build/c3fmt -w ${{ matrix.line_width }} -i ${{ matrix.indent }} {}
 
       - name: c3c unit tests on formatted c3c/test/unit
         run: |
+          ulimit -c unlimited
           cd c3c/test
           ../build/c3c compile-test unit
 
       - name: c3fmt of all *.c3t files in test_suite
         run: |
+          ulimit -c unlimited
           ./scripts/c3fmt_c3c_test_suite.sh c3c/test/test_suite/
+
+      - uses: actions/upload-artifact@master # capture all crashes as build artifacts
+        with:
+          name: crashes
+          path: /cores
