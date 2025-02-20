@@ -2022,6 +2022,40 @@ def Int32 = int;
     test::eq(struct_type.iend, code.len - 4);
 }
 
+fn void test_def_const()
+{
+    String code = `module test::std::c3lang::ast;
+<*def doc*>
+def MY_CONST = int;
+//`;  // NOTE: // - is sanity guard comment, don't delete it!
+    DString contents = dstring::temp_new(code);
+    Ast ast = ast::parse(contents.str_view(), "foo.c3", print_lex: true);
+    defer mem::free(ast._allocator);
+    contents.clear();
+
+    test::ne(ast.modules, null);
+    AstModule* m = ast.@node_at(ast.modules, 0);
+    test::ne(m, null);
+
+    AstTypeDefStructural* struct_type = (AstTypeDefStructural*)ast.@node_at(m.decls, 0);
+    test::ne(struct_type, null);
+
+    test::eq(struct_type.type, TokenType.DEF);
+    test::eq(struct_type.value, "MY_CONST");
+
+    test::eq(ast.@node_join(struct_type.attributes, contents), "");
+    test::eq(ast.@node_join(struct_type.docs, contents), "<*def doc");
+    test::eq(ast.@node_join(struct_type.ftype, contents), "int");
+
+    io::printf(
+        "\n\n``%s``",
+        code[struct_type.istart .. math::min((isz)struct_type.iend, (isz)(code.len - 1))]
+    );
+    test::eq(struct_type.istart, 43);
+    test::eq(code[struct_type.iend], ';');
+    test::eq(struct_type.iend, code.len - 4);
+}
+
 fn void test_def_attr_type()
 {
     String code = `module test::std::c3lang::ast;

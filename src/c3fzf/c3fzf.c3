@@ -51,12 +51,12 @@ fn int main(String[] args)
             {
                 .long_name = "stdlib",
                 .value = &settings.stdlib_path,
-                .help = "includes stdlib symbols"
+                .help = "stdlib path for std symbols"
             },
             {
                 .long_name = "preview",
                 .value = &settings.preview,
-                .help = "preview symbols (require full module name)"
+                .help = "preview symbols (requires full module name)"
             },
             {
                 .long_name = "project",
@@ -74,8 +74,6 @@ fn int main(String[] args)
     if (agp.arguments.len > 0) settings.module_filter = agp.arguments[0];
     if (agp.arguments.len > 1) settings.type_filter = agp.arguments[1];
 
-    // if(catch err = process_file(agp.arguments[0])) {
-    // io::printfn("%s", stdlib_path);
     if (catch err = find(&settings)) {
         return 1;
     }
@@ -106,9 +104,6 @@ fn void! find(FzfSettings* settings) @local
     if (try std_abs){
         settings.stdlib_path = std_abs.str_view();
     }
-    
-    // io::eprintfn("proj_abs: %s", settings.project_path);
-    // io::eprintfn("std_abs: %s", settings.stdlib_path);
     
     LspProject proj = LspProject.new_init(settings.project_path, settings.stdlib_path);
     defer proj.free();
@@ -375,9 +370,15 @@ fn void print_decl_callable(AstCallable* d, bool is_full_preview)
     }
     io::printf(")");
 
-    if (is_full_preview) print_nodes(" %s", d.attributes, sep: "");
-
-    io::printfn(" {} ");
+    if (is_full_preview) 
+    {
+        if (d.attributes) {
+            print_nodes(" %s", d.attributes, sep: " ");
+        }
+        io::printfn(" {} ");
+    } else {
+        io::printf("\n");
+    }
 }
 
 fn String strip_path(FzfSettings* settings, String path) {
@@ -466,11 +467,6 @@ fn void! print_preview(
 
 fn int cmp_decl(ModuleDecl a, ModuleDecl b) @private
 {
-    // if (a.mod != b.mod){
-    //     // Check if it's a different files under the same module name
-    //     int mcmp = ast::cmp_module(a.mod, b.mod);
-    //     if (mcmp != 0) return mcmp;
-    // }
     if (a.decl == null || b.decl == null) {
         // synth module-wide decl filter
         if (a.decl == null && b.decl != null) return -1;
@@ -480,32 +476,31 @@ fn int cmp_decl(ModuleDecl a, ModuleDecl b) @private
     if (a.decl.type == b.decl.type) {
         return cmp_str(a.decl.value, b.decl.value);
     }
-    bool is_comparable_type = {|
-        switch (a.decl.type) {
-            case FN:
-            case MACRO:
-                switch (b.decl.type) {
-                    case FN:
-                    case MACRO:
-                        return true;
-                    default:
-                        return false;
-                }
-            case STRUCT:
-            case DEF:
-            case DISTINCT:
-                switch (b.decl.type) {
-                    case STRUCT:
-                    case DEF:
-                    case DISTINCT:
-                        return true;
-                    default:
-                        return false;
-                }
-            default:
-                return false;
-        }
-    |};
+    bool is_comparable_type = false;
+    switch (a.decl.type) {
+        case FN:
+        case MACRO:
+            switch (b.decl.type) {
+                case FN:
+                case MACRO:
+                    is_comparable_type = true;
+                default:
+                    break;
+            }
+        case STRUCT:
+        case DEF:
+        case DISTINCT:
+            switch (b.decl.type) {
+                case STRUCT:
+                case DEF:
+                case DISTINCT:
+                    is_comparable_type = true;
+                default:
+                    break;
+            }
+        default:
+            break;
+    }
 
     if (is_comparable_type) {
         return cmp_str(a.decl.value, b.decl.value);
