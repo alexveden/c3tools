@@ -561,6 +561,8 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private
     bool has_type = false;
     bool has_idents = false;
     bool has_expr = false;
+    bool has_typeof = false;
+    bool has_vars = false;
 
     TokenType rhs_token = INVALID_TOKEN;
 
@@ -618,9 +620,11 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private
             case QUESTION:  // for ternary
                 if (scope == 0) break LOOP;
                 has_expr = true;
-            case INTEGER:
             case IDENT:
             case HASH_IDENT:
+                has_vars = true;
+                nextcase;
+            case INTEGER:
                 // is a binary expression sign
                 // ident &
                 // ident *
@@ -628,6 +632,7 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private
                 // ident + foo
                 // ident - foo
                 // indent[i]
+                // ((char*)indent)
                 switch (rhs_token) {
                     case PLUS:
                     case MINUS:
@@ -640,9 +645,11 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private
                         break;
                 }
                 has_idents = true;
+            case CT_TYPEOF:
+                has_typeof = true;
+                nextcase;
             case TYPE_IDENT:
             case CT_TYPE_IDENT:
-            case CT_TYPEOF:
                 has_type = true;
             case LVEC:
             case RVEC:
@@ -697,8 +704,7 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private
             // simple cast (void*)
             // generic cast (Foo(<void>)*) / array cast (char[8]*)
             if (has_type) {
-                // return !has_idents || has_brackets;
-                is_cast = true;
+                if(has_typeof || !has_vars) is_cast = true;
                 break;
             } else {
                 break;
@@ -717,7 +723,7 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private
             }
         }
 
-        if (!has_parens && !has_type && !has_brackets && !has_idents) {
+        if (!has_parens && !has_type && !has_brackets && (has_typeof || !has_idents)) {
             is_cast = true;
         }
     };

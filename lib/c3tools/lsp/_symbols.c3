@@ -40,8 +40,8 @@ struct SymbolItem @align(32)
     {
         uint name_offset : 0..31;  // from the beginning of SymbolCache.data
         SymbolKind kind : 32..39;  // kind of the symbol
-        bool is_private: 40..40;      // symbol contains @private attribute
-        bool is_conditional: 41..41;  // symbol contains @if() attribute
+        bool is_private : 40..40;  // symbol contains @private attribute
+        bool is_conditional : 41..41;  // symbol contains @if() attribute
     }
 
     union ptr
@@ -113,6 +113,7 @@ macro SymbolItem* SymbolCache.first(&self, name_or_hash)
 
 <*
  Returns next item with hash collision (if any)
+
  @param [in] item "Item returned by previous SymbolCache.find()"
  @return "next item or null if not exist"
  @require item != null
@@ -239,8 +240,9 @@ struct SymbolItemIterator
     uint cursor;
     uint next_idx;
 }
-macro SymbolNameIterator SymbolCache.iter_names(&self) => SymbolNameIterator {.cache = self};
-macro SymbolItemIterator SymbolCache.iter_items(&self) => SymbolItemIterator {.cache = self};
+
+macro SymbolNameIterator SymbolCache.iter_names(&self) => SymbolNameIterator { .cache = self };
+macro SymbolItemIterator SymbolCache.iter_items(&self) => SymbolItemIterator { .cache = self };
 
 macro usz SymbolNameIterator.len(self) @operator(len) => self.cache.names_cnt;
 macro usz SymbolItemIterator.len(self) @operator(len) => self.cache.items_len;
@@ -254,7 +256,7 @@ macro String SymbolNameIterator.get(&self, usz idx) @operator([])
     uint cnt = names[i];
 
     assert(cnt, "expected string len > 0");
-    assert(names[i+1+cnt] == '\0', "no null terminator");
+    assert(names[i + 1 + cnt] == '\0', "no null terminator");
 
     self.cursor += cnt + 2;  // 2 extra bytes for len and \0
     self.next_idx++;
@@ -268,7 +270,6 @@ macro SymbolItem* SymbolItemIterator.get(&self, usz idx) @operator(&[])
     self.next_idx++;
     return &items[idx];
 }
-
 
 <*
  Checks if SymbolCache has space for adding a new symbol
