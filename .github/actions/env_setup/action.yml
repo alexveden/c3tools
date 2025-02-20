@@ -23,7 +23,7 @@ runs:
       run: |
         touch /var/cores/test
         ls /var/cores
-        rm /var/cores/test
+        #rm /var/cores/test
 
     - name: test enabling cores
       shell: bash
@@ -45,5 +45,7 @@ runs:
         sudo sysctl -a | grep kernel.core_pattern
         sudo sysctl -a | grep dump
         echo "int main() {return *(int*)0;}" > coredump.c
-        gcc coredump.c && ./a.out
+        gcc coredump.c
+        ./a.out || echo "core dumped?"
+        ls -la /var/cores
 
