@@ -6,7 +6,8 @@ A collection of tools and libs for C3 language
 
 ## CLI tools
 * c3fmt - universal code formatting utility [Docs and examples](https://github.com/alexveden/c3tools/tree/main/src/c3fmt/)
-* c3fzf - (WIP) quick search over project and stdlib symbols 
+* c3fzf - quick search over project and stdlib symbols  [Docs and examples](https://github.com/alexveden/c3tools/tree/main/src/c3fzf/)
+
 
 ## c3lib
 * `c3lib::test` - now [merged](https://github.com/c3lang/c3c/pull/1908) to stdlib under `std::core::test` (always available by `test::` namespace without need of including)
