@@ -1,8 +1,8 @@
 # c3fzf C3 Symbol Search Utility
 
-Features
+## Features:
 * Allows listing all modules in project or stdlib
-* Supports searching my module name or symbol part
+* Supports searching by module name or symbol part
 * Supports code/documentation preview for selected symbols
 * Allows integration with IDE tools, like NeoVim Telescope
 
