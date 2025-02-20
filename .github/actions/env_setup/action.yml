@@ -11,9 +11,14 @@ runs:
         git config --global user.email "ci@c3tools.com"
         git config --global user.name "c3tools CI"
         sudo mkdir /var/cores
-        sudo bash -c 'echo "/var/cores/core.%e.%t.%p" > /proc/sys/kernel/core_pattern'
         sudo chmod ugo+rwx /var/cores/
         echo "ASAN_OPTIONS=abort_on_error=1" >> $GITHUB_ENV
+
+        sudo apt-get remove apport  
+        sudo bash -c 'echo "/var/cores/core.%e.%t.%p" > /proc/sys/kernel/core_pattern'
+        echo "Core pattern:"
+        sudo cat /proc/sys/kernel/core_pattern
+        sudo sysctl -a | grep kernel.core_pattern
 
     - name: test access to core dump directory
       shell: bash
