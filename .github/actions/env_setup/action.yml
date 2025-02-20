@@ -1,0 +1,35 @@
+name: CI environment setup
+description: Setup stuff
+
+runs:
+  using: 'composite'
+
+  steps:
+    - name: Setup environment
+      shell: bash
+      run: |
+        git config --global user.email "ci@c3tools.com"
+        git config --global user.name "c3tools CI"
+        sudo mkdir /var/cores
+        sudo bash -c 'echo "/var/cores/core.%e.%t.%p" > /proc/sys/kernel/core_pattern'
+        sudo chmod ugo+rwx /var/cores/
+        export ASAN_OPTIONS=abort_on_error=1
+
+    - name: test access to core dump directory
+      shell: bash
+      run: |
+        sudo touch /var/cores/test
+        ls /var/cores
+        sudo rm /var/cores/test
+
+    - name: test enabling cores
+      shell: bash
+      run: |
+        ulimit -c               # should output 0 if disabled
+        ulimit -c unlimited
+        ulimit -c               # should output 'unlimited' now
+
+    - name: asan abort_on_error
+      shell: bash
+      run: |
+        echo "ASAN_OPTIONS: $ASAN_OPTIONS"

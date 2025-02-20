@@ -24,6 +24,9 @@ jobs:
       - name: Checkout c3tools 
         uses: actions/checkout@v4
 
+      - uses: ./.github/actions/env_setup
+        name: Setup env
+
       - uses: ./.github/actions/c3c_build_latest
         name: Build c3c compiler
 
@@ -92,6 +95,9 @@ jobs:
     steps:
       - name: Checkout c3tools 
         uses: actions/checkout@v4
+
+      - uses: ./.github/actions/env_setup
+        name: Setup env
 
       - name: Build c3c compiler
         uses: ./.github/actions/c3c_build_latest
