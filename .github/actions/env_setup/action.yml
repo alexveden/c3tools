@@ -13,7 +13,7 @@ runs:
         sudo mkdir /var/cores
         sudo bash -c 'echo "/var/cores/core.%e.%t.%p" > /proc/sys/kernel/core_pattern'
         sudo chmod ugo+rwx /var/cores/
-        export ASAN_OPTIONS=abort_on_error=1
+        echo "ASAN_OPTIONS=abort_on_error=1" >> $GITHUB_ENV
 
     - name: test access to core dump directory
       shell: bash
