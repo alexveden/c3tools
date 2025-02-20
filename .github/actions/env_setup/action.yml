@@ -12,7 +12,7 @@ runs:
         git config --global user.name "c3tools CI"
         sudo mkdir /var/cores
         sudo chmod ugo+rwx /var/cores/
-        echo "ASAN_OPTIONS=abort_on_error=1" >> $GITHUB_ENV
+        echo "ASAN_OPTIONS=abort_on_error=1:disable_coredump=0:unmap_shadow_on_exit=1" >> $GITHUB_ENV
 
         sudo apt-get remove apport  
         sudo systemctl disable apport.service
