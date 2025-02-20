@@ -691,15 +691,17 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private
         if (t.type != SPACE) rhs_token = t.type;
     }
 
-    bool is_cast = {|
+    bool is_cast = false;
+    do {
         if (has_parens) {
             // simple cast (void*)
             // generic cast (Foo(<void>)*) / array cast (char[8]*)
             if (has_type) {
                 // return !has_idents || has_brackets;
-                return true;
+                is_cast = true;
+                break;
             } else {
-                return false;
+                break;
             }
         } else if (scope <= 0) {
             // maybe incomplete cast or fn argument
@@ -708,14 +710,17 @@ fn bool CodeFmt._resolve__prev_is_binexp(&self) @private
             // (char[8]*  |) ?
             // (char[8]*  |param ?
             if (has_type && has_brackets) {
-                if (has_idents && !has_expr) return true;
+                if (has_idents && !has_expr) {
+                    is_cast = true;
+                    break;
+                }
             }
         }
 
-        if (!has_parens && !has_type && !has_brackets && !has_idents) return true;
-        // not a cast
-        return false;
-    |};
+        if (!has_parens && !has_type && !has_brackets && !has_idents) {
+            is_cast = true;
+        }
+    };
     return !is_cast;
 }
 
