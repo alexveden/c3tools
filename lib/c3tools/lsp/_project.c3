@@ -95,7 +95,7 @@ fn void! LspProject._load_module_symbols(&self, SymbolCache** dest, AstModule* s
 
     for LOOP: (AstTypeDef* decl = src.decls; decl != null; decl = (AstTypeDef*)decl.next) {
         if (!decl.value) {
-            io::eprintfn("    %s -> %s: zero length symbol!", src.value, decl.type);
+            // io::eprintfn("    %s -> %s: zero length symbol!", src.value, decl.type);
             continue LOOP;
         }
         // io::eprintfn("    %s: %s", decl.type, decl.value);

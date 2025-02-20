@@ -16,6 +16,8 @@ fn void! Lsp.new_init(&self, String project_root, String stdlib_path)
         log::error("c3 project load failed: %s", err);
         return err?;
     }
+
+    self.proj.load_symbols()!;
 }
 
 fn void Lsp.free(&self){

@@ -42,3 +42,9 @@ struct Range
         uint c;
     }
 }
+
+struct DocChange
+{
+    String value;
+    Range range;
+}
