@@ -16,9 +16,7 @@ runs:
 
         sudo apt-get remove apport  
         sudo bash -c 'echo "/var/cores/core.%e.%t.%p" > /proc/sys/kernel/core_pattern'
-        echo "Core pattern:"
-        sudo cat /proc/sys/kernel/core_pattern
-        sudo sysctl -a | grep kernel.core_pattern
+        sudo sysctl -w fs.suid_dumpable=2
 
     - name: test access to core dump directory
       shell: bash
@@ -42,6 +40,10 @@ runs:
     - name: core dump check
       shell: bash
       run: |
+        echo "Core pattern:"
+        sudo cat /proc/sys/kernel/core_pattern
+        sudo sysctl -a | grep kernel.core_pattern
+        sudo sysctl -a | grep dump
         echo "int main() {return *(int*)0;}" > coredump.c
         gcc coredump.c && ./a.out
 
