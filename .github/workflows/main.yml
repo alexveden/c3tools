@@ -30,11 +30,6 @@ jobs:
       - uses: ./.github/actions/c3c_build_latest
         name: Build c3c compiler
 
-      - uses: actions/upload-artifact@master # capture all crashes as build artifacts
-        with:
-          name: crashes
-          path: /var/cores
-
       - name: c3tools unit tests
         run: |
           ulimit -c unlimited 
@@ -81,6 +76,12 @@ jobs:
           ulimit -c unlimited
           ./build/c3fzf --project=./lib/ --stdlib=./c3c/lib/std . | xargs -I{} ./build/c3fzf --project=./lib/ --preview --stdlib=./c3c/lib/std {} .
 
+      - uses: actions/upload-artifact@master # capture all crashes as build artifacts
+        if: always()
+        with:
+          name: crashes
+          path: /var/cores
+
 
   build-c3fmt:
     runs-on: ubuntu-22.04
@@ -103,10 +104,6 @@ jobs:
       - name: Build c3c compiler
         uses: ./.github/actions/c3c_build_latest
 
-      - uses: actions/upload-artifact@master # capture all crashes as build artifacts
-        with:
-          name: crashes
-          path: /var/cores
 
       #
       #   c3tools self formatting block
@@ -199,3 +196,8 @@ jobs:
           ulimit -c unlimited
           ./scripts/c3fmt_c3c_test_suite.sh c3c/test/test_suite/
 
+      - uses: actions/upload-artifact@master # capture all crashes as build artifacts
+        if: always()
+        with:
+          name: crashes
+          path: /var/cores
