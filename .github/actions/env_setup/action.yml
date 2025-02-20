@@ -41,6 +41,11 @@ runs:
     - name: core dump check
       shell: bash
       run: |
+        echo "Core ulimit default"
+        ulimit -c               # should output 'unlimited' now
+        echo "Core ulimit after"
+        ulimit -c unlimited
+        ulimit -c               # should output 'unlimited' now
         echo "Core pattern:"
         sudo cat /proc/sys/kernel/core_pattern
         sudo sysctl -a | grep kernel.core_pattern
