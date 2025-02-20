@@ -79,7 +79,7 @@ jobs:
       - uses: actions/upload-artifact@master # capture all crashes as build artifacts
         if: always()
         with:
-          name: ${{ env.RUN_UNIQUE_ID }}_coredumps_${{ matrix.step }}
+          name: ${{ github.job }}_coredumps_${{ matrix.optimize}}
           path: /var/cores
           if-no-files-found: ignore
 
@@ -200,6 +200,6 @@ jobs:
       - uses: actions/upload-artifact@master # capture all crashes as build artifacts
         if: always()
         with:
-          name: ${{ env.RUN_UNIQUE_ID }}_coredumps_${{ matrix.step }}
+          name: ${{ github.job }}_coredumps_${{ matrix.line_width }}_${{matrix.indent}}_${{matrix.optimize}}
           path: /var/cores
           if-no-files-found: ignore
