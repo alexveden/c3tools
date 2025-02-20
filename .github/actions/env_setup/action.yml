@@ -18,9 +18,9 @@ runs:
     - name: test access to core dump directory
       shell: bash
       run: |
-        sudo touch /var/cores/test
+        touch /var/cores/test
         ls /var/cores
-        sudo rm /var/cores/test
+        rm /var/cores/test
 
     - name: test enabling cores
       shell: bash
@@ -33,3 +33,10 @@ runs:
       shell: bash
       run: |
         echo "ASAN_OPTIONS: $ASAN_OPTIONS"
+
+    - name: core dump check
+      shell: bash
+      run: |
+        echo "int main() {return *(int*)0;}" > coredump.c
+        gcc coredump.c && ./a.out
+

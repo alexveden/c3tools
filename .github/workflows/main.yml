@@ -81,6 +81,7 @@ jobs:
         with:
           name: crashes
           path: /var/cores
+          if-no-files-found: ignore
 
 
   build-c3fmt:
@@ -201,3 +202,4 @@ jobs:
         with:
           name: crashes
           path: /var/cores
+          if-no-files-found: ignore
