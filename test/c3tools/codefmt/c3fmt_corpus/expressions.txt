@@ -467,3 +467,57 @@ int d = '\u0031';
 char b = '\x40';
 uint abc = '\U133222AB';
 uint foo = '謝';
+================================================================================
+new_designated_initializers
+================================================================================
+fn void main()
+{
+    f64_helper(x64, x64, 1.0, 1.0, 1.0, 1.0, 1.0, (Complex) { 1.0, 1.0 });
+    blorg((Test){});
+    return (Test){};
+      f_va_callee(1, 2, 3, 4.0, 5.0, (Tiny){6, 7, 8, 9},
+         (Small){10, null}, (Small_aligned){11},
+         (Large){12, 13, 14, 15});
+         int[?][?][] x = (int[2][1][]) { { { 1, 2 } } };
+         int z = (int) (Foo) { .abc = 2, .defg = 1 };
+         Foo4 *f4 = &&(Foo4) { .expand = 2, .a = true, .b = true, .widget = &f };
+         io::printfn("%s", $$reduce_max((double[<2>]) { 23.2, 23.3 }));
+         var $b4 = x'403322' +++ (char[2]) { 1, 2 };
+         IFoo foo = @clone((Ba){});
+         if (contains(url, "title-missing")) return { dupe((Head) { .title = null })! };
+         return buildSummary(readDoc(url)) ?? (Summary) { .title = null, .ok = false };
+         bool x = ! (int[]) { 1, 2, 3 };
+         int x = $typeof((int[?]) { 1, 2, 3}).len;
+         result = mem::gather(y, (bool[<2>]) { true, false }, (int[<2>]){ 10, 20 });
+}
+--------------------------------------------------------------------------------
+fn void main()
+{
+    f64_helper(x64, x64, 1.0, 1.0, 1.0, 1.0, 1.0, (Complex){1.0, 1.0});
+    blorg((Test){});
+    return (Test){};
+    f_va_callee(
+        1,
+        2,
+        3,
+        4.0,
+        5.0,
+        (Tiny){6, 7, 8, 9},
+        (Small){10, null},
+        (Small_aligned){11},
+        (Large){12, 13, 14, 15}
+    );
+    int[?][?][] x = (int[2][1][]){ { {1, 2}} };
+    int z = (int)(Foo){ .abc = 2, .defg = 1 };
+    Foo4* f4 = &&(Foo4){ .expand = 2, .a = true, .b = true, .widget = &f };
+    io::printfn("%s", $$reduce_max((double[<2>]){23.2, 23.3}));
+    var $b4 = x'403322' +++ (char[2]){ 1, 2 };
+    IFoo foo = @clone((Ba){});
+    if (contains(url, "title-missing")) return { dupe((Head){.title = null})! };
+    return buildSummary(readDoc(url)) ?? (Summary){
+        .title = null, .ok = false
+    };
+    bool x = !(int[]){ 1, 2, 3 };
+    int x = $typeof((int[?]){1, 2, 3}).len;
+    result = mem::gather(y, (bool[<2>]){true, false}, (int[<2>]){10, 20});
+}

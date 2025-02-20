@@ -62,7 +62,9 @@ call(&StrucType.fn_ptr);
     (double)x[0] * P10ST;
     foo(&(char[16])uuid);
     for(int i; *a > 0; i++);
+    // ambiguous conflicts
     f = (*(char[$Type.sizeof]*)bar);
+    f = *($typeof(x)*)s.ptr;
 }
 
 --------------------------------------------------------------------------------
@@ -114,7 +116,9 @@ fn void* main(int* arg)
     (double)x[0] * P10ST;
     foo(&(char[16])uuid);
     for (int i; *a > 0; i++) ;
+    // ambiguous conflicts
     f = (*(char[$Type.sizeof] *) bar);
+    f = *($typeof(x) *)s.ptr;
 }
 ================================================================================
 fn_array_args_casting_ambiguity
